@@ -48,8 +48,8 @@ class ApiService {
   static const Duration _timeout = Duration(seconds: 30);
 
   /// 获取基础URL
-  static Future<String?> _getBaseUrl() async {
-    return await UserDataService.getServerUrl();
+  static Future<String> _getBaseUrl() async {
+    return 'https://moontv.cc.cd';
   }
 
   /// 获取认证cookies
@@ -60,9 +60,6 @@ class ApiService {
   /// 构建完整URL
   static Future<String> _buildUrl(String endpoint) async {
     final baseUrl = await _getBaseUrl();
-    if (baseUrl == null) {
-      throw Exception('服务器地址未配置，请先登录');
-    }
 
     // 确保baseUrl不以/结尾，endpoint以/开头
     String cleanBaseUrl = baseUrl.endsWith('/')
@@ -329,9 +326,6 @@ class ApiService {
       BuildContext context) async {
     try {
       final baseUrl = await _getBaseUrl();
-      if (baseUrl == null) {
-        return ApiResponse.error('服务器地址未配置');
-      }
 
       final cookies = await _getCookies();
       if (cookies == null) {
@@ -542,7 +536,6 @@ class ApiService {
   static Future<bool> checkConnection() async {
     try {
       final baseUrl = await _getBaseUrl();
-      if (baseUrl == null) return false;
 
       final response = await http.get(
         Uri.parse('$baseUrl/api/health'),
@@ -559,19 +552,15 @@ class ApiService {
   static Future<ApiResponse<String>> autoLogin() async {
     try {
       // 获取用户数据
-      final serverUrl = await UserDataService.getServerUrl();
+      final baseUrl = 'https://moontv.cc.cd';
       final username = await UserDataService.getUsername();
       final password = await UserDataService.getPassword();
 
-      if (serverUrl == null || username == null || password == null) {
+      if (username == null || password == null) {
         return ApiResponse.error('缺少登录信息');
       }
 
       // 处理 URL
-      String baseUrl = serverUrl.trim();
-      if (baseUrl.endsWith('/')) {
-        baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-      }
       String loginUrl = '$baseUrl/api/login';
 
       // 发送登录请求

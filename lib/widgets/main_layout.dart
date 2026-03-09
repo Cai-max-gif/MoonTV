@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:selene/services/search_service.dart';
-import 'package:selene/services/user_data_service.dart';
+import '../services/search_service.dart';
+import '../services/user_data_service.dart';
 import '../services/theme_service.dart';
 import '../services/api_service.dart';
 import '../utils/device_utils.dart';
@@ -459,23 +459,23 @@ class _MainLayoutState extends State<MainLayout> {
             ),
           ),
           // 完全居中的 Logo
-          Center(
-            child: GestureDetector(
-              onTap: widget.onHomeTap,
-              behavior: HitTestBehavior.opaque,
-              child: Text(
-                'Selene',
-                style: FontUtils.sourceCodePro(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w400,
-                  color: themeService.isDarkMode
-                      ? Colors.white
-                      : const Color(0xFF2c3e50),
-                  letterSpacing: 1.5,
+            Center(
+              child: GestureDetector(
+                onTap: widget.onHomeTap,
+                behavior: HitTestBehavior.opaque,
+                child: Text(
+                  'MoonTV',
+                  style: FontUtils.sourceCodePro(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w400,
+                    color: themeService.isDarkMode
+                        ? Colors.white
+                        : const Color(0xFF2c3e50),
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ),
             ),
-          ),
           // 右侧按钮组
           Positioned(
             right: 0,
