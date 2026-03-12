@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Selene 构建脚本
-# 用于构建安卓和 iOS 无签名版本，并将构建产物复制到根目录下
+# MoonTV 构建脚本
+# 用于构建安卓、iOS和Windows版本，并将构建产物复制到根目录下
 
 set -e  # 遇到错误时退出
 
@@ -90,15 +90,28 @@ get_dependencies() {
 
 # 构建安卓版本
 build_android() {
-    log_info "开始构建安卓 armv8 和 armv7a 版本..."
+    log_info "开始构建安卓版本..."
     
     # 确保安卓构建目录存在
     mkdir -p build/android
     
-    # 构建 APK，添加优化参数
+    # 构建拆分架构的 APK（v7a 和 v8a）
+    log_info "构建安卓 armv8 和 armv7a 版本..."
     flutter build apk --release \
         --target-platform android-arm64,android-arm \
         --split-per-abi \
+        --obfuscate \
+        --split-debug-info=build/app/outputs/symbols
+    
+    # 构建通用版 APK
+    log_info "构建安卓通用版本..."
+    flutter build apk --release \
+        --obfuscate \
+        --split-debug-info=build/app/outputs/symbols
+    
+    # 构建 AAB 格式
+    log_info "构建安卓 AAB 格式..."
+    flutter build appbundle --release \
         --obfuscate \
         --split-debug-info=build/app/outputs/symbols
     
@@ -127,9 +140,9 @@ build_macos_arm64() {
     flutter build macos --release --dart-define=FLUTTER_TARGET_PLATFORM=darwin-arm64
     
     # 备份 ARM64 构建产物
-    if [ -d "build/macos/Build/Products/Release/selene.app" ]; then
+    if [ -d "build/macos/Build/Products/Release/MoonTV.app" ]; then
         mkdir -p ../build/macos-arm64
-        ditto build/macos/Build/Products/Release/selene.app ../build/macos-arm64/selene.app
+        ditto build/macos/Build/Products/Release/MoonTV.app ../build/macos-arm64/MoonTV.app
         log_success "macOS ARM64 构建完成"
     fi
     
@@ -158,9 +171,9 @@ build_macos_x86_64() {
     flutter build macos --release --dart-define=FLUTTER_TARGET_PLATFORM=darwin-x64
     
     # 备份 x86_64 构建产物
-    if [ -d "build/macos/Build/Products/Release/selene.app" ]; then
+    if [ -d "build/macos/Build/Products/Release/MoonTV.app" ]; then
         mkdir -p ../build/macos-x86_64
-        ditto build/macos/Build/Products/Release/selene.app ../build/macos-x86_64/selene.app
+        ditto build/macos/Build/Products/Release/MoonTV.app ../build/macos-x86_64/MoonTV.app
         log_success "macOS x86_64 构建完成"
     fi
     
@@ -228,6 +241,19 @@ build_ios() {
     log_success "iOS 构建完成"
 }
 
+# 构建 Windows 版本
+build_windows() {
+    log_info "开始构建 Windows 版本..."
+    
+    # 确保 Windows 构建目录存在
+    mkdir -p build/windows
+    
+    # 构建 Windows 版本
+    flutter build windows --release
+    
+    log_success "Windows 构建完成"
+}
+
 # 复制构建产物到根目录
 copy_artifacts() {
     log_info "复制构建产物到根目录..."
@@ -237,39 +263,62 @@ copy_artifacts() {
     
     # 复制安卓 APK
     if [ -f "build/app/outputs/flutter-apk/app-arm64-v8a-release.apk" ]; then
-        cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "dist/selene-${APP_VERSION}-armv8.apk"
-        log_success "安卓 arm64 APK 已复制到 dist/selene-${APP_VERSION}-armv8.apk"
+        cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "dist/MoonTV-${APP_VERSION}-armv8.apk"
+        log_success "安卓 arm64 APK 已复制到 dist/MoonTV-${APP_VERSION}-armv8.apk"
     else
         log_warning "安卓 arm64 APK 文件未找到"
     fi
     if [ -f "build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk" ]; then
-        cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "dist/selene-${APP_VERSION}-armv7a.apk"
-        log_success "安卓 armv7a APK 已复制到 dist/selene-${APP_VERSION}-armv7a.apk"
+        cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "dist/MoonTV-${APP_VERSION}-armv7a.apk"
+        log_success "安卓 armv7a APK 已复制到 dist/MoonTV-${APP_VERSION}-armv7a.apk"
     else
         log_warning "安卓 armv7a APK 文件未找到"
+    fi
+    if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+        cp build/app/outputs/flutter-apk/app-release.apk "dist/MoonTV-${APP_VERSION}-universal.apk"
+        log_success "安卓通用版 APK 已复制到 dist/MoonTV-${APP_VERSION}-universal.apk"
+    else
+        log_warning "安卓通用版 APK 文件未找到"
+    fi
+    
+    # 复制安卓 AAB
+    if [ -f "build/app/outputs/bundle/release/app-release.aab" ]; then
+        cp build/app/outputs/bundle/release/app-release.aab "dist/MoonTV-${APP_VERSION}.aab"
+        log_success "安卓 AAB 已复制到 dist/MoonTV-${APP_VERSION}.aab"
+    else
+        log_warning "安卓 AAB 文件未找到"
     fi
 
     # 复制 iOS 构建产物
     if [ -f "ios-build/Runner.ipa" ]; then
-        cp ios-build/Runner.ipa "dist/selene-${APP_VERSION}.ipa"
-        log_success "iOS .ipa 文件已复制到 dist/selene-${APP_VERSION}.ipa"
+        cp ios-build/Runner.ipa "dist/MoonTV-${APP_VERSION}.ipa"
+        log_success "iOS .ipa 文件已复制到 dist/MoonTV-${APP_VERSION}.ipa"
     else
         log_warning "iOS .ipa 文件未找到"
     fi
     
+    # 复制 Windows 构建产物
+    if [ -d "build/windows/x64/Release" ]; then
+        mkdir -p "dist/windows"
+        cp -r "build/windows/x64/Release" "dist/windows/"
+        log_success "Windows 构建产物已复制到 dist/windows/"
+    else
+        log_warning "Windows 构建产物未找到"
+    fi
+    
     # 打包 macOS ARM64 应用为 DMG
-    if [ -d "build/macos-arm64/selene.app" ]; then
+    if [ -d "build/macos-arm64/MoonTV.app" ]; then
         log_info "打包 macOS ARM64 应用为 DMG..."
         
-        DMG_NAME="selene-${APP_VERSION}-macos-arm64.dmg"
+        DMG_NAME="MoonTV-${APP_VERSION}-macos-arm64.dmg"
         DMG_PATH="dist/${DMG_NAME}"
         
         # 创建临时目录
         TMP_DMG_DIR=$(mktemp -d)
-        cp -R build/macos-arm64/selene.app "$TMP_DMG_DIR/"
+        cp -R build/macos-arm64/MoonTV.app "$TMP_DMG_DIR/"
         
         # 创建 DMG
-        hdiutil create -volname "Selene" \
+        hdiutil create -volname "MoonTV" \
             -srcfolder "$TMP_DMG_DIR" \
             -ov -format UDZO \
             "$DMG_PATH"
@@ -283,18 +332,18 @@ copy_artifacts() {
     fi
     
     # 打包 macOS x86_64 应用为 DMG
-    if [ -d "build/macos-x86_64/selene.app" ]; then
+    if [ -d "build/macos-x86_64/MoonTV.app" ]; then
         log_info "打包 macOS x86_64 应用为 DMG..."
         
-        DMG_NAME="selene-${APP_VERSION}-macos-x86_64.dmg"
+        DMG_NAME="MoonTV-${APP_VERSION}-macos-x86_64.dmg"
         DMG_PATH="dist/${DMG_NAME}"
         
         # 创建临时目录
         TMP_DMG_DIR=$(mktemp -d)
-        cp -R build/macos-x86_64/selene.app "$TMP_DMG_DIR/"
+        cp -R build/macos-x86_64/MoonTV.app "$TMP_DMG_DIR/"
         
         # 创建 DMG
-        hdiutil create -volname "Selene" \
+        hdiutil create -volname "MoonTV" \
             -srcfolder "$TMP_DMG_DIR" \
             -ov -format UDZO \
             "$DMG_PATH"
@@ -332,7 +381,7 @@ show_results() {
 
 # 主函数
 main() {
-    echo "🚀 Selene 构建脚本启动"
+    echo "🚀 MoonTV 构建脚本启动"
     echo "=================================="
     
     # 检查参数
@@ -340,6 +389,7 @@ main() {
     BUILD_IOS=true
     BUILD_MACOS_ARM64=true
     BUILD_MACOS_X86_64=true
+    BUILD_WINDOWS=true
     PARALLEL_BUILD=true
     
     while [[ $# -gt 0 ]]; do
@@ -375,6 +425,14 @@ main() {
                 ;;
             --apple-only)
                 BUILD_ANDROID=false
+                BUILD_WINDOWS=false
+                shift
+                ;;
+            --windows-only)
+                BUILD_ANDROID=false
+                BUILD_IOS=false
+                BUILD_MACOS_ARM64=false
+                BUILD_MACOS_X86_64=false
                 shift
                 ;;
             --sequential)
@@ -390,6 +448,7 @@ main() {
                 echo "  --macos-x86_64-only  只构建 macOS x86_64 版本"
                 echo "  --macos-only         构建 macOS 所有架构"
                 echo "  --apple-only         构建所有 Apple 平台版本（iOS 和 macOS）"
+                echo "  --windows-only       只构建 Windows 版本"
                 echo "  --sequential         顺序构建（默认为并行构建）"
                 echo "  --help               显示此帮助信息"
                 exit 0
@@ -435,6 +494,11 @@ main() {
             pids+=($!)
         fi
         
+        if [ "$BUILD_WINDOWS" = true ]; then
+            build_windows &
+            pids+=($!)
+        fi
+        
         # 等待所有后台进程完成
         log_info "等待所有构建任务完成..."
         for pid in "${pids[@]}"; do
@@ -458,6 +522,10 @@ main() {
         
         if [ "$BUILD_MACOS_X86_64" = true ]; then
             build_macos_x86_64
+        fi
+        
+        if [ "$BUILD_WINDOWS" = true ]; then
+            build_windows
         fi
     fi
     

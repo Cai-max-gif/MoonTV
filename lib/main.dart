@@ -37,7 +37,7 @@ void main() async {
   // 启动定期清理
   cacheService.startPeriodicCleanup();
 
-  runApp(const SeleneApp());
+  runApp(const MoonTVApp());
 
   // 初始化 Windows 窗口配置
   if (Platform.isWindows) {
@@ -48,14 +48,14 @@ void main() async {
       win.minSize = minSize;
       win.size = initialSize;
       win.alignment = Alignment.center;
-      win.title = "Selene";
+      win.title = "MoonTV";
       win.show();
     });
   }
 }
 
-class SeleneApp extends StatelessWidget {
-  const SeleneApp({super.key});
+class MoonTVApp extends StatelessWidget {
+  const MoonTVApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class SeleneApp extends StatelessWidget {
       child: Consumer<ThemeService>(
         builder: (context, themeService, child) {
           return MaterialApp(
-            title: 'Selene',
+            title: 'MoonTV',
             debugShowCheckedModeBanner: false,
             theme: themeService.lightTheme,
             darkTheme: themeService.darkTheme,
@@ -122,11 +122,13 @@ class _AppWrapperState extends State<AppWrapper> {
                   await SubscriptionService.parseSubscriptionContent(
                       response.body);
               if (content != null) {
-                if (content.searchResources != null && content.searchResources!.isNotEmpty) {
+                if (content.searchResources != null &&
+                    content.searchResources!.isNotEmpty) {
                   await LocalModeStorageService.saveSearchSources(
                       content.searchResources!);
                 }
-                if (content.liveSources != null && content.liveSources!.isNotEmpty) {
+                if (content.liveSources != null &&
+                    content.liveSources!.isNotEmpty) {
                   await LocalModeStorageService.saveLiveSources(
                       content.liveSources!);
                 }

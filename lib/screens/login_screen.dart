@@ -299,9 +299,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.6),
                   contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -366,9 +366,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.6),
                   contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -385,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: (_isLoading || !_isFormValid) ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _isFormValid && !_isLoading
-                      ? const Color(0xFF2c3e50) // 与Selene logo相同的颜色
+                      ? const Color(0xFF2c3e50) // 与MoonTV logo相同的颜色
                       : const Color(0xFFbdc3c7), // 禁用时的浅灰色
                   foregroundColor: _isFormValid && !_isLoading
                       ? Colors.white

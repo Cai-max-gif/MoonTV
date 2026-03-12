@@ -500,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// 处理点击 Selene 标题跳转到首页
+  /// 处理点击 MoonTV 标题跳转到首页
   void _onHomeTap() {
     setState(() {
       // 切换到首页
