@@ -129,11 +129,7 @@ flutter_launcher_icons:
   image_path: "logo.png"
   remove_alpha_ios: true  # 移除 iOS 图标的 alpha 通道
   min_sdk_android: 21 # android min sdk min:16, default 21
-  web:
-    generate: true
-    image_path: "logo.png"
-    background_color: "#hexcode"
-    theme_color: "#hexcode"
+
   windows:
     generate: true
     image_path: "logo.png"
