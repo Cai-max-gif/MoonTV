@@ -1,0 +1,57 @@
+# Flutter/Dart
+/build/
+/.dart_tool/
+/.flutter-plugins
+/.flutter-plugins-dependencies
+/.packages
+.pub-cache/
+.pub/
+
+# Android
+/android/app/build/
+/android/build/
+/android/gradle/
+/android/.gradle/
+/local.properties
+
+# iOS
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/Flutter.framework/
+/ios/Flutter/flutter_export_environment.sh
+/ios/Runner/GeneratedPluginRegistrant.swift
+
+# macOS
+/macos/Pods/
+/macos/Flutter/FlutterMacOS.framework/
+/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Windows
+/windows/flutter/ephemeral/
+/windows/flutter/generated_plugin_registrant.cc
+/windows/flutter/generated_plugin_registrant.h
+
+# Linux
+/linux/flutter/ephemeral/
+/linux/flutter/generated_plugin_registrant.cc
+/linux/flutter/generated_plugin_registrant.h
+
+# Installer directory (contains built files)
+/installer/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# OS generated files
+.DS_Store
+Thumbs.db
