@@ -234,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              onMoreTap: () => _onBottomNavChanged(1),
+              onMoreTap: () => _onTopCategoryChanged(1),
               onGlobalMenuAction: (videoInfo, action) {
                 if (action == VideoMenuAction.play) {
                   _navigateToPlayer(
@@ -259,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              onMoreTap: () => _onBottomNavChanged(2),
+              onMoreTap: () => _onTopCategoryChanged(2),
               onGlobalMenuAction: (videoInfo, action) {
                 if (action == VideoMenuAction.play) {
                   _navigateToPlayer(
@@ -283,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              onMoreTap: () => _onBottomNavChanged(3),
+              onMoreTap: () => _onTopCategoryChanged(3),
               onGlobalMenuAction: (videoInfo, action) {
                 if (action == VideoMenuAction.play) {
                   _navigateToPlayer(
@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              onMoreTap: () => _onBottomNavChanged(4),
+              onMoreTap: () => _onTopCategoryChanged(4),
               onGlobalMenuAction: (videoInfo, action) {
                 if (action == VideoMenuAction.play) {
                   _navigateToPlayer(
