@@ -10,6 +10,7 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -480,6 +481,34 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '没有账户？',
+              style: FontUtils.poppins(
+                fontSize: 14,
+                color: const Color(0xFF7f8c8d),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                );
+              },
+              child: Text(
+                '立即注册',
+                style: FontUtils.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF2c3e50),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -690,6 +719,34 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '没有账户？',
+                style: FontUtils.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF7f8c8d),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                  );
+                },
+                child: Text(
+                  '立即注册',
+                  style: FontUtils.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF2c3e50),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

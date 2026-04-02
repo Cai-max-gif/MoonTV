@@ -130,70 +130,66 @@ class UserDataService {
 
   // 检查账户是否被锁定
   static Future<bool> isAccountLocked() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lockedUntil = prefs.getInt(_accountLockedUntilKey);
+    final lockedUntil = await _secureStorage.read(key: _accountLockedUntilKey);
 
     if (lockedUntil == null) {
       return false;
     }
 
+    final lockTime = int.tryParse(lockedUntil) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    return now < lockedUntil;
+    return now < lockTime;
   }
 
   // 获取账户锁定剩余时间
   static Future<Duration?> getAccountLockRemainingTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lockedUntil = prefs.getInt(_accountLockedUntilKey);
+    final lockedUntil = await _secureStorage.read(key: _accountLockedUntilKey);
 
     if (lockedUntil == null) {
       return null;
     }
 
+    final lockTime = int.tryParse(lockedUntil) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (now >= lockedUntil) {
-      // 锁定时间已过，重置锁定状态
-      await prefs.remove(_accountLockedUntilKey);
+    if (now >= lockTime) {
+      await _secureStorage.delete(key: _accountLockedUntilKey);
       return null;
     }
 
-    return Duration(milliseconds: lockedUntil - now);
+    return Duration(milliseconds: lockTime - now);
   }
 
   // 记录登录失败
   static Future<void> recordLoginFailure() async {
-    final prefs = await SharedPreferences.getInstance();
-
     // 获取当前尝试次数
-    int attempts = prefs.getInt(_loginAttemptsKey) ?? 0;
+    final attemptsStr = await _secureStorage.read(key: _loginAttemptsKey);
+    int attempts = int.tryParse(attemptsStr ?? '') ?? 0;
     attempts++;
 
     // 更新尝试次数和最后尝试时间
-    await prefs.setInt(_loginAttemptsKey, attempts);
-    await prefs.setInt(
-        _lastLoginAttemptKey, DateTime.now().millisecondsSinceEpoch);
+    await _secureStorage.write(key: _loginAttemptsKey, value: attempts.toString());
+    await _secureStorage.write(
+        key: _lastLoginAttemptKey, value: DateTime.now().millisecondsSinceEpoch.toString());
 
     // 检查是否达到最大尝试次数
     if (attempts >= _maxLoginAttempts) {
-      // 锁定账户
       final lockUntil =
           DateTime.now().add(_lockDuration).millisecondsSinceEpoch;
-      await prefs.setInt(_accountLockedUntilKey, lockUntil);
+      await _secureStorage.write(key: _accountLockedUntilKey, value: lockUntil.toString());
     }
   }
 
   // 重置登录尝试计数
   static Future<void> resetLoginAttempts() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_loginAttemptsKey);
-    await prefs.remove(_lastLoginAttemptKey);
-    await prefs.remove(_accountLockedUntilKey);
+    await _secureStorage.delete(key: _loginAttemptsKey);
+    await _secureStorage.delete(key: _lastLoginAttemptKey);
+    await _secureStorage.delete(key: _accountLockedUntilKey);
   }
 
   // 获取当前登录尝试次数
   static Future<int> getLoginAttempts() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_loginAttemptsKey) ?? 0;
+    final attemptsStr = await _secureStorage.read(key: _loginAttemptsKey);
+    return int.tryParse(attemptsStr ?? '') ?? 0;
   }
 
   // 保存豆瓣数据源设置（存储key值）

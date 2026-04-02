@@ -1006,71 +1006,67 @@ class _MainLayoutState extends State<MainLayout> {
       );
     } else {
       // 非移动端：保持原来的布局
-      return Container(
-        width: 240, // 设置固定宽度为240
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ...navItems.asMap().entries.expand((entry) {
-              int index = entry.key;
-              Map<String, dynamic> item = entry.value;
-              bool isSelected =
-                  !widget.isSearchMode && widget.currentTopNavIndex == index;
-              bool isHovered =
-                  DeviceUtils.isPC() && _hoveredTopNavIndex == index;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ...navItems.asMap().entries.expand((entry) {
+            int index = entry.key;
+            Map<String, dynamic> item = entry.value;
+            bool isSelected =
+                !widget.isSearchMode && widget.currentTopNavIndex == index;
+            bool isHovered = DeviceUtils.isPC() && _hoveredTopNavIndex == index;
 
-              return [
-                MouseRegion(
-                  cursor: DeviceUtils.isPC()
-                      ? SystemMouseCursors.click
-                      : MouseCursor.defer,
-                  onEnter: DeviceUtils.isPC()
-                      ? (_) {
-                          setState(() {
-                            _hoveredTopNavIndex = index;
-                          });
-                        }
-                      : null,
-                  onExit: DeviceUtils.isPC()
-                      ? (_) {
-                          setState(() {
-                            _hoveredTopNavIndex = null;
-                          });
-                        }
-                      : null,
-                  child: GestureDetector(
-                    onTap: () {
-                      widget.onTopCategoryChanged?.call(index);
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: Text(
-                        item['label'],
-                        style: FontUtils.poppins(
-                          fontSize: isSelected ? 16 : 14,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: isSelected
-                              ? const Color(0xFF27ae60)
-                              : isHovered
-                                  ? const Color(0xFF52c77a)
-                                  : themeService.isDarkMode
-                                      ? const Color(0xFFb0b0b0)
-                                      : const Color(0xFF7f8c8d),
-                        ),
+            return [
+              MouseRegion(
+                cursor: DeviceUtils.isPC()
+                    ? SystemMouseCursors.click
+                    : MouseCursor.defer,
+                onEnter: DeviceUtils.isPC()
+                    ? (_) {
+                        setState(() {
+                          _hoveredTopNavIndex = index;
+                        });
+                      }
+                    : null,
+                onExit: DeviceUtils.isPC()
+                    ? (_) {
+                        setState(() {
+                          _hoveredTopNavIndex = null;
+                        });
+                      }
+                    : null,
+                child: GestureDetector(
+                  onTap: () {
+                    widget.onTopCategoryChanged?.call(index);
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      item['label'],
+                      style: FontUtils.poppins(
+                        fontSize: isSelected ? 16 : 14,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: isSelected
+                            ? const Color(0xFF27ae60)
+                            : isHovered
+                                ? const Color(0xFF52c77a)
+                                : themeService.isDarkMode
+                                    ? const Color(0xFFb0b0b0)
+                                    : const Color(0xFF7f8c8d),
                       ),
                     ),
                   ),
                 ),
-                if (index < navItems.length - 1) const SizedBox(width: 24),
-              ];
-            }),
-          ],
-        ),
+              ),
+              if (index < navItems.length - 1) const SizedBox(width: 24),
+            ];
+          }),
+        ],
       );
     }
   }
