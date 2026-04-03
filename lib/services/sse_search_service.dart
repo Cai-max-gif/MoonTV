@@ -199,6 +199,8 @@ class SSESearchService {
     try {
       // 获取服务器地址和认证信息
       final baseUrl = await UserDataService.getServerUrlWithDefault();
+      // 确保使用HTTPS
+      final secureBaseUrl = baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
       final cookies = await UserDataService.getCookies();
 
       if (cookies == null) {
@@ -206,7 +208,7 @@ class SSESearchService {
       }
 
       // 构建 SSE URL
-      final baseUri = Uri.parse(baseUrl);
+      final baseUri = Uri.parse(secureBaseUrl);
       final sseUri = baseUri.replace(
         path: '/api/search/ws',
         queryParameters: {

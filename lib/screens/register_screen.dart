@@ -130,7 +130,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
-      String sendCodeUrl = '$baseUrl/api/register/send-code';
+      // 确保使用HTTPS
+      String secureBaseUrl =
+          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
+      String sendCodeUrl = '$secureBaseUrl/api/send-verification-code';
 
       final response = await http.post(
         Uri.parse(sendCodeUrl),
@@ -145,17 +148,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        if (responseData['ok'] == true) {
+        try {
+          final responseData = json.decode(response.body);
+          // 检查多种可能的成功标志
+          bool isSuccess = responseData['ok'] == true ||
+              responseData['success'] == true ||
+              responseData['status'] == 'success';
+
+          if (isSuccess) {
+            _showToast('验证码已发送到您的邮箱', const Color(0xFF27ae60));
+            _startCountdown();
+          } else {
+            _showToast(
+                responseData['error'] ?? responseData['message'] ?? '发送验证码失败',
+                const Color(0xFFe74c3c));
+          }
+        } catch (e) {
+          // 如果JSON解析失败，也认为是成功（服务器可能返回空响应）
           _showToast('验证码已发送到您的邮箱', const Color(0xFF27ae60));
           _startCountdown();
-        } else {
-          _showToast(
-              responseData['error'] ?? '发送验证码失败', const Color(0xFFe74c3c));
         }
       } else {
-        final responseData = json.decode(response.body);
-        _showToast(responseData['error'] ?? '发送验证码失败', const Color(0xFFe74c3c));
+        try {
+          final responseData = json.decode(response.body);
+          _showToast(
+              responseData['error'] ?? responseData['message'] ?? '发送验证码失败',
+              const Color(0xFFe74c3c));
+        } catch (e) {
+          _showToast(
+              '发送验证码失败 (${response.statusCode})', const Color(0xFFe74c3c));
+        }
       }
     } catch (e) {
       setState(() {
@@ -197,7 +219,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
-      String registerUrl = '$baseUrl/api/register';
+      // 确保使用HTTPS
+      String secureBaseUrl =
+          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
+      String registerUrl = '$secureBaseUrl/api/register';
 
       final response = await http.post(
         Uri.parse(registerUrl),

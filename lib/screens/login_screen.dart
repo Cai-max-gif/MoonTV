@@ -115,11 +115,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
-    if (_formKey.currentState!.validate() && _isFormValid && _passwordController.text.isNotEmpty) {
+    if (_formKey.currentState!.validate() &&
+        _isFormValid &&
+        _passwordController.text.isNotEmpty) {
       // 检查账户是否被锁定
       bool isLocked = await UserDataService.isAccountLocked();
       if (isLocked) {
-        final remainingTime = await UserDataService.getAccountLockRemainingTime();
+        final remainingTime =
+            await UserDataService.getAccountLockRemainingTime();
         if (remainingTime != null) {
           final minutes = remainingTime.inMinutes;
           _showToast('账户已被锁定，请${minutes}分钟后再试', const Color(0xFFe74c3c));
@@ -136,7 +139,10 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         // 处理 URL
         String baseUrl = await UserDataService.getServerUrlWithDefault();
-        String loginUrl = '$baseUrl/api/login';
+        // 确保使用HTTPS
+        String secureBaseUrl =
+            baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
+        String loginUrl = '$secureBaseUrl/api/login';
 
         // 发送登录请求
         final response = await http.post(
@@ -161,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // 尝试解析响应获取令牌
               final responseData = json.decode(response.body);
               final token = responseData['token'] as String?;
-              
+
               // 解析 cookies
               String cookies = _parseCookies(response);
 
@@ -198,21 +204,24 @@ class _LoginScreenState extends State<LoginScreen> {
           case 401:
             // 记录登录失败
             await UserDataService.recordLoginFailure();
-            
+
             // 检查是否被锁定
             isLocked = await UserDataService.isAccountLocked();
             if (isLocked) {
-              final remainingTime = await UserDataService.getAccountLockRemainingTime();
+              final remainingTime =
+                  await UserDataService.getAccountLockRemainingTime();
               if (remainingTime != null) {
                 final minutes = remainingTime.inMinutes;
-                _showToast('用户名或密码错误，账户已被锁定，请${minutes}分钟后再试', const Color(0xFFe74c3c));
+                _showToast('用户名或密码错误，账户已被锁定，请${minutes}分钟后再试',
+                    const Color(0xFFe74c3c));
               } else {
                 _showToast('用户名或密码错误，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
               }
             } else {
               final attempts = await UserDataService.getLoginAttempts();
               final remainingAttempts = 5 - attempts;
-              _showToast('用户名或密码错误，还有${remainingAttempts}次尝试机会', const Color(0xFFe74c3c));
+              _showToast('用户名或密码错误，还有${remainingAttempts}次尝试机会',
+                  const Color(0xFFe74c3c));
             }
             break;
           case 500:
@@ -429,12 +438,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // 登录按钮
               ElevatedButton(
-                onPressed: (_isLoading || !_isFormValid || _passwordController.text.isEmpty) ? null : _handleLogin,
+                onPressed: (_isLoading ||
+                        !_isFormValid ||
+                        _passwordController.text.isEmpty)
+                    ? null
+                    : _handleLogin,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isFormValid && !_isLoading && _passwordController.text.isNotEmpty
+                  backgroundColor: _isFormValid &&
+                          !_isLoading &&
+                          _passwordController.text.isNotEmpty
                       ? const Color(0xFF2c3e50) // 与MoonTV logo相同的颜色
                       : const Color(0xFFbdc3c7), // 禁用时的浅灰色
-                  foregroundColor: _isFormValid && !_isLoading && _passwordController.text.isNotEmpty
+                  foregroundColor: _isFormValid &&
+                          !_isLoading &&
+                          _passwordController.text.isNotEmpty
                       ? Colors.white
                       : const Color(0xFF7f8c8d), // 禁用时的文字颜色
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -495,7 +512,8 @@ class _LoginScreenState extends State<LoginScreen> {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const RegisterScreen()),
                 );
               },
               child: Text(
@@ -667,13 +685,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // 登录按钮
                 ElevatedButton(
-                  onPressed:
-                      (_isLoading || !_isFormValid || _passwordController.text.isEmpty) ? null : _handleLogin,
+                  onPressed: (_isLoading ||
+                          !_isFormValid ||
+                          _passwordController.text.isEmpty)
+                      ? null
+                      : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isFormValid && !_isLoading && _passwordController.text.isNotEmpty
+                    backgroundColor: _isFormValid &&
+                            !_isLoading &&
+                            _passwordController.text.isNotEmpty
                         ? const Color(0xFF2c3e50)
                         : const Color(0xFFbdc3c7),
-                    foregroundColor: _isFormValid && !_isLoading && _passwordController.text.isNotEmpty
+                    foregroundColor: _isFormValid &&
+                            !_isLoading &&
+                            _passwordController.text.isNotEmpty
                         ? Colors.white
                         : const Color(0xFF7f8c8d),
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -734,7 +759,8 @@ class _LoginScreenState extends State<LoginScreen> {
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const RegisterScreen()),
                   );
                 },
                 child: Text(
