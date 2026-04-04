@@ -18,19 +18,16 @@ class VersionService {
       final currentVersion = packageInfo.version;
 
       // 从 GitHub API 获取最新 Release 信息
-      final response = await http
-          .get(
-            Uri.parse(githubApiUrl),
-            headers: {'Accept': 'application/vnd.github.v3+json'},
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await http.get(
+        Uri.parse(githubApiUrl),
+        headers: {'Accept': 'application/vnd.github.v3+json'},
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final tagName = data['tag_name'] as String;
-        final latestVersion = tagName.startsWith('v')
-            ? tagName.substring(1)
-            : tagName;
+        final latestVersion =
+            tagName.startsWith('v') ? tagName.substring(1) : tagName;
         final releaseNotes = data['body'] as String? ?? '';
 
         // 比较版本号
@@ -45,7 +42,6 @@ class VersionService {
 
       return null;
     } catch (e) {
-      print('检查版本更新失败: $e');
       return null;
     }
   }

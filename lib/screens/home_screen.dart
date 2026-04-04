@@ -5,9 +5,10 @@ import '../widgets/continue_watching_section.dart';
 import '../widgets/hot_movies_section.dart';
 import '../widgets/hot_tv_section.dart';
 import '../widgets/hot_show_section.dart';
+import '../widgets/hot_short_drama_section.dart';
+
 import '../widgets/bangumi_section.dart';
 import '../widgets/main_layout.dart';
-import '../widgets/top_tab_switcher.dart';
 import '../widgets/favorites_grid.dart';
 import '../widgets/history_grid.dart';
 import 'search_screen.dart';
@@ -23,6 +24,7 @@ import 'movie_screen.dart';
 import 'tv_screen.dart';
 import 'anime_screen.dart';
 import 'show_screen.dart';
+import 'short_drama_screen.dart';
 import 'player_screen.dart';
 import 'live_screen.dart';
 import 'profile_screen.dart';
@@ -50,15 +52,15 @@ class CustomPageViewPhysics extends ScrollPhysics {
     if (currentIndex == 0 && position.pixels > position.minScrollExtent) {
       return false;
     }
-    // 第六个页面无法向左滑动
-    if (currentIndex == 5 && position.pixels < position.maxScrollExtent) {
+    // 第七个页面无法向左滑动
+    if (currentIndex == 6 && position.pixels < position.maxScrollExtent) {
       return false;
     }
     // 确保在顶部导航栏页面范围内，不允许滑动到播放历史和收藏夹页面
-    if (currentIndex < 6) {
+    if (currentIndex < 7) {
       // 计算当前页面的滚动范围
       double pageWidth = position.viewportDimension;
-      double maxScrollExtent = pageWidth * 5; // 最大滚动到第6个页面（索引5）
+      double maxScrollExtent = pageWidth * 6; // 最大滚动到第7个页面（索引6）
       double minScrollExtent = 0; // 最小滚动到第1个页面（索引0）
 
       // 如果尝试滚动超出顶部导航栏页面范围，禁止滑动
@@ -119,7 +121,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       // 静默失败，不影响用户体验
-      print('检查更新失败: $e');
     }
   }
 
@@ -190,6 +191,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 刷新热门综艺组件
         await HotShowSection.refreshHotShows();
+
+        // 刷新热门短剧组件
+        await HotShortDramaSection.refreshHotShortDramas();
 
         // 强制重建页面
         setState(() {});
@@ -321,6 +325,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               },
             ),
+            // 热门短剧组件
+            HotShortDramaSection(
+              onShortDramaTap: (videoInfo) {
+                _navigateToPlayer(
+                  PlayerScreen(
+                    title: videoInfo.title,
+                    year: videoInfo.year,
+                  ),
+                );
+              },
+              onMoreTap: () => _onTopCategoryChanged(5),
+              onGlobalMenuAction: (videoInfo, action) {
+                if (action == VideoMenuAction.play) {
+                  _navigateToPlayer(
+                    PlayerScreen(
+                      title: videoInfo.title,
+                      year: videoInfo.year,
+                    ),
+                  );
+                } else {
+                  _onGlobalMenuActionFromVideoInfo(videoInfo, action);
+                }
+              },
+            ),
           ],
         ),
       ),
@@ -403,7 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 构建底栏内容，根据当前页面类型显示不同的PageView
   Widget _buildBottomNavContent() {
     // 如果当前在顶部导航栏的页面范围内，显示顶部导航栏的PageView
-    if (_currentPageIndex < 6) {
+    if (_currentPageIndex < 7) {
       return PageView(
         controller: _bottomNavPageController,
         onPageChanged: (index) {
@@ -421,6 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const TvScreen(),
           const AnimeScreen(),
           const ShowScreen(),
+          const ShortDramaScreen(),
           const LiveScreen(),
         ],
       );
@@ -437,9 +466,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        child: _currentPageIndex == 6
+        child: _currentPageIndex == 7
             ? _buildHistoryTabContent()
-            : _currentPageIndex == 7
+            : _currentPageIndex == 8
                 ? _buildFavoritesTabContent()
                 : const ProfileScreen(),
         key: ValueKey<int>(_currentPageIndex),
@@ -456,22 +485,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 底部导航栏索引映射到对应的页面索引
     // 0: 首页 -> 0
-    // 1: 播放历史 -> 6
-    // 2: 收藏夹 -> 7
-    // 3: 我的 -> 8
+    // 1: 播放历史 -> 7
+    // 2: 收藏夹 -> 8
+    // 3: 我的 -> 9
     int pageIndex;
     switch (index) {
       case 0:
         pageIndex = _lastTopNavIndex; // 恢复到之前点击的顶部导航栏标签
         break;
       case 1:
-        pageIndex = 6;
-        break;
-      case 2:
         pageIndex = 7;
         break;
-      case 3:
+      case 2:
         pageIndex = 8;
+        break;
+      case 3:
+        pageIndex = 9;
         break;
       default:
         pageIndex = _lastTopNavIndex; // 恢复到之前点击的顶部导航栏标签
@@ -481,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _currentBottomNavIndex = index;
       _currentPageIndex = pageIndex;
       // 只有在顶部导航栏的页面范围内才更新顶部导航栏索引
-      if (pageIndex < 6) {
+      if (pageIndex < 7) {
         _currentTopNavIndex = pageIndex;
       }
     });
@@ -489,7 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 延迟执行跳转，确保状态更新后页面已重建
     Future.delayed(Duration(milliseconds: 10), () {
       // 跳转到顶部导航栏的对应页面
-      if (pageIndex < 6) {
+      if (pageIndex < 7) {
         _bottomNavPageController.jumpToPage(pageIndex);
       }
     });
@@ -600,7 +629,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     // 跳转到顶部导航栏的对应页面
-    _bottomNavPageController.jumpToPage(index);
+    // 确保PageController已附加到PageView
+    if (_bottomNavPageController.hasClients) {
+      _bottomNavPageController.jumpToPage(index);
+    }
   }
 
   /// 处理视频卡片点击

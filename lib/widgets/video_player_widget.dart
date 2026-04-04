@@ -28,6 +28,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final VoidCallback? onExitFullScreen;
   final bool live;
   final Function(bool isPipMode)? onPipModeChanged;
+  final Function(String error)? onError;
 
   const VideoPlayerWidget({
     super.key,
@@ -50,6 +51,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.onExitFullScreen,
     this.live = false,
     this.onPipModeChanged,
+    this.onError,
   });
 
   @override
@@ -198,15 +200,16 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       await _player!.setRate(_playbackSpeed.value);
       setState(() {
         _hasCompleted = false;
-        // _isLoadingVideo = false;
+        _isLoadingVideo = false;
       });
-      // widget.onReady?.call();
+      widget.onReady?.call();
     } catch (error) {
       debugPrint('VideoPlayerWidget: failed to open media $error');
       if (mounted) {
         setState(() {
           _isLoadingVideo = false;
         });
+        widget.onError?.call(error.toString());
       }
     }
   }

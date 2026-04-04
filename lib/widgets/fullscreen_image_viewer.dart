@@ -33,7 +33,8 @@ class FullscreenImageViewer extends StatefulWidget {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (context, animation, secondaryAnimation) => FullscreenImageViewer(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            FullscreenImageViewer(
           imageUrl: imageUrl,
           source: source,
           title: title,
@@ -64,11 +65,11 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
       builder: (context) => Consumer<ThemeService>(
         builder: (context, themeService, child) {
           final isDark = themeService.isDarkMode;
-          final backgroundColor = isDark 
+          final backgroundColor = isDark
               ? const Color(0xFF1e1e1e).withValues(alpha: 0.95)
               : const Color(0xFFffffff).withValues(alpha: 0.95);
           final textColor = isDark ? Colors.white : const Color(0xFF2c3e50);
-          final secondaryTextColor = isDark 
+          final secondaryTextColor = isDark
               ? Colors.white.withValues(alpha: 0.7)
               : const Color(0xFF2c3e50).withValues(alpha: 0.7);
           return Container(
@@ -95,7 +96,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                       ),
                     ),
                   ),
-                  
+
                   // 选项列表
                   ListTile(
                     leading: Icon(
@@ -114,7 +115,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                       _saveImageToGallery();
                     },
                   ),
-                  
+
                   ListTile(
                     leading: Icon(
                       Icons.close,
@@ -129,7 +130,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                     ),
                     onTap: () => Navigator.of(context).pop(),
                   ),
-                  
+
                   // 底部安全区域
                   SizedBox(height: MediaQuery.of(context).padding.bottom),
                 ],
@@ -146,14 +147,14 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
     try {
       // 使用 gal 包检查权限
       final hasAccess = await Gal.hasAccess();
-      
+
       if (hasAccess) {
         return true;
       }
-      
+
       // 请求权限
       final granted = await Gal.requestAccess();
-      
+
       if (!granted && mounted) {
         // 权限被拒绝，引导用户到设置页面
         showDialog(
@@ -162,9 +163,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
             builder: (context, themeService, child) {
               final isDark = themeService.isDarkMode;
               final textColor = isDark ? Colors.white : const Color(0xFF2c3e50);
-              
+
               return AlertDialog(
-                backgroundColor: isDark ? const Color(0xFF1e1e1e) : Colors.white,
+                backgroundColor:
+                    isDark ? const Color(0xFF1e1e1e) : Colors.white,
                 title: Text(
                   '需要存储权限',
                   style: FontUtils.poppins(color: textColor),
@@ -197,10 +199,9 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
           ),
         );
       }
-      
+
       return granted;
     } catch (e) {
-      print('权限检查失败: $e');
       return false;
     }
   }
@@ -208,7 +209,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   /// 保存图片到相册
   Future<void> _saveImageToGallery() async {
     if (_isSaving) return;
-    
+
     setState(() {
       _isSaving = true;
     });
@@ -235,7 +236,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                 color: isDark ? Colors.white : Colors.white,
               ),
             ),
-            backgroundColor: isDark 
+            backgroundColor: isDark
                 ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
                 : const Color(0xFF2c3e50).withValues(alpha: 0.9),
             duration: const Duration(seconds: 2),
@@ -245,7 +246,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
 
       // 获取缓存的图片数据
       final imageBytes = await _getCachedImageBytes();
-      
+
       if (imageBytes == null) {
         throw Exception('无法获取图片数据');
       }
@@ -298,13 +299,14 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         widget.imageUrl,
         headers: getImageRequestHeaders(widget.imageUrl, widget.source),
       );
-      
+
       // 获取图片数据
       final imageStream = imageProvider.resolve(ImageConfiguration.empty);
       final completer = Completer<Uint8List>();
-      
+
       late ImageStreamListener listener;
-      listener = ImageStreamListener((ImageInfo imageInfo, bool synchronousCall) {
+      listener =
+          ImageStreamListener((ImageInfo imageInfo, bool synchronousCall) {
         final image = imageInfo.image;
         image.toByteData(format: ui.ImageByteFormat.png).then((byteData) {
           if (byteData != null) {
@@ -320,11 +322,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         completer.completeError(exception);
         imageStream.removeListener(listener);
       });
-      
+
       imageStream.addListener(listener);
       return await completer.future;
     } catch (e) {
-      print('获取缓存图片数据失败: $e');
       return null;
     }
   }
@@ -336,8 +337,9 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         final isDark = themeService.isDarkMode;
         final backgroundColor = isDark ? Colors.black : Colors.white;
         final textColor = isDark ? Colors.white : const Color(0xFF2c3e50);
-        final progressIndicatorColor = isDark ? Colors.white : const Color(0xFF2c3e50);
-        
+        final progressIndicatorColor =
+            isDark ? Colors.white : const Color(0xFF2c3e50);
+
         return Scaffold(
           backgroundColor: backgroundColor,
           body: Stack(
@@ -349,7 +351,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                   child: Container(color: Colors.transparent),
                 ),
               ),
-              
+
               // 图片区域
               Center(
                 child: GestureDetector(
@@ -359,8 +361,9 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                     future: getImageUrl(widget.imageUrl, widget.source),
                     builder: (context, snapshot) {
                       final String imageUrl = snapshot.data ?? widget.imageUrl;
-                      final headers = getImageRequestHeaders(imageUrl, widget.source);
-                      
+                      final headers =
+                          getImageRequestHeaders(imageUrl, widget.source);
+
                       return CachedNetworkImage(
                         imageUrl: imageUrl,
                         httpHeaders: headers,

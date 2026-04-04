@@ -889,7 +889,6 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 if (Platform.isAndroid)
                   GestureDetector(
                     onTap: () async {
-                      print('PIP button clicked!');
                       _onUserInteraction();
                       await _enterPipMode();
                     },
@@ -1277,7 +1276,7 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                       height: 6,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(3),
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -1308,7 +1307,7 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                             color: Colors.red,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),

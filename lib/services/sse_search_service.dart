@@ -432,7 +432,6 @@ class SSESearchService {
         errorString.contains('clientexception') ||
         errorString.contains('connection terminated')) {
       // 连接被关闭，这是正常情况，不显示错误
-      print('搜索连接已关闭: ${error.toString()}');
       return;
     }
 

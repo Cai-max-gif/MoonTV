@@ -53,7 +53,8 @@ class CollapsibleScrollPhysics extends ScrollPhysics {
     // 如果已展开到最大高度且在顶部，向下拖拽时触发收起回调
     // iOS 需要更宽松的条件，因为 bouncing 效果会产生负值
     if (isAtMaxHeight &&
-        ((isIOS && position.pixels <= 1.0) || (!isIOS && position.pixels <= 0)) &&
+        ((isIOS && position.pixels <= 1.0) ||
+            (!isIOS && position.pixels <= 0)) &&
         offset > 0) {
       // 触发收起回调
       if (onCollapseTriggered != null) {
@@ -68,7 +69,8 @@ class CollapsibleScrollPhysics extends ScrollPhysics {
   @override
   ScrollPhysics buildParent(ScrollPhysics? ancestor) {
     // 根据平台选择合适的父物理效果
-    final parentPhysics = isIOS ? BouncingScrollPhysics() : ClampingScrollPhysics();
+    final parentPhysics =
+        isIOS ? BouncingScrollPhysics() : ClampingScrollPhysics();
     return parent?.applyTo(ancestor ?? parentPhysics) ?? parentPhysics;
   }
 }
@@ -219,7 +221,9 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   }
 
   void _onScroll() {
-    if (_showScrollIndicator && _scrollController.hasClients && _scrollController.offset > 10) {
+    if (_showScrollIndicator &&
+        _scrollController.hasClients &&
+        _scrollController.offset > 10) {
       setState(() {
         _showScrollIndicator = false;
       });
@@ -229,7 +233,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   void _captureInitialHeight() {
     try {
       // 捕获整个弹窗的高度作为初始高度
-      final renderBox = _sheetKey.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox =
+          _sheetKey.currentContext?.findRenderObject() as RenderBox?;
       final height = renderBox?.size.height;
       if (height != null && mounted && !_hasInitialHeightCaptured) {
         // 延迟设置状态，避免在动画期间重建
@@ -244,32 +249,34 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         });
       }
     } catch (e) {
-      print('捕获初始高度失败: $e');
+      // 捕获初始高度失败，静默处理
     }
   }
 
   void _calculateContentBasedMaxHeight() {
     try {
       // 计算包含豆瓣详情的完整内容高度
-      final renderBox = _fullContentKey.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox =
+          _fullContentKey.currentContext?.findRenderObject() as RenderBox?;
       final contentHeight = renderBox?.size.height;
-      
+
       if (contentHeight != null && mounted) {
         // 加上顶部拖拽指示器和一些边距
-        final totalContentHeight = contentHeight + 20; // 8(top margin) + 4(indicator height) + 8(bottom margin)
-        
+        final totalContentHeight = contentHeight +
+            20; // 8(top margin) + 4(indicator height) + 8(bottom margin)
+
         // 取内容高度和屏幕90%的较小值作为最大高度
         final screenBasedMaxHeight = MediaQuery.of(context).size.height * 0.8;
-        final effectiveMaxHeight = (totalContentHeight < screenBasedMaxHeight) 
-            ? totalContentHeight 
+        final effectiveMaxHeight = (totalContentHeight < screenBasedMaxHeight)
+            ? totalContentHeight
             : screenBasedMaxHeight;
-            
+
         setState(() {
           _contentBasedMaxHeight = effectiveMaxHeight;
         });
       }
     } catch (e) {
-      print('计算内容最大高度失败: $e');
+      // 计算内容最大高度失败，静默处理
     }
   }
 
@@ -320,9 +327,11 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   }
 
   /// 更新拖拽高度 - 用于更高效的拖拽处理
-  void _updateDragHeight(double newHeight, double effectiveMaxHeight, bool isDraggingDown) {
+  void _updateDragHeight(
+      double newHeight, double effectiveMaxHeight, bool isDraggingDown) {
     // 限制高度在有效范围内
-    final clampedHeight = newHeight.clamp(_initialSheetHeight!, effectiveMaxHeight);
+    final clampedHeight =
+        newHeight.clamp(_initialSheetHeight!, effectiveMaxHeight);
 
     // 只在高度有显著变化时更新UI
     final currentHeight = _currentSheetHeight ?? _initialSheetHeight!;
@@ -333,7 +342,6 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
       });
     }
   }
-
 
   /// 如果有豆瓣ID，则加载豆瓣详情
   void _loadDoubanDetailsIfNeeded() {
@@ -354,7 +362,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   /// 加载豆瓣详情
   Future<void> _loadDoubanDetails(String doubanId) async {
     if (_isLoadingDoubanDetails) return;
-    
+
     setState(() {
       _isLoadingDoubanDetails = true;
     });
@@ -369,10 +377,11 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         setState(() {
           _doubanDetails = response.data;
           // 只有在初始高度时才显示箭头提示
-          _showScrollIndicator = _hasInitialHeightCaptured && 
-              (_currentSheetHeight == null || _currentSheetHeight == _initialSheetHeight);
+          _showScrollIndicator = _hasInitialHeightCaptured &&
+              (_currentSheetHeight == null ||
+                  _currentSheetHeight == _initialSheetHeight);
         });
-        
+
         // 豆瓣详情加载完成后，重新计算基于内容的最大高度
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _calculateContentBasedMaxHeight();
@@ -390,7 +399,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   /// 加载 Bangumi 详情
   Future<void> _loadBangumiDetails(String bangumiId) async {
     if (_isLoadingBangumiDetails) return;
-    
+
     setState(() {
       _isLoadingBangumiDetails = true;
     });
@@ -405,10 +414,11 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         setState(() {
           _bangumiDetails = response.data;
           // 只有在初始高度时才显示箭头提示
-          _showScrollIndicator = _hasInitialHeightCaptured && 
-              (_currentSheetHeight == null || _currentSheetHeight == _initialSheetHeight);
+          _showScrollIndicator = _hasInitialHeightCaptured &&
+              (_currentSheetHeight == null ||
+                  _currentSheetHeight == _initialSheetHeight);
         });
-        
+
         // Bangumi 详情加载完成后，重新计算基于内容的最大高度
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _calculateContentBasedMaxHeight();
@@ -431,21 +441,28 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           future: getImageUrl(widget.videoInfo.cover, widget.videoInfo.source),
           builder: (context, snapshot) {
             final String thumbUrl = snapshot.data ?? widget.videoInfo.cover;
-            final headers = getImageRequestHeaders(thumbUrl, widget.videoInfo.source);
-            
+            final headers =
+                getImageRequestHeaders(thumbUrl, widget.videoInfo.source);
+
             return GestureDetector(
               behavior: HitTestBehavior.translucent,
               onPanStart: (details) {
                 // 拖动开始时，确保当前高度存在
-                if ((_doubanDetails != null || _bangumiDetails != null) && _initialSheetHeight != null && _currentSheetHeight == null) {
+                if ((_doubanDetails != null || _bangumiDetails != null) &&
+                    _initialSheetHeight != null &&
+                    _currentSheetHeight == null) {
                   _currentSheetHeight = _initialSheetHeight;
                 }
               },
               onPanUpdate: (details) {
-                if ((_doubanDetails != null || _bangumiDetails != null) && _initialSheetHeight != null) {
+                if ((_doubanDetails != null || _bangumiDetails != null) &&
+                    _initialSheetHeight != null) {
                   // 检查是否应该响应拖拽
-                  final isAtMaxHeight = _currentSheetHeight != null && _currentSheetHeight! >= (_contentBasedMaxHeight ?? _maxSheetHeight) - 1;
-                  final isScrollAtTop = !_scrollController.hasClients || _scrollController.offset <= 0;
+                  final isAtMaxHeight = _currentSheetHeight != null &&
+                      _currentSheetHeight! >=
+                          (_contentBasedMaxHeight ?? _maxSheetHeight) - 1;
+                  final isScrollAtTop = !_scrollController.hasClients ||
+                      _scrollController.offset <= 0;
                   final isDraggingUp = details.delta.dy < 0; // 向上拖拽
                   final isDraggingDown = details.delta.dy > 0; // 向下拖拽
 
@@ -455,63 +472,79 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                   }
 
                   // 如果已经在最大高度且内容可滚动且不在顶部，并且是向上拖拽，则不响应
-                  if (isAtMaxHeight && _scrollController.hasClients && !isScrollAtTop && isDraggingUp) {
+                  if (isAtMaxHeight &&
+                      _scrollController.hasClients &&
+                      !isScrollAtTop &&
+                      isDraggingUp) {
                     return;
                   }
 
                   // 在已展开+到顶+向下拖拽时，锁定内部滚动，让外层接管
-                  final shouldLockInnerScroll = isAtMaxHeight && isScrollAtTop && isDraggingDown;
+                  final shouldLockInnerScroll =
+                      isAtMaxHeight && isScrollAtTop && isDraggingDown;
                   if (shouldLockInnerScroll && !_lockInnerScroll) {
                     _lockInnerScroll = true;
                     _isInCollapsePhase = true; // 开始收起阶段
                   }
 
                   final delta = -details.delta.dy; // 负值表示向上拖拽
-                  final newHeight = (_currentSheetHeight ?? _initialSheetHeight!) + delta;
+                  final newHeight =
+                      (_currentSheetHeight ?? _initialSheetHeight!) + delta;
 
                   // 使用内容基础的最大高度，如果没有则使用屏幕基础的最大高度
-                  final effectiveMaxHeight = _contentBasedMaxHeight ?? _maxSheetHeight;
+                  final effectiveMaxHeight =
+                      _contentBasedMaxHeight ?? _maxSheetHeight;
 
                   // iOS 二段式滑动逻辑
                   if (_isIOS && _isInCollapsePhase) {
                     // 第一阶段：从最大高度收起到初始高度
-                    if (isDraggingDown && _currentSheetHeight! > _initialSheetHeight!) {
+                    if (isDraggingDown &&
+                        _currentSheetHeight! > _initialSheetHeight!) {
                       // 使用高效的拖拽高度更新
-                      _updateDragHeight(newHeight, effectiveMaxHeight, isDraggingDown);
+                      _updateDragHeight(
+                          newHeight, effectiveMaxHeight, isDraggingDown);
                       return;
                     }
 
                     // 如果已经到达初始高度，继续向下拖拽则进入第二阶段（关闭弹窗）
-                    if (isDraggingDown && _currentSheetHeight! <= _initialSheetHeight! + 1) {
+                    if (isDraggingDown &&
+                        _currentSheetHeight! <= _initialSheetHeight! + 1) {
                       // 第二阶段：从初始高度继续向下拖拽，超过阈值则关闭
-                      if (newHeight < _initialSheetHeight! - _dismissDragThreshold) {
+                      if (newHeight <
+                          _initialSheetHeight! - _dismissDragThreshold) {
                         widget.onClose();
                         return;
                       }
                       // 否则保持在初始高度
-                      _updateDragHeight(_initialSheetHeight!, effectiveMaxHeight, isDraggingDown);
+                      _updateDragHeight(_initialSheetHeight!,
+                          effectiveMaxHeight, isDraggingDown);
                       return;
                     }
                   } else {
                     // 使用高效的拖拽高度更新
-                    _updateDragHeight(newHeight, effectiveMaxHeight, isDraggingDown);
+                    _updateDragHeight(
+                        newHeight, effectiveMaxHeight, isDraggingDown);
                   }
                 }
               },
               onPanEnd: (details) {
                 // 拖动结束时的吸附逻辑
-                if ((_doubanDetails != null || _bangumiDetails != null) && _initialSheetHeight != null && _currentSheetHeight != null) {
+                if ((_doubanDetails != null || _bangumiDetails != null) &&
+                    _initialSheetHeight != null &&
+                    _currentSheetHeight != null) {
                   final velocity = details.velocity.pixelsPerSecond.dy; // 向下为正
-                  final effectiveMaxHeight = _contentBasedMaxHeight ?? _maxSheetHeight;
-                  
+                  final effectiveMaxHeight =
+                      _contentBasedMaxHeight ?? _maxSheetHeight;
+
                   // iOS 二段式滑动结束处理
                   if (_isIOS && _isInCollapsePhase) {
                     // 如果在初始高度附近并快速向下，关闭弹窗
-                    if (_currentSheetHeight! <= _initialSheetHeight! + 1 && velocity > _dismissVelocityThreshold) {
+                    if (_currentSheetHeight! <= _initialSheetHeight! + 1 &&
+                        velocity > _dismissVelocityThreshold) {
                       widget.onClose();
                       return;
                     }
-                    
+
                     // 如果还在收起阶段（高度大于初始高度），吸附到初始高度
                     if (_currentSheetHeight! > _initialSheetHeight! + 1) {
                       _animateToHeight(_initialSheetHeight!);
@@ -522,11 +555,12 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                   } else {
                     // 非iOS或非收起阶段的正常逻辑
                     // 如果在初始高度附近并快速向下，关闭弹窗
-                    if (_currentSheetHeight! <= _initialSheetHeight! + 1 && velocity > _dismissVelocityThreshold) {
+                    if (_currentSheetHeight! <= _initialSheetHeight! + 1 &&
+                        velocity > _dismissVelocityThreshold) {
                       widget.onClose();
                       return;
                     }
-                    
+
                     // iOS 需要更敏感的阈值，因为 bouncing 效果会消耗一些速度
                     final velocityThreshold = _isIOS ? 400.0 : 800.0;
                     final negativeVelocityThreshold = _isIOS ? -400.0 : -800.0;
@@ -545,7 +579,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                       });
                     }
                   }
-                  
+
                   // 拖拽结束后，解除内部滚动锁并重置所有状态
                   setState(() {
                     if (_lockInnerScroll) {
@@ -564,7 +598,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                 ),
                 height: _currentSheetHeight,
                 decoration: BoxDecoration(
-                  color: themeService.isDarkMode 
+                  color: themeService.isDarkMode
                       ? const Color(0xFF2C2C2C)
                       : Colors.white,
                   borderRadius: const BorderRadius.only(
@@ -579,29 +613,38 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                     ),
                   ],
                 ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 可滚动内容 + 悬浮下滑箭头
-                  Flexible(
-                    child: Stack(
-                      children: [
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 可滚动内容 + 悬浮下滑箭头
+                    Flexible(
+                      child: Stack(
+                        children: [
                           // 使用 ClipRect 确保内容不会溢出
                           ClipRect(
                             child: NotificationListener<ScrollNotification>(
                               onNotification: (notification) {
                                 // 监听过度滚动通知，作为备用方案
                                 if (notification is OverscrollNotification) {
-                                  final isAtTop = notification.metrics.pixels <= (_isIOS ? 1.0 : 0.0);
-                                  final isOverscrollingDown = notification.overscroll > 0;
+                                  final isAtTop = notification.metrics.pixels <=
+                                      (_isIOS ? 1.0 : 0.0);
+                                  final isOverscrollingDown =
+                                      notification.overscroll > 0;
                                   final velocity = notification.velocity;
 
                                   // iOS 需要更宽松的条件，因为 bouncing 效果
-                                  final velocityThreshold = _isIOS ? 400.0 : 800.0;
+                                  final velocityThreshold =
+                                      _isIOS ? 400.0 : 800.0;
 
-                                  if (isAtTop && isOverscrollingDown && velocity > velocityThreshold) {
-                                    final isAtMaxHeight = _currentSheetHeight != null &&
-                                        _currentSheetHeight! >= (_contentBasedMaxHeight ?? _maxSheetHeight) - 1;
+                                  if (isAtTop &&
+                                      isOverscrollingDown &&
+                                      velocity > velocityThreshold) {
+                                    final isAtMaxHeight =
+                                        _currentSheetHeight != null &&
+                                            _currentSheetHeight! >=
+                                                (_contentBasedMaxHeight ??
+                                                        _maxSheetHeight) -
+                                                    1;
 
                                     if (isAtMaxHeight) {
                                       _animateToHeight(_initialSheetHeight!);
@@ -618,228 +661,313 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                                 controller: _scrollController,
                                 // 滚动物理控制：使用自定义物理处理展开状态下的顶部向下拖拽
                                 physics: (() {
-                                  final isAtMaxHeight = _currentSheetHeight != null && 
-                                      _currentSheetHeight! >= (_contentBasedMaxHeight ?? _maxSheetHeight) - 1;
-                                  
+                                  final isAtMaxHeight =
+                                      _currentSheetHeight != null &&
+                                          _currentSheetHeight! >=
+                                              (_contentBasedMaxHeight ??
+                                                      _maxSheetHeight) -
+                                                  1;
+
                                   // 当菜单高度小于最大高度时，完全禁用滚动让拖拽控制高度
-                                  final shouldCompletelyDisable = (_currentSheetHeight != null && 
-                                      (_contentBasedMaxHeight == null || _currentSheetHeight! < _contentBasedMaxHeight!)) 
-                                      || _lockInnerScroll;
-                                  
+                                  final shouldCompletelyDisable =
+                                      (_currentSheetHeight != null &&
+                                              (_contentBasedMaxHeight == null ||
+                                                  _currentSheetHeight! <
+                                                      _contentBasedMaxHeight!)) ||
+                                          _lockInnerScroll;
+
                                   if (shouldCompletelyDisable) {
                                     return const NeverScrollableScrollPhysics();
                                   }
-                                  
+
                                   // 使用自定义物理，在展开状态下处理顶部向下拖拽
                                   return CollapsibleScrollPhysics(
                                     isAtMaxHeight: isAtMaxHeight,
-                                    onCollapseTriggered: _handleCollapseFromScroll,
+                                    onCollapseTriggered:
+                                        _handleCollapseFromScroll,
                                     isIOS: _isIOS,
                                   );
                                 })(),
-                              child: Container(
-                                key: _fullContentKey,
-                                child: Column(
-                                  children: [
-                                  // 头部信息区域
-                                  Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      children: [
-                                        // 缩略图
-                                        GestureDetector(
-                                          onTap: () {
-                                            FullscreenImageViewer.show(
-                                              context,
-                                              imageUrl: thumbUrl,
-                                              source: widget.videoInfo.source,
-                                              title: widget.videoInfo.title,
-                                            );
-                                          },
-                                          child: Container(
-                                            width: 60,
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.1),
-                                                  blurRadius: 4,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: CachedNetworkImage(
-                                                imageUrl: thumbUrl,
-                                                httpHeaders: headers,
-                                                fit: BoxFit.cover,
-                                                // 优化图片加载，避免动画卡顿
-                                                memCacheWidth: 120, // 限制内存缓存大小
-                                                memCacheHeight: 160,
-                                                fadeInDuration: const Duration(milliseconds: 150), // 更快的淡入动画
-                                                fadeOutDuration: const Duration(milliseconds: 100),
-                                                placeholder: (context, url) => Container(
-                                                  color: themeService.isDarkMode
-                                                      ? const Color(0xFF333333)
-                                                      : Colors.grey[300],
-                                                  child: Icon(
-                                                    Icons.movie,
-                                                    color: themeService.isDarkMode
-                                                        ? const Color(0xFF666666)
-                                                        : Colors.grey,
-                                                    size: 24,
-                                                  ),
-                                                ),
-                                                errorWidget: (context, url, error) => Container(
-                                                  color: themeService.isDarkMode
-                                                      ? const Color(0xFF333333)
-                                                      : Colors.grey[300],
-                                                  child: Icon(
-                                                    Icons.movie,
-                                                    color: themeService.isDarkMode
-                                                        ? const Color(0xFF666666)
-                                                        : Colors.grey,
-                                                    size: 24,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      
-                                      const SizedBox(width: 12),
-                                      
-                                      // 标题和分类信息
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Container(
+                                  key: _fullContentKey,
+                                  child: Column(
+                                    children: [
+                                      // 头部信息区域
+                                      Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Row(
                                           children: [
-                                            // 标题
-                                            Text(
-                                              widget.videoInfo.title,
-                                              style: FontUtils.poppins(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                                color: themeService.isDarkMode 
-                                                    ? const Color(0xFFFFFFFF)
-                                                    : const Color(0xFF2C2C2C),
+                                            // 缩略图
+                                            GestureDetector(
+                                              onTap: () {
+                                                FullscreenImageViewer.show(
+                                                  context,
+                                                  imageUrl: thumbUrl,
+                                                  source:
+                                                      widget.videoInfo.source,
+                                                  title: widget.videoInfo.title,
+                                                );
+                                              },
+                                              child: Container(
+                                                width: 60,
+                                                height: 80,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withValues(
+                                                              alpha: 0.1),
+                                                      blurRadius: 4,
+                                                      offset:
+                                                          const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: thumbUrl,
+                                                    httpHeaders: headers,
+                                                    fit: BoxFit.cover,
+                                                    // 优化图片加载，避免动画卡顿
+                                                    memCacheWidth:
+                                                        120, // 限制内存缓存大小
+                                                    memCacheHeight: 160,
+                                                    fadeInDuration:
+                                                        const Duration(
+                                                            milliseconds:
+                                                                150), // 更快的淡入动画
+                                                    fadeOutDuration:
+                                                        const Duration(
+                                                            milliseconds: 100),
+                                                    placeholder:
+                                                        (context, url) =>
+                                                            Container(
+                                                      color: themeService
+                                                              .isDarkMode
+                                                          ? const Color(
+                                                              0xFF333333)
+                                                          : Colors.grey[300],
+                                                      child: Icon(
+                                                        Icons.movie,
+                                                        color: themeService
+                                                                .isDarkMode
+                                                            ? const Color(
+                                                                0xFF666666)
+                                                            : Colors.grey,
+                                                        size: 24,
+                                                      ),
+                                                    ),
+                                                    errorWidget:
+                                                        (context, url, error) =>
+                                                            Container(
+                                                      color: themeService
+                                                              .isDarkMode
+                                                          ? const Color(
+                                                              0xFF333333)
+                                                          : Colors.grey[300],
+                                                      child: Icon(
+                                                        Icons.movie,
+                                                        color: themeService
+                                                                .isDarkMode
+                                                            ? const Color(
+                                                                0xFF666666)
+                                                            : Colors.grey,
+                                                        size: 24,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            
-                                            const SizedBox(height: 6),
-                                            
-                            // 源名称标签或播放源数量
-                            (widget.videoInfo.source == 'douban' || widget.videoInfo.source == 'bangumi')
-                                ? // 豆瓣或Bangumi来源：纯文本，无边框
-                                  Text(
-                                    widget.videoInfo.source == 'douban' ? '来自豆瓣' : '来自 Bangumi',
-                                    style: FontUtils.poppins(
-                                      fontSize: 12,
-                                      color: themeService.isDarkMode 
-                                          ? const Color(0xFF999999)
-                                          : const Color(0xFF666666),
-                                    ),
-                                  )
-                                : // 聚合来源：显示播放源数量并可点击
-                                  widget.from == 'agg'
-                                      ? GestureDetector(
-                                          onTap: _showSourcesDialog,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                '共 ${widget.videoInfo.sourceName.split(', ').length} 个播放源',
-                                                style: FontUtils.poppins(
-                                                  fontSize: 12,
-                                                  color: themeService.isDarkMode 
+
+                                            const SizedBox(width: 12),
+
+                                            // 标题和分类信息
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  // 标题
+                                                  Text(
+                                                    widget.videoInfo.title,
+                                                    style: FontUtils.poppins(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: themeService
+                                                              .isDarkMode
+                                                          ? const Color(
+                                                              0xFFFFFFFF)
+                                                          : const Color(
+                                                              0xFF2C2C2C),
+                                                    ),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+
+                                                  const SizedBox(height: 6),
+
+                                                  // 源名称标签或播放源数量
+                                                  (widget.videoInfo.source ==
+                                                              'douban' ||
+                                                          widget.videoInfo
+                                                                  .source ==
+                                                              'bangumi')
+                                                      ? // 豆瓣或Bangumi来源：纯文本，无边框
+                                                      Text(
+                                                          widget.videoInfo
+                                                                      .source ==
+                                                                  'douban'
+                                                              ? '来自豆瓣'
+                                                              : '来自 Bangumi',
+                                                          style:
+                                                              FontUtils.poppins(
+                                                            fontSize: 12,
+                                                            color: themeService
+                                                                    .isDarkMode
+                                                                ? const Color(
+                                                                    0xFF999999)
+                                                                : const Color(
+                                                                    0xFF666666),
+                                                          ),
+                                                        )
+                                                      : // 聚合来源：显示播放源数量并可点击
+                                                      widget.from == 'agg'
+                                                          ? GestureDetector(
+                                                              onTap:
+                                                                  _showSourcesDialog,
+                                                              child: Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                children: [
+                                                                  Text(
+                                                                    '共 ${widget.videoInfo.sourceName.split(', ').length} 个播放源',
+                                                                    style: FontUtils
+                                                                        .poppins(
+                                                                      fontSize:
+                                                                          12,
+                                                                      color: themeService
+                                                                              .isDarkMode
+                                                                          ? const Color(
+                                                                              0xFF999999)
+                                                                          : const Color(
+                                                                              0xFF666666),
+                                                                    ),
+                                                                  ),
+                                                                  const SizedBox(
+                                                                      width: 4),
+                                                                  Icon(
+                                                                    Icons
+                                                                        .chevron_right,
+                                                                    size: 16,
+                                                                    color: themeService
+                                                                            .isDarkMode
+                                                                        ? const Color(
+                                                                            0xFF999999)
+                                                                        : const Color(
+                                                                            0xFF666666),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            )
+                                                          : // 其他来源：带边框的标签
+                                                          Container(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 4,
+                                                              ),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                border:
+                                                                    Border.all(
+                                                                  color: themeService
+                                                                          .isDarkMode
+                                                                      ? const Color(
+                                                                          0xFF666666)
+                                                                      : const Color(
+                                                                          0xFFE0E0E0),
+                                                                  width: 1,
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            4),
+                                                              ),
+                                                              child: Text(
+                                                                widget.videoInfo
+                                                                    .sourceName,
+                                                                style: FontUtils
+                                                                    .poppins(
+                                                                  fontSize: 12,
+                                                                  color: themeService
+                                                                          .isDarkMode
+                                                                      ? const Color(
+                                                                          0xFF999999)
+                                                                      : const Color(
+                                                                          0xFF666666),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                ],
+                                              ),
+                                            ),
+
+                                            // 关闭按钮
+                                            GestureDetector(
+                                              onTap: widget.onClose,
+                                              child: Container(
+                                                width: 32,
+                                                height: 32,
+                                                child: Icon(
+                                                  Icons.close,
+                                                  size: 18,
+                                                  color: themeService.isDarkMode
                                                       ? const Color(0xFF999999)
                                                       : const Color(0xFF666666),
                                                 ),
                                               ),
-                                              const SizedBox(width: 4),
-                                              Icon(
-                                                Icons.chevron_right,
-                                                size: 16,
-                                                color: themeService.isDarkMode 
-                                                    ? const Color(0xFF999999)
-                                                    : const Color(0xFF666666),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      : // 其他来源：带边框的标签
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: themeService.isDarkMode 
-                                                  ? const Color(0xFF666666)
-                                                  : const Color(0xFFE0E0E0),
-                                              width: 1,
                                             ),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            widget.videoInfo.sourceName,
-                                            style: FontUtils.poppins(
-                                              fontSize: 12,
-                                              color: themeService.isDarkMode 
-                                                  ? const Color(0xFF999999)
-                                                  : const Color(0xFF666666),
-                                            ),
-                                          ),
-                                        ),
                                           ],
                                         ),
                                       ),
-                                      
-                                      // 关闭按钮
-                                      GestureDetector(
-                                        onTap: widget.onClose,
-                                        child: Container(
-                                          width: 32,
-                                          height: 32,
-                                          child: Icon(
-                                            Icons.close,
-                                            size: 18,
-                                            color: themeService.isDarkMode 
-                                                ? const Color(0xFF999999)
-                                                : const Color(0xFF666666),
-                                          ),
-                                        ),
-                                      ),
+
+                                      // 菜单选项
+                                      _buildMenuOptions(context, themeService),
+
+                                      // 豆瓣详情区域（仅在加载完成后展示）
+                                      if (_doubanDetails != null)
+                                        _buildDoubanDetailsSection(
+                                            context, themeService),
+
+                                      // Bangumi 详情区域（仅在加载完成后展示）
+                                      if (_bangumiDetails != null)
+                                        _buildBangumiDetailsSection(
+                                            context, themeService),
+
+                                      // 底部安全区域
+                                      SizedBox(
+                                          height: MediaQuery.of(context)
+                                              .padding
+                                              .bottom),
                                     ],
                                   ),
-                                  ),
-                                  
-                                  // 菜单选项
-                                  _buildMenuOptions(context, themeService),
-                                  
-                                  // 豆瓣详情区域（仅在加载完成后展示）
-                                  if (_doubanDetails != null)
-                                    _buildDoubanDetailsSection(context, themeService),
-                                  
-                                  // Bangumi 详情区域（仅在加载完成后展示）
-                                  if (_bangumiDetails != null)
-                                    _buildBangumiDetailsSection(context, themeService),
-                                  
-                                    // 底部安全区域
-                                    SizedBox(height: MediaQuery.of(context).padding.bottom),
-                                  ],
                                 ),
-                              ),
                               ),
                             ),
                           ),
                           // 悬浮箭头提示
-                          if (_showScrollIndicator && (_doubanDetails != null || _bangumiDetails != null))
+                          if (_showScrollIndicator &&
+                              (_doubanDetails != null ||
+                                  _bangumiDetails != null))
                             Positioned(
                               bottom: 12.0,
                               left: 0,
@@ -855,8 +983,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                       ),
                     ),
                   ],
+                ),
               ),
-            ),
             );
           },
         );
@@ -877,7 +1005,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             child: Icon(
               Icons.keyboard_arrow_down,
               size: 36, // 增大基础尺寸
-              color: themeService.isDarkMode 
+              color: themeService.isDarkMode
                   ? const Color(0xFF666666)
                   : const Color(0xFFCCCCCC),
             ),
@@ -888,7 +1016,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   }
 
   /// 构建豆瓣详情区域
-  Widget _buildDoubanDetailsSection(BuildContext context, ThemeService themeService) {
+  Widget _buildDoubanDetailsSection(
+      BuildContext context, ThemeService themeService) {
     if (_isLoadingDoubanDetails) {
       return const SizedBox.shrink();
     }
@@ -906,31 +1035,32 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           Container(
             height: 1,
             margin: const EdgeInsets.only(bottom: 16),
-            color: themeService.isDarkMode 
+            color: themeService.isDarkMode
                 ? const Color(0xFF404040)
                 : const Color(0xFFE0E0E0),
           ),
-          
+
           // 豆瓣详情标题
           Text(
             '豆瓣简介',
             style: FontUtils.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: themeService.isDarkMode 
+              color: themeService.isDarkMode
                   ? const Color(0xFFFFFFFF)
                   : const Color(0xFF2C2C2C),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // 评分和年份
           Row(
             children: [
               if (_doubanDetails!.rate != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFB800).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -961,7 +1091,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: themeService.isDarkMode 
+                    color: themeService.isDarkMode
                         ? const Color(0xFF666666)
                         : const Color(0xFFE0E0E0),
                     width: 1,
@@ -972,7 +1102,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                   _doubanDetails!.year,
                   style: FontUtils.poppins(
                     fontSize: 14,
-                    color: themeService.isDarkMode 
+                    color: themeService.isDarkMode
                         ? const Color(0xFF999999)
                         : const Color(0xFF666666),
                   ),
@@ -980,54 +1110,61 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               ),
             ],
           ),
-          
+
           // 类型标签
           if (_doubanDetails!.genres.isNotEmpty) ...[
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _doubanDetails!.genres.take(5).map((genre) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: themeService.isDarkMode 
-                      ? const Color(0xFF404040)
-                      : const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  genre,
-                  style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: themeService.isDarkMode 
-                        ? const Color(0xFFCCCCCC)
-                        : const Color(0xFF666666),
-                  ),
-                ),
-              )).toList(),
+              children: _doubanDetails!.genres
+                  .take(5)
+                  .map((genre) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: themeService.isDarkMode
+                              ? const Color(0xFF404040)
+                              : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          genre,
+                          style: FontUtils.poppins(
+                            fontSize: 12,
+                            color: themeService.isDarkMode
+                                ? const Color(0xFFCCCCCC)
+                                : const Color(0xFF666666),
+                          ),
+                        ),
+                      ))
+                  .toList(),
             ),
           ],
-          
+
           // 导演和演员
           if (_doubanDetails!.directors.isNotEmpty) ...[
             const SizedBox(height: 16),
-            _buildDetailRow('导演', _doubanDetails!.directors.join(', '), themeService),
+            _buildDetailRow(
+                '导演', _doubanDetails!.directors.join(', '), themeService),
           ],
-          
+
           if (_doubanDetails!.actors.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildDetailRow('主演', _doubanDetails!.actors.take(3).join(', '), themeService),
+            _buildDetailRow(
+                '主演', _doubanDetails!.actors.take(3).join(', '), themeService),
           ],
-          
+
           // 简介
-          if (_doubanDetails!.summary != null && _doubanDetails!.summary!.isNotEmpty) ...[
+          if (_doubanDetails!.summary != null &&
+              _doubanDetails!.summary!.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               '简介',
               style: FontUtils.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: themeService.isDarkMode 
+                color: themeService.isDarkMode
                     ? const Color(0xFFFFFFFF)
                     : const Color(0xFF2C2C2C),
               ),
@@ -1038,13 +1175,13 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               style: FontUtils.poppins(
                 fontSize: 14,
                 height: 1.5,
-                color: themeService.isDarkMode 
+                color: themeService.isDarkMode
                     ? const Color(0xFFCCCCCC)
                     : const Color(0xFF666666),
               ),
             ),
           ],
-          
+
           const SizedBox(height: 16),
         ],
       ),
@@ -1052,7 +1189,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   }
 
   /// 构建 Bangumi 详情区域
-  Widget _buildBangumiDetailsSection(BuildContext context, ThemeService themeService) {
+  Widget _buildBangumiDetailsSection(
+      BuildContext context, ThemeService themeService) {
     if (_isLoadingBangumiDetails) {
       return const SizedBox.shrink();
     }
@@ -1070,31 +1208,32 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           Container(
             height: 1,
             margin: const EdgeInsets.only(bottom: 16),
-            color: themeService.isDarkMode 
+            color: themeService.isDarkMode
                 ? const Color(0xFF404040)
                 : const Color(0xFFE0E0E0),
           ),
-          
+
           // Bangumi 详情标题
           Text(
             'Bangumi 简介',
             style: FontUtils.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: themeService.isDarkMode 
+              color: themeService.isDarkMode
                   ? const Color(0xFFFFFFFF)
                   : const Color(0xFF2C2C2C),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // 评分和年份
           Row(
             children: [
               if (_bangumiDetails!.rating.score > 0) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE91E63).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -1123,10 +1262,11 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               ],
               if (_bangumiDetails!.date != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: themeService.isDarkMode 
+                      color: themeService.isDarkMode
                           ? const Color(0xFF666666)
                           : const Color(0xFFE0E0E0),
                       width: 1,
@@ -1137,7 +1277,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                     _bangumiDetails!.date!.split('-').first,
                     style: FontUtils.poppins(
                       fontSize: 14,
-                      color: themeService.isDarkMode 
+                      color: themeService.isDarkMode
                           ? const Color(0xFF999999)
                           : const Color(0xFF666666),
                     ),
@@ -1146,37 +1286,41 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               ],
             ],
           ),
-          
+
           // 标签
           if (_bangumiDetails!.metaTags.isNotEmpty) ...[
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _bangumiDetails!.metaTags.take(5).map((tag) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: themeService.isDarkMode 
-                      ? const Color(0xFF404040)
-                      : const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  tag,
-                  style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: themeService.isDarkMode 
-                        ? const Color(0xFFCCCCCC)
-                        : const Color(0xFF666666),
-                  ),
-                ),
-              )).toList(),
+              children: _bangumiDetails!.metaTags
+                  .take(5)
+                  .map((tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: themeService.isDarkMode
+                              ? const Color(0xFF404040)
+                              : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          tag,
+                          style: FontUtils.poppins(
+                            fontSize: 12,
+                            color: themeService.isDarkMode
+                                ? const Color(0xFFCCCCCC)
+                                : const Color(0xFF666666),
+                          ),
+                        ),
+                      ))
+                  .toList(),
             ),
           ],
-          
+
           // 从infobox中提取相关信息
           ..._buildBangumiInfoboxDetails(themeService),
-          
+
           // 简介
           if (_bangumiDetails!.summary.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -1185,7 +1329,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               style: FontUtils.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: themeService.isDarkMode 
+                color: themeService.isDarkMode
                     ? const Color(0xFFFFFFFF)
                     : const Color(0xFF2C2C2C),
               ),
@@ -1196,13 +1340,13 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               style: FontUtils.poppins(
                 fontSize: 14,
                 height: 1.5,
-                color: themeService.isDarkMode 
+                color: themeService.isDarkMode
                     ? const Color(0xFFCCCCCC)
                     : const Color(0xFF666666),
               ),
             ),
           ],
-          
+
           const SizedBox(height: 16),
         ],
       ),
@@ -1210,7 +1354,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
   }
 
   /// 构建详情行
-  Widget _buildDetailRow(String label, String value, ThemeService themeService) {
+  Widget _buildDetailRow(
+      String label, String value, ThemeService themeService) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1220,7 +1365,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             label,
             style: FontUtils.poppins(
               fontSize: 14,
-              color: themeService.isDarkMode 
+              color: themeService.isDarkMode
                   ? const Color(0xFF999999)
                   : const Color(0xFF666666),
             ),
@@ -1231,7 +1376,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             value,
             style: FontUtils.poppins(
               fontSize: 14,
-              color: themeService.isDarkMode 
+              color: themeService.isDarkMode
                   ? const Color(0xFFCCCCCC)
                   : const Color(0xFF333333),
             ),
@@ -1248,7 +1393,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
     }
 
     List<Widget> widgets = [];
-    
+
     // 定义我们感兴趣的字段映射
     final Map<String, String> fieldMapping = {
       '导演': '导演',
@@ -1271,7 +1416,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         if (parts.length >= 2) {
           final key = parts[0].trim();
           final value = parts.sublist(1).join(':').trim();
-          
+
           // 检查是否是我们感兴趣的字段
           for (final entry in fieldMapping.entries) {
             if (key.contains(entry.key)) {
@@ -1284,9 +1429,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
     }
 
     // 按优先级顺序展示信息
-    final List<String> priorityOrder = [
-      '原作', '导演', '脚本', '分镜', '演出'
-    ];
+    final List<String> priorityOrder = ['原作', '导演', '脚本', '分镜', '演出'];
 
     bool hasAddedContent = false;
     for (final field in priorityOrder) {
@@ -1297,13 +1440,13 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         } else {
           widgets.add(const SizedBox(height: 8));
         }
-        
+
         // 限制显示长度，避免过长
         String displayValue = parsedInfo[field]!;
         if (displayValue.length > 100) {
           displayValue = '${displayValue.substring(0, 100)}...';
         }
-        
+
         widgets.add(_buildDetailRow(field, displayValue, themeService));
       }
     }
@@ -1329,9 +1472,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               widget.onActionSelected(VideoMenuAction.play);
             },
           ),
-          
           _buildDivider(themeService),
-          
           _buildMenuItem(
             context,
             themeService,
@@ -1341,8 +1482,10 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             onTap: () async {
               widget.onClose();
               // 从videoInfo中获取doubanId，优先使用doubanId，如果为空或为0则使用id
-              final doubanId = (widget.videoInfo.doubanId != null && widget.videoInfo.doubanId!.isNotEmpty && widget.videoInfo.doubanId != "0") 
-                  ? widget.videoInfo.doubanId! 
+              final doubanId = (widget.videoInfo.doubanId != null &&
+                      widget.videoInfo.doubanId!.isNotEmpty &&
+                      widget.videoInfo.doubanId != "0")
+                  ? widget.videoInfo.doubanId!
                   : widget.videoInfo.id;
               await _openDoubanDetail(doubanId);
             },
@@ -1350,7 +1493,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         ],
       );
     }
-    
+
     // 如果是Bangumi来源，只显示播放和Bangumi详情
     if (widget.videoInfo.source == 'bangumi') {
       return Column(
@@ -1367,9 +1510,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               widget.onActionSelected(VideoMenuAction.play);
             },
           ),
-          
           _buildDivider(themeService),
-          
           _buildMenuItem(
             context,
             themeService,
@@ -1379,8 +1520,9 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             onTap: () async {
               widget.onClose();
               // 从videoInfo中获取bangumiId，优先使用bangumiId，如果为空或为0则使用id
-              final bangumiId = (widget.videoInfo.bangumiId != null && widget.videoInfo.bangumiId! > 0) 
-                  ? widget.videoInfo.bangumiId!.toString() 
+              final bangumiId = (widget.videoInfo.bangumiId != null &&
+                      widget.videoInfo.bangumiId! > 0)
+                  ? widget.videoInfo.bangumiId!.toString()
                   : widget.videoInfo.id;
               await _openBangumiDetail(bangumiId);
             },
@@ -1388,7 +1530,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         ],
       );
     }
-    
+
     // 如果是收藏场景，只显示播放和取消收藏
     if (widget.from == 'favorite') {
       return Column(
@@ -1405,9 +1547,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
               widget.onActionSelected(VideoMenuAction.play);
             },
           ),
-          
           _buildDivider(themeService),
-          
           _buildMenuItem(
             context,
             themeService,
@@ -1422,7 +1562,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         ],
       );
     }
-    
+
     // 如果是聚合场景，显示播放和豆瓣详情（如果有）
     if (widget.from == 'agg') {
       List<Widget> menuItems = [
@@ -1441,9 +1581,11 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           },
         ),
       ];
-      
+
       // 如果有豆瓣ID且不为0，添加豆瓣详情选项
-      if (widget.videoInfo.doubanId != null && widget.videoInfo.doubanId!.isNotEmpty && widget.videoInfo.doubanId != "0") {
+      if (widget.videoInfo.doubanId != null &&
+          widget.videoInfo.doubanId!.isNotEmpty &&
+          widget.videoInfo.doubanId != "0") {
         menuItems.addAll([
           _buildDivider(themeService),
           _buildMenuItem(
@@ -1459,10 +1601,10 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           ),
         ]);
       }
-      
+
       return Column(children: menuItems);
     }
-    
+
     // 如果是搜索场景，显示播放、收藏/取消收藏，如果有豆瓣ID则显示豆瓣详情
     if (widget.from == 'search') {
       List<Widget> menuItems = [
@@ -1478,9 +1620,9 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             widget.onActionSelected(VideoMenuAction.play);
           },
         ),
-        
+
         _buildDivider(themeService),
-        
+
         // 根据收藏状态动态显示收藏或取消收藏
         _buildMenuItem(
           context,
@@ -1490,13 +1632,17 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           title: widget.isFavorited ? '取消收藏' : '收藏',
           onTap: () {
             widget.onClose();
-            widget.onActionSelected(widget.isFavorited ? VideoMenuAction.unfavorite : VideoMenuAction.favorite);
+            widget.onActionSelected(widget.isFavorited
+                ? VideoMenuAction.unfavorite
+                : VideoMenuAction.favorite);
           },
         ),
       ];
-      
+
       // 如果有豆瓣ID且不为0，添加豆瓣详情选项
-      if (widget.videoInfo.doubanId != null && widget.videoInfo.doubanId!.isNotEmpty && widget.videoInfo.doubanId != "0") {
+      if (widget.videoInfo.doubanId != null &&
+          widget.videoInfo.doubanId!.isNotEmpty &&
+          widget.videoInfo.doubanId != "0") {
         menuItems.addAll([
           _buildDivider(themeService),
           _buildMenuItem(
@@ -1512,9 +1658,10 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           ),
         ]);
       }
-      
+
       // 如果有Bangumi ID且不为0，添加Bangumi详情选项
-      if (widget.videoInfo.bangumiId != null && widget.videoInfo.bangumiId! > 0) {
+      if (widget.videoInfo.bangumiId != null &&
+          widget.videoInfo.bangumiId! > 0) {
         menuItems.addAll([
           _buildDivider(themeService),
           _buildMenuItem(
@@ -1530,10 +1677,10 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           ),
         ]);
       }
-      
+
       return Column(children: menuItems);
     }
-    
+
     // 其他来源显示完整菜单
     return Column(
       children: [
@@ -1549,9 +1696,9 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
             widget.onActionSelected(VideoMenuAction.play);
           },
         ),
-        
+
         _buildDivider(themeService),
-        
+
         // 根据收藏状态动态显示收藏或取消收藏
         _buildMenuItem(
           context,
@@ -1561,12 +1708,14 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           title: widget.isFavorited ? '取消收藏' : '收藏',
           onTap: () {
             widget.onClose();
-            widget.onActionSelected(widget.isFavorited ? VideoMenuAction.unfavorite : VideoMenuAction.favorite);
+            widget.onActionSelected(widget.isFavorited
+                ? VideoMenuAction.unfavorite
+                : VideoMenuAction.favorite);
           },
         ),
-        
+
         _buildDivider(themeService),
-        
+
         _buildMenuItem(
           context,
           themeService,
@@ -1614,9 +1763,9 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                   color: iconColor,
                 ),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // 标题
               Expanded(
                 child: Text(
@@ -1624,20 +1773,20 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                   style: FontUtils.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: themeService.isDarkMode 
+                    color: themeService.isDarkMode
                         ? const Color(0xFFFFFFFF)
                         : const Color(0xFF2C2C2C),
                   ),
                 ),
               ),
-              
+
               // 副标题（集数信息）
               if (subtitle != null)
                 Text(
                   subtitle,
                   style: FontUtils.poppins(
                     fontSize: 14,
-                    color: themeService.isDarkMode 
+                    color: themeService.isDarkMode
                         ? const Color(0xFF999999)
                         : const Color(0xFF666666),
                   ),
@@ -1654,14 +1803,11 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: themeService.isDarkMode 
+      color: themeService.isDarkMode
           ? const Color(0xFF404040)
           : const Color(0xFFE0E0E0),
     );
   }
-
-
-  
 
   /// 获取集数副标题
   String? _getEpisodeSubtitle() {
@@ -1669,16 +1815,16 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
     if (widget.videoInfo.totalEpisodes <= 1) {
       return null;
     }
-    
+
     // 只有 from=playrecord 和 from=favorite 且 index 不为 0 的场景才显示集数信息
     if (widget.from == 'playrecord') {
       return '${widget.videoInfo.index}/${widget.videoInfo.totalEpisodes}';
     }
-    
+
     if (widget.from == 'favorite' && widget.videoInfo.index > 0) {
       return '${widget.videoInfo.index}/${widget.videoInfo.totalEpisodes}';
     }
-    
+
     // 其他所有场景都不显示集数信息
     return null;
   }
@@ -1688,7 +1834,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
     try {
       final url = 'https://movie.douban.com/subject/$doubanId';
       final uri = Uri.parse(url);
-      
+
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
@@ -1702,7 +1848,7 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
     try {
       final url = 'https://bgm.tv/subject/$bangumiId';
       final uri = Uri.parse(url);
-      
+
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
@@ -1778,7 +1924,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
                               },
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
                                 child: Row(
                                   children: [
                                     Text(
@@ -1821,5 +1968,4 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
       },
     );
   }
-
 }

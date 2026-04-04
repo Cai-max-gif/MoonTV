@@ -67,7 +67,7 @@ class DoubanService {
   static final DoubanCacheService _cacheService = DoubanCacheService();
   static bool _cacheInitialized = false;
   static String? _uniqueOrigin;
-  
+
   /// 生成唯一的 Origin 以避免统一限流
   static String _getUniqueOrigin() {
     if (_uniqueOrigin == null) {
@@ -84,12 +84,12 @@ class DoubanService {
         'api',
         'web',
       ];
-      
+
       // 随机选择域名和子域名组合
       final baseDomain = domains[random.nextInt(domains.length)];
       final subdomain = subdomains[random.nextInt(subdomains.length)];
       final randomId = random.nextInt(9999).toString().padLeft(4, '0');
-      
+
       _uniqueOrigin = 'https://$subdomain$randomId.$baseDomain';
     }
     return _uniqueOrigin!;
@@ -99,17 +99,20 @@ class DoubanService {
   static DoubanMovieDetails _parseDoubanHtmlDetails(String html, String id) {
     try {
       // 提取基本信息 - 标题
-      final titleRegex = RegExp(r'<h1[^>]*>[\s\S]*?<span[^>]*property="v:itemreviewed"[^>]*>([^<]+)</span>');
+      final titleRegex = RegExp(
+          r'<h1[^>]*>[\s\S]*?<span[^>]*property="v:itemreviewed"[^>]*>([^<]+)</span>');
       final titleMatch = titleRegex.firstMatch(html);
       final title = titleMatch?.group(1)?.trim() ?? '';
 
       // 提取海报
-      final posterRegex = RegExp(r'<a[^>]*class="nbgnbg"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"');
+      final posterRegex =
+          RegExp(r'<a[^>]*class="nbgnbg"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"');
       final posterMatch = posterRegex.firstMatch(html);
       final poster = posterMatch?.group(1) ?? '';
 
       // 提取评分
-      final ratingRegex = RegExp(r'<strong[^>]*class="ll rating_num"[^>]*property="v:average">([^<]+)</strong>');
+      final ratingRegex = RegExp(
+          r'<strong[^>]*class="ll rating_num"[^>]*property="v:average">([^<]+)</strong>');
       final ratingMatch = ratingRegex.firstMatch(html);
       final rate = ratingMatch?.group(1);
 
@@ -120,54 +123,89 @@ class DoubanService {
 
       // 提取导演
       List<String> directors = [];
-      final directorRegex = RegExp(r'<span class=["\x27]pl["\x27]>导演</span>:\s*<span class=["\x27]attrs["\x27]>(.*?)</span>');
+      final directorRegex = RegExp(
+          r'<span class=["\x27]pl["\x27]>导演</span>:\s*<span class=["\x27]attrs["\x27]>(.*?)</span>');
       final directorMatch = directorRegex.firstMatch(html);
       if (directorMatch != null) {
-        final directorLinks = RegExp(r'<a[^>]*>([^<]+)</a>').allMatches(directorMatch.group(1)!);
-        directors = directorLinks.map((match) => match.group(1)?.trim() ?? '').where((name) => name.isNotEmpty).toList();
+        final directorLinks =
+            RegExp(r'<a[^>]*>([^<]+)</a>').allMatches(directorMatch.group(1)!);
+        directors = directorLinks
+            .map((match) => match.group(1)?.trim() ?? '')
+            .where((name) => name.isNotEmpty)
+            .toList();
       }
 
       // 提取编剧
       List<String> screenwriters = [];
-      final writerRegex = RegExp(r'<span class=["\x27]pl["\x27]>编剧</span>:\s*<span class=["\x27]attrs["\x27]>(.*?)</span>');
+      final writerRegex = RegExp(
+          r'<span class=["\x27]pl["\x27]>编剧</span>:\s*<span class=["\x27]attrs["\x27]>(.*?)</span>');
       final writerMatch = writerRegex.firstMatch(html);
       if (writerMatch != null) {
-        final writerLinks = RegExp(r'<a[^>]*>([^<]+)</a>').allMatches(writerMatch.group(1)!);
-        screenwriters = writerLinks.map((match) => match.group(1)?.trim() ?? '').where((name) => name.isNotEmpty).toList();
+        final writerLinks =
+            RegExp(r'<a[^>]*>([^<]+)</a>').allMatches(writerMatch.group(1)!);
+        screenwriters = writerLinks
+            .map((match) => match.group(1)?.trim() ?? '')
+            .where((name) => name.isNotEmpty)
+            .toList();
       }
 
       // 提取主演
       List<String> actors = [];
-      final castRegex = RegExp(r'<span class=["\x27]pl["\x27]>主演</span>:\s*<span class=["\x27]attrs["\x27]>(.*?)</span>');
+      final castRegex = RegExp(
+          r'<span class=["\x27]pl["\x27]>主演</span>:\s*<span class=["\x27]attrs["\x27]>(.*?)</span>');
       final castMatch = castRegex.firstMatch(html);
       if (castMatch != null) {
-        final castLinks = RegExp(r'<a[^>]*>([^<]+)</a>').allMatches(castMatch.group(1)!);
-        actors = castLinks.map((match) => match.group(1)?.trim() ?? '').where((name) => name.isNotEmpty).toList();
+        final castLinks =
+            RegExp(r'<a[^>]*>([^<]+)</a>').allMatches(castMatch.group(1)!);
+        actors = castLinks
+            .map((match) => match.group(1)?.trim() ?? '')
+            .where((name) => name.isNotEmpty)
+            .toList();
       }
 
       // 提取类型
       final genreRegex = RegExp(r'<span[^>]*property="v:genre">([^<]+)</span>');
       final genreMatches = genreRegex.allMatches(html);
-      final genres = genreMatches.map((match) => match.group(1) ?? '').where((genre) => genre.isNotEmpty).toList();
+      final genres = genreMatches
+          .map((match) => match.group(1) ?? '')
+          .where((genre) => genre.isNotEmpty)
+          .toList();
 
       // 提取制片国家/地区
-      final countryRegex = RegExp(r'<span[^>]*class="pl">制片国家/地区:</span>([^<]+)');
+      final countryRegex =
+          RegExp(r'<span[^>]*class="pl">制片国家/地区:</span>([^<]+)');
       final countryMatch = countryRegex.firstMatch(html);
-      final countries = countryMatch?.group(1)?.trim().split('/').map((c) => c.trim()).where((c) => c.isNotEmpty).toList() ?? <String>[];
+      final countries = countryMatch
+              ?.group(1)
+              ?.trim()
+              .split('/')
+              .map((c) => c.trim())
+              .where((c) => c.isNotEmpty)
+              .toList() ??
+          <String>[];
 
       // 提取语言
       final languageRegex = RegExp(r'<span[^>]*class="pl">语言:</span>([^<]+)');
       final languageMatch = languageRegex.firstMatch(html);
-      final languages = languageMatch?.group(1)?.trim().split('/').map((l) => l.trim()).where((l) => l.isNotEmpty).toList() ?? <String>[];
+      final languages = languageMatch
+              ?.group(1)
+              ?.trim()
+              .split('/')
+              .map((l) => l.trim())
+              .where((l) => l.isNotEmpty)
+              .toList() ??
+          <String>[];
 
       // 提取首播/上映日期
       String? releaseDate;
-      final firstAiredRegex = RegExp(r'<span class="pl">首播:</span>\s*<span[^>]*property="v:initialReleaseDate"[^>]*content="([^"]*)"[^>]*>([^<]*)</span>');
+      final firstAiredRegex = RegExp(
+          r'<span class="pl">首播:</span>\s*<span[^>]*property="v:initialReleaseDate"[^>]*content="([^"]*)"[^>]*>([^<]*)</span>');
       final firstAiredMatch = firstAiredRegex.firstMatch(html);
       if (firstAiredMatch != null) {
         releaseDate = firstAiredMatch.group(1);
       } else {
-        final releaseDateRegex = RegExp(r'<span class="pl">上映日期:</span>\s*<span[^>]*property="v:initialReleaseDate"[^>]*content="([^"]*)"[^>]*>([^<]*)</span>');
+        final releaseDateRegex = RegExp(
+            r'<span class="pl">上映日期:</span>\s*<span[^>]*property="v:initialReleaseDate"[^>]*content="([^"]*)"[^>]*>([^<]*)</span>');
         final releaseDateMatch = releaseDateRegex.firstMatch(html);
         if (releaseDateMatch != null) {
           releaseDate = releaseDateMatch.group(1);
@@ -185,21 +223,26 @@ class DoubanService {
       // 提取时长 - 支持电影和剧集
       int? episodeLength;
       int? movieDuration;
-      
+
       // 先尝试提取剧集的单集片长
-      final singleEpisodeDurationRegex = RegExp(r'<span[^>]*class="pl">单集片长:</span>([^<]+)');
-      final singleEpisodeDurationMatch = singleEpisodeDurationRegex.firstMatch(html);
+      final singleEpisodeDurationRegex =
+          RegExp(r'<span[^>]*class="pl">单集片长:</span>([^<]+)');
+      final singleEpisodeDurationMatch =
+          singleEpisodeDurationRegex.firstMatch(html);
       if (singleEpisodeDurationMatch != null) {
-        episodeLength = int.tryParse(singleEpisodeDurationMatch.group(1)?.trim() ?? '');
+        episodeLength =
+            int.tryParse(singleEpisodeDurationMatch.group(1)?.trim() ?? '');
       } else {
         // 如果没有单集片长，尝试提取电影的总片长
-        final movieDurationRegex = RegExp(r'<span[^>]*class="pl">片长:</span>([^<]+)');
+        final movieDurationRegex =
+            RegExp(r'<span[^>]*class="pl">片长:</span>([^<]+)');
         final movieDurationMatch = movieDurationRegex.firstMatch(html);
         if (movieDurationMatch != null) {
-          movieDuration = int.tryParse(movieDurationMatch.group(1)?.trim() ?? '');
+          movieDuration =
+              int.tryParse(movieDurationMatch.group(1)?.trim() ?? '');
         }
       }
-      
+
       // 为了保持与现有代码的兼容性，将时长转换为字符串
       String? duration;
       if (episodeLength != null) {
@@ -210,36 +253,46 @@ class DoubanService {
 
       // 提取剧情简介 - 两个正则都匹配，选择内容更长的
       String? summary;
-      
+
       // 使用多行模式和非贪婪匹配来正确处理包含HTML标签的内容
-      final summaryRegex1 = RegExp(r'<span[^>]*class="all hidden">(.*?)</span>', multiLine: true, dotAll: true);
+      final summaryRegex1 = RegExp(r'<span[^>]*class="all hidden">(.*?)</span>',
+          multiLine: true, dotAll: true);
       final summaryMatch1 = summaryRegex1.firstMatch(html);
       String? summary1;
       if (summaryMatch1 != null) {
-        summary1 = summaryMatch1.group(1)
-            ?.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '|||LINEBREAK|||') // 先用特殊标记替换<br>
+        summary1 = summaryMatch1
+            .group(1)
+            ?.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false),
+                '|||LINEBREAK|||') // 先用特殊标记替换<br>
             .replaceAll(RegExp(r'<[^>]*>'), '') // 移除所有HTML标签
-            .replaceAll(RegExp(r'\s+'), ' ') // 去除重复空格，将所有空白字符（包括HTML中的\n）合并为单个空格
+            .replaceAll(
+                RegExp(r'\s+'), ' ') // 去除重复空格，将所有空白字符（包括HTML中的\n）合并为单个空格
             .replaceAll('|||LINEBREAK|||', '\n') // 将特殊标记恢复为换行符
             .trim()
             .split('\n') // 按换行符分割
             .join('\n'); // 重新组合
       }
-      
-      final summaryRegex2 = RegExp(r'<span[^>]*property="v:summary"[^>]*>(.*?)</span>', multiLine: true, dotAll: true);
+
+      final summaryRegex2 = RegExp(
+          r'<span[^>]*property="v:summary"[^>]*>(.*?)</span>',
+          multiLine: true,
+          dotAll: true);
       final summaryMatch2 = summaryRegex2.firstMatch(html);
       String? summary2;
       if (summaryMatch2 != null) {
-        summary2 = summaryMatch2.group(1)
-            ?.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '|||LINEBREAK|||') // 先用特殊标记替换<br>
+        summary2 = summaryMatch2
+            .group(1)
+            ?.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false),
+                '|||LINEBREAK|||') // 先用特殊标记替换<br>
             .replaceAll(RegExp(r'<[^>]*>'), '') // 移除所有HTML标签
-            .replaceAll(RegExp(r'\s+'), ' ') // 去除重复空格，将所有空白字符（包括HTML中的\n）合并为单个空格
+            .replaceAll(
+                RegExp(r'\s+'), ' ') // 去除重复空格，将所有空白字符（包括HTML中的\n）合并为单个空格
             .replaceAll('|||LINEBREAK|||', '\n') // 将特殊标记恢复为换行符
             .trim()
             .split('\n') // 按换行符分割
             .join('\n'); // 重新组合
       }
-      
+
       // 选择内容更长的简介
       if (summary1 != null && summary2 != null) {
         summary = summary1.length >= summary2.length ? summary1 : summary2;
@@ -253,41 +306,51 @@ class DoubanService {
       List<DoubanRecommendItem> recommends = [];
       try {
         // 查找推荐区域
-        final recommendationsRegex = RegExp(r'<div[^>]*id="recommendations"[^>]*>(.*?)</div>', multiLine: true, dotAll: true);
+        final recommendationsRegex = RegExp(
+            r'<div[^>]*id="recommendations"[^>]*>(.*?)</div>',
+            multiLine: true,
+            dotAll: true);
         final recommendationsMatch = recommendationsRegex.firstMatch(html);
-        
+
         if (recommendationsMatch != null) {
           final recommendationsContent = recommendationsMatch.group(1) ?? '';
-          
+
           // 提取所有推荐项目
-          final dlRegex = RegExp(r'<dl>(.*?)</dl>', multiLine: true, dotAll: true);
+          final dlRegex =
+              RegExp(r'<dl>(.*?)</dl>', multiLine: true, dotAll: true);
           final dlMatches = dlRegex.allMatches(recommendationsContent);
-          
+
           for (final dlMatch in dlMatches) {
             final dlContent = dlMatch.group(1) ?? '';
-            
+
             // 提取链接和海报
-            final linkRegex = RegExp(r'<a[^>]*href="https://movie\.douban\.com/subject/(\d+)/[^"]*"[^>]*>');
+            final linkRegex = RegExp(
+                r'<a[^>]*href="https://movie\.douban\.com/subject/(\d+)/[^"]*"[^>]*>');
             final linkMatch = linkRegex.firstMatch(dlContent);
-            
+
             // 提取海报图片
-            final imgRegex = RegExp(r'<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"');
+            final imgRegex =
+                RegExp(r'<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"');
             final imgMatch = imgRegex.firstMatch(dlContent);
-            
+
             // 提取评分
-            final rateRegex = RegExp(r'<span[^>]*class="subject-rate"[^>]*>([^<]*)</span>');
+            final rateRegex =
+                RegExp(r'<span[^>]*class="subject-rate"[^>]*>([^<]*)</span>');
             final rateMatch = rateRegex.firstMatch(dlContent);
-            
+
             if (linkMatch != null && imgMatch != null) {
               final recommendId = linkMatch.group(1) ?? '';
               final posterUrl = imgMatch.group(1) ?? '';
               final title = imgMatch.group(2) ?? '';
               final recommendRate = rateMatch?.group(1)?.trim();
-              
+
               // 过滤掉空的评分
-              final rate = recommendRate?.isNotEmpty == true ? recommendRate : null;
-              
-              if (recommendId.isNotEmpty && title.isNotEmpty && posterUrl.isNotEmpty) {
+              final rate =
+                  recommendRate?.isNotEmpty == true ? recommendRate : null;
+
+              if (recommendId.isNotEmpty &&
+                  title.isNotEmpty &&
+                  posterUrl.isNotEmpty) {
                 recommends.add(DoubanRecommendItem(
                   id: recommendId,
                   title: title,
@@ -300,7 +363,6 @@ class DoubanService {
         }
       } catch (e) {
         // 推荐区域解析失败，继续执行
-        print('解析推荐区域失败: $e');
       }
 
       return DoubanMovieDetails(
@@ -341,8 +403,9 @@ class DoubanService {
       _cacheInitialized = true;
     }
   }
+
   /// 获取豆瓣分类数据
-  /// 
+  ///
   /// 参数说明：
   /// - kind: 类型 (movie, tv)
   /// - category: 分类 (热门, tv, show 等)
@@ -373,18 +436,16 @@ class DoubanService {
     try {
       final cachedData = await _cacheService.get<List<DoubanMovie>>(
         cacheKey,
-        (raw) => (raw as List<dynamic>)
-            .map((m) {
-              final map = m as Map<String, dynamic>;
-              return DoubanMovie(
-                id: map['id']?.toString() ?? '',
-                title: map['title']?.toString() ?? '',
-                poster: map['poster']?.toString() ?? '',
-                rate: map['rate']?.toString(),
-                year: map['year']?.toString() ?? '',
-              );
-            })
-            .toList(),
+        (raw) => (raw as List<dynamic>).map((m) {
+          final map = m as Map<String, dynamic>;
+          return DoubanMovie(
+            id: map['id']?.toString() ?? '',
+            title: map['title']?.toString() ?? '',
+            poster: map['poster']?.toString() ?? '',
+            rate: map['rate']?.toString(),
+            year: map['year']?.toString() ?? '',
+          );
+        }).toList(),
       );
 
       if (cachedData != null) {
@@ -392,51 +453,56 @@ class DoubanService {
       }
     } catch (e) {
       // 缓存读取失败，继续执行网络请求
-      print('读取缓存失败: $e');
     }
     // 获取用户存储的豆瓣数据源选项
     final dataSourceKey = await UserDataService.getDoubanDataSourceKey();
-    
+
     // 根据数据源选项构建不同的基础URL
     String apiUrl;
     switch (dataSourceKey) {
       case 'cdn_tencent':
-        apiUrl = 'https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
+        apiUrl =
+            'https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
         break;
       case 'cdn_aliyun':
-        apiUrl = 'https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
+        apiUrl =
+            'https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
         break;
       case 'direct':
       default:
-        apiUrl = 'https://m.douban.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
+        apiUrl =
+            'https://m.douban.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
         break;
     }
     if (dataSourceKey == 'cors_proxy') {
       apiUrl = 'https://ciao-cors.is-an.org/${Uri.encodeComponent(apiUrl)}';
     }
-    
+
     try {
       final headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
         'Referer': 'https://movie.douban.com/',
         'Accept': 'application/json, text/plain, */*',
       };
-      
+
       // 如果使用 cors_proxy，添加 Origin 头
       if (dataSourceKey == 'cors_proxy') {
         headers['Origin'] = _getUniqueOrigin();
       }
-      
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
+
+      final response = await http
+          .get(
+            Uri.parse(apiUrl),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         try {
           final Map<String, dynamic> data = json.decode(response.body);
           final doubanResponse = DoubanResponse.fromJson(data);
-          
+
           // 缓存成功的结果（保存已处理后的 DoubanMovie 列表），缓存时间为1天
           try {
             await _cacheService.set(
@@ -445,10 +511,11 @@ class DoubanService {
               const Duration(hours: 6),
             );
           } catch (cacheError) {
-            print('缓存数据失败: $cacheError');
+            // 缓存失败，静默处理
           }
-          
-          return ApiResponse.success(doubanResponse.items, statusCode: response.statusCode);
+
+          return ApiResponse.success(doubanResponse.items,
+              statusCode: response.statusCode);
         } catch (parseError) {
           return ApiResponse.error('豆瓣数据解析失败: ${parseError.toString()}');
         }
@@ -540,18 +607,16 @@ class DoubanService {
     try {
       final cachedData = await _cacheService.get<List<DoubanMovie>>(
         cacheKey,
-        (raw) => (raw as List<dynamic>)
-            .map((m) {
-              final map = m as Map<String, dynamic>;
-              return DoubanMovie(
-                id: map['id']?.toString() ?? '',
-                title: map['title']?.toString() ?? '',
-                poster: map['poster']?.toString() ?? '',
-                rate: map['rate']?.toString(),
-                year: map['year']?.toString() ?? '',
-              );
-            })
-            .toList(),
+        (raw) => (raw as List<dynamic>).map((m) {
+          final map = m as Map<String, dynamic>;
+          return DoubanMovie(
+            id: map['id']?.toString() ?? '',
+            title: map['title']?.toString() ?? '',
+            poster: map['poster']?.toString() ?? '',
+            rate: map['rate']?.toString(),
+            year: map['year']?.toString() ?? '',
+          );
+        }).toList(),
       );
 
       if (cachedData != null) {
@@ -559,7 +624,6 @@ class DoubanService {
       }
     } catch (e) {
       // 缓存读取失败，继续执行网络请求
-      print('读取缓存失败: $e');
     }
     // 处理筛选参数，将 'all' 转换为空字符串
     String category = params.category == 'all' ? '' : params.category;
@@ -602,22 +666,24 @@ class DoubanService {
 
     // 获取用户存储的豆瓣数据源选项
     final dataSourceKey = await UserDataService.getDoubanDataSourceKey();
-    
+
     // 根据数据源选项构建不同的基础URL
     String baseUrl;
     switch (dataSourceKey) {
       case 'cdn_tencent':
-        baseUrl = 'https://m.douban.cmliussss.net/rexxar/api/v2/${params.kind}/recommend';
+        baseUrl =
+            'https://m.douban.cmliussss.net/rexxar/api/v2/${params.kind}/recommend';
         break;
       case 'cdn_aliyun':
-        baseUrl = 'https://m.douban.cmliussss.com/rexxar/api/v2/${params.kind}/recommend';
+        baseUrl =
+            'https://m.douban.cmliussss.com/rexxar/api/v2/${params.kind}/recommend';
         break;
       case 'direct':
       default:
         baseUrl = 'https://m.douban.com/rexxar/api/v2/${params.kind}/recommend';
         break;
     }
-    
+
     // 构建查询参数
     final queryParams = <String, String>{
       'refresh': '0',
@@ -628,7 +694,7 @@ class DoubanService {
       'score_range': '0,10',
       'tags': tags.join(','),
     };
-    
+
     if (sort.isNotEmpty) {
       queryParams['sort'] = sort;
     }
@@ -641,25 +707,28 @@ class DoubanService {
 
     try {
       final headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
         'Referer': 'https://movie.douban.com/',
         'Accept': 'application/json, text/plain, */*',
       };
-      
+
       // 如果使用 cors_proxy，添加 Origin 头
       if (dataSourceKey == 'cors_proxy') {
         headers['Origin'] = _getUniqueOrigin();
       }
-      
-      final response = await http.get(
-        Uri.parse(target),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
+
+      final response = await http
+          .get(
+            Uri.parse(target),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         try {
           final Map<String, dynamic> data = json.decode(response.body);
-          
+
           // 过滤并转换数据
           final itemsData = data['items'] as List<dynamic>? ?? [];
           final filteredItems = itemsData
@@ -675,10 +744,11 @@ class DoubanService {
               const Duration(hours: 6),
             );
           } catch (cacheError) {
-            print('缓存数据失败: $cacheError');
+            // 缓存失败，静默处理
           }
 
-          return ApiResponse.success(filteredItems, statusCode: response.statusCode);
+          return ApiResponse.success(filteredItems,
+              statusCode: response.statusCode);
         } catch (parseError) {
           return ApiResponse.error('豆瓣推荐数据解析失败: ${parseError.toString()}');
         }
@@ -694,7 +764,7 @@ class DoubanService {
   }
 
   /// 获取豆瓣详情数据
-  /// 
+  ///
   /// 参数说明：
   /// - doubanId: 豆瓣ID
   static Future<ApiResponse<DoubanMovieDetails>> getDoubanDetails(
@@ -715,14 +785,17 @@ class DoubanService {
         cacheKey,
         (raw) {
           final map = raw as Map<String, dynamic>;
-          
+
           // 处理推荐列表
           List<DoubanRecommendItem> recommends = [];
           if (map['recommends'] != null) {
             final recommendsData = map['recommends'] as List<dynamic>? ?? [];
-            recommends = recommendsData.map((r) => DoubanRecommendItem.fromJson(r as Map<String, dynamic>)).toList();
+            recommends = recommendsData
+                .map((r) =>
+                    DoubanRecommendItem.fromJson(r as Map<String, dynamic>))
+                .toList();
           }
-          
+
           return DoubanMovieDetails(
             id: map['id']?.toString() ?? '',
             title: map['title']?.toString() ?? '',
@@ -762,12 +835,11 @@ class DoubanService {
       }
     } catch (e) {
       // 缓存读取失败，继续执行网络请求
-      print('读取豆瓣详情缓存失败: $e');
     }
 
     // 获取用户存储的豆瓣数据源选项
     final dataSourceKey = await UserDataService.getDoubanDataSourceKey();
-    
+
     // 根据数据源选项构建不同的基础URL
     String apiUrl;
     switch (dataSourceKey) {
@@ -782,33 +854,36 @@ class DoubanService {
         apiUrl = 'https://movie.douban.com/subject/$doubanId';
         break;
     }
-    
+
     if (dataSourceKey == 'cors_proxy') {
       apiUrl = 'https://ciao-cors.is-an.org/${Uri.encodeComponent(apiUrl)}';
     }
-    
+
     try {
       final headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
         'Referer': 'https://movie.douban.com/',
         'Accept': 'application/json, text/plain, */*',
       };
-      
+
       // 如果使用 cors_proxy，添加 Origin 头
       if (dataSourceKey == 'cors_proxy') {
         headers['Origin'] = _getUniqueOrigin();
       }
-      
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
+
+      final response = await http
+          .get(
+            Uri.parse(apiUrl),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         try {
           // 解析HTML响应
           final details = _parseDoubanHtmlDetails(response.body, doubanId);
-          
+
           // 缓存成功的结果，缓存时间为24小时
           try {
             await _cacheService.set(
@@ -817,9 +892,9 @@ class DoubanService {
               const Duration(days: 3),
             );
           } catch (cacheError) {
-            print('缓存豆瓣详情数据失败: $cacheError');
+            // 缓存失败，静默处理
           }
-          
+
           return ApiResponse.success(details, statusCode: response.statusCode);
         } catch (parseError) {
           return ApiResponse.error('豆瓣详情数据解析失败: ${parseError.toString()}');

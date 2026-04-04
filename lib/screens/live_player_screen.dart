@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart'; // 添加 debugPrint 的导入
 import '../widgets/video_player_surface.dart';
 import '../widgets/video_player_widget.dart';
 import '../models/live_channel.dart';
@@ -127,11 +128,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         });
       }
     } catch (e) {
-      print('加载直播源列表失败: $e');
+      debugPrint('Failed to load sources: $e');
       if (mounted) {
         setState(() {
           _allSources = [];
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载直播源失败')),
+        );
       }
     }
   }
@@ -148,11 +152,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         _scrollToCurrentChannel();
       }
     } catch (e) {
-      print('加载频道列表失败: $e');
+      debugPrint('Failed to load channels: $e');
       if (mounted) {
         setState(() {
           _allChannels = [];
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载频道列表失败')),
+        );
       }
     }
   }
@@ -173,6 +180,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
   @override
   void dispose() {
+    // 释放播放器控制器
+    _videoPlayerController?.dispose();
     // 恢复原始的系统UI样式
     SystemChrome.setSystemUIOverlayStyle(_originalStyle);
     _programScrollController.dispose();
@@ -215,12 +224,15 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         _scrollToCurrentProgram();
       }
     } catch (e) {
-      print('加载 EPG 失败: $e');
+      debugPrint('Failed to load EPG data: $e');
       if (mounted) {
         setState(() {
           _programs = null;
           _isLoadingEpg = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载节目单失败')),
+        );
       }
     }
   }
@@ -353,7 +365,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
       // ListTile 的固定高度（通过 SizedBox 设置）
       const itemHeight = 68.0;
-      
+
       // ListView 的 padding: EdgeInsets.symmetric(vertical: 4)
       const listPadding = 4.0;
 
@@ -615,6 +627,16 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         _scrollToCurrentProgram();
       },
       onReady: _onVideoPlayerReady,
+      onError: (error) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('播放器加载失败: $error')),
+          );
+        }
+      },
       live: true,
     );
   }
@@ -912,75 +934,75 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           child: ListTile(
             key: itemKey,
             selected: isSelected,
-            selectedTileColor: const Color(0xFF27ae60).withOpacity(0.1),
+            selectedTileColor: const Color(0xFF27ae60).withValues(alpha: 0.1),
             visualDensity: const VisualDensity(vertical: -1),
             leading: channel.logo.isNotEmpty
-              ? AspectRatio(
-                  aspectRatio: 2.0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: themeService.isDarkMode
-                          ? const Color(0xFF2a2a2a)
-                          : const Color(0xFFc0c0c0),
-                      borderRadius: BorderRadius.circular(6),
+                ? AspectRatio(
+                    aspectRatio: 2.0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: themeService.isDarkMode
+                            ? const Color(0xFF2a2a2a)
+                            : const Color(0xFFc0c0c0),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(
+                          channel.logo,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.tv,
+                              size: 16,
+                              color: Color(0xFF95a5b0),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.network(
-                        channel.logo,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.tv,
-                            size: 16,
-                            color: Color(0xFF95a5b0),
-                          );
-                        },
+                  )
+                : AspectRatio(
+                    aspectRatio: 2.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: themeService.isDarkMode
+                            ? const Color(0xFF2a2a2a)
+                            : const Color(0xFFc0c0c0),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(
+                        Icons.tv,
+                        size: 16,
+                        color: Color(0xFF95a5b0),
                       ),
                     ),
                   ),
-                )
-              : AspectRatio(
-                  aspectRatio: 2.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: themeService.isDarkMode
-                          ? const Color(0xFF2a2a2a)
-                          : const Color(0xFFc0c0c0),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.tv,
-                      size: 16,
-                      color: Color(0xFF95a5b0),
-                    ),
-                  ),
-                ),
-          title: Text(
-            channel.name,
-            style: FontUtils.poppins(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              color: isSelected
-                  ? const Color(0xFF27ae60)
-                  : themeService.isDarkMode
-                      ? Colors.white
-                      : const Color(0xFF2c3e50),
+            title: Text(
+              channel.name,
+              style: FontUtils.poppins(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? const Color(0xFF27ae60)
+                    : themeService.isDarkMode
+                        ? Colors.white
+                        : const Color(0xFF2c3e50),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Text(
-            channel.group,
-            style: FontUtils.poppins(
-              fontSize: 12,
-              color: themeService.isDarkMode
-                  ? const Color(0xFF999999)
-                  : const Color(0xFF7f8c8d),
+            subtitle: Text(
+              channel.group,
+              style: FontUtils.poppins(
+                fontSize: 12,
+                color: themeService.isDarkMode
+                    ? const Color(0xFF999999)
+                    : const Color(0xFF7f8c8d),
+              ),
             ),
-          ),
-          onTap: () => _switchChannel(channel),
+            onTap: () => _switchChannel(channel),
           ),
         );
       },
@@ -1726,9 +1748,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (isLive) {
       // 正在播放 - 绿色背景 + 绿色边框
       backgroundColor = themeService.isDarkMode
-          ? const Color(0xFF27ae60).withOpacity(0.2)
-          : const Color(0xFF27ae60).withOpacity(0.1);
-      borderColor = const Color(0xFF27ae60).withOpacity(0.3);
+          ? const Color(0xFF27ae60).withValues(alpha: 0.2)
+          : const Color(0xFF27ae60).withValues(alpha: 0.1);
+      borderColor = const Color(0xFF27ae60).withValues(alpha: 0.3);
       textColor = themeService.isDarkMode
           ? const Color(0xFF4ade80)
           : const Color(0xFF16a34a);
@@ -1738,8 +1760,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     } else if (isPast) {
       // 过去的节目 - 灰色背景 + 灰色边框
       backgroundColor = themeService.isDarkMode
-          ? const Color(0xFF374151).withOpacity(0.5)
-          : const Color(0xFFd1d5db).withOpacity(0.5);
+          ? const Color(0xFF374151).withValues(alpha: 0.5)
+          : const Color(0xFFd1d5db).withValues(alpha: 0.5);
       borderColor = themeService.isDarkMode
           ? const Color(0xFF4b5563)
           : const Color(0xFFd1d5db);
@@ -1752,9 +1774,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     } else {
       // 未开始的节目 - 蓝色背景 + 蓝色边框
       backgroundColor = themeService.isDarkMode
-          ? const Color(0xFF3498db).withOpacity(0.2)
-          : const Color(0xFF3498db).withOpacity(0.1);
-      borderColor = const Color(0xFF3498db).withOpacity(0.3);
+          ? const Color(0xFF3498db).withValues(alpha: 0.2)
+          : const Color(0xFF3498db).withValues(alpha: 0.1);
+      borderColor = const Color(0xFF3498db).withValues(alpha: 0.3);
       textColor = themeService.isDarkMode
           ? const Color(0xFF60a5fa)
           : const Color(0xFF2563eb);

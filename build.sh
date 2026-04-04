@@ -95,16 +95,16 @@ build_android() {
     # 确保安卓构建目录存在
     mkdir -p build/android
     
-    # 构建拆分架构的 APK（v7a、v8a 和 x86_64）
-    log_info "构建安卓 armv8、armv7a 和 x86_64 版本..."
+    # 构建拆分架构的 APK（v7a、v8a、x86 和 x86_64）
+    log_info "构建安卓 armv8、armv7a、x86 和 x86_64 版本..."
     flutter build apk --release \
-        --target-platform android-arm64,android-arm,android-x64 \
+        --target-platform android-arm64,android-arm,android-x64,android-x86 \
         --split-per-abi \
         --obfuscate \
         --split-debug-info=build/app/outputs/symbols
     
-    # 构建通用版 APK（包含 v7、v8 和 x86_64）
-    log_info "构建安卓通用版本（包含 v7、v8 和 x86_64）..."
+    # 构建通用版 APK（包含 v7、v8、x86 和 x86_64）
+    log_info "构建安卓通用版本（包含 v7、v8、x86 和 x86_64）..."
     flutter build apk --release \
         --obfuscate \
         --split-debug-info=build/app/outputs/symbols
@@ -267,6 +267,24 @@ build_windows() {
         log_warning "请安装 Inno Setup 后手动运行: iscc MoonTV.iss"
     fi
     
+    # 打包便携式文件
+    log_info "打包 Windows 便携式文件..."
+    if [ -d "build/windows/x64/Release" ]; then
+        mkdir -p build/windows/portable
+        cp -r "build/windows/x64/Release" "build/windows/portable/"
+        # 创建便携式版本的压缩包
+        if command -v zip &> /dev/null; then
+            cd build/windows/portable
+            zip -r "MoonTV-${APP_VERSION}-portable.zip" Release/
+            cd ../../..
+            log_success "Windows 便携式文件已打包为 zip 文件"
+        else
+            log_warning "zip 命令未找到，跳过便携式文件打包"
+        fi
+    else
+        log_warning "Windows 构建产物未找到，跳过便携式文件打包"
+    fi
+    
     log_success "Windows 构建完成"
 }
 
@@ -289,6 +307,18 @@ copy_artifacts() {
         log_success "安卓 armv7a APK 已复制到 dist/MoonTV-${APP_VERSION}-armv7a.apk"
     else
         log_warning "安卓 armv7a APK 文件未找到"
+    fi
+    if [ -f "build/app/outputs/flutter-apk/app-x86_64-release.apk" ]; then
+        cp build/app/outputs/flutter-apk/app-x86_64-release.apk "dist/MoonTV-${APP_VERSION}-x86_64.apk"
+        log_success "安卓 x86_64 APK 已复制到 dist/MoonTV-${APP_VERSION}-x86_64.apk"
+    else
+        log_warning "安卓 x86_64 APK 文件未找到"
+    fi
+    if [ -f "build/app/outputs/flutter-apk/app-x86-release.apk" ]; then
+        cp build/app/outputs/flutter-apk/app-x86-release.apk "dist/MoonTV-${APP_VERSION}-x86.apk"
+        log_success "安卓 x86 APK 已复制到 dist/MoonTV-${APP_VERSION}-x86.apk"
+    else
+        log_warning "安卓 x86 APK 文件未找到"
     fi
     if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
         cp build/app/outputs/flutter-apk/app-release.apk "dist/MoonTV-${APP_VERSION}-universal.apk"
@@ -331,6 +361,14 @@ copy_artifacts() {
         log_success "Windows 安装程序已复制到 dist/MoonTV-${APP_VERSION}-setup.exe"
     else
         log_warning "Windows 安装程序未找到"
+    fi
+    
+    # 复制 Windows 便携式文件
+    if [ -f "build/windows/portable/MoonTV-${APP_VERSION}-portable.zip" ]; then
+        cp "build/windows/portable/MoonTV-${APP_VERSION}-portable.zip" "dist/"
+        log_success "Windows 便携式文件已复制到 dist/MoonTV-${APP_VERSION}-portable.zip"
+    else
+        log_warning "Windows 便携式文件未找到"
     fi
     
     # 打包 macOS ARM64 应用为 DMG

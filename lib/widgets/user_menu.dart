@@ -323,9 +323,8 @@ class _UserMenuState extends State<UserMenu> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: widget.isDarkMode
-              ? const Color(0xFF2c2c2c)
-              : Colors.white,
+          backgroundColor:
+              widget.isDarkMode ? const Color(0xFF2c2c2c) : Colors.white,
           title: Text(
             title,
             style: FontUtils.poppins(
@@ -363,8 +362,8 @@ class _UserMenuState extends State<UserMenu> {
                           color: currentValue == option
                               ? const Color(0xFF10b981)
                               : (widget.isDarkMode
-                                    ? const Color(0xFF9ca3af)
-                                    : const Color(0xFF6b7280)),
+                                  ? const Color(0xFF9ca3af)
+                                  : const Color(0xFF6b7280)),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -398,9 +397,8 @@ class _UserMenuState extends State<UserMenu> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: widget.isDarkMode
-              ? const Color(0xFF2c2c2c)
-              : Colors.white,
+          backgroundColor:
+              widget.isDarkMode ? const Color(0xFF2c2c2c) : Colors.white,
           title: Text(
             'M3U8 代理 URL',
             style: FontUtils.poppins(
@@ -605,14 +603,13 @@ class _UserMenuState extends State<UserMenu> {
                   color: value
                       ? const Color(0xFF10b981)
                       : (widget.isDarkMode
-                            ? const Color(0xFF374151)
-                            : const Color(0xFFe5e7eb)),
+                          ? const Color(0xFF374151)
+                          : const Color(0xFFe5e7eb)),
                 ),
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 200),
-                  alignment: value
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
+                  alignment:
+                      value ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     width: 20,
                     height: 20,
@@ -638,7 +635,7 @@ class _UserMenuState extends State<UserMenu> {
       child: GestureDetector(
         onTap: widget.onClose,
         child: Container(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           child: Center(
             child: GestureDetector(
               onTap: () {}, // 阻止点击菜单内容时关闭
@@ -652,7 +649,7 @@ class _UserMenuState extends State<UserMenu> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -668,6 +665,7 @@ class _UserMenuState extends State<UserMenu> {
                         children: [
                           Text(
                             '当前用户',
+                            textAlign: TextAlign.center,
                             style: FontUtils.poppins(
                               fontSize: 12,
                               color: widget.isDarkMode

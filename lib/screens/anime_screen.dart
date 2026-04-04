@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
 import '../widgets/capsule_tab_switcher.dart';
@@ -237,21 +236,24 @@ class _AnimeScreenState extends State<AnimeScreen> {
   void _handleScroll() {
     if (_scrollController.hasClients) {
       final position = _scrollController.position;
-      
+
       // 每日放送不需要加载更多
       if (_selectedCategoryValue == '每日放送') {
         return;
       }
-      
+
       // 如果内容不足以滚动（maxScrollExtent <= 0），直接尝试加载更多
       if (position.maxScrollExtent <= 0) {
         // 检查是否有更多数据且当前不在加载中
-        if (_hasMore && !_isLoading && !_isLoadingMore && _animeList.isNotEmpty) {
+        if (_hasMore &&
+            !_isLoading &&
+            !_isLoadingMore &&
+            _animeList.isNotEmpty) {
           _loadMoreAnimeData();
         }
         return;
       }
-      
+
       // 正常滚动情况：当滚动到距离底部50像素内时触发加载
       const double threshold = 50.0;
       if (position.pixels >= position.maxScrollExtent - threshold) {
@@ -285,7 +287,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
       sortValue = _selectedAnimeSort;
       kind = 'tv';
       format = '电视剧';
-    } else { // 剧场版
+    } else {
+      // 剧场版
       categoryValue = _selectedMovieType;
       regionValue = _selectedMovieRegion;
       yearValue = _selectedMovieYear;
@@ -297,32 +300,30 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
     // 转换参数为中文标签
     if (regionValue != 'all') {
-      final regionOptions = _selectedCategoryValue == '番剧' ? _regionOptions : _movieRegionOptions;
-      regionValue = regionOptions
-          .firstWhere((e) => e.value == regionValue)
-          .label;
+      final regionOptions =
+          _selectedCategoryValue == '番剧' ? _regionOptions : _movieRegionOptions;
+      regionValue =
+          regionOptions.firstWhere((e) => e.value == regionValue).label;
     }
-    
+
     if (yearValue != 'all') {
-      yearValue = _yearOptions
-          .firstWhere((e) => e.value == yearValue)
-          .label;
+      yearValue = _yearOptions.firstWhere((e) => e.value == yearValue).label;
     }
-    
+
     if (categoryValue != 'all') {
-      final typeOptions = _selectedCategoryValue == '番剧' ? _animeTypeOptions : _movieTypeOptions;
-      categoryValue = typeOptions
-          .firstWhere((e) => e.value == categoryValue)
-          .label;
+      final typeOptions = _selectedCategoryValue == '番剧'
+          ? _animeTypeOptions
+          : _movieTypeOptions;
+      categoryValue =
+          typeOptions.firstWhere((e) => e.value == categoryValue).label;
     }
 
     if (_selectedCategoryValue == '番剧' && platformValue != 'all') {
-      platformValue = _platformOptions
-          .firstWhere((e) => e.value == platformValue)
-          .label;
+      platformValue =
+          _platformOptions.firstWhere((e) => e.value == platformValue).label;
     }
-    
-    final params = _selectedCategoryValue == '番剧' 
+
+    final params = _selectedCategoryValue == '番剧'
         ? DoubanRecommendsParams(
             kind: kind,
             category: '动画',
@@ -346,7 +347,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
             pageLimit: _pageLimit,
             page: _page,
           );
-    
+
     final result = await DoubanService.fetchDoubanRecommends(
       context,
       params,
@@ -380,14 +381,15 @@ class _AnimeScreenState extends State<AnimeScreen> {
     if (_selectedCategoryValue == '每日放送') {
       // 获取 Bangumi 数据
       final weekdayInt = int.parse(_selectedWeekday);
-      final result = await BangumiService.getCalendarByWeekday(context, weekdayInt);
+      final result =
+          await BangumiService.getCalendarByWeekday(context, weekdayInt);
       if (mounted) {
         setState(() {
           if (result.success && result.data != null) {
             _bangumiList.clear();
-            _bangumiList.addAll(
-              result.data!.where((item) => item.images.bestImageUrl.isNotEmpty).toList()
-            );
+            _bangumiList.addAll(result.data!
+                .where((item) => item.images.bestImageUrl.isNotEmpty)
+                .toList());
             _hasMore = false; // Bangumi 数据不支持分页
           } else {
             _errorMessage = result.message ?? '加载失败';
@@ -413,7 +415,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
         sortValue = _selectedAnimeSort;
         kind = 'tv';
         format = '电视剧';
-      } else { // 剧场版
+      } else {
+        // 剧场版
         categoryValue = _selectedMovieType;
         regionValue = _selectedMovieRegion;
         yearValue = _selectedMovieYear;
@@ -425,35 +428,34 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
       // 转换地区参数为中文标签
       if (regionValue != 'all') {
-        final regionOptions = _selectedCategoryValue == '番剧' ? _regionOptions : _movieRegionOptions;
-        regionValue = regionOptions
-            .firstWhere((e) => e.value == regionValue)
-            .label;
+        final regionOptions = _selectedCategoryValue == '番剧'
+            ? _regionOptions
+            : _movieRegionOptions;
+        regionValue =
+            regionOptions.firstWhere((e) => e.value == regionValue).label;
       }
-      
+
       // 转换年代参数为中文标签
       if (yearValue != 'all') {
-        yearValue = _yearOptions
-            .firstWhere((e) => e.value == yearValue)
-            .label;
+        yearValue = _yearOptions.firstWhere((e) => e.value == yearValue).label;
       }
-      
+
       // 转换类型参数为中文标签
       if (categoryValue != 'all') {
-        final typeOptions = _selectedCategoryValue == '番剧' ? _animeTypeOptions : _movieTypeOptions;
-        categoryValue = typeOptions
-            .firstWhere((e) => e.value == categoryValue)
-            .label;
+        final typeOptions = _selectedCategoryValue == '番剧'
+            ? _animeTypeOptions
+            : _movieTypeOptions;
+        categoryValue =
+            typeOptions.firstWhere((e) => e.value == categoryValue).label;
       }
 
       // 转换平台参数为中文标签（仅番剧需要）
       if (_selectedCategoryValue == '番剧' && platformValue != 'all') {
-        platformValue = _platformOptions
-            .firstWhere((e) => e.value == platformValue)
-            .label;
+        platformValue =
+            _platformOptions.firstWhere((e) => e.value == platformValue).label;
       }
-      
-      final params = _selectedCategoryValue == '番剧' 
+
+      final params = _selectedCategoryValue == '番剧'
           ? DoubanRecommendsParams(
               kind: kind,
               category: '动画',
@@ -477,7 +479,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
               pageLimit: _pageLimit,
               page: _page,
             );
-      
+
       final result = await DoubanService.fetchDoubanRecommends(
         context,
         params,
@@ -569,7 +571,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
             _buildHeader(),
             _buildFilterSection(),
             const SizedBox(height: 16),
-            _selectedCategoryValue == '每日放送' 
+            _selectedCategoryValue == '每日放送'
                 ? BangumiGrid(
                     bangumiItems: _bangumiList,
                     isLoading: _isLoading && _bangumiList.isEmpty,
@@ -629,7 +631,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
           SizedBox(
             height: 20, // 固定高度确保一致性
             child: Text(
-              _selectedCategoryValue == '每日放送' 
+              _selectedCategoryValue == '每日放送'
                   ? '来自 Bangumi 的精选内容'
                   : '来自豆瓣的精选内容',
               style: FontUtils.poppins(
@@ -653,8 +655,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? Colors.white.withOpacity(0.1)
-            : Colors.white.withOpacity(0.8),
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -697,7 +699,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
       return _buildWeekdayFilterSection();
     } else if (_selectedCategoryValue == '番剧') {
       return _buildAnimeFilterSection();
-    } else { // 剧场版
+    } else {
+      // 剧场版
       return _buildMovieFilterSection();
     }
   }
@@ -718,9 +721,12 @@ class _AnimeScreenState extends State<AnimeScreen> {
         Expanded(
           child: SimpleTabSwitcher(
             tabs: _weekdayOptions.map((e) => e.label).toList(),
-            selectedTab: _weekdayOptions.firstWhere((e) => e.value == _selectedWeekday).label,
+            selectedTab: _weekdayOptions
+                .firstWhere((e) => e.value == _selectedWeekday)
+                .label,
             onTabChanged: (newLabel) {
-              final newValue = _weekdayOptions.firstWhere((e) => e.label == newLabel).value;
+              final newValue =
+                  _weekdayOptions.firstWhere((e) => e.label == newLabel).value;
               setState(() {
                 _selectedWeekday = newValue;
               });
@@ -750,11 +756,13 @@ class _AnimeScreenState extends State<AnimeScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterPill('类型', _animeTypeOptions, _selectedAnimeType, (v) {
+                _buildFilterPill('类型', _animeTypeOptions, _selectedAnimeType,
+                    (v) {
                   setState(() => _selectedAnimeType = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('地区', _regionOptions, _selectedAnimeRegion, (v) {
+                _buildFilterPill('地区', _regionOptions, _selectedAnimeRegion,
+                    (v) {
                   setState(() => _selectedAnimeRegion = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
@@ -762,7 +770,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
                   setState(() => _selectedAnimeYear = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('平台', _platformOptions, _selectedAnimePlatform, (v) {
+                _buildFilterPill('平台', _platformOptions, _selectedAnimePlatform,
+                    (v) {
                   setState(() => _selectedAnimePlatform = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
@@ -796,11 +805,13 @@ class _AnimeScreenState extends State<AnimeScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterPill('类型', _movieTypeOptions, _selectedMovieType, (v) {
+                _buildFilterPill('类型', _movieTypeOptions, _selectedMovieType,
+                    (v) {
                   setState(() => _selectedMovieType = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('地区', _movieRegionOptions, _selectedMovieRegion, (v) {
+                _buildFilterPill(
+                    '地区', _movieRegionOptions, _selectedMovieRegion, (v) {
                   setState(() => _selectedMovieRegion = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
@@ -824,8 +835,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
       String selectedValue, ValueChanged<String> onSelected) {
     final selectedOption = options.firstWhere((e) => e.value == selectedValue,
         orElse: () => options.first);
-    bool isDefault = selectedValue == 'all' ||
-        (title == '排序' && selectedValue == 'T');
+    bool isDefault =
+        selectedValue == 'all' || (title == '排序' && selectedValue == 'T');
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -875,9 +886,11 @@ class _AnimeScreenState extends State<AnimeScreen> {
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
             tabs: items.map((e) => e.label).toList(),
-            selectedTab: items.firstWhere((e) => e.value == selectedValue).label,
+            selectedTab:
+                items.firstWhere((e) => e.value == selectedValue).label,
             onTabChanged: (newLabel) {
-              final newValue = items.firstWhere((e) => e.label == newLabel).value;
+              final newValue =
+                  items.firstWhere((e) => e.label == newLabel).value;
               onItemSelected(newValue);
             },
           ),
@@ -886,13 +899,17 @@ class _AnimeScreenState extends State<AnimeScreen> {
     );
   }
 
-
   Widget _buildEndOfListIndicator() {
     final themeService = Provider.of<ThemeService>(context);
-    final totalCount = _selectedCategoryValue == '每日放送' ? _bangumiList.length : _animeList.length;
-    final contentType = _selectedCategoryValue == '每日放送' ? '个番剧' : 
-                       _selectedCategoryValue == '番剧' ? '部番剧' : '部动画电影';
-    
+    final totalCount = _selectedCategoryValue == '每日放送'
+        ? _bangumiList.length
+        : _animeList.length;
+    final contentType = _selectedCategoryValue == '每日放送'
+        ? '个番剧'
+        : _selectedCategoryValue == '番剧'
+            ? '部番剧'
+            : '部动画电影';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -903,8 +920,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
             height: 2,
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? Colors.white.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.4),
+                  ? Colors.white.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -914,7 +931,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
             style: FontUtils.poppins(
               fontSize: 14,
               color: themeService.isDarkMode
-                  ? Colors.white.withOpacity(0.6)
+                  ? Colors.white.withValues(alpha: 0.6)
                   : Colors.grey[600],
               fontWeight: FontWeight.w400,
             ),
@@ -925,7 +942,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
             style: FontUtils.poppins(
               fontSize: 12,
               color: themeService.isDarkMode
-                  ? Colors.white.withOpacity(0.4)
+                  ? Colors.white.withValues(alpha: 0.4)
                   : Colors.grey[500],
               fontWeight: FontWeight.w300,
             ),

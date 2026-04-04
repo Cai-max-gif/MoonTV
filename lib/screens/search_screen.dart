@@ -319,7 +319,7 @@ class _SearchScreenState extends State<SearchScreen>
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFe74c3c).withOpacity(0.1),
+                      color: const Color(0xFFe74c3c).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -785,7 +785,7 @@ class _SearchScreenState extends State<SearchScreen>
                           themeService.isDarkMode
                               ? const Color(0xFF1e1e1e)
                               : Colors.white,
-                          const Color(0xFFe74c3c).withOpacity(0.2),
+                          const Color(0xFFe74c3c).withValues(alpha: 0.2),
                           animationValue,
                         )!;
 
@@ -893,7 +893,8 @@ class _SearchScreenState extends State<SearchScreen>
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.2),
                                           blurRadius: 2,
                                           offset: const Offset(0, 1),
                                         ),
@@ -930,10 +931,10 @@ class _SearchScreenState extends State<SearchScreen>
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFe74c3c).withOpacity(0.1),
+        color: const Color(0xFFe74c3c).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFe74c3c).withOpacity(0.3),
+          color: const Color(0xFFe74c3c).withValues(alpha: 0.3),
           width: 1,
         ),
       ),

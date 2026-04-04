@@ -7,7 +7,6 @@ import '../services/theme_service.dart';
 import '../services/api_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
-import '../screens/profile_screen.dart';
 import 'dart:io' show Platform;
 import 'dart:async';
 import 'windows_title_bar.dart';
@@ -362,8 +361,8 @@ class _MainLayoutState extends State<MainLayout> {
                 ? const Color(0xFF121212)
                 : const Color(0xFFf5f5f5)
             : themeService.isDarkMode
-                ? const Color(0xFF1e1e1e).withOpacity(0.9)
-                : Colors.white.withOpacity(0.8),
+                ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
+                : Colors.white.withValues(alpha: 0.8),
       ),
       child: widget.isSearchMode
           ? _buildSearchHeader(context, themeService, isTablet)
@@ -815,13 +814,13 @@ class _MainLayoutState extends State<MainLayout> {
     return Container(
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? const Color(0xFF1e1e1e).withOpacity(0.9)
-            : Colors.white.withOpacity(0.9),
+            ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
+            : Colors.white.withValues(alpha: 0.9),
         border: Border(
           top: BorderSide(
             color: themeService.isDarkMode
-                ? const Color(0xFF333333).withOpacity(0.3)
-                : Colors.white.withOpacity(0.2),
+                ? const Color(0xFF333333).withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -932,6 +931,7 @@ class _MainLayoutState extends State<MainLayout> {
       {'label': '剧集'},
       {'label': '动漫'},
       {'label': '综艺'},
+      {'label': '短剧'},
       {'label': '直播'},
     ];
 

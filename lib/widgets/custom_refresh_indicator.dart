@@ -61,7 +61,7 @@ class CustomRefreshIndicatorContent extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: indicatorColor.withOpacity(0.3),
+                color: indicatorColor.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

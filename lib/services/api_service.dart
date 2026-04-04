@@ -46,6 +46,8 @@ class ApiResponse<T> {
 /// 通用API请求服务
 class ApiService {
   static const Duration _timeout = Duration(seconds: 30);
+  static const int _maxRetries = 3;
+  static const Duration _retryDelay = Duration(seconds: 1);
 
   /// 获取基础URL
   static Future<String> _getBaseUrl() async {
@@ -146,8 +148,17 @@ class ApiService {
         }
       }
 
+      // 尝试解析响应体中的错误信息
+      String errorMessage = '登录已过期，请重新登录';
+      try {
+        final errorData = json.decode(response.body);
+        errorMessage = errorData['message'] ?? errorMessage;
+      } catch (e) {
+        // 解析失败，使用默认错误信息
+      }
+
       return ApiResponse.error(
-        '登录已过期，请重新登录',
+        errorMessage,
         statusCode: 401,
       );
     }
@@ -212,6 +223,29 @@ class ApiService {
     }
   }
 
+  /// 带重试机制的请求执行器
+  static Future<ApiResponse<T>> _retryRequest<T>(
+    Future<http.Response> Function() request,
+    T Function(dynamic)? fromJson,
+    BuildContext? context,
+  ) async {
+    int retryCount = 0;
+    while (retryCount < _maxRetries) {
+      try {
+        final response = await request();
+        return await _handleResponse(response, fromJson, context);
+      } catch (e) {
+        retryCount++;
+        if (retryCount >= _maxRetries) {
+          return ApiResponse.error('网络请求异常: ${e.toString()}');
+        }
+        // 等待一段时间后重试
+        await Future.delayed(_retryDelay * retryCount);
+      }
+    }
+    return ApiResponse.error('网络请求异常: 重试次数过多');
+  }
+
   /// GET请求
   static Future<ApiResponse<T>> get<T>(
     String endpoint, {
@@ -220,30 +254,28 @@ class ApiService {
     T Function(dynamic)? fromJson,
     BuildContext? context,
   }) async {
-    try {
-      String url = await _buildUrl(endpoint);
+    String url = await _buildUrl(endpoint);
 
-      // 构建URI并添加查询参数
-      Uri uri = Uri.parse(url);
-      if (queryParameters != null && queryParameters.isNotEmpty) {
-        // 对查询参数进行验证和过滤
-        final filteredParams = _filterQueryParameters(queryParameters);
-        uri = uri.replace(queryParameters: filteredParams);
-      }
+    // 构建URI并添加查询参数
+    Uri uri = Uri.parse(url);
+    if (queryParameters != null && queryParameters.isNotEmpty) {
+      // 对查询参数进行验证和过滤
+      final filteredParams = _filterQueryParameters(queryParameters);
+      uri = uri.replace(queryParameters: filteredParams);
+    }
 
-      final requestHeaders = await _buildHeaders(additionalHeaders: headers);
+    final requestHeaders = await _buildHeaders(additionalHeaders: headers);
 
-      final response = await http
+    return await _retryRequest<T>(
+      () => http
           .get(
             uri,
             headers: requestHeaders,
           )
-          .timeout(_timeout);
-
-      return await _handleResponse(response, fromJson, context);
-    } catch (e) {
-      return ApiResponse.error('网络请求异常: ${e.toString()}');
-    }
+          .timeout(_timeout),
+      fromJson,
+      context,
+    );
   }
 
   /// 过滤查询参数，防止注入攻击
@@ -275,28 +307,26 @@ class ApiService {
     T Function(dynamic)? fromJson,
     BuildContext? context,
   }) async {
-    try {
-      final url = await _buildUrl(endpoint);
-      final requestHeaders = await _buildHeaders(additionalHeaders: headers);
+    final url = await _buildUrl(endpoint);
+    final requestHeaders = await _buildHeaders(additionalHeaders: headers);
 
-      // 对请求体进行验证和过滤
-      Map<String, dynamic>? filteredBody;
-      if (body != null) {
-        filteredBody = _filterRequestBody(body);
-      }
+    // 对请求体进行验证和过滤
+    Map<String, dynamic>? filteredBody;
+    if (body != null) {
+      filteredBody = _filterRequestBody(body);
+    }
 
-      final response = await http
+    return await _retryRequest<T>(
+      () => http
           .post(
             Uri.parse(url),
             headers: requestHeaders,
             body: filteredBody != null ? json.encode(filteredBody) : null,
           )
-          .timeout(_timeout);
-
-      return await _handleResponse(response, fromJson, context);
-    } catch (e) {
-      return ApiResponse.error('网络请求异常: ${e.toString()}');
-    }
+          .timeout(_timeout),
+      fromJson,
+      context,
+    );
   }
 
   /// 过滤请求体，防止注入攻击
@@ -321,7 +351,7 @@ class ApiService {
         filtered[key] = _filterRequestBody(value as Map<String, dynamic>);
       } else if (value is List) {
         // 过滤列表中的字符串元素
-        filtered[key] = (value as List).map((item) {
+        filtered[key] = value.map((item) {
           if (item is String) {
             return item
                 .replaceAll("'", '')
@@ -354,28 +384,26 @@ class ApiService {
     T Function(dynamic)? fromJson,
     BuildContext? context,
   }) async {
-    try {
-      final url = await _buildUrl(endpoint);
-      final requestHeaders = await _buildHeaders(additionalHeaders: headers);
+    final url = await _buildUrl(endpoint);
+    final requestHeaders = await _buildHeaders(additionalHeaders: headers);
 
-      // 对请求体进行验证和过滤
-      Map<String, dynamic>? filteredBody;
-      if (body != null) {
-        filteredBody = _filterRequestBody(body);
-      }
+    // 对请求体进行验证和过滤
+    Map<String, dynamic>? filteredBody;
+    if (body != null) {
+      filteredBody = _filterRequestBody(body);
+    }
 
-      final response = await http
+    return await _retryRequest<T>(
+      () => http
           .put(
             Uri.parse(url),
             headers: requestHeaders,
             body: filteredBody != null ? json.encode(filteredBody) : null,
           )
-          .timeout(_timeout);
-
-      return await _handleResponse(response, fromJson, context);
-    } catch (e) {
-      return ApiResponse.error('网络请求异常: ${e.toString()}');
-    }
+          .timeout(_timeout),
+      fromJson,
+      context,
+    );
   }
 
   /// DELETE请求
@@ -385,21 +413,19 @@ class ApiService {
     T Function(dynamic)? fromJson,
     BuildContext? context,
   }) async {
-    try {
-      final url = await _buildUrl(endpoint);
-      final requestHeaders = await _buildHeaders(additionalHeaders: headers);
+    final url = await _buildUrl(endpoint);
+    final requestHeaders = await _buildHeaders(additionalHeaders: headers);
 
-      final response = await http
+    return await _retryRequest<T>(
+      () => http
           .delete(
             Uri.parse(url),
             headers: requestHeaders,
           )
-          .timeout(_timeout);
-
-      return await _handleResponse(response, fromJson, context);
-    } catch (e) {
-      return ApiResponse.error('网络请求异常: ${e.toString()}');
-    }
+          .timeout(_timeout),
+      fromJson,
+      context,
+    );
   }
 
   /// 上传文件请求
@@ -411,35 +437,44 @@ class ApiService {
     T Function(dynamic)? fromJson,
     BuildContext? context,
   }) async {
-    try {
-      final url = await _buildUrl(endpoint);
-      final requestHeaders = await _buildHeaders(
-        additionalHeaders: headers,
-        includeAuth: true,
-      );
+    int retryCount = 0;
+    while (retryCount < _maxRetries) {
+      try {
+        final url = await _buildUrl(endpoint);
+        final requestHeaders = await _buildHeaders(
+          additionalHeaders: headers,
+          includeAuth: true,
+        );
 
-      // 移除Content-Type，让http包自动设置multipart的Content-Type
-      requestHeaders.remove('Content-Type');
+        // 移除Content-Type，让http包自动设置multipart的Content-Type
+        requestHeaders.remove('Content-Type');
 
-      final request = http.MultipartRequest('POST', Uri.parse(url));
-      request.headers.addAll(requestHeaders);
+        final request = http.MultipartRequest('POST', Uri.parse(url));
+        request.headers.addAll(requestHeaders);
 
-      // 添加文件
-      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+        // 添加文件
+        request.files.add(await http.MultipartFile.fromPath('file', filePath));
 
-      // 添加其他字段（经过过滤）
-      if (fields != null) {
-        final filteredFields = _filterQueryParameters(fields);
-        request.fields.addAll(filteredFields);
+        // 添加其他字段（经过过滤）
+        if (fields != null) {
+          final filteredFields = _filterQueryParameters(fields);
+          request.fields.addAll(filteredFields);
+        }
+
+        final streamedResponse = await request.send().timeout(_timeout);
+        final response = await http.Response.fromStream(streamedResponse);
+
+        return await _handleResponse(response, fromJson, context);
+      } catch (e) {
+        retryCount++;
+        if (retryCount >= _maxRetries) {
+          return ApiResponse.error('文件上传异常: ${e.toString()}');
+        }
+        // 等待一段时间后重试
+        await Future.delayed(_retryDelay * retryCount);
       }
-
-      final streamedResponse = await request.send().timeout(_timeout);
-      final response = await http.Response.fromStream(streamedResponse);
-
-      return await _handleResponse(response, fromJson, context);
-    } catch (e) {
-      return ApiResponse.error('文件上传异常: ${e.toString()}');
     }
+    return ApiResponse.error('文件上传异常: 重试次数过多');
   }
 
   /// 获取收藏夹列表
@@ -669,6 +704,22 @@ class ApiService {
     }
   }
 
+  /// 检查账号状态
+  static Future<ApiResponse<bool>> checkAccountStatus(
+      BuildContext context) async {
+    try {
+      final response = await get<bool>(
+        '/api/user/status',
+        context: context,
+        fromJson: (data) => data['status'] == 'active',
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('检查账号状态异常: ${e.toString()}');
+    }
+  }
+
   /// 自动登录方法
   static Future<ApiResponse<String>> autoLogin() async {
     try {
@@ -678,7 +729,6 @@ class ApiService {
       }
 
       // 获取用户数据
-      final baseUrl = await UserDataService.getServerUrlWithDefault();
       final username = await UserDataService.getUsername();
       final token = await UserDataService.getAuthToken();
       final cookies = await UserDataService.getCookies();
@@ -688,7 +738,8 @@ class ApiService {
       }
 
       // 如果已有令牌或cookies，直接返回成功
-      if ((token != null && token.isNotEmpty) || (cookies != null && cookies.isNotEmpty)) {
+      if ((token != null && token.isNotEmpty) ||
+          (cookies != null && cookies.isNotEmpty)) {
         return ApiResponse.success('自动登录成功');
       }
 
@@ -889,20 +940,140 @@ class ApiService {
     }
   }
 
-  /// 解析 Set-Cookie 头部
-  static String _parseCookies(http.Response response) {
-    List<String> cookies = [];
+  /// 获取短剧分类列表
+  static Future<ApiResponse<List<dynamic>>> getShortDramaCategories(
+      BuildContext context) async {
+    try {
+      final response = await get<List<dynamic>>(
+        '/api/shortdrama/categories',
+        context: context,
+        fromJson: (data) => (data as List).toList(),
+      );
 
-    // 获取所有 Set-Cookie 头部
-    final setCookieHeaders = response.headers['set-cookie'];
-    if (setCookieHeaders != null) {
-      // HTTP 头部通常是 String 类型
-      final cookieParts = setCookieHeaders.split(';');
-      if (cookieParts.isNotEmpty) {
-        cookies.add(cookieParts[0].trim());
-      }
+      return response;
+    } catch (e) {
+      return ApiResponse.error('获取短剧分类失败: ${e.toString()}');
     }
+  }
 
-    return cookies.join('; ');
+  /// 获取短剧列表
+  static Future<ApiResponse<Map<String, dynamic>>> getShortDramaList(
+      int categoryId, int page, int size, BuildContext context) async {
+    try {
+      final response = await get<Map<String, dynamic>>(
+        '/api/shortdrama/list',
+        queryParameters: {
+          'categoryId': categoryId.toString(),
+          'page': page.toString(),
+          'size': size.toString(),
+        },
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('获取短剧列表失败: ${e.toString()}');
+    }
+  }
+
+  /// 获取短剧详情
+  static Future<ApiResponse<Map<String, dynamic>>> getShortDramaDetail(
+      int id, int episode, String? name, BuildContext context) async {
+    try {
+      final queryParameters = {
+        'id': id.toString(),
+        'episode': episode.toString(),
+      };
+      if (name != null) {
+        queryParameters['name'] = name;
+      }
+
+      final response = await get<Map<String, dynamic>>(
+        '/api/shortdrama/detail',
+        queryParameters: queryParameters,
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('获取短剧详情失败: ${e.toString()}');
+    }
+  }
+
+  /// 解析短剧视频地址
+  static Future<ApiResponse<Map<String, dynamic>>> parseShortDrama(
+      int id, int episode, String? name, BuildContext context) async {
+    try {
+      final queryParameters = {
+        'id': id.toString(),
+        'episode': episode.toString(),
+      };
+      if (name != null) {
+        queryParameters['name'] = name;
+      }
+
+      final response = await get<Map<String, dynamic>>(
+        '/api/shortdrama/parse',
+        queryParameters: queryParameters,
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('解析短剧视频地址失败: ${e.toString()}');
+    }
+  }
+
+  /// 搜索短剧
+  static Future<ApiResponse<Map<String, dynamic>>> searchShortDrama(
+      String query, BuildContext context) async {
+    try {
+      final response = await get<Map<String, dynamic>>(
+        '/api/shortdrama/search',
+        queryParameters: {'q': query.trim()},
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('搜索短剧失败: ${e.toString()}');
+    }
+  }
+
+  /// 获取推荐短剧
+  static Future<ApiResponse<Map<String, dynamic>>> getRecommendedShortDramas(
+      BuildContext context) async {
+    try {
+      final response = await get<Map<String, dynamic>>(
+        '/api/shortdrama/recommend',
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('获取推荐短剧失败: ${e.toString()}');
+    }
+  }
+
+  /// 获取短剧集数信息
+  static Future<ApiResponse<Map<String, dynamic>>> getShortDramaEpisodeCount(
+      int id, BuildContext context) async {
+    try {
+      final response = await get<Map<String, dynamic>>(
+        '/api/shortdrama/episode-count',
+        queryParameters: {'id': id.toString()},
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('获取短剧集数信息失败: ${e.toString()}');
+    }
   }
 }

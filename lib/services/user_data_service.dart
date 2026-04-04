@@ -167,15 +167,18 @@ class UserDataService {
     attempts++;
 
     // 更新尝试次数和最后尝试时间
-    await _secureStorage.write(key: _loginAttemptsKey, value: attempts.toString());
     await _secureStorage.write(
-        key: _lastLoginAttemptKey, value: DateTime.now().millisecondsSinceEpoch.toString());
+        key: _loginAttemptsKey, value: attempts.toString());
+    await _secureStorage.write(
+        key: _lastLoginAttemptKey,
+        value: DateTime.now().millisecondsSinceEpoch.toString());
 
     // 检查是否达到最大尝试次数
     if (attempts >= _maxLoginAttempts) {
       final lockUntil =
           DateTime.now().add(_lockDuration).millisecondsSinceEpoch;
-      await _secureStorage.write(key: _accountLockedUntilKey, value: lockUntil.toString());
+      await _secureStorage.write(
+          key: _accountLockedUntilKey, value: lockUntil.toString());
     }
   }
 

@@ -674,6 +674,8 @@ class _VideoCardState extends State<VideoCard> {
         return true; // 搜索模式中显示总集数
       case 'agg':
         return true; // 聚合模式中显示总集数
+      case 'shortdrama':
+        return true; // 短剧模式中显示总集数
       default:
         return true; // 默认显示当前/总集数
     }
@@ -693,6 +695,8 @@ class _VideoCardState extends State<VideoCard> {
         return '${widget.videoInfo.totalEpisodes}'; // 搜索模式只显示总集数
       case 'agg':
         return '${widget.videoInfo.totalEpisodes}'; // 聚合模式只显示总集数
+      case 'shortdrama':
+        return '${widget.videoInfo.totalEpisodes}'; // 短剧模式只显示总集数
       default:
         return '${widget.videoInfo.index}/${widget.videoInfo.totalEpisodes}'; // 默认显示当前/总集数
     }
@@ -711,6 +715,8 @@ class _VideoCardState extends State<VideoCard> {
         return false; // 搜索模式不显示进度条
       case 'agg':
         return false; // 聚合模式不显示进度条
+      case 'shortdrama':
+        return false; // 短剧模式不显示进度条
       case 'playrecord':
       default:
         return true; // 播放记录中显示进度条

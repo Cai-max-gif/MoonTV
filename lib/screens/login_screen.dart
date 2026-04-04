@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
-import 'dart:async';
 import '../services/user_data_service.dart';
-import '../services/local_mode_storage_service.dart';
-import '../services/subscription_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/windows_title_bar.dart';
@@ -202,25 +199,48 @@ class _LoginScreenState extends State<LoginScreen> {
             }
             break;
           case 401:
-            // 记录登录失败
-            await UserDataService.recordLoginFailure();
+            // 解析响应体，检查是否为账号封禁
+            String errorMessage = '用户名或密码错误';
+            bool isBanned = false;
+            try {
+              final responseData = json.decode(response.body);
+              if (responseData.containsKey('message')) {
+                errorMessage = responseData['message'] as String;
+                // 检查是否为账号封禁
+                if (errorMessage.contains('账号已被封禁') ||
+                    errorMessage.contains('封禁')) {
+                  isBanned = true;
+                }
+              }
+            } catch (e) {
+              // 解析失败，使用默认错误信息
+            }
+
+            // 记录登录失败（如果不是账号封禁）
+            if (!isBanned) {
+              await UserDataService.recordLoginFailure();
+            }
 
             // 检查是否被锁定
             isLocked = await UserDataService.isAccountLocked();
-            if (isLocked) {
+            if (isBanned) {
+              // 账号被封禁，直接显示封禁提示
+              _showToast(errorMessage, const Color(0xFFe74c3c));
+            } else if (isLocked) {
               final remainingTime =
                   await UserDataService.getAccountLockRemainingTime();
               if (remainingTime != null) {
                 final minutes = remainingTime.inMinutes;
-                _showToast('用户名或密码错误，账户已被锁定，请${minutes}分钟后再试',
+                _showToast('${errorMessage}，账户已被锁定，请${minutes}分钟后再试',
                     const Color(0xFFe74c3c));
               } else {
-                _showToast('用户名或密码错误，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+                _showToast(
+                    '${errorMessage}，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
               }
             } else {
               final attempts = await UserDataService.getLoginAttempts();
               final remainingAttempts = 5 - attempts;
-              _showToast('用户名或密码错误，还有${remainingAttempts}次尝试机会',
+              _showToast('${errorMessage}，还有${remainingAttempts}次尝试机会',
                   const Color(0xFFe74c3c));
             }
             break;
@@ -353,7 +373,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.6),
+                  fillColor: Colors.white.withValues(alpha: 0.6),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
@@ -420,7 +440,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.6),
+                  fillColor: Colors.white.withValues(alpha: 0.6),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
@@ -600,7 +620,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.6),
+                    fillColor: Colors.white.withValues(alpha: 0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
@@ -667,7 +687,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.6),
+                    fillColor: Colors.white.withValues(alpha: 0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
