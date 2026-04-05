@@ -115,8 +115,10 @@ class _AppWrapperState extends State<AppWrapper> {
   }
 
   void _startAccountStatusCheck() {
-    // 每30秒检查一次账号状态
-    _accountStatusTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+    // 初始检查间隔为30秒
+    Duration checkInterval = const Duration(seconds: 30);
+    
+    _accountStatusTimer = Timer.periodic(checkInterval, (timer) async {
       // 只在非本地模式下检查
       final isLocalMode = await UserDataService.getIsLocalMode();
       if (!isLocalMode) {
@@ -125,43 +127,46 @@ class _AppWrapperState extends State<AppWrapper> {
     });
   }
 
-  void _checkAccountStatus() async {
-    try {
-      // 检查是否已登录
-      final isLoggedIn = await UserDataService.isLoggedIn();
-      if (!isLoggedIn) {
-        return;
-      }
+  void _checkAccountStatus() {
+    // 在后台执行检查，不阻塞主线程
+    Future.microtask(() async {
+      try {
+        // 检查是否已登录
+        final isLoggedIn = await UserDataService.isLoggedIn();
+        if (!isLoggedIn) {
+          return;
+        }
 
-      // 检查账号状态
-      final statusResult = await ApiService.checkAccountStatus(context);
-      
-      if (!statusResult.success && statusResult.statusCode == 401) {
-        // 账号被封禁或登录已过期
-        await UserDataService.clearAuthData();
+        // 检查账号状态
+        final statusResult = await ApiService.checkAccountStatus(context);
         
-        // 跳转到登录页
-        if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
+        if (!statusResult.success && statusResult.statusCode == 401) {
+          // 账号被封禁或登录已过期
+          await UserDataService.clearAuthData();
+          
+          // 跳转到登录页
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            );
+          }
+        } else if (statusResult.success && statusResult.data == false) {
+          // 账号状态为非活跃（被封禁）
+          await UserDataService.clearAuthData();
+          
+          // 跳转到登录页
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            );
+          }
         }
-      } else if (statusResult.success && statusResult.data == false) {
-        // 账号状态为非活跃（被封禁）
-        await UserDataService.clearAuthData();
-        
-        // 跳转到登录页
-        if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
-        }
+      } catch (e) {
+        // 检查失败，忽略错误
       }
-    } catch (e) {
-      // 检查失败，忽略错误
-    }
+    });
   }
 
   void _checkLoginStatus() async {

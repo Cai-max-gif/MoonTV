@@ -208,7 +208,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 errorMessage = responseData['message'] as String;
                 // 检查是否为账号封禁
                 if (errorMessage.contains('账号已被封禁') ||
-                    errorMessage.contains('封禁')) {
+                    errorMessage.contains('封禁') ||
+                    errorMessage.contains('banned') ||
+                    errorMessage.contains('ban')) {
+                  isBanned = true;
+                }
+              } else if (responseData.containsKey('error')) {
+                errorMessage = responseData['error'] as String;
+                // 检查是否为账号封禁
+                if (errorMessage.contains('账号已被封禁') ||
+                    errorMessage.contains('封禁') ||
+                    errorMessage.contains('banned') ||
+                    errorMessage.contains('ban')) {
                   isBanned = true;
                 }
               }

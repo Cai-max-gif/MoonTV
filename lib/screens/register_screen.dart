@@ -213,6 +213,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // 验证验证码
+    if (verificationCode.isEmpty) {
+      _showToast('请输入验证码', const Color(0xFFe74c3c));
+      return;
+    }
+
+    if (!RegExp(r'^\d{4,6}$').hasMatch(verificationCode)) {
+      _showToast('验证码格式错误，应为4-6位数字', const Color(0xFFe74c3c));
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });

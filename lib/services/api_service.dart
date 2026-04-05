@@ -48,6 +48,11 @@ class ApiService {
   static const Duration _timeout = Duration(seconds: 30);
   static const int _maxRetries = 3;
   static const Duration _retryDelay = Duration(seconds: 1);
+  
+  // 账号状态缓存
+  static DateTime? _lastAccountStatusCheck;
+  static bool? _cachedAccountStatus;
+  static const Duration _accountStatusCacheDuration = Duration(minutes: 1);
 
   /// 获取基础URL
   static Future<String> _getBaseUrl() async {
@@ -134,6 +139,34 @@ class ApiService {
   ) async {
     // 处理401未授权
     if (response.statusCode == 401) {
+      // 尝试解析响应体中的错误信息
+      String errorMessage = '登录已过期，请重新登录';
+      bool isBanned = false;
+      try {
+        final errorData = json.decode(response.body);
+        if (errorData.containsKey('message')) {
+          errorMessage = errorData['message'] as String;
+          // 检查是否为账号封禁
+          if (errorMessage.contains('账号已被封禁') ||
+              errorMessage.contains('封禁') ||
+              errorMessage.contains('banned') ||
+              errorMessage.contains('ban')) {
+            isBanned = true;
+          }
+        } else if (errorData.containsKey('error')) {
+          errorMessage = errorData['error'] as String;
+          // 检查是否为账号封禁
+          if (errorMessage.contains('账号已被封禁') ||
+              errorMessage.contains('封禁') ||
+              errorMessage.contains('banned') ||
+              errorMessage.contains('ban')) {
+            isBanned = true;
+          }
+        }
+      } catch (e) {
+        // 解析失败，使用默认错误信息
+      }
+
       // 清除用户认证数据
       await UserDataService.clearAuthData();
 
@@ -146,15 +179,6 @@ class ApiService {
             (route) => false,
           );
         }
-      }
-
-      // 尝试解析响应体中的错误信息
-      String errorMessage = '登录已过期，请重新登录';
-      try {
-        final errorData = json.decode(response.body);
-        errorMessage = errorData['message'] ?? errorMessage;
-      } catch (e) {
-        // 解析失败，使用默认错误信息
       }
 
       return ApiResponse.error(
@@ -708,11 +732,29 @@ class ApiService {
   static Future<ApiResponse<bool>> checkAccountStatus(
       BuildContext context) async {
     try {
-      final response = await get<bool>(
+      // 检查缓存是否有效
+      final now = DateTime.now();
+      if (_lastAccountStatusCheck != null && 
+          _cachedAccountStatus != null &&
+          now.difference(_lastAccountStatusCheck!).inSeconds < _accountStatusCacheDuration.inSeconds) {
+        // 使用缓存的状态
+        return ApiResponse.success(_cachedAccountStatus!);
+      }
+
+      // 使用较短的超时时间，避免长时间阻塞
+      final response = await Future.value(get<bool>(
         '/api/user/status',
         context: context,
         fromJson: (data) => data['status'] == 'active',
-      );
+      )).timeout(const Duration(seconds: 5), onTimeout: () {
+        return ApiResponse<bool>.error('检查账号状态超时');
+      });
+
+      // 更新缓存
+      if (response.success) {
+        _cachedAccountStatus = response.data;
+        _lastAccountStatusCheck = now;
+      }
 
       return response;
     } catch (e) {
