@@ -349,6 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               },
             ),
+            // 添加40的空白内容，避免导航栏遮挡内容
+            const SizedBox(height: 40),
           ],
         ),
       ),

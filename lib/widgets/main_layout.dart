@@ -330,10 +330,16 @@ class _MainLayoutState extends State<MainLayout> {
                         ),
                       ),
                     ),
-                    // 底部导航栏（可选）
-                    if (widget.showBottomNav) _buildBottomNavBar(themeService),
                   ],
                 ),
+                // 底部导航栏（可选）
+                if (widget.showBottomNav)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: _buildBottomNavBar(themeService),
+                  ),
               ],
             ),
           ),
@@ -810,12 +816,21 @@ class _MainLayoutState extends State<MainLayout> {
     ];
 
     final isTablet = DeviceUtils.isTablet(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
+      width: screenWidth - 40, // 缩小整个底部导航栏的长度40
+      margin: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        bottom: 20 + bottomPadding, // 考虑底部安全区域的高度
+      ), // 向上移动20
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
             : Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(36), // 改为36圆角
         border: Border(
           top: BorderSide(
             color: themeService.isDarkMode
@@ -829,7 +844,7 @@ class _MainLayoutState extends State<MainLayout> {
         left: 0,
         right: 0,
         top: 4,
-        bottom: MediaQuery.of(context).padding.bottom + 4, // 手动处理底部安全区域
+        bottom: 4, // 固定底部padding，不再添加安全区域高度
       ),
       child: Row(
         mainAxisAlignment:

@@ -637,7 +637,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // 用户信息区域
           Container(
             padding: const EdgeInsets.all(20),
-            margin: const EdgeInsets.all(16),
+            margin: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: DeviceUtils.isPC() ? 16 : -10, // 移动端顶部距离改为-10
+              bottom: 16,
+            ),
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
                   ? const Color(0xFF1e1e1e)
