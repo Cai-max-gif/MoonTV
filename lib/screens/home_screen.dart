@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -88,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedTopTab = '首页';
   late PageController _pageController;
   late PageController _bottomNavPageController;
+  Timer? _versionCheckTimer;
 
   @override
   void initState() {
@@ -100,24 +102,27 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshCacheOnHomeEnter();
     // 检查应用更新
     _checkForUpdates();
+    // 启动定时检测
+    _startVersionCheckTimer();
+  }
+
+  /// 启动定时检测
+  void _startVersionCheckTimer() {
+    _versionCheckTimer = Timer.periodic(const Duration(hours: 1), (timer) {
+      _checkForUpdates();
+    });
   }
 
   /// 检查应用更新
   void _checkForUpdates() async {
-    // 延迟3秒后检查更新，避免影响页面加载
-    await Future.delayed(const Duration(seconds: 3));
-
     try {
       final versionInfo = await VersionService.checkForUpdate();
 
       if (versionInfo != null && mounted) {
-        final shouldShow = await VersionService.shouldShowUpdatePrompt(
-          versionInfo.latestVersion,
-        );
-
-        if (shouldShow && mounted) {
+        if (versionInfo.updateType == UpdateType.force) {
           UpdateDialog.show(context, versionInfo);
         }
+        // 非强制更新不显示弹窗
       }
     } catch (e) {
       // 静默失败，不影响用户体验
@@ -128,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _pageController.dispose();
     _bottomNavPageController.dispose();
+    _versionCheckTimer?.cancel();
     super.dispose();
   }
 
