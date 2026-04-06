@@ -472,8 +472,14 @@ class _PlayerScreenState extends State<PlayerScreen>
       } else {
         // 本地播放：根据设备类型从对应播放器获取
         if (_videoPlayerController == null) return;
-        currentPosition = _videoPlayerController!.currentPosition;
-        duration = _videoPlayerController!.duration;
+        try {
+          currentPosition = _videoPlayerController!.currentPosition;
+          duration = _videoPlayerController!.duration;
+        } catch (e) {
+          // 播放器可能已经被销毁，静默处理
+          debugPrint('获取播放器状态失败: $e');
+          return;
+        }
       }
 
       if (currentPosition == null || duration == null) return;

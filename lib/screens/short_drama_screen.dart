@@ -5,7 +5,7 @@ import '../widgets/capsule_tab_switcher.dart';
 import '../widgets/custom_refresh_indicator.dart';
 import '../widgets/short_drama_grid.dart';
 import '../services/api_service.dart';
-import '../models/video_info.dart';
+
 import '../widgets/video_menu_bottom_sheet.dart';
 import '../widgets/pulsing_dots_indicator.dart';
 import 'player_screen.dart';
@@ -244,31 +244,9 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     }
   }
 
-  /// 将短剧数据转换为VideoInfo对象
-  VideoInfo _convertToVideoInfo(Map<String, dynamic> shortDrama) {
-    return VideoInfo(
-      id: shortDrama['id'].toString(),
-      title: shortDrama['name'] ?? '',
-      year: shortDrama['update_time']?.toString().substring(0, 4) ?? '',
-      cover: shortDrama['cover'] ?? '',
-      source: 'shortdrama',
-      sourceName: '短剧',
-      index: 1,
-      totalEpisodes:
-          int.tryParse(shortDrama['episode_count']?.toString() ?? '0') ?? 0,
-      playTime: 0,
-      totalTime: 0,
-      saveTime: DateTime.now().millisecondsSinceEpoch,
-      searchTitle: shortDrama['name'] ?? '',
-    );
-  }
 
-  /// 转换短剧列表为VideoInfo列表
-  List<VideoInfo> _convertToVideoInfos() {
-    return _shortDramas
-        .map((shortDrama) => _convertToVideoInfo(shortDrama))
-        .toList();
-  }
+
+
 
   @override
   Widget build(BuildContext context) {

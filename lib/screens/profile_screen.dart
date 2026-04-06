@@ -5,10 +5,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/user_data_service.dart';
 import '../screens/login_screen.dart';
-import '../services/douban_cache_service.dart';
 import '../services/page_cache_service.dart';
 import '../services/live_service.dart';
-import '../services/local_search_cache_service.dart';
 import '../services/version_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
@@ -29,7 +27,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _m3u8ProxyUrl = '';
   String _version = '';
   bool _preferSpeedTest = true;
-  bool _localSearch = false;
 
   @override
   void initState() {
@@ -56,7 +53,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await UserDataService.getDoubanImageSourceDisplayName();
     final m3u8ProxyUrl = await UserDataService.getM3u8ProxyUrl();
     final preferSpeedTest = await UserDataService.getPreferSpeedTest();
-    final localSearch = await UserDataService.getLocalSearch();
 
     if (mounted) {
       setState(() {
@@ -66,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _doubanImageSource = doubanImageSource;
         _m3u8ProxyUrl = m3u8ProxyUrl;
         _preferSpeedTest = preferSpeedTest;
-        _localSearch = localSearch;
       });
     }
   }
@@ -120,7 +115,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleLogout() async {
     // 清空所有缓存
     LiveService.clearAllCache();
-    LocalSearchCacheService().clearCache();
     PageCacheService().clearAllCache();
 
     // 只清除密码和cookies，保留服务器地址和用户名
@@ -135,24 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _handleClearDoubanCache() async {
-    try {
-      await DoubanCacheService().clearAll();
-      // 同时清空 Bangumi 的函数级与内存级缓存
-      PageCacheService().clearCache('bangumi_calendar');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('已清除豆瓣缓存')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('清除豆瓣缓存失败')));
-      }
-    }
-  }
+
 
   Future<void> _handleCheckUpdate() async {
     try {
@@ -790,26 +767,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                   icon: LucideIcons.zap,
                 ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-                // 本地搜索选项
-                _buildToggleOption(
-                  title: '本地搜索',
-                  value: _localSearch,
-                  onChanged: (value) async {
-                    await UserDataService.saveLocalSearch(value);
-                    setState(() {
-                      _localSearch = value;
-                    });
-                  },
-                  icon: LucideIcons.search,
-                ),
+
               ],
             ),
           ),
@@ -834,48 +792,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
-                // 清除豆瓣缓存按钮
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _handleClearDoubanCache,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            LucideIcons.trash2,
-                            size: 20,
-                            color: const Color(0xFFf59e0b),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '清除豆瓣缓存',
-                            style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFFffffff)
-                                  : const Color(0xFF1f2937),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
                 // 检查更新按钮
                 Material(
                   color: Colors.transparent,

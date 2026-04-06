@@ -223,8 +223,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onVideoTap: _onVideoTap,
               onGlobalMenuAction: _onGlobalMenuAction,
               onViewAll: () {
-                // 切换到播放历史标签
-                _onTopTabChanged('播放历史');
+                // 切换到播放历史页面
+                _onBottomNavChanged(1);
               },
             ),
             // 热门电影组件

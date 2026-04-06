@@ -276,35 +276,32 @@ class _HistoryGridState extends State<HistoryGrid>
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 120.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.history,
-              size: 80,
-              color: Color(0xFFbdc3c7),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.history,
+            size: 80,
+            color: Color(0xFFbdc3c7),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            '暂无播放历史',
+            style: FontUtils.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF7f8c8d),
             ),
-            const SizedBox(height: 24),
-            Text(
-              '暂无播放历史',
-              style: FontUtils.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF7f8c8d),
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '您观看过的视频将显示在这里',
+            style: FontUtils.poppins(
+              fontSize: 14,
+              color: const Color(0xFF95a5a6),
             ),
-            const SizedBox(height: 12),
-            Text(
-              '您观看过的视频将显示在这里',
-              style: FontUtils.poppins(
-                fontSize: 14,
-                color: const Color(0xFF95a5a6),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -328,7 +325,7 @@ class _HistoryGridState extends State<HistoryGrid>
           const double minItemWidth = 80.0;
           final double calculatedItemWidth = availableWidth / crossAxisCount;
           final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
-          final double aspectRatio = 0.75; // 固定宽高比 4:3
+          final double itemHeight = itemWidth * 2.0;
 
           return GridView.builder(
             padding: const EdgeInsets.all(16),
@@ -336,7 +333,7 @@ class _HistoryGridState extends State<HistoryGrid>
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              childAspectRatio: aspectRatio,
+              childAspectRatio: itemWidth / itemHeight,
               crossAxisSpacing: spacing,
               mainAxisSpacing: isTablet ? 0 : 16,
             ),

@@ -141,27 +141,12 @@ class ApiService {
     if (response.statusCode == 401) {
       // 尝试解析响应体中的错误信息
       String errorMessage = '登录已过期，请重新登录';
-      bool isBanned = false;
       try {
         final errorData = json.decode(response.body);
         if (errorData.containsKey('message')) {
           errorMessage = errorData['message'] as String;
-          // 检查是否为账号封禁
-          if (errorMessage.contains('账号已被封禁') ||
-              errorMessage.contains('封禁') ||
-              errorMessage.contains('banned') ||
-              errorMessage.contains('ban')) {
-            isBanned = true;
-          }
         } else if (errorData.containsKey('error')) {
           errorMessage = errorData['error'] as String;
-          // 检查是否为账号封禁
-          if (errorMessage.contains('账号已被封禁') ||
-              errorMessage.contains('封禁') ||
-              errorMessage.contains('banned') ||
-              errorMessage.contains('ban')) {
-            isBanned = true;
-          }
         }
       } catch (e) {
         // 解析失败，使用默认错误信息
