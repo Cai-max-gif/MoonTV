@@ -119,10 +119,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final versionInfo = await VersionService.checkForUpdate();
 
       if (versionInfo != null && mounted) {
-        if (versionInfo.updateType == UpdateType.force) {
-          UpdateDialog.show(context, versionInfo);
-        }
-        // 非强制更新不显示弹窗
+        // 显示更新弹窗，与个人中心的检查更新一样
+        UpdateDialog.show(context, versionInfo);
       }
     } catch (e) {
       // 静默失败，不影响用户体验
