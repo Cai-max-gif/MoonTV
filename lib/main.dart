@@ -9,6 +9,10 @@ import 'services/theme_service.dart';
 import 'services/douban_cache_service.dart';
 import 'services/local_mode_storage_service.dart';
 import 'services/subscription_service.dart';
+import 'services/version_service.dart';
+import 'services/announcement_service.dart';
+import 'widgets/announcement_dialog.dart';
+import 'widgets/update_dialog.dart';
 import 'dart:io' show Platform;
 import 'dart:async';
 import 'package:macos_window_utils/macos_window_utils.dart';
@@ -117,7 +121,7 @@ class _AppWrapperState extends State<AppWrapper> {
   void _startAccountStatusCheck() {
     // 初始检查间隔为30秒
     Duration checkInterval = const Duration(seconds: 30);
-    
+
     _accountStatusTimer = Timer.periodic(checkInterval, (timer) async {
       // 只在非本地模式下检查
       final isLocalMode = await UserDataService.getIsLocalMode();
@@ -139,11 +143,11 @@ class _AppWrapperState extends State<AppWrapper> {
 
         // 检查账号状态
         final statusResult = await ApiService.checkAccountStatus(context);
-        
+
         if (!statusResult.success && statusResult.statusCode == 401) {
           // 账号被封禁或登录已过期
           await UserDataService.clearAuthData();
-          
+
           // 跳转到登录页
           if (mounted) {
             Navigator.of(context).pushAndRemoveUntil(
@@ -154,7 +158,7 @@ class _AppWrapperState extends State<AppWrapper> {
         } else if (statusResult.success && statusResult.data == false) {
           // 账号状态为非活跃（被封禁）
           await UserDataService.clearAuthData();
-          
+
           // 跳转到登录页
           if (mounted) {
             Navigator.of(context).pushAndRemoveUntil(
@@ -203,12 +207,8 @@ class _AppWrapperState extends State<AppWrapper> {
           // 刷新失败也继续进入首页
         }
 
-        // 无论刷新成功与否，都进入首页
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
+        // 执行启动流程
+        await _executeStartupFlow();
       }
 
       // 检查是否有自动登录所需的数据
@@ -229,10 +229,8 @@ class _AppWrapperState extends State<AppWrapper> {
 
       if (mounted) {
         if (loginResult.success) {
-          // 自动登录成功，进入首页
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
+          // 自动登录成功，执行启动流程
+          await _executeStartupFlow();
         } else {
           // 自动登录失败，进入登录页
           setState(() {
@@ -247,6 +245,56 @@ class _AppWrapperState extends State<AppWrapper> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _executeStartupFlow() async {
+    // 1. 检查版本更新
+    final versionInfo = await VersionService.checkForUpdate();
+
+    if (mounted) {
+      if (versionInfo != null) {
+        // 检查是否为强制更新
+        if (versionInfo.updateType == UpdateType.force) {
+          // 强制更新，必须完成更新后才能继续
+          // 显示更新对话框并等待用户操作
+          await UpdateDialog.show(context, versionInfo);
+          // 对于强制更新，用户无法关闭对话框，只能完成更新
+          // 但为了安全起见，我们仍然检查是否应该继续
+          // 实际应用中，强制更新后通常会重启应用
+          // 这里我们假设用户已经完成更新或取消
+        } else {
+          // 非强制更新，继续执行公告显示逻辑
+          await _checkAndShowAnnouncement();
+        }
+      } else {
+        // 无版本更新，继续执行公告显示逻辑
+        await _checkAndShowAnnouncement();
+      }
+
+      // 进入首页
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
+  Future<void> _checkAndShowAnnouncement() async {
+    try {
+      // 获取公告
+      final announcement = await AnnouncementService.getAnnouncement();
+
+      if (mounted && announcement != null) {
+        // 检查是否应该显示公告
+        final shouldShow =
+            await AnnouncementService.shouldShowAnnouncement(announcement);
+        if (shouldShow) {
+          // 显示公告
+          await AnnouncementDialog.show(context, announcement);
+        }
+      }
+    } catch (e) {
+      // 公告显示失败，不影响主流程
     }
   }
 

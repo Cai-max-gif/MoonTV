@@ -8,9 +8,11 @@ import '../screens/login_screen.dart';
 import '../services/page_cache_service.dart';
 import '../services/live_service.dart';
 import '../services/version_service.dart';
+import '../services/announcement_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/update_dialog.dart';
+import '../widgets/announcement_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -27,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _m3u8ProxyUrl = '';
   String _version = '';
   bool _preferSpeedTest = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -113,26 +116,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _handleLogout() async {
-    // 清空所有缓存
-    LiveService.clearAllCache();
-    PageCacheService().clearAllCache();
+    if (_isLoading) return;
+    
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      // 清空所有缓存
+      LiveService.clearAllCache();
+      PageCacheService().clearAllCache();
 
-    // 只清除密码和cookies，保留服务器地址和用户名
-    await UserDataService.clearAuthData();
+      // 只清除密码和cookies，保留服务器地址和用户名
+      await UserDataService.clearAuthData();
 
-    // 跳转到登录页，并移除所有之前的路由（强制销毁所有页面）
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
+      // 跳转到登录页，并移除所有之前的路由（强制销毁所有页面）
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-
-
   Future<void> _handleCheckUpdate() async {
+    if (_isLoading) return;
+    
     try {
+      setState(() {
+        _isLoading = true;
+      });
+      
       // 显示加载提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -177,6 +198,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
             backgroundColor: const Color(0xFFef4444),
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleViewAnnouncement() async {
+    if (_isLoading) return;
+    
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      // 显示加载提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '正在获取公告...',
+              style: FontUtils.poppins(color: Colors.white),
+            ),
+            backgroundColor: Colors.black,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      final announcement = await AnnouncementService.getAnnouncement();
+
+      if (!mounted) return;
+
+      if (announcement != null) {
+        // 显示公告对话框
+        await AnnouncementDialog.show(context, announcement);
+      } else {
+        // 没有公告
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '暂无公告',
+              style: FontUtils.poppins(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF27AE60),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '获取公告失败: ${e.toString()}',
+              style: FontUtils.poppins(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFef4444),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -767,7 +856,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                   icon: LucideIcons.zap,
                 ),
-
               ],
             ),
           ),
@@ -792,6 +880,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
+                // 公告入口按钮
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _handleViewAnnouncement,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            LucideIcons.bell,
+                            size: 20,
+                            color: const Color(0xFFf59e0b),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '公告',
+                            style: FontUtils.poppins(
+                              fontSize: 16,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const Color(0xFFffffff)
+                                  : const Color(0xFF1f2937),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // 分割线
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
                 // 检查更新按钮
                 Material(
                   color: Colors.transparent,

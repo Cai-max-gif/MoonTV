@@ -147,6 +147,9 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
 
 ## 更新日志
 
+### v1.1.0
+- 更新版本号为v1.1.0
+
 ### v1.0.0
 - 初始版本
 - 支持Android和Windows平台
