@@ -1,0 +1,45 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins-dependencies
+.flutter-plugins
+.pub/
+build/
+dist/
+installer/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+
+# iOS
+ios/Pods/
+ios/build/
+
+# macOS
+macos/Pods/
+macos/build/
+
+# Windows
+windows/build/
+
+# Linux
+linux/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
