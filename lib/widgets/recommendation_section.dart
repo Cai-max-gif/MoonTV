@@ -22,6 +22,8 @@ class RecommendationSection extends StatefulWidget {
   final VoidCallback? onRetry; // 重试回调
   final double cardCount; // 显示的卡片数量（如2.75）
   final Map<String, String>? rateMap; // 评分映射，key为item.id，value为评分
+  final String
+      from; // 场景值：'favorite', 'playrecord', 'search', 'agg', 'shortdrama'
 
   const RecommendationSection({
     super.key,
@@ -36,6 +38,7 @@ class RecommendationSection extends StatefulWidget {
     this.onRetry,
     this.cardCount = 2.75,
     this.rateMap,
+    this.from = 'douban', // 默认使用douban模式
   });
 
   @override
@@ -396,7 +399,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                 child: VideoCard(
                   videoInfo: videoInfo,
                   onTap: () => widget.onItemTap?.call(videoInfo),
-                  from: 'douban', // 推荐页面使用douban模式，不显示删除和爱心图标
+                  from: widget.from, // 使用传入的from参数
                   cardWidth: cardWidth,
                   onGlobalMenuAction: widget.onGlobalMenuAction != null
                       ? (action) =>

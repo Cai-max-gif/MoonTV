@@ -48,7 +48,7 @@ class ApiService {
   static const Duration _timeout = Duration(seconds: 30);
   static const int _maxRetries = 3;
   static const Duration _retryDelay = Duration(seconds: 1);
-  
+
   // 账号状态缓存
   static DateTime? _lastAccountStatusCheck;
   static bool? _cachedAccountStatus;
@@ -719,9 +719,10 @@ class ApiService {
     try {
       // 检查缓存是否有效
       final now = DateTime.now();
-      if (_lastAccountStatusCheck != null && 
+      if (_lastAccountStatusCheck != null &&
           _cachedAccountStatus != null &&
-          now.difference(_lastAccountStatusCheck!).inSeconds < _accountStatusCacheDuration.inSeconds) {
+          now.difference(_lastAccountStatusCheck!).inSeconds <
+              _accountStatusCacheDuration.inSeconds) {
         // 使用缓存的状态
         return ApiResponse.success(_cachedAccountStatus!);
       }

@@ -111,7 +111,8 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
       source: 'shortdrama',
       sourceName: '短剧',
       index: 1,
-      totalEpisodes: int.tryParse(shortDrama['episode_count']?.toString() ?? '0') ?? 0,
+      totalEpisodes:
+          int.tryParse(shortDrama['episode_count']?.toString() ?? '0') ?? 0,
       playTime: 0,
       totalTime: 0,
       saveTime: DateTime.now().millisecondsSinceEpoch,
@@ -147,6 +148,8 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
       isLoading: _isLoading,
       hasError: _hasError,
       onRetry: _loadHotShortDramas,
+      cardCount: 2.75,
+      from: 'shortdrama', // 传递from参数为'shortdrama'，确保显示集数而不是链接图标
     );
   }
 }

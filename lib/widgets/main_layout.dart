@@ -177,8 +177,8 @@ class _MainLayoutState extends State<MainLayout> {
       return;
     }
 
-    // 设置新的防抖计时器（500ms）
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+    // 设置新的防抖计时器（300ms），提高响应速度
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       if (mounted && query == widget.searchQuery) {
         _fetchSearchSuggestions(query);
       }
@@ -283,64 +283,74 @@ class _MainLayoutState extends State<MainLayout> {
               : themeService.lightTheme,
           child: Scaffold(
             resizeToAvoidBottomInset: !widget.isSearchMode,
-            body: Stack(
-              children: [
-                // 主要内容区域
-                Column(
-                  children: [
-                    // 主内容区域（包含header和content）
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: themeService.isDarkMode
-                              ? const Color(0xFF000000) // 深色模式纯黑色
-                              : null,
-                          gradient: themeService.isDarkMode
-                              ? null
-                              : const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Color(0xFFe6f3fb), // 浅色模式渐变
-                                    Color(0xFFeaf3f7),
-                                    Color(0xFFf7f7f3),
-                                    Color(0xFFe9ecef),
-                                    Color(0xFFdbe3ea),
-                                    Color(0xFFd3dde6),
-                                  ],
-                                  stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
+            body: GestureDetector(
+              // 点击空白处关闭搜索建议
+              onTap: () {
+                _removeOverlay();
+              },
+              // 滑动时关闭搜索建议
+              onVerticalDragStart: (details) {
+                _removeOverlay();
+              },
+              child: Stack(
+                children: [
+                  // 主要内容区域
+                  Column(
+                    children: [
+                      // 主内容区域（包含header和content）
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: themeService.isDarkMode
+                                ? const Color(0xFF000000) // 深色模式纯黑色
+                                : null,
+                            gradient: themeService.isDarkMode
+                                ? null
+                                : const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Color(0xFFe6f3fb), // 浅色模式渐变
+                                      Color(0xFFeaf3f7),
+                                      Color(0xFFf7f7f3),
+                                      Color(0xFFe9ecef),
+                                      Color(0xFFdbe3ea),
+                                      Color(0xFFd3dde6),
+                                    ],
+                                    stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
+                                  ),
+                          ),
+                          child: Column(
+                            children: [
+                              // Windows 自定义标题栏
+                              if (Platform.isWindows)
+                                WindowsTitleBar(
+                                  customBackgroundColor: widget.isSearchMode
+                                      ? (themeService.isDarkMode
+                                          ? const Color(0xFF121212)
+                                          : const Color(0xFFf5f5f5))
+                                      : null,
                                 ),
-                        ),
-                        child: Column(
-                          children: [
-                            // Windows 自定义标题栏
-                            if (Platform.isWindows)
-                              WindowsTitleBar(
-                                customBackgroundColor: widget.isSearchMode
-                                    ? (themeService.isDarkMode
-                                        ? const Color(0xFF121212)
-                                        : const Color(0xFFf5f5f5))
-                                    : null,
-                              ),
-                            // 固定 Header
-                            _buildHeader(context, themeService),
-                            // 主要内容区域
-                            Expanded(child: widget.content),
-                          ],
+                              // 固定 Header
+                              _buildHeader(context, themeService),
+                              // 主要内容区域
+                              Expanded(child: widget.content),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                // 底部导航栏（可选）
-                if (widget.showBottomNav)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: _buildBottomNavBar(themeService),
+                    ],
                   ),
-              ],
+                  // 底部导航栏（可选）
+                  if (widget.showBottomNav)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: _buildBottomNavBar(themeService),
+                    ),
+                ],
+              ),
             ),
           ),
         );
@@ -472,185 +482,195 @@ class _MainLayoutState extends State<MainLayout> {
   ) {
     final searchBoxWidget = CompositedTransformTarget(
       link: _layerLink,
-      child: Container(
-        decoration: BoxDecoration(
-          color:
-              themeService.isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Focus(
-          onFocusChange: (hasFocus) {
-            if (!hasFocus) {
-              // 失焦时关闭建议框
-              _removeOverlay();
-            }
-          },
-          child: TextField(
-            controller: widget.searchController,
-            focusNode: widget.searchFocusNode,
-            autofocus: false,
-            textInputAction: TextInputAction.search,
-            keyboardType: TextInputType.text,
-            textAlignVertical: TextAlignVertical.center,
-            decoration: InputDecoration(
-              hintText: '搜索电影、剧集、动漫...',
-              hintStyle: FontUtils.poppins(
-                color: themeService.isDarkMode
-                    ? const Color(0xFF666666)
-                    : const Color(0xFF95a5a6),
-                fontSize: 14,
-              ),
-              suffixIcon: SizedBox(
-                width: isTablet ? 80 : 80, // 固定宽度确保按钮位置一致
-                child: Stack(
-                  alignment: Alignment.centerRight,
-                  children: [
-                    // 搜索按钮 - 固定在右侧
-                    Positioned(
-                      right: isTablet ? 8 : 12,
-                      child: MouseRegion(
-                        cursor:
-                            (widget.searchQuery?.trim().isNotEmpty ?? false) &&
-                                    DeviceUtils.isPC()
-                                ? SystemMouseCursors.click
-                                : MouseCursor.defer,
-                        onEnter: DeviceUtils.isPC() &&
-                                (widget.searchQuery?.trim().isNotEmpty ?? false)
-                            ? (_) {
-                                setState(() {
-                                  _isSearchSubmitButtonHovered = true;
-                                });
-                              }
-                            : null,
-                        onExit: DeviceUtils.isPC() &&
-                                (widget.searchQuery?.trim().isNotEmpty ?? false)
-                            ? (_) {
-                                setState(() {
-                                  _isSearchSubmitButtonHovered = false;
-                                });
-                              }
-                            : null,
-                        child: GestureDetector(
-                          onTap:
-                              (widget.searchQuery?.trim().isNotEmpty ?? false)
-                                  ? () {
-                                      _removeOverlay();
-                                      widget.onSearchSubmitted?.call(
-                                        widget.searchQuery!,
-                                      );
-                                    }
-                                  : null,
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.all(isTablet ? 6 : 8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: DeviceUtils.isPC() &&
-                                      _isSearchSubmitButtonHovered &&
-                                      (widget.searchQuery?.trim().isNotEmpty ??
-                                          false)
-                                  ? (themeService.isDarkMode
-                                      ? const Color(0xFF333333)
-                                      : const Color(0xFFe0e0e0))
-                                  : Colors.transparent,
-                            ),
-                            child: Icon(
-                              LucideIcons.search,
-                              color: (widget.searchQuery?.trim().isNotEmpty ??
-                                      false)
-                                  ? const Color(0xFF27ae60)
-                                  : themeService.isDarkMode
-                                      ? const Color(0xFFb0b0b0)
-                                      : const Color(0xFF7f8c8d),
-                              size: isTablet ? 18 : 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // 清除按钮 - 在搜索按钮左侧（仅在有内容时显示）
-                    Positioned(
-                      right: isTablet ? 42 : 44,
-                      child: Visibility(
-                        visible: widget.searchQuery?.isNotEmpty ?? false,
-                        maintainSize: true,
-                        maintainAnimation: true,
-                        maintainState: true,
+      child: GestureDetector(
+        // 阻止事件冒泡，确保点击搜索框时不会触发外部的onTap
+        onTap: (() {
+          // 聚焦时如果有内容，直接显示建议
+          if (widget.searchQuery?.trim().isNotEmpty ?? false) {
+            _fetchSearchSuggestions(widget.searchQuery!);
+          }
+        }),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: BoxDecoration(
+            color: themeService.isDarkMode
+                ? const Color(0xFF1e1e1e)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (!hasFocus) {
+                // 失焦时关闭建议框
+                _removeOverlay();
+              }
+            },
+            child: TextField(
+              controller: widget.searchController,
+              focusNode: widget.searchFocusNode,
+              autofocus: false,
+              textInputAction: TextInputAction.search,
+              keyboardType: TextInputType.text,
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                hintText: '搜索电影、剧集、动漫...',
+                hintStyle: FontUtils.poppins(
+                  color: themeService.isDarkMode
+                      ? const Color(0xFF666666)
+                      : const Color(0xFF95a5a6),
+                  fontSize: 14,
+                ),
+                suffixIcon: SizedBox(
+                  width: isTablet ? 80 : 80, // 固定宽度确保按钮位置一致
+                  child: Stack(
+                    alignment: Alignment.centerRight,
+                    children: [
+                      // 搜索按钮 - 固定在右侧
+                      Positioned(
+                        right: isTablet ? 8 : 12,
                         child: MouseRegion(
-                          cursor: DeviceUtils.isPC()
+                          cursor: (widget.searchQuery?.trim().isNotEmpty ??
+                                      false) &&
+                                  DeviceUtils.isPC()
                               ? SystemMouseCursors.click
                               : MouseCursor.defer,
-                          onEnter: DeviceUtils.isPC()
+                          onEnter: DeviceUtils.isPC() &&
+                                  (widget.searchQuery?.trim().isNotEmpty ??
+                                      false)
                               ? (_) {
                                   setState(() {
-                                    _isClearButtonHovered = true;
+                                    _isSearchSubmitButtonHovered = true;
                                   });
                                 }
                               : null,
-                          onExit: DeviceUtils.isPC()
+                          onExit: DeviceUtils.isPC() &&
+                                  (widget.searchQuery?.trim().isNotEmpty ??
+                                      false)
                               ? (_) {
                                   setState(() {
-                                    _isClearButtonHovered = false;
+                                    _isSearchSubmitButtonHovered = false;
                                   });
                                 }
                               : null,
                           child: GestureDetector(
-                            onTap: () {
-                              _removeOverlay();
-                              widget.onClearSearch?.call();
-                            },
+                            onTap:
+                                (widget.searchQuery?.trim().isNotEmpty ?? false)
+                                    ? () {
+                                        _removeOverlay();
+                                        widget.onSearchSubmitted?.call(
+                                          widget.searchQuery!,
+                                        );
+                                      }
+                                    : null,
                             behavior: HitTestBehavior.opaque,
                             child: Container(
                               padding: EdgeInsets.all(isTablet ? 6 : 8),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color:
-                                    DeviceUtils.isPC() && _isClearButtonHovered
-                                        ? (themeService.isDarkMode
-                                            ? const Color(0xFF333333)
-                                            : const Color(0xFFe0e0e0))
-                                        : Colors.transparent,
+                                color: DeviceUtils.isPC() &&
+                                        _isSearchSubmitButtonHovered &&
+                                        (widget.searchQuery
+                                                ?.trim()
+                                                .isNotEmpty ??
+                                            false)
+                                    ? (themeService.isDarkMode
+                                        ? const Color(0xFF333333)
+                                        : const Color(0xFFe0e0e0))
+                                    : Colors.transparent,
                               ),
                               child: Icon(
-                                LucideIcons.x,
-                                color: themeService.isDarkMode
-                                    ? const Color(0xFFb0b0b0)
-                                    : const Color(0xFF7f8c8d),
+                                LucideIcons.search,
+                                color: (widget.searchQuery?.trim().isNotEmpty ??
+                                        false)
+                                    ? const Color(0xFF27ae60)
+                                    : themeService.isDarkMode
+                                        ? const Color(0xFFb0b0b0)
+                                        : const Color(0xFF7f8c8d),
                                 size: isTablet ? 18 : 16,
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      // 清除按钮 - 在搜索按钮左侧（仅在有内容时显示）
+                      Positioned(
+                        right: isTablet ? 42 : 44,
+                        child: Visibility(
+                          visible: widget.searchQuery?.isNotEmpty ?? false,
+                          maintainSize: true,
+                          maintainAnimation: true,
+                          maintainState: true,
+                          child: MouseRegion(
+                            cursor: DeviceUtils.isPC()
+                                ? SystemMouseCursors.click
+                                : MouseCursor.defer,
+                            onEnter: DeviceUtils.isPC()
+                                ? (_) {
+                                    setState(() {
+                                      _isClearButtonHovered = true;
+                                    });
+                                  }
+                                : null,
+                            onExit: DeviceUtils.isPC()
+                                ? (_) {
+                                    setState(() {
+                                      _isClearButtonHovered = false;
+                                    });
+                                  }
+                                : null,
+                            child: GestureDetector(
+                              onTap: () {
+                                _removeOverlay();
+                                widget.onClearSearch?.call();
+                              },
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: EdgeInsets.all(isTablet ? 6 : 8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: DeviceUtils.isPC() &&
+                                          _isClearButtonHovered
+                                      ? (themeService.isDarkMode
+                                          ? const Color(0xFF333333)
+                                          : const Color(0xFFe0e0e0))
+                                      : Colors.transparent,
+                                ),
+                                child: Icon(
+                                  LucideIcons.x,
+                                  color: themeService.isDarkMode
+                                      ? const Color(0xFFb0b0b0)
+                                      : const Color(0xFF7f8c8d),
+                                  size: isTablet ? 18 : 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                isDense: true,
               ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 6,
+              style: FontUtils.poppins(
+                fontSize: 14,
+                color: themeService.isDarkMode
+                    ? const Color(0xFFffffff)
+                    : const Color(0xFF2c3e50),
+                height: 1.2,
               ),
-              isDense: true,
+              onSubmitted: (value) {
+                _removeOverlay();
+                widget.onSearchSubmitted?.call(value);
+              },
+              onChanged: _onSearchQueryChanged,
+              // 移除TextField的onTap，使用外部GestureDetector的onTap
             ),
-            style: FontUtils.poppins(
-              fontSize: 14,
-              color: themeService.isDarkMode
-                  ? const Color(0xFFffffff)
-                  : const Color(0xFF2c3e50),
-              height: 1.2,
-            ),
-            onSubmitted: (value) {
-              _removeOverlay();
-              widget.onSearchSubmitted?.call(value);
-            },
-            onChanged: _onSearchQueryChanged,
-            onTap: () {
-              // 聚焦时如果有内容，显示建议
-              if (widget.searchQuery?.trim().isNotEmpty ?? false) {
-                _fetchSearchSuggestions(widget.searchQuery!);
-              }
-            },
           ),
         ),
       ),
