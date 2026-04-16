@@ -160,10 +160,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               '正在检查更新...',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
             ),
-            backgroundColor: Colors.black,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
             duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
         );
       }
@@ -181,9 +189,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               '当前已是最新版本',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(
+                color: Colors.white,
+              ),
             ),
             backgroundColor: const Color(0xFF27AE60),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
         );
       }
@@ -193,9 +205,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               '检查更新失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(
+                color: Colors.white,
+              ),
             ),
             backgroundColor: const Color(0xFFef4444),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
         );
       }
@@ -222,10 +238,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               '正在获取公告...',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
             ),
-            backgroundColor: Colors.black,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
             duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
         );
       }
@@ -243,9 +267,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               '暂无公告',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(
+                color: Colors.white,
+              ),
             ),
             backgroundColor: const Color(0xFF27AE60),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
         );
       }
@@ -255,9 +283,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               '获取公告失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(
+                color: Colors.white,
+              ),
             ),
             backgroundColor: const Color(0xFFef4444),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
         );
       }
