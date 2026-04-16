@@ -22,8 +22,10 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 初始化 media_kit (用于 PC 端播放器)
-  MediaKit.ensureInitialized();
+  // 初始化 media_kit (仅用于 PC 端播放器)
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    MediaKit.ensureInitialized();
+  }
 
   // 初始化 macOS 窗口配置
   if (Platform.isMacOS) {

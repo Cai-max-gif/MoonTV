@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import 'package:pip/pip.dart';
 import 'mobile_player_controls.dart';
 import 'pc_player_controls.dart';
 import 'video_player_surface.dart';
+
+// 只在 PC 平台导入 media_kit 库
+import 'package:media_kit/media_kit.dart' if (dart.library.html) 'dart:html';
+import 'package:media_kit_video/media_kit_video.dart' if (dart.library.html) 'dart:html';
 
 class VideoPlayerWidget extends StatefulWidget {
   final VideoPlayerSurface surface;
@@ -125,8 +127,9 @@ class VideoPlayerWidgetController {
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     with WidgetsBindingObserver {
-  Player? _player;
-  VideoController? _videoController;
+  // 只在 PC 平台使用 media_kit
+  dynamic _player;
+  dynamic _videoController;
   bool _isInitialized = false;
   bool _hasCompleted = false;
   bool _isLoadingVideo = false;
@@ -149,7 +152,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     WidgetsBinding.instance.addObserver(this);
     _currentUrl = widget.url;
     _currentHeaders = widget.headers;
-    _initializePlayer();
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      _initializePlayer();
+    } else {
+      // 移动端不使用 media_kit，直接标记为初始化完成
+      setState(() {
+        _isInitialized = true;
+      });
+      widget.onReady?.call();
+    }
     _setupPip();
     _registerPipObserver();
     widget.onControllerCreated?.call(VideoPlayerWidgetController._(this));
@@ -167,22 +178,30 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Future<void> _initializePlayer() async {
-    if (_playerDisposed) {
+    if (_playerDisposed || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return;
     }
-    _player = Player();
-    _videoController = VideoController(_player!);
-    _setupPlayerListeners();
-    if (_currentUrl != null) {
-      await _openCurrentMedia();
+    try {
+      _player = Player();
+      _videoController = VideoController(_player!);
+      _setupPlayerListeners();
+      if (_currentUrl != null) {
+        await _openCurrentMedia();
+      }
+      setState(() {
+        _isInitialized = true;
+      });
+    } catch (e) {
+      debugPrint('VideoPlayerWidget: failed to initialize player $e');
+      setState(() {
+        _isInitialized = true;
+      });
+      widget.onError?.call(e.toString());
     }
-    setState(() {
-      _isInitialized = true;
-    });
   }
 
   Future<void> _openCurrentMedia({Duration? startAt}) async {
-    if (_playerDisposed || _player == null || _currentUrl == null) {
+    if (_playerDisposed || _player == null || _currentUrl == null || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return;
     }
     setState(() {
@@ -215,7 +234,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   void _setupPlayerListeners() {
-    if (_player == null) {
+    if (_player == null || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return;
     }
     _positionSubscription?.cancel();
@@ -287,7 +306,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     Duration? startAt,
     Map<String, String>? headers,
   }) async {
-    if (_playerDisposed) {
+    if (_playerDisposed || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       return;
     }
     _currentUrl = url;
@@ -345,7 +364,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
   Future<void> _setPlaybackSpeed(double speed) async {
     _playbackSpeed.value = speed;
-    await _player?.setRate(speed);
+    if (_player != null && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      await _player?.setRate(speed);
+    }
   }
 
   void _exitWebFullscreen() {
@@ -410,7 +431,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         debugPrint('Device does not support PiP!');
         return;
       }
-      await _player?.play();
+      if (_player != null && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+        await _player?.play();
+      }
       await _pip.start();
     } catch (e) {
       debugPrint('Failed to enter PiP mode: $e');
@@ -435,7 +458,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _completedSubscription?.cancel();
     _durationSubscription?.cancel();
     _progressListeners.clear();
-    await _player?.dispose();
+    if (_player != null && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      await _player?.dispose();
+    }
     _player = null;
     _videoController = null;
   }
@@ -474,59 +499,89 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
-      child: _isInitialized && _videoController != null
-          ? Video(
-              controller: _videoController!,
-              controls: (state) {
-                return widget.surface == VideoPlayerSurface.desktop
-                    ? PCPlayerControls(
-                        state: state,
-                        player: _player!,
-                        onBackPressed: widget.onBackPressed,
-                        onNextEpisode: widget.onNextEpisode,
-                        onPause: widget.onPause,
-                        videoUrl: _currentUrl ?? '',
-                        isLastEpisode: widget.isLastEpisode,
-                        isLoadingVideo: _isLoadingVideo,
-                        onCastStarted: widget.onCastStarted,
-                        videoTitle: widget.videoTitle,
-                        currentEpisodeIndex: widget.currentEpisodeIndex,
-                        totalEpisodes: widget.totalEpisodes,
-                        sourceName: widget.sourceName,
-                        onWebFullscreenChanged: widget.onWebFullscreenChanged,
-                        onExitWebFullscreenCallbackReady: (callback) {
-                          _exitWebFullscreenCallback = callback;
-                        },
-                        onExitFullScreen: widget.onExitFullScreen,
-                        live: widget.live,
-                        playbackSpeedListenable: _playbackSpeed,
-                        onSetSpeed: _setPlaybackSpeed,
-                      )
-                    : MobilePlayerControls(
-                        player: _player!,
-                        state: state,
-                        onControlsVisibilityChanged: (_) {},
-                        onBackPressed: widget.onBackPressed,
-                        onFullscreenChange: (_) {},
-                        onNextEpisode: widget.onNextEpisode,
-                        onPause: widget.onPause,
-                        videoUrl: _currentUrl ?? '',
-                        isLastEpisode: widget.isLastEpisode,
-                        isLoadingVideo: _isLoadingVideo,
-                        onCastStarted: widget.onCastStarted,
-                        videoTitle: widget.videoTitle,
-                        currentEpisodeIndex: widget.currentEpisodeIndex,
-                        totalEpisodes: widget.totalEpisodes,
-                        sourceName: widget.sourceName,
-                        onExitFullScreen: widget.onExitFullScreen,
-                        live: widget.live,
-                        playbackSpeedListenable: _playbackSpeed,
-                        onSetSpeed: _setPlaybackSpeed,
-                        onEnterPipMode: _enterPipMode,
-                        isPipMode: _isPipMode,
-                      );
-              },
-            )
+      child: _isInitialized
+          ? (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+              ? _videoController != null
+                  ? Video(
+                      controller: _videoController!,
+                      controls: (state) {
+                        return widget.surface == VideoPlayerSurface.desktop
+                            ? PCPlayerControls(
+                                state: state,
+                                player: _player!,
+                                onBackPressed: widget.onBackPressed,
+                                onNextEpisode: widget.onNextEpisode,
+                                onPause: widget.onPause,
+                                videoUrl: _currentUrl ?? '',
+                                isLastEpisode: widget.isLastEpisode,
+                                isLoadingVideo: _isLoadingVideo,
+                                onCastStarted: widget.onCastStarted,
+                                videoTitle: widget.videoTitle,
+                                currentEpisodeIndex: widget.currentEpisodeIndex,
+                                totalEpisodes: widget.totalEpisodes,
+                                sourceName: widget.sourceName,
+                                onWebFullscreenChanged: widget.onWebFullscreenChanged,
+                                onExitWebFullscreenCallbackReady: (callback) {
+                                  _exitWebFullscreenCallback = callback;
+                                },
+                                onExitFullScreen: widget.onExitFullScreen,
+                                live: widget.live,
+                                playbackSpeedListenable: _playbackSpeed,
+                                onSetSpeed: _setPlaybackSpeed,
+                              )
+                            : MobilePlayerControls(
+                                player: _player!,
+                                state: state,
+                                onControlsVisibilityChanged: (_) {},
+                                onBackPressed: widget.onBackPressed,
+                                onFullscreenChange: (_) {},
+                                onNextEpisode: widget.onNextEpisode,
+                                onPause: widget.onPause,
+                                videoUrl: _currentUrl ?? '',
+                                isLastEpisode: widget.isLastEpisode,
+                                isLoadingVideo: _isLoadingVideo,
+                                onCastStarted: widget.onCastStarted,
+                                videoTitle: widget.videoTitle,
+                                currentEpisodeIndex: widget.currentEpisodeIndex,
+                                totalEpisodes: widget.totalEpisodes,
+                                sourceName: widget.sourceName,
+                                onExitFullScreen: widget.onExitFullScreen,
+                                live: widget.live,
+                                playbackSpeedListenable: _playbackSpeed,
+                                onSetSpeed: _setPlaybackSpeed,
+                                onEnterPipMode: _enterPipMode,
+                                isPipMode: _isPipMode,
+                              );
+                      },
+                    )
+                  : const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    )
+              : MobilePlayerControls(
+                  player: _player,
+                  state: null,
+                  onControlsVisibilityChanged: (_) {},
+                  onBackPressed: widget.onBackPressed,
+                  onFullscreenChange: (_) {},
+                  onNextEpisode: widget.onNextEpisode,
+                  onPause: widget.onPause,
+                  videoUrl: _currentUrl ?? '',
+                  isLastEpisode: widget.isLastEpisode,
+                  isLoadingVideo: _isLoadingVideo,
+                  onCastStarted: widget.onCastStarted,
+                  videoTitle: widget.videoTitle,
+                  currentEpisodeIndex: widget.currentEpisodeIndex,
+                  totalEpisodes: widget.totalEpisodes,
+                  sourceName: widget.sourceName,
+                  onExitFullScreen: widget.onExitFullScreen,
+                  live: widget.live,
+                  playbackSpeedListenable: _playbackSpeed,
+                  onSetSpeed: _setPlaybackSpeed,
+                  onEnterPipMode: _enterPipMode,
+                  isPipMode: _isPipMode,
+                )
           : const Center(
               child: CircularProgressIndicator(
                 color: Colors.white,

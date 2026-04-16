@@ -2,15 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
 import 'dlna_device_dialog.dart';
 
 class MobilePlayerControls extends StatefulWidget {
-  final Player player;
-  final VideoState state;
+  final dynamic player;
+  final dynamic state;
   final Function(bool) onControlsVisibilityChanged;
   final VoidCallback? onBackPressed;
   final Function(bool) onFullscreenChange;
@@ -33,8 +31,8 @@ class MobilePlayerControls extends StatefulWidget {
 
   const MobilePlayerControls({
     super.key,
-    required this.player,
-    required this.state,
+    this.player,
+    this.state,
     required this.onControlsVisibilityChanged,
     this.onBackPressed,
     required this.onFullscreenChange,
@@ -121,31 +119,37 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   }
 
   void _listenPlayerStreams() {
-    _subscriptions.add(widget.player.stream.playing.listen((playing) {
-      if (!mounted) return;
-      if (playing && _controlsVisible) {
-        _startHideTimer();
-      }
-      if (!playing) {
-        _hideTimer?.cancel();
-        if (!_controlsVisible) {
-          setState(() => _controlsVisible = true);
-          widget.onControlsVisibilityChanged(true);
-        }
-      }
-    }));
+    if (widget.player != null) {
+      try {
+        _subscriptions.add(widget.player.stream.playing.listen((playing) {
+          if (!mounted) return;
+          if (playing && _controlsVisible) {
+            _startHideTimer();
+          }
+          if (!playing) {
+            _hideTimer?.cancel();
+            if (!_controlsVisible) {
+              setState(() => _controlsVisible = true);
+              widget.onControlsVisibilityChanged(true);
+            }
+          }
+        }));
 
-    _subscriptions.add(widget.player.stream.position.listen((_) {
-      if (!mounted) return;
-      if (_controlsVisible && !_isSeekingViaSwipe) {
-        setState(() {});
-      }
-    }));
+        _subscriptions.add(widget.player.stream.position.listen((_) {
+          if (!mounted) return;
+          if (_controlsVisible && !_isSeekingViaSwipe) {
+            setState(() {});
+          }
+        }));
 
-    _subscriptions.add(widget.player.stream.completed.listen((_) {
-      if (!mounted) return;
-      setState(() {});
-    }));
+        _subscriptions.add(widget.player.stream.completed.listen((_) {
+          if (!mounted) return;
+          setState(() {});
+        }));
+      } catch (e) {
+        debugPrint('MobilePlayerControls: error listening to player streams $e');
+      }
+    }
   }
 
   @override
@@ -161,10 +165,10 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     super.dispose();
   }
 
-  bool get _isFullscreen => widget.state.isFullscreen();
-  bool get _isPlaying => widget.player.state.playing;
-  Duration get _position => widget.player.state.position;
-  Duration get _duration => widget.player.state.duration;
+  bool get _isFullscreen => widget.state?.isFullscreen() ?? false;
+  bool get _isPlaying => widget.player?.state?.playing ?? false;
+  Duration get _position => widget.player?.state?.position ?? Duration.zero;
+  Duration get _duration => widget.player?.state?.duration ?? Duration.zero;
 
   void _startHideTimer() {
     _hideTimer?.cancel();
@@ -264,8 +268,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
 
   void _onSwipeEnd(DragEndDetails details) {
     if (_isLocked || !_isSeekingViaSwipe || widget.live) return;
-    if (_dragPosition != null) {
-      widget.player.seek(_dragPosition!);
+    if (_dragPosition != null && widget.player != null) {
+      try {
+        widget.player.seek(_dragPosition!);
+      } catch (e) {
+        debugPrint('MobilePlayerControls: error seeking player $e');
+      }
     }
     setState(() {
       _isSeekingViaSwipe = false;
@@ -361,57 +369,85 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
 
   Future<void> _togglePlayPause() async {
     _onUserInteraction();
-    if (_isPlaying) {
-      await widget.player.pause();
-      widget.onPause?.call();
-    } else {
-      await widget.player.play();
+    if (widget.player != null) {
+      if (_isPlaying) {
+        try {
+          await widget.player.pause();
+          widget.onPause?.call();
+        } catch (e) {
+          debugPrint('MobilePlayerControls: error pausing player $e');
+        }
+      } else {
+        try {
+          await widget.player.play();
+        } catch (e) {
+          debugPrint('MobilePlayerControls: error playing player $e');
+        }
+      }
     }
   }
 
   void _enterFullscreen() {
-    widget.state.enterFullscreen();
-    widget.onFullscreenChange(true);
-    _onUserInteraction();
+    if (widget.state != null) {
+      try {
+        widget.state.enterFullscreen();
+        widget.onFullscreenChange(true);
+        _onUserInteraction();
+      } catch (e) {
+        debugPrint('MobilePlayerControls: error entering fullscreen $e');
+      }
+    }
   }
 
   void _exitFullscreen() {
-    widget.state.exitFullscreen();
-    widget.onFullscreenChange(false);
-    // 触发退出全屏回调
-    widget.onExitFullScreen?.call();
-    // 确保控制栏可见并重新启动隐藏计时器
-    setState(() {
-      _controlsVisible = true;
-      _isLocked = false;
-    });
-    widget.onControlsVisibilityChanged(true);
-    _startHideTimer();
+    if (widget.state != null) {
+      try {
+        widget.state.exitFullscreen();
+        widget.onFullscreenChange(false);
+        // 触发退出全屏回调
+        widget.onExitFullScreen?.call();
+        // 确保控制栏可见并重新启动隐藏计时器
+        setState(() {
+          _controlsVisible = true;
+          _isLocked = false;
+        });
+        widget.onControlsVisibilityChanged(true);
+        _startHideTimer();
+      } catch (e) {
+        debugPrint('MobilePlayerControls: error exiting fullscreen $e');
+      }
+    }
   }
 
   Future<void> _showDLNADialog() async {
-    if (_isPlaying) {
-      await widget.player.pause();
-      widget.onPause?.call();
+    if (widget.player != null) {
+      if (_isPlaying) {
+        try {
+          await widget.player.pause();
+          widget.onPause?.call();
+        } catch (e) {
+          debugPrint('MobilePlayerControls: error pausing player $e');
+        }
+      }
+      if (_isFullscreen) {
+        _exitFullscreen();
+        await Future.delayed(const Duration(milliseconds: 250));
+      }
+      final resumePos = widget.player.state?.position ?? Duration.zero;
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (context) => DLNADeviceDialog(
+          currentUrl: widget.videoUrl,
+          resumePosition: resumePos,
+          videoTitle: widget.videoTitle,
+          currentEpisodeIndex: widget.currentEpisodeIndex,
+          totalEpisodes: widget.totalEpisodes,
+          sourceName: widget.sourceName,
+          onCastStarted: widget.onCastStarted,
+        ),
+      );
     }
-    if (_isFullscreen) {
-      _exitFullscreen();
-      await Future.delayed(const Duration(milliseconds: 250));
-    }
-    final resumePos = widget.player.state.position;
-    if (!mounted) return;
-    await showDialog(
-      context: context,
-      builder: (context) => DLNADeviceDialog(
-        currentUrl: widget.videoUrl,
-        resumePosition: resumePos,
-        videoTitle: widget.videoTitle,
-        currentEpisodeIndex: widget.currentEpisodeIndex,
-        totalEpisodes: widget.totalEpisodes,
-        sourceName: widget.sourceName,
-        onCastStarted: widget.onCastStarted,
-      ),
-    );
   }
 
   Future<void> _showSpeedDialog() async {
@@ -725,8 +761,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
           child: GestureDetector(
             onTap: () async {
               _onUserInteraction();
-              if (!widget.live) {
-                widget.player.pause();
+              if (!widget.live && widget.player != null) {
+                try {
+                  widget.player.pause();
+                } catch (e) {
+                  debugPrint('MobilePlayerControls: error pausing player $e');
+                }
               }
               await _showDLNADialog();
             },
@@ -1120,7 +1160,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
 }
 
 class _MobileVideoProgressBar extends StatefulWidget {
-  final Player player;
+  final dynamic player;
   final VoidCallback? onDragStart;
   final VoidCallback? onDragEnd;
   final VoidCallback? onDragUpdate;
@@ -1130,7 +1170,7 @@ class _MobileVideoProgressBar extends StatefulWidget {
   final bool live;
 
   const _MobileVideoProgressBar({
-    required this.player,
+    this.player,
     this.onDragStart,
     this.onDragEnd,
     this.onDragUpdate,
@@ -1154,11 +1194,17 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
   @override
   void initState() {
     super.initState();
-    _positionSubscription = widget.player.stream.position.listen((_) {
-      if (mounted && !_isDragging && !_isSeeking) {
-        setState(() {});
+    if (widget.player != null) {
+      try {
+        _positionSubscription = widget.player.stream.position.listen((_) {
+          if (mounted && !_isDragging && !_isSeeking) {
+            setState(() {});
+          }
+        });
+      } catch (e) {
+        debugPrint('MobileVideoProgressBar: error listening to player position $e');
       }
-    });
+    }
   }
 
   @override
@@ -1169,8 +1215,8 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
 
   @override
   Widget build(BuildContext context) {
-    final duration = widget.player.state.duration;
-    final position = widget.dragPosition ?? widget.player.state.position;
+    final duration = widget.player?.state?.duration ?? Duration.zero;
+    final position = widget.dragPosition ?? (widget.player?.state?.position ?? Duration.zero);
 
     double value = 0.0;
     if (duration.inMilliseconds > 0) {
@@ -1205,7 +1251,7 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
       onHorizontalDragEnd: widget.live
           ? null
           : (details) async {
-              if (_isDragging) {
+              if (_isDragging && widget.player != null) {
                 final seekPosition = Duration(
                   milliseconds: (_dragValue * duration.inMilliseconds).round(),
                 );
@@ -1215,7 +1261,11 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                   _isSeeking = true; // 标记开始 seek
                 });
 
-                await widget.player.seek(seekPosition);
+                try {
+                  await widget.player.seek(seekPosition);
+                } catch (e) {
+                  debugPrint('MobileVideoProgressBar: error seeking player $e');
+                }
 
                 // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
                 await Future.delayed(const Duration(milliseconds: 100));
@@ -1232,28 +1282,34 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
       onTapDown: widget.live
           ? null
           : (details) async {
-              widget.onDragStart?.call();
-              _updateDrag(details.localPosition.dx, context);
-              final seekPosition = Duration(
-                milliseconds: (_dragValue * duration.inMilliseconds).round(),
-              );
+              if (widget.player != null) {
+                widget.onDragStart?.call();
+                _updateDrag(details.localPosition.dx, context);
+                final seekPosition = Duration(
+                  milliseconds: (_dragValue * duration.inMilliseconds).round(),
+                );
 
-              setState(() {
-                _isSeeking = true; // 标记开始 seek
-              });
-
-              await widget.player.seek(seekPosition);
-
-              // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
-              await Future.delayed(const Duration(milliseconds: 100));
-
-              if (mounted) {
                 setState(() {
-                  _isSeeking = false; // 标记 seek 完成
+                  _isSeeking = true; // 标记开始 seek
                 });
-              }
 
-              widget.onDragEnd?.call();
+                try {
+                  await widget.player.seek(seekPosition);
+                } catch (e) {
+                  debugPrint('MobileVideoProgressBar: error seeking player $e');
+                }
+
+                // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
+                await Future.delayed(const Duration(milliseconds: 100));
+
+                if (mounted) {
+                  setState(() {
+                    _isSeeking = false; // 标记 seek 完成
+                  });
+                }
+
+                widget.onDragEnd?.call();
+              }
             },
       child: Container(
         height: 24,
@@ -1331,8 +1387,8 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
     final width = box.size.width;
     final value = (dx / width).clamp(0.0, 1.0);
     setState(() => _dragValue = value);
-    if (!widget.live) {
-      final duration = widget.player.state.duration;
+    if (!widget.live && widget.player != null) {
+      final duration = widget.player.state?.duration ?? Duration.zero;
       final position =
           Duration(milliseconds: (value * duration.inMilliseconds).round());
       widget.onPositionUpdate?.call(position);
