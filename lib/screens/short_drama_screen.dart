@@ -134,6 +134,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     }
 
     // 获取短剧列表
+    if (!mounted) return;
     final result = await ApiService.getShortDramaList(
       _selectedCategoryId,
       isRefresh ? 1 : _page,

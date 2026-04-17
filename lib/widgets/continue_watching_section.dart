@@ -216,7 +216,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
 
       final record = records[i];
       final imageUrl = await getImageUrl(record.cover, record.source);
-      if (imageUrl.isNotEmpty) {
+      if (imageUrl.isNotEmpty && mounted) {
         final headers = getImageRequestHeaders(imageUrl, record.source);
         final provider = NetworkImage(imageUrl, headers: headers);
         precacheImage(provider, context);

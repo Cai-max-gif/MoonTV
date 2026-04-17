@@ -61,6 +61,11 @@ class PageCacheService
       return DataOperationResult.success(cachedData);
     }
 
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
     // 缓存未命中，直接走接口并保存到缓存
     return await getPlayRecordsDirect(context);
   }
@@ -72,6 +77,11 @@ class PageCacheService
     if (isLocalMode) {
       return DataOperationResult.success(
           await LocalModeStorageService.getPlayRecords());
+    }
+
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
     }
 
     const cacheKey = 'play_records';
@@ -115,6 +125,11 @@ class PageCacheService
     }
     const cacheKey = 'play_records';
 
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return;
+    }
+
     try {
       final response = await ApiService.get<Map<String, dynamic>>(
         '/api/playrecords',
@@ -152,6 +167,11 @@ class PageCacheService
       return DataOperationResult.success(null);
     }
 
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
     // 优先操作缓存
     _addPlayRecordToCache(playRecord);
 
@@ -176,6 +196,11 @@ class PageCacheService
       return DataOperationResult.success(null);
     }
 
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
     // 优先操作缓存
     _removePlayRecordFromCache(source, id);
 
@@ -192,11 +217,17 @@ class PageCacheService
   }
 
   @override
-  Future<DataOperationResult<void>> clearPlayRecord(BuildContext context) async {
+  Future<DataOperationResult<void>> clearPlayRecord(
+      BuildContext context) async {
     final isLocalMode = await UserDataService.getIsLocalMode();
     if (isLocalMode) {
       await LocalModeStorageService.clearPlayRecords();
       return DataOperationResult.success(null);
+    }
+
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
     }
 
     // 优先操作缓存
@@ -276,6 +307,11 @@ class PageCacheService
       return DataOperationResult.success(filteredData);
     }
 
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
     // 缓存未命中，直接走接口并保存到缓存
     return await getFavoritesDirect(context);
   }
@@ -289,6 +325,11 @@ class PageCacheService
           await LocalModeStorageService.getFavorites());
     }
     const cacheKey = 'favorites';
+
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
 
     try {
       final response = await ApiService.getFavorites(context);
@@ -315,6 +356,11 @@ class PageCacheService
       return;
     }
     const cacheKey = 'favorites';
+
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return;
+    }
 
     try {
       final response = await ApiService.getFavorites(context);
@@ -349,6 +395,11 @@ class PageCacheService
       return DataOperationResult.success(null);
     }
 
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
     // 优先操作缓存
     _addFavoriteToCache(source, id, favoriteData);
 
@@ -373,6 +424,12 @@ class PageCacheService
       await LocalModeStorageService.deleteFavorite(source, id);
       return DataOperationResult.success(null);
     }
+
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
     // 优先操作缓存
     _removeFavoriteFromCache(source, id);
 
@@ -466,7 +523,8 @@ class PageCacheService
       BuildContext context) async {
     final isLocalMode = UserDataService.getIsLocalModeSync();
     if (isLocalMode) {
-      return DataOperationResult.success(await LocalModeStorageService.getSearchHistory());
+      return DataOperationResult.success(
+          await LocalModeStorageService.getSearchHistory());
     }
 
     const cacheKey = 'search_history';
@@ -487,7 +545,8 @@ class PageCacheService
       BuildContext context) async {
     final isLocalMode = UserDataService.getIsLocalModeSync();
     if (isLocalMode) {
-      return DataOperationResult.success(await LocalModeStorageService.getSearchHistory());
+      return DataOperationResult.success(
+          await LocalModeStorageService.getSearchHistory());
     }
 
     const cacheKey = 'search_history';
@@ -536,7 +595,7 @@ class PageCacheService
       await LocalModeStorageService.addSearchHistory(query);
       return DataOperationResult.success(null);
     }
-    
+
     // 优先操作缓存
     const cacheKey = 'search_history';
     final cachedData = getCache<List<String>>(cacheKey);
@@ -554,7 +613,7 @@ class PageCacheService
         final existingItem = cachedData[existingIndex];
         final updatedHistory = [
           existingItem,
-          ...cachedData.where((item) => item != query).toList()
+          ...cachedData.where((item) => item != query)
         ];
         setCache(cacheKey, updatedHistory);
       }

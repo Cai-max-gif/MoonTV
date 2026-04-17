@@ -43,7 +43,8 @@ class BangumiService {
       );
       if (cachedRaw != null && cachedRaw.isNotEmpty) {
         final calendar = cachedRaw
-            .map((item) => BangumiCalendarResponse.fromJson(item as Map<String, dynamic>))
+            .map((item) =>
+                BangumiCalendarResponse.fromJson(item as Map<String, dynamic>))
             .toList();
         BangumiCalendarResponse? targetDay;
         for (final day in calendar) {
@@ -61,7 +62,8 @@ class BangumiService {
     try {
       const apiUrl = 'https://api.bgm.tv/calendar';
       final headers = {
-        'User-Agent': 'senshinya/selene/1.0.0 (Android) (http://github.com/senshinya/selene)',
+        'User-Agent':
+            'senshinya/selene/1.0.0 (Android) (http://github.com/senshinya/selene)',
         'Accept': 'application/json',
       };
 
@@ -74,7 +76,8 @@ class BangumiService {
 
         // 解析所有星期数据
         final List<BangumiCalendarResponse> calendarData = responseData
-            .map((item) => BangumiCalendarResponse.fromJson(item as Map<String, dynamic>))
+            .map((item) =>
+                BangumiCalendarResponse.fromJson(item as Map<String, dynamic>))
             .toList();
 
         BangumiCalendarResponse? targetDay;
@@ -109,7 +112,7 @@ class BangumiService {
   }
 
   /// 获取 Bangumi 详情数据
-  /// 
+  ///
   /// 参数说明：
   /// - bangumiId: Bangumi ID
   static Future<ApiResponse<BangumiDetails>> getBangumiDetails(
@@ -149,20 +152,23 @@ class BangumiService {
     try {
       final apiUrl = 'https://api.bgm.tv/v0/subjects/$bangumiId';
       final headers = {
-        'User-Agent': 'senshinya/selene/1.0.0 (Android) (http://github.com/senshinya/selene)',
+        'User-Agent':
+            'senshinya/selene/1.0.0 (Android) (http://github.com/senshinya/selene)',
         'Accept': 'application/json',
       };
 
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse(apiUrl),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         try {
           final Map<String, dynamic> data = json.decode(response.body);
           final details = BangumiDetails.fromJson(data);
-          
+
           // 缓存成功的结果，缓存时间为24小时
           try {
             await _cache.set(
@@ -173,10 +179,11 @@ class BangumiService {
           } catch (cacheError) {
             // 静默处理缓存错误
           }
-          
+
           return ApiResponse.success(details, statusCode: response.statusCode);
         } catch (parseError) {
-          return ApiResponse.error('Bangumi 详情数据解析失败: ${parseError.toString()}');
+          return ApiResponse.error(
+              'Bangumi 详情数据解析失败: ${parseError.toString()}');
         }
       } else {
         return ApiResponse.error(
@@ -189,5 +196,3 @@ class BangumiService {
     }
   }
 }
-
-

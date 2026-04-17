@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import 'user_data_service.dart';
 import '../screens/login_screen.dart';
 import '../models/favorite_item.dart';
@@ -117,18 +118,9 @@ class ApiService {
 
   /// 获取CSRF令牌
   static Future<String> _getCsrfToken() async {
-    // 这里可以从安全存储中获取CSRF令牌
-    // 或者生成一个基于时间和设备信息的令牌
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final deviceId = await _getDeviceId();
-    return '${timestamp}_${deviceId.hashCode}';
-  }
-
-  /// 获取设备ID
-  static Future<String> _getDeviceId() async {
-    // 这里可以使用设备唯一标识符
-    // 为了简化，使用当前时间戳作为临时方案
-    return DateTime.now().millisecondsSinceEpoch.toString();
+    // 生成基于UUID的CSRF令牌
+    const uuid = Uuid();
+    return uuid.v4();
   }
 
   /// 处理响应
@@ -156,14 +148,11 @@ class ApiService {
       await UserDataService.clearAuthData();
 
       // 跳转到登录页
-      if (context != null) {
-        // 检查context是否仍然有效
-        if (context.mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
-        }
+      if (context != null && context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
       }
 
       return ApiResponse.error(
@@ -233,26 +222,23 @@ class ApiService {
   }
 
   /// 带重试机制的请求执行器
-  static Future<ApiResponse<T>> _retryRequest<T>(
+  static Future<http.Response> _retryRequest(
     Future<http.Response> Function() request,
-    T Function(dynamic)? fromJson,
-    BuildContext? context,
   ) async {
     int retryCount = 0;
     while (retryCount < _maxRetries) {
       try {
-        final response = await request();
-        return await _handleResponse(response, fromJson, context);
+        return await request();
       } catch (e) {
         retryCount++;
         if (retryCount >= _maxRetries) {
-          return ApiResponse.error('网络请求异常: ${e.toString()}');
+          rethrow;
         }
         // 等待一段时间后重试
         await Future.delayed(_retryDelay * retryCount);
       }
     }
-    return ApiResponse.error('网络请求异常: 重试次数过多');
+    throw Exception('网络请求异常: 重试次数过多');
   }
 
   /// GET请求
@@ -275,16 +261,28 @@ class ApiService {
 
     final requestHeaders = await _buildHeaders(additionalHeaders: headers);
 
-    return await _retryRequest<T>(
-      () => http
-          .get(
-            uri,
-            headers: requestHeaders,
-          )
-          .timeout(_timeout),
-      fromJson,
-      context,
-    );
+    try {
+      final response = await _retryRequest(
+        () => http
+            .get(
+              uri,
+              headers: requestHeaders,
+            )
+            .timeout(_timeout),
+      );
+
+      // 检查context是否仍然挂载
+      if (context != null && !context.mounted) {
+        return await _handleResponse(response, fromJson, null);
+      }
+      return await _handleResponse(response, fromJson, context);
+    } catch (e) {
+      // 记录详细错误信息供调试
+      // 生产环境中应使用专业的日志库
+      // print('GET请求错误: ${e.toString()}');
+      // 向用户返回通用错误信息
+      return ApiResponse.error('网络请求异常，请稍后重试');
+    }
   }
 
   /// 过滤查询参数，防止注入攻击
@@ -325,17 +323,29 @@ class ApiService {
       filteredBody = _filterRequestBody(body);
     }
 
-    return await _retryRequest<T>(
-      () => http
-          .post(
-            Uri.parse(url),
-            headers: requestHeaders,
-            body: filteredBody != null ? json.encode(filteredBody) : null,
-          )
-          .timeout(_timeout),
-      fromJson,
-      context,
-    );
+    try {
+      final response = await _retryRequest(
+        () => http
+            .post(
+              Uri.parse(url),
+              headers: requestHeaders,
+              body: filteredBody != null ? json.encode(filteredBody) : null,
+            )
+            .timeout(_timeout),
+      );
+
+      // 检查context是否仍然挂载
+      if (context != null && !context.mounted) {
+        return await _handleResponse(response, fromJson, null);
+      }
+      return await _handleResponse(response, fromJson, context);
+    } catch (e) {
+      // 记录详细错误信息供调试
+      // 生产环境中应使用专业的日志库
+      // print('POST请求错误: ${e.toString()}');
+      // 向用户返回通用错误信息
+      return ApiResponse.error('网络请求异常，请稍后重试');
+    }
   }
 
   /// 过滤请求体，防止注入攻击
@@ -402,17 +412,29 @@ class ApiService {
       filteredBody = _filterRequestBody(body);
     }
 
-    return await _retryRequest<T>(
-      () => http
-          .put(
-            Uri.parse(url),
-            headers: requestHeaders,
-            body: filteredBody != null ? json.encode(filteredBody) : null,
-          )
-          .timeout(_timeout),
-      fromJson,
-      context,
-    );
+    try {
+      final response = await _retryRequest(
+        () => http
+            .put(
+              Uri.parse(url),
+              headers: requestHeaders,
+              body: filteredBody != null ? json.encode(filteredBody) : null,
+            )
+            .timeout(_timeout),
+      );
+
+      // 检查context是否仍然挂载
+      if (context != null && !context.mounted) {
+        return await _handleResponse(response, fromJson, null);
+      }
+      return await _handleResponse(response, fromJson, context);
+    } catch (e) {
+      // 记录详细错误信息供调试
+      // 生产环境中应使用专业的日志库
+      // print('PUT请求错误: ${e.toString()}');
+      // 向用户返回通用错误信息
+      return ApiResponse.error('网络请求异常，请稍后重试');
+    }
   }
 
   /// DELETE请求
@@ -425,16 +447,28 @@ class ApiService {
     final url = await _buildUrl(endpoint);
     final requestHeaders = await _buildHeaders(additionalHeaders: headers);
 
-    return await _retryRequest<T>(
-      () => http
-          .delete(
-            Uri.parse(url),
-            headers: requestHeaders,
-          )
-          .timeout(_timeout),
-      fromJson,
-      context,
-    );
+    try {
+      final response = await _retryRequest(
+        () => http
+            .delete(
+              Uri.parse(url),
+              headers: requestHeaders,
+            )
+            .timeout(_timeout),
+      );
+
+      // 检查context是否仍然挂载
+      if (context != null && !context.mounted) {
+        return await _handleResponse(response, fromJson, null);
+      }
+      return await _handleResponse(response, fromJson, context);
+    } catch (e) {
+      // 记录详细错误信息供调试
+      // 生产环境中应使用专业的日志库
+      // print('DELETE请求错误: ${e.toString()}');
+      // 向用户返回通用错误信息
+      return ApiResponse.error('网络请求异常，请稍后重试');
+    }
   }
 
   /// 上传文件请求
@@ -473,17 +507,26 @@ class ApiService {
         final streamedResponse = await request.send().timeout(_timeout);
         final response = await http.Response.fromStream(streamedResponse);
 
+        // 检查context是否仍然挂载
+        if (context != null && !context.mounted) {
+          return await _handleResponse(response, fromJson, null);
+        }
         return await _handleResponse(response, fromJson, context);
       } catch (e) {
         retryCount++;
         if (retryCount >= _maxRetries) {
-          return ApiResponse.error('文件上传异常: ${e.toString()}');
+          // 记录详细错误信息供调试
+          // 生产环境中应使用专业的日志库
+          // print('文件上传错误: ${e.toString()}');
+          // 向用户返回通用错误信息
+          return ApiResponse.error('文件上传异常，请稍后重试');
         }
         // 等待一段时间后重试
         await Future.delayed(_retryDelay * retryCount);
       }
     }
-    return ApiResponse.error('文件上传异常: 重试次数过多');
+    // 向用户返回通用错误信息
+    return ApiResponse.error('文件上传异常，请稍后重试');
   }
 
   /// 获取收藏夹列表

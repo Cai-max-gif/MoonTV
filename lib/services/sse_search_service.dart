@@ -268,7 +268,7 @@ class SSESearchService {
     _buffer = '';
 
     // 使用流式 UTF-8 解码器，自动处理跨 chunk 的多字节字符
-    final utf8Decoder = const Utf8Decoder(allowMalformed: false);
+    const utf8Decoder = Utf8Decoder(allowMalformed: false);
 
     // 流式处理 SSE 数据
     await for (final chunk in response.stream.transform(utf8Decoder)) {

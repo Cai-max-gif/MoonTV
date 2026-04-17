@@ -6,7 +6,7 @@ void main() {
   group('Login Tests', () {
     test('Should show correct error message for banned account', () async {
       // 模拟401响应，包含账号被封禁的错误信息
-      final responseBody = '{"message": "账号已被封禁"}';
+    const responseBody = '{"message": "账号已被封禁"}';
       
       // 验证错误信息解析
       expect(responseBody.contains('账号已被封禁'), isTrue);
@@ -14,7 +14,7 @@ void main() {
 
     test('Should handle normal login failure', () async {
       // 模拟401响应，普通密码错误
-      final responseBody = '{"message": "用户名或密码错误"}';
+    const responseBody = '{"message": "用户名或密码错误"}';
       
       // 验证错误信息解析
       expect(responseBody.contains('用户名或密码错误'), isTrue);

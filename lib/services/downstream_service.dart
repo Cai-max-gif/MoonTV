@@ -49,6 +49,8 @@ class DownstreamService {
           : maxSearchPages - 1;
 
       if (pagesToFetch > 0) {
+        // 限制并发请求数量，避免过多网络请求
+        const maxConcurrentRequests = 2;
         final additionalPageFutures = <Future<List<SearchResult>>>[];
 
         for (int page = 2; page <= pagesToFetch + 1; page++) {
@@ -63,13 +65,30 @@ class DownstreamService {
           ).then((pageResult) => pageResult.results);
 
           additionalPageFutures.add(pageFuture);
+
+          // 达到最大并发数时，等待部分请求完成
+          if (additionalPageFutures.length >= maxConcurrentRequests) {
+            // 等待所有当前请求完成
+            final pageResultsList = await Future.wait(additionalPageFutures);
+            // 将结果添加到总结果中
+            for (final pageResults in pageResultsList) {
+              if (pageResults.isNotEmpty) {
+                results.addAll(pageResults);
+              }
+            }
+            // 清空已完成的请求
+            additionalPageFutures.clear();
+          }
         }
 
-        final additionalResults = await Future.wait(additionalPageFutures);
-
-        for (final pageResults in additionalResults) {
-          if (pageResults.isNotEmpty) {
-            results.addAll(pageResults);
+        // 等待所有剩余请求完成
+        if (additionalPageFutures.isNotEmpty) {
+          final pageResultsList = await Future.wait(additionalPageFutures);
+          // 将结果添加到总结果中
+          for (final pageResults in pageResultsList) {
+            if (pageResults.isNotEmpty) {
+              results.addAll(pageResults);
+            }
           }
         }
       }

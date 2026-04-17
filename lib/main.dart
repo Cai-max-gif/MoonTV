@@ -144,6 +144,7 @@ class _AppWrapperState extends State<AppWrapper> {
         }
 
         // 检查账号状态
+        if (!mounted) return;
         final statusResult = await ApiService.checkAccountStatus(context);
 
         if (!statusResult.success && statusResult.statusCode == 401) {
@@ -275,9 +276,11 @@ class _AppWrapperState extends State<AppWrapper> {
       }
 
       // 进入首页
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
     }
   }
 
@@ -290,7 +293,7 @@ class _AppWrapperState extends State<AppWrapper> {
         // 检查是否应该显示公告
         final shouldShow =
             await AnnouncementService.shouldShowAnnouncement(announcement);
-        if (shouldShow) {
+        if (shouldShow && mounted) {
           // 显示公告
           await AnnouncementDialog.show(context, announcement);
         }

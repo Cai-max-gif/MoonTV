@@ -246,9 +246,9 @@ class DoubanService {
       // 为了保持与现有代码的兼容性，将时长转换为字符串
       String? duration;
       if (episodeLength != null) {
-        duration = '${episodeLength}分钟';
+        duration = '$episodeLength分钟';
       } else if (movieDuration != null) {
-        duration = '${movieDuration}分钟';
+        duration = '$movieDuration分钟';
       }
 
       // 提取剧情简介 - 两个正则都匹配，选择内容更长的

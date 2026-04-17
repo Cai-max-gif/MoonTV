@@ -122,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
             await UserDataService.getAccountLockRemainingTime();
         if (remainingTime != null) {
           final minutes = remainingTime.inMinutes;
-          _showToast('账户已被锁定，请${minutes}分钟后再试', const Color(0xFFe74c3c));
+          _showToast('账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
         } else {
           _showToast('账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
         }
@@ -242,16 +242,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   await UserDataService.getAccountLockRemainingTime();
               if (remainingTime != null) {
                 final minutes = remainingTime.inMinutes;
-                _showToast('${errorMessage}，账户已被锁定，请${minutes}分钟后再试',
+                _showToast('$errorMessage，账户已被锁定，请$minutes分钟后再试',
                     const Color(0xFFe74c3c));
               } else {
                 _showToast(
-                    '${errorMessage}，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+                    '$errorMessage，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
               }
             } else {
               final attempts = await UserDataService.getLoginAttempts();
               final remainingAttempts = 5 - attempts;
-              _showToast('${errorMessage}，还有${remainingAttempts}次尝试机会',
+              _showToast('$errorMessage，还有$remainingAttempts次尝试机会',
                   const Color(0xFFe74c3c));
             }
             break;
@@ -496,7 +496,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             height: 18,
                             width: 18,
                             child: CircularProgressIndicator(

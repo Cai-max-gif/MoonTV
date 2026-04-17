@@ -124,7 +124,7 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
   Widget build(BuildContext context) {
     return RecommendationSection(
       title: '热门短剧',
-      moreText: '查看更多',
+      moreText: '查看更多 >',
       onMoreTap: widget.onMoreTap,
       videoInfos: _convertToVideoInfos(),
       onItemTap: (videoInfo) {

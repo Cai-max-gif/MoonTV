@@ -8,10 +8,10 @@ class AnnouncementDialog extends StatelessWidget {
   final VoidCallback onClose;
 
   const AnnouncementDialog({
-    Key? key,
+    super.key,
     required this.announcement,
     required this.onClose,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class AnnouncementDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -70,14 +70,14 @@ class AnnouncementDialog extends StatelessWidget {
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: isDarkMode
-                                ? const Color(0xFF10b981).withOpacity(0.2)
-                                : const Color(0xFF10b981).withOpacity(0.1),
+                                ? const Color(0xFF10b981).withValues(alpha: 0.2)
+                                : const Color(0xFF10b981).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             LucideIcons.messageCircle,
                             size: 18,
-                            color: const Color(0xFF10b981),
+                            color: Color(0xFF10b981),
                           ),
                         ),
                         Text(
@@ -140,7 +140,7 @@ class AnnouncementDialog extends StatelessWidget {
     await showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (BuildContext context) {
         return AnnouncementDialog(
           announcement: announcement,

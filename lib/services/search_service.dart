@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/search_result.dart';
@@ -38,24 +39,33 @@ class SearchService {
   }
 
   /// 刷新缓存（仅用于服务器模式）
+  static Completer<List<SearchResource>>? _refreshCacheCompleter;
+  
   static Future<List<SearchResource>> _refreshCache() async {
     if (_isRefreshing) {
       // 如果正在刷新，等待当前刷新完成
-      while (_isRefreshing) {
-        await Future.delayed(const Duration(milliseconds: 100));
+      if (_refreshCacheCompleter != null && !_refreshCacheCompleter!.isCompleted) {
+        return await _refreshCacheCompleter!.future;
       }
       return _cachedResources ?? [];
     }
 
     _isRefreshing = true;
+    final completer = Completer<List<SearchResource>>();
+    _refreshCacheCompleter = completer;
+    
     try {
       final resources = await ApiService.getSearchResources();
       _cachedResources = resources;
+      completer.complete(resources);
       return resources;
     } catch (e) {
-      return _cachedResources ?? [];
+      final result = _cachedResources ?? [];
+      completer.complete(result);
+      return result;
     } finally {
       _isRefreshing = false;
+      _refreshCacheCompleter = null;
     }
   }
 

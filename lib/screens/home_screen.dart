@@ -36,14 +36,14 @@ class CustomPageViewPhysics extends ScrollPhysics {
 
   const CustomPageViewPhysics({
     required this.currentIndex,
-    ScrollPhysics? parent,
-  }) : super(parent: parent);
+    super.parent,
+  });
 
   @override
-  CustomPageViewPhysics applyTo(ScrollPhysics? parent) {
+  CustomPageViewPhysics applyTo(ScrollPhysics? ancestor) {
     return CustomPageViewPhysics(
       currentIndex: currentIndex,
-      parent: buildParent(parent),
+      parent: buildParent(ancestor),
     );
   }
 
@@ -472,12 +472,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
+        key: ValueKey<int>(_currentPageIndex),
         child: _currentPageIndex == 7
             ? _buildHistoryTabContent()
             : _currentPageIndex == 8
                 ? _buildFavoritesTabContent()
                 : const ProfileScreen(),
-        key: ValueKey<int>(_currentPageIndex),
       );
     }
   }
@@ -522,7 +522,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     // 延迟执行跳转，确保状态更新后页面已重建
-    Future.delayed(Duration(milliseconds: 10), () {
+    Future.delayed(const Duration(milliseconds: 10), () {
       // 跳转到顶部导航栏的对应页面
       if (pageIndex < 7) {
         _bottomNavPageController.jumpToPage(pageIndex);

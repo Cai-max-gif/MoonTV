@@ -140,26 +140,26 @@ class ShortDramaGrid extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.tv_outlined,
             size: 80,
-            color: const Color(0xFFbdc3c7),
+            color: Color(0xFFbdc3c7),
           ),
           const SizedBox(height: 24),
           Text(
             '暂无短剧',
             style: FontUtils.poppins(
               fontSize: 18,
+              color: const Color(0xFF2c3e50),
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            '当前分类下没有短剧',
+            '敬请期待更多精彩内容',
             style: FontUtils.poppins(
               fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              color: const Color(0xFF7f8c8d),
             ),
           ),
         ],

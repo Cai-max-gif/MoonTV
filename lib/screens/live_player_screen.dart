@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart'; // 添加 debugPrint 的导入
 import '../widgets/video_player_surface.dart';
 import '../widgets/video_player_widget.dart';
 import '../models/live_channel.dart';
@@ -1820,8 +1819,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     Container(
                       width: 4,
                       height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF27ae60),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF27ae60),
                         shape: BoxShape.circle,
                       ),
                     ),

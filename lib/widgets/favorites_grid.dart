@@ -108,10 +108,12 @@ class _FavoritesGridState extends State<FavoritesGrid>
   /// 刷新收藏夹数据
   Future<void> _refreshFavorites() async {
     try {
+      if (!mounted) return;
       // 刷新缓存数据
       await _cacheService.refreshFavorites(context);
 
       // 重新获取收藏夹数据
+      if (!mounted) return;
       final result = await _cacheService.getFavorites(context);
 
       if (result.success && result.data != null && mounted) {
@@ -349,10 +351,10 @@ class _FavoritesGridState extends State<FavoritesGrid>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             size: 80,
-            color: const Color(0xFFbdc3c7),
+            color: Color(0xFFbdc3c7),
           ),
           const SizedBox(height: 24),
           Text(

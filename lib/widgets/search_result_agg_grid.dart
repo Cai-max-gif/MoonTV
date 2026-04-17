@@ -158,26 +158,26 @@ class _SearchResultAggGridState extends State<SearchResultAggGrid>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.search_off,
             size: 80,
-            color: const Color(0xFFbdc3c7),
+            color: Color(0xFFbdc3c7),
           ),
           const SizedBox(height: 24),
           Text(
             '暂无搜索结果',
             style: FontUtils.poppins(
               fontSize: 18,
+              color: const Color(0xFF2c3e50),
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            '请尝试其他关键词',
+            '换个关键词试试吧',
             style: FontUtils.poppins(
               fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              color: const Color(0xFF7f8c8d),
             ),
           ),
         ],

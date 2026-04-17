@@ -38,7 +38,7 @@ class _SearchScreenState extends State<SearchScreen>
   final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   List<String> _searchHistory = [];
-  List<SearchResult> _searchResults = [];
+  final List<SearchResult> _searchResults = [];
   bool _hasSearched = false;
   bool _hasReceivedStart = false; // 是否已收到start消息
   String? _searchError;
@@ -242,10 +242,12 @@ class _SearchScreenState extends State<SearchScreen>
 
   Future<void> _refreshSearchHistory() async {
     try {
+      if (!mounted) return;
       // 刷新缓存数据
       await PageCacheService().refreshSearchHistory(context);
 
       // 重新获取搜索历史数据
+      if (!mounted) return;
       final result = await PageCacheService().getSearchHistory(context);
       if (mounted) {
         setState(() {

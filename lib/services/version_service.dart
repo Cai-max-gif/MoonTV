@@ -234,8 +234,12 @@ class VersionService {
     final currentParts = current.split('.').map(int.parse).toList();
     final latestParts = latest.split('.').map(int.parse).toList();
 
-    while (currentParts.length < 3) currentParts.add(0);
-    while (latestParts.length < 3) latestParts.add(0);
+    while (currentParts.length < 3) {
+      currentParts.add(0);
+    }
+    while (latestParts.length < 3) {
+      latestParts.add(0);
+    }
 
     final currentMajor = currentParts[0];
     final latestMajor = latestParts[0];
@@ -257,7 +261,7 @@ class VersionService {
 
     final lastCheck = prefs.getInt(_lastCheckKey) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final dayInMs = 24 * 60 * 60 * 1000;
+    const dayInMs = 24 * 60 * 60 * 1000;
 
     if (now - lastCheck < dayInMs) {
       return false;

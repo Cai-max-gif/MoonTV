@@ -6,7 +6,7 @@ void main() {
   group('Login and Account Status Tests', () {
     test('Should handle normal login failure', () async {
       // 模拟401响应，普通密码错误
-      final responseBody = '{"message": "用户名或密码错误"}';
+    const responseBody = '{"message": "用户名或密码错误"}';
       
       // 验证错误信息解析
       expect(responseBody.contains('用户名或密码错误'), isTrue);
@@ -14,7 +14,7 @@ void main() {
 
     test('Should show correct error message for banned account', () async {
       // 模拟401响应，包含账号被封禁的错误信息
-      final responseBody = '{"message": "账号已被封禁"}';
+    const responseBody = '{"message": "账号已被封禁"}';
       
       // 验证错误信息解析
       expect(responseBody.contains('账号已被封禁'), isTrue);
@@ -22,7 +22,7 @@ void main() {
 
     test('Should detect banned account status', () async {
       // 模拟账号状态检查响应，账号被封禁
-      final bannedResponse = '{"status": "banned"}';
+    const bannedResponse = '{"status": "banned"}';
       
       // 验证状态解析
       expect(bannedResponse.contains('banned'), isTrue);
@@ -30,7 +30,7 @@ void main() {
 
     test('Should detect active account status', () async {
       // 模拟账号状态检查响应，账号正常
-      final activeResponse = '{"status": "active"}';
+    const activeResponse = '{"status": "active"}';
       
       // 验证状态解析
       expect(activeResponse.contains('active'), isTrue);

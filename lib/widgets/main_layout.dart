@@ -860,7 +860,7 @@ class _MainLayoutState extends State<MainLayout> {
           ),
         ),
       ),
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         left: 0,
         right: 0,
         top: 4,
@@ -975,7 +975,7 @@ class _MainLayoutState extends State<MainLayout> {
 
     if (isMobile && !isTablet) {
       // 移动端：使用可水平滑动的ListView，设置固定宽度
-      return Container(
+      return SizedBox(
         height: 32, // 固定高度，确保导航链接可见
         width: 240, // 设置固定宽度为240
         child: ListView.builder(
