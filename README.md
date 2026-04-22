@@ -6,7 +6,8 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
 
 ## 功能特性
 
-- **多平台支持**：支持Android和Windows平台
+### 已完成功能
+- **多平台支持**：支持Android、iOS、Windows、macOS、Linux平台
 - **视频内容浏览**：分类浏览电影、电视剧、动漫等多种视频内容
 - **搜索功能**：支持关键词搜索和智能推荐
 - **视频播放**：支持多种视频格式和播放源
@@ -14,6 +15,17 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
 - **历史记录**：自动记录观看历史
 - **多语言支持**：支持中文界面
 - **响应式设计**：适配不同屏幕尺寸
+
+### 计划功能
+
+- **下载功能**：支持视频内容下载到本地
+- **弹幕功能**：支持视频播放时显示弹幕
+- **网盘集成**：支持从网盘加载视频内容
+- **YouTube集成**：支持直接播放YouTube视频
+- **Emby集成**：支持连接Emby服务器
+- **观影室**：支持多人同时观看同一视频
+- **OIDC认证**：支持通过OIDC进行身份验证(支持 Google、Microsoft、GitHub、Facebook、微信、Apple、LinuxDo 等提供商)
+- **Telegram集成**：支持通过Telegram认证和接收通知
 
 ## 安装指南
 
@@ -23,12 +35,11 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
    - 从[发布页面](https://github.com/Cai-max-gif/MoonTV/releases)下载对应架构的APK文件
    - 允许安装来自未知来源的应用
    - 点击APK文件进行安装
-
 2. **架构选择**：
    - `MoonTV-universal.apk`：通用版本，支持所有架构
    - `MoonTV-v7.apk`：适用于32位ARM设备
    - `MoonTV-v8.apk`：适用于64位ARM设备
-   - `MoonTV-x86_64.apk`：适用于x86_64架构设备
+   - `MoonTV-x86_64.apk`：适用于x86\_64架构设备
 
 ### Windows平台
 
@@ -36,7 +47,6 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
    - 从[发布页面](https://github.com/Cai-max-gif/MoonTV/releases)下载`MoonTV-Setup.exe`
    - 双击运行安装程序
    - 按照安装向导完成安装
-
 2. **使用便携版本**：
    - 从[发布页面](https://github.com/Cai-max-gif/MoonTV/releases)下载便携版压缩包
    - 解压到任意目录
@@ -59,12 +69,10 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
    git clone https://github.com/Cai-max-gif/MoonTV.git
    cd MoonTV
    ```
-
 2. **安装依赖**：
    ```bash
    flutter pub get
    ```
-
 3. **构建项目**：
    - Android：
      ```bash
@@ -141,21 +149,28 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
 
 ## 联系方式
 
-- **项目地址**：[https://github.com/Cai-max-gif/MoonTV](https://github.com/Cai-max-gif/MoonTV)
+- **项目地址**：<https://github.com/Cai-max-gif/MoonTV>
 - **问题反馈**：[GitHub Issues](https://github.com/Cai-max-gif/MoonTV/issues)
-- **邮箱**：[moontv.cc.cd@foxmail.com](mailto:moontv.cc.cd@foxmail.com)
+- **邮箱**：<moontv.cc.cd@foxmail.com>
 
 ## 更新日志
 
 ### v1.1.0
+
 - 更新版本号为v1.1.0
+- 优化视频播放性能
+- 改进用户界面响应速度
 
 ### v1.0.0
+
 - 初始版本
 - 支持Android和Windows平台
 - 实现基本的视频浏览和播放功能
 - 添加搜索和收藏功能
+- 实现历史记录功能
+- 添加多语言支持
+- 实现响应式设计，适配不同屏幕尺寸
 
----
+***
 
 **感谢使用MoonTV！** 我们将持续改进和更新，为您提供更好的观影体验。
