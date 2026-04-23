@@ -23,9 +23,6 @@ macos/build/
 # Windows
 windows/build/
 
-# Linux
-linux/build/
-
 # IDE
 .idea/
 .vscode/

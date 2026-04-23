@@ -8,7 +8,8 @@ import 'video_player_surface.dart';
 
 // 只在 PC 平台导入 media_kit 库
 import 'package:media_kit/media_kit.dart' if (dart.library.html) 'dart:html';
-import 'package:media_kit_video/media_kit_video.dart' if (dart.library.html) 'dart:html';
+import 'package:media_kit_video/media_kit_video.dart'
+    if (dart.library.html) 'dart:html';
 
 class VideoPlayerWidget extends StatefulWidget {
   final VideoPlayerSurface surface;
@@ -152,7 +153,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     WidgetsBinding.instance.addObserver(this);
     _currentUrl = widget.url;
     _currentHeaders = widget.headers;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (Platform.isWindows || Platform.isMacOS) {
       _initializePlayer();
     } else {
       // 移动端不使用 media_kit，直接标记为初始化完成
@@ -178,7 +179,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Future<void> _initializePlayer() async {
-    if (_playerDisposed || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (_playerDisposed || !(Platform.isWindows || Platform.isMacOS)) {
       return;
     }
     try {
@@ -201,7 +202,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Future<void> _openCurrentMedia({Duration? startAt}) async {
-    if (_playerDisposed || _player == null || _currentUrl == null || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (_playerDisposed ||
+        _player == null ||
+        _currentUrl == null ||
+        !(Platform.isWindows || Platform.isMacOS)) {
       return;
     }
     setState(() {
@@ -234,7 +238,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   void _setupPlayerListeners() {
-    if (_player == null || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (_player == null || !(Platform.isWindows || Platform.isMacOS)) {
       return;
     }
     _positionSubscription?.cancel();
@@ -306,7 +310,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     Duration? startAt,
     Map<String, String>? headers,
   }) async {
-    if (_playerDisposed || !(Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (_playerDisposed || !(Platform.isWindows || Platform.isMacOS)) {
       return;
     }
     _currentUrl = url;
@@ -364,7 +368,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
   Future<void> _setPlaybackSpeed(double speed) async {
     _playbackSpeed.value = speed;
-    if (_player != null && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
       await _player?.setRate(speed);
     }
   }
@@ -431,7 +435,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         debugPrint('Device does not support PiP!');
         return;
       }
-      if (_player != null && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
         await _player?.play();
       }
       await _pip.start();
@@ -458,7 +462,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _completedSubscription?.cancel();
     _durationSubscription?.cancel();
     _progressListeners.clear();
-    if (_player != null && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
       await _player?.dispose();
     }
     _player = null;
@@ -500,7 +504,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     return Container(
       color: Colors.black,
       child: _isInitialized
-          ? (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+          ? (Platform.isWindows || Platform.isMacOS)
               ? _videoController != null
                   ? Video(
                       controller: _videoController!,
@@ -520,7 +524,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 currentEpisodeIndex: widget.currentEpisodeIndex,
                                 totalEpisodes: widget.totalEpisodes,
                                 sourceName: widget.sourceName,
-                                onWebFullscreenChanged: widget.onWebFullscreenChanged,
+                                onWebFullscreenChanged:
+                                    widget.onWebFullscreenChanged,
                                 onExitWebFullscreenCallbackReady: (callback) {
                                   _exitWebFullscreenCallback = callback;
                                 },

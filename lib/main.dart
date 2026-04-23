@@ -23,7 +23,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 初始化 media_kit (仅用于 PC 端播放器)
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  if (Platform.isWindows || Platform.isMacOS) {
     MediaKit.ensureInitialized();
   }
 
