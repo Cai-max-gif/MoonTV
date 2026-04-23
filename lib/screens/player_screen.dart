@@ -189,21 +189,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    // 读取优选测速配置
-    final preferSpeedTest = await UserDataService.getPreferSpeedTest();
-
-    if (!preferSpeedTest ||
-        (widget.source != null &&
-            widget.id != null &&
-            (widget.prefer == null || widget.prefer != 'true'))) {
-      updateLoadingMessage('正在获取播放源详情...');
-      updateLoadingProgress(0.5);
-      updateLoadingEmoji('🔍');
-    } else {
-      updateLoadingMessage('正在搜索播放源...');
-      updateLoadingProgress(0.33);
-      updateLoadingEmoji('🔍');
-    }
+    updateLoadingMessage('正在获取播放源详情...');
+    updateLoadingProgress(0.5);
+    updateLoadingEmoji('🔍');
 
     // 初始化参数
     initParam();
@@ -222,9 +210,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    // 指定源和id且无需优选
+    // 指定源和id
     currentDetail = allSources.first;
-    if (currentSource.isNotEmpty && currentID.isNotEmpty && !needPrefer) {
+    if (currentSource.isNotEmpty && currentID.isNotEmpty) {
       final target = allSources.where(
           (source) => source.source == currentSource && source.id == currentID);
       currentDetail = target.isNotEmpty ? target.first : null;
@@ -234,14 +222,6 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    // 未指定源和 id/需要优选，且优选测速开关打开时，执行优选
-    if ((currentSource.isEmpty || currentID.isEmpty || needPrefer) &&
-        preferSpeedTest) {
-      updateLoadingMessage('正在优选最佳播放源...');
-      updateLoadingProgress(0.66);
-      updateLoadingEmoji('⚡');
-      currentDetail = await preferBestSource();
-    }
     setInfosByDetail(currentDetail!);
 
     // 检查收藏状态
@@ -379,24 +359,6 @@ class _PlayerScreenState extends State<PlayerScreen>
     } catch (e) {
       // 获取豆瓣详情异常，静默处理
     }
-  }
-
-  Future<SearchResult> preferBestSource() async {
-    final m3u8Service = M3U8Service();
-    final result = await m3u8Service.preferBestSource(allSources);
-
-    // 更新测速结果
-    final speedResults = result['allSourcesSpeed'] as Map<String, dynamic>;
-    for (final entry in speedResults.entries) {
-      final speedData = entry.value as Map<String, dynamic>;
-      allSourcesSpeed[entry.key] = SourceSpeed(
-        quality: speedData['quality'] as String,
-        loadSpeed: speedData['loadSpeed'] as String,
-        pingTime: speedData['pingTime'] as String,
-      );
-    }
-
-    return result['bestSource'] as SearchResult;
   }
 
   // 处理返回按钮点击
@@ -632,16 +594,6 @@ class _PlayerScreenState extends State<PlayerScreen>
   /// 动态更新视频数据源
   Future<void> updateVideoUrl(String newUrl, {Duration? startAt}) async {
     try {
-      // 获取 M3U8 代理 URL
-      final m3u8ProxyUrl = await UserDataService.getM3u8ProxyUrl();
-
-      // 如果代理 URL 不为空，则将 newUrl encode 后拼接到代理 URL 后面
-      String finalUrl = newUrl;
-      if (m3u8ProxyUrl.isNotEmpty) {
-        final encodedUrl = Uri.encodeComponent(newUrl);
-        finalUrl = '$m3u8ProxyUrl$encodedUrl';
-      }
-
       if (_isCasting) {
         // 构建标题：{title} - {第 x 集} - {sourceName}
         // 如果总集数为 1，则不显示集数
@@ -654,11 +606,11 @@ class _PlayerScreenState extends State<PlayerScreen>
           formattedTitle = '$videoTitle - $sourceName';
         }
         // 投屏状态：调用 DLNA 播放器的 updateVideoUrl
-        _dlnaPlayerController?.updateVideoUrl(finalUrl, formattedTitle,
+        _dlnaPlayerController?.updateVideoUrl(newUrl, formattedTitle,
             startAt: startAt);
       } else {
         // 本地播放：根据设备类型调用对应播放器的 updateDataSource
-        await _videoPlayerController?.updateDataSource(finalUrl,
+        await _videoPlayerController?.updateDataSource(newUrl,
             startAt: startAt);
       }
     } catch (e) {
@@ -2483,10 +2435,9 @@ class _PlayerScreenState extends State<PlayerScreen>
   Future<List<SearchResult>> fetchSourcesData(String query) async {
     // 检查是否启用本地搜索
     final isLocalSearch = await UserDataService.getLocalSearch();
-    final isLocalMode = await UserDataService.getIsLocalMode();
 
     List<SearchResult> results;
-    if (isLocalSearch || isLocalMode) {
+    if (isLocalSearch) {
       // 使用本地搜索
       results = await SearchService.searchSync(query);
     } else {

@@ -275,7 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             );
           }
 
-          await UserDataService.saveIsLocalMode(false);
+
 
           if (mounted) {
             _showToast('注册成功！', const Color(0xFF27ae60));

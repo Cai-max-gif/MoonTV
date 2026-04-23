@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
+
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/user_data_service.dart';
 import 'services/api_service.dart';
 import 'services/theme_service.dart';
 import 'services/douban_cache_service.dart';
-import 'services/local_mode_storage_service.dart';
-import 'services/subscription_service.dart';
+
 import 'services/version_service.dart';
 import 'services/announcement_service.dart';
 import 'widgets/announcement_dialog.dart';
@@ -125,11 +124,7 @@ class _AppWrapperState extends State<AppWrapper> {
     Duration checkInterval = const Duration(seconds: 30);
 
     _accountStatusTimer = Timer.periodic(checkInterval, (timer) async {
-      // 只在非本地模式下检查
-      final isLocalMode = await UserDataService.getIsLocalMode();
-      if (!isLocalMode) {
-        _checkAccountStatus();
-      }
+      _checkAccountStatus();
     });
   }
 
@@ -178,42 +173,6 @@ class _AppWrapperState extends State<AppWrapper> {
 
   void _checkLoginStatus() async {
     try {
-      // 检查是否是本地模式
-      final isLocalMode = await UserDataService.getIsLocalMode();
-
-      if (isLocalMode) {
-        // 本地模式：尝试刷新订阅内容
-        try {
-          final subscriptionUrl =
-              await LocalModeStorageService.getSubscriptionUrl();
-          if (subscriptionUrl != null && subscriptionUrl.isNotEmpty) {
-            final response = await http.get(Uri.parse(subscriptionUrl));
-            if (response.statusCode == 200) {
-              final content =
-                  await SubscriptionService.parseSubscriptionContent(
-                      response.body);
-              if (content != null) {
-                if (content.searchResources != null &&
-                    content.searchResources!.isNotEmpty) {
-                  await LocalModeStorageService.saveSearchSources(
-                      content.searchResources!);
-                }
-                if (content.liveSources != null &&
-                    content.liveSources!.isNotEmpty) {
-                  await LocalModeStorageService.saveLiveSources(
-                      content.liveSources!);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          // 刷新失败也继续进入首页
-        }
-
-        // 执行启动流程
-        await _executeStartupFlow();
-      }
-
       // 检查是否有自动登录所需的数据
       final hasAutoLoginData = await UserDataService.hasAutoLoginData();
 
@@ -227,7 +186,7 @@ class _AppWrapperState extends State<AppWrapper> {
         return;
       }
 
-      // 服务器模式：尝试自动登录
+      // 尝试自动登录
       final loginResult = await ApiService.autoLogin();
 
       if (mounted) {

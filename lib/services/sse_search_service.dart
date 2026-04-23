@@ -6,7 +6,7 @@ import '../models/search_resource.dart';
 import 'user_data_service.dart';
 import 'api_service.dart';
 import 'downstream_service.dart';
-import 'local_mode_storage_service.dart';
+
 
 /// SSE 搜索服务
 class SSESearchService {
@@ -45,13 +45,8 @@ class SSESearchService {
   /// 本地搜索
   Future<void> localSearch(String query) async {
     try {
-      // 检查是否是本地模式
-      final isLocalMode = await UserDataService.getIsLocalMode();
-
       // 获取搜索资源列表
-      final allResources = isLocalMode
-          ? await LocalModeStorageService.getSearchSources()
-          : await ApiService.getSearchResources();
+      final allResources = await ApiService.getSearchResources();
 
       // 过滤掉被禁用的资源
       final resources =
@@ -183,12 +178,7 @@ class SSESearchService {
       }
     });
 
-    // 检查是否启用本地搜索或本地模式
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      localSearch(query);
-      return;
-    }
+
 
     final isLocalSearch = await UserDataService.getLocalSearch();
     if (isLocalSearch) {

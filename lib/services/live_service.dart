@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'local_mode_storage_service.dart';
-import 'user_data_service.dart';
+
+
 
 import '../models/live_channel.dart';
 import '../models/live_source.dart';
@@ -64,13 +64,7 @@ class LiveService {
   /// 获取并缓存直播源
   static Future<List<LiveSource>> _fetchAndCacheLiveSources() async {
     try {
-      final isLocalMode = await UserDataService.getIsLocalMode();
-      List<LiveSource> sources;
-      if (isLocalMode) {
-        sources = await LocalModeStorageService.getLiveSources();
-      } else {
-        sources = await ApiService.getLiveSources();
-      }
+      final sources = await ApiService.getLiveSources();
       _liveSourcesCache = _CacheItem(sources, DateTime.now());
       return sources;
     } catch (e) {

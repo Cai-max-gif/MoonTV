@@ -187,9 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             }
 
-            // 保存模式状态为服务器模式
-            await UserDataService.saveIsLocalMode(false);
-
             // 跳转到首页，并清除所有路由栈（强制销毁所有旧页面）
             if (mounted) {
               Navigator.of(context).pushAndRemoveUntil(

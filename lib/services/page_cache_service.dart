@@ -5,8 +5,8 @@ import '../models/favorite_item.dart';
 import 'api_service.dart';
 import 'douban_service.dart';
 import 'data_operation_interface.dart';
-import 'user_data_service.dart';
-import 'local_mode_storage_service.dart';
+
+
 
 /// 页面缓存服务 - 单例模式
 class PageCacheService
@@ -46,12 +46,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<PlayRecord>>> getPlayRecords(
       BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      return DataOperationResult.success(
-          await LocalModeStorageService.getPlayRecords());
-    }
-
     const cacheKey = 'play_records';
 
     // 先检查缓存
@@ -73,12 +67,6 @@ class PageCacheService
   /// 直接走接口并保存到缓存
   Future<DataOperationResult<List<PlayRecord>>> getPlayRecordsDirect(
       BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      return DataOperationResult.success(
-          await LocalModeStorageService.getPlayRecords());
-    }
-
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');
@@ -119,10 +107,6 @@ class PageCacheService
 
   @override
   Future<void> refreshPlayRecords(BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      return;
-    }
     const cacheKey = 'play_records';
 
     // 检查context是否仍然挂载
@@ -161,12 +145,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> savePlayRecord(
       PlayRecord playRecord, BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      await LocalModeStorageService.savePlayRecord(playRecord);
-      return DataOperationResult.success(null);
-    }
-
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');
@@ -190,12 +168,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> deletePlayRecord(
       String source, String id, BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      await LocalModeStorageService.deletePlayRecord(source, id);
-      return DataOperationResult.success(null);
-    }
-
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');
@@ -219,12 +191,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> clearPlayRecord(
       BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      await LocalModeStorageService.clearPlayRecords();
-      return DataOperationResult.success(null);
-    }
-
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');
@@ -290,11 +256,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<FavoriteItem>>> getFavorites(
       BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      return DataOperationResult.success(
-          await LocalModeStorageService.getFavorites());
-    }
     const cacheKey = 'favorites';
 
     // 先检查缓存
@@ -319,11 +280,6 @@ class PageCacheService
   /// 直接走接口并保存到缓存
   Future<DataOperationResult<List<FavoriteItem>>> getFavoritesDirect(
       BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      return DataOperationResult.success(
-          await LocalModeStorageService.getFavorites());
-    }
     const cacheKey = 'favorites';
 
     // 检查context是否仍然挂载
@@ -351,10 +307,6 @@ class PageCacheService
 
   @override
   Future<void> refreshFavorites(BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      return;
-    }
     const cacheKey = 'favorites';
 
     // 检查context是否仍然挂载
@@ -380,21 +332,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> addFavorite(String source, String id,
       Map<String, dynamic> favoriteData, BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      await LocalModeStorageService.saveFavorite(FavoriteItem(
-          id: id,
-          source: source,
-          title: favoriteData['title'],
-          sourceName: favoriteData['source_name'],
-          year: favoriteData['year'],
-          cover: favoriteData['cover'],
-          totalEpisodes: favoriteData['total_episodes'],
-          saveTime: favoriteData['save_time'],
-          origin: ''));
-      return DataOperationResult.success(null);
-    }
-
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');
@@ -419,12 +356,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> removeFavorite(
       String source, String id, BuildContext context) async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-    if (isLocalMode) {
-      await LocalModeStorageService.deleteFavorite(source, id);
-      return DataOperationResult.success(null);
-    }
-
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');
@@ -447,10 +378,6 @@ class PageCacheService
 
   @override
   bool isFavoritedSync(String source, String id) {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      return LocalModeStorageService.isFavoriteSync(source, id);
-    }
     try {
       final favorites = _getCachedFavorites();
       if (favorites == null || favorites.isEmpty) return false;
@@ -521,12 +448,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<String>>> getSearchHistory(
       BuildContext context) async {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      return DataOperationResult.success(
-          await LocalModeStorageService.getSearchHistory());
-    }
-
     const cacheKey = 'search_history';
 
     // 先检查缓存
@@ -543,12 +464,6 @@ class PageCacheService
   /// 直接走接口并保存到缓存
   Future<DataOperationResult<List<String>>> getSearchHistoryDirect(
       BuildContext context) async {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      return DataOperationResult.success(
-          await LocalModeStorageService.getSearchHistory());
-    }
-
     const cacheKey = 'search_history';
 
     try {
@@ -568,11 +483,6 @@ class PageCacheService
 
   @override
   Future<void> refreshSearchHistory(BuildContext context) async {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      return;
-    }
-
     const cacheKey = 'search_history';
 
     try {
@@ -590,12 +500,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> addSearchHistory(
       String query, BuildContext context) async {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      await LocalModeStorageService.addSearchHistory(query);
-      return DataOperationResult.success(null);
-    }
-
     // 优先操作缓存
     const cacheKey = 'search_history';
     final cachedData = getCache<List<String>>(cacheKey);
@@ -637,12 +541,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> deleteSearchHistory(
       String query, BuildContext context) async {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      await LocalModeStorageService.deleteSearchHistory(query);
-      return DataOperationResult.success(null);
-    }
-
     // 优先操作缓存
     const cacheKey = 'search_history';
     final cachedData = getCache<List<String>>(cacheKey);
@@ -668,12 +566,6 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> clearSearchHistory(
       BuildContext context) async {
-    final isLocalMode = UserDataService.getIsLocalModeSync();
-    if (isLocalMode) {
-      await LocalModeStorageService.clearSearchHistory();
-      return DataOperationResult.success(null);
-    }
-
     // 优先操作缓存
     clearCache('search_history');
 

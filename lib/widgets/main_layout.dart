@@ -113,11 +113,10 @@ class _MainLayoutState extends State<MainLayout> {
     }
 
     final currentQuery = query;
-    final isLocalMode = await UserDataService.getIsLocalMode();
     final isLocalSearch = await UserDataService.getLocalSearch();
 
     List<String> suggestionResults;
-    if (isLocalMode || isLocalSearch) {
+    if (isLocalSearch) {
       suggestionResults = await SearchService.searchRecommand(query.trim());
     } else {
       suggestionResults = await ApiService.getSearchSuggestions(query.trim());

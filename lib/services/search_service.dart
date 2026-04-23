@@ -5,8 +5,8 @@ import '../models/search_result.dart';
 import '../models/search_resource.dart';
 import 'api_service.dart';
 import 'downstream_service.dart';
-import '../services/user_data_service.dart';
-import '../services/local_mode_storage_service.dart';
+
+
 
 /// 搜索服务
 class SearchService {
@@ -15,16 +15,7 @@ class SearchService {
   static bool _isRefreshing = false;
 
   /// 获取搜索资源列表（带缓存）
-  /// 本地模式直接返回，服务器模式先返回缓存数据然后异步刷新
   static Future<List<SearchResource>> _getSearchResourcesWithCache() async {
-    final isLocalMode = await UserDataService.getIsLocalMode();
-
-    // 本地模式不使用缓存，直接返回
-    if (isLocalMode) {
-      return await LocalModeStorageService.getSearchSources();
-    }
-
-    // 服务器模式使用缓存
     // 如果有缓存，立即返回缓存数据
     if (_cachedResources != null) {
       // 异步刷新缓存（不等待）

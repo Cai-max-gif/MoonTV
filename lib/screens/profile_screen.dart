@@ -24,11 +24,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String? _username;
   String _role = 'user';
-  String _doubanDataSource = '直连';
-  String _doubanImageSource = '直连';
-  String _m3u8ProxyUrl = '';
   String _version = '';
-  bool _preferSpeedTest = true;
   bool _isLoading = false;
 
   @override
@@ -50,21 +46,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserInfo() async {
     final username = await UserDataService.getUsername();
     final cookies = await UserDataService.getCookies();
-    final doubanDataSource =
-        await UserDataService.getDoubanDataSourceDisplayName();
-    final doubanImageSource =
-        await UserDataService.getDoubanImageSourceDisplayName();
-    final m3u8ProxyUrl = await UserDataService.getM3u8ProxyUrl();
-    final preferSpeedTest = await UserDataService.getPreferSpeedTest();
 
     if (mounted) {
       setState(() {
         _username = username;
         _role = _parseRoleFromCookies(cookies);
-        _doubanDataSource = doubanDataSource;
-        _doubanImageSource = doubanImageSource;
-        _m3u8ProxyUrl = m3u8ProxyUrl;
-        _preferSpeedTest = preferSpeedTest;
       });
     }
   }
@@ -117,12 +103,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleLogout() async {
     if (_isLoading) return;
-    
+
     try {
       setState(() {
         _isLoading = true;
       });
-      
+
       // 清空所有缓存
       LiveService.clearAllCache();
       PageCacheService().clearAllCache();
@@ -148,12 +134,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleCheckUpdate() async {
     if (_isLoading) return;
-    
+
     try {
       setState(() {
         _isLoading = true;
       });
-      
+
       // 显示加载提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -226,12 +212,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleViewAnnouncement() async {
     if (_isLoading) return;
-    
+
     try {
       setState(() {
         _isLoading = true;
       });
-      
+
       // 显示加载提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -339,389 +325,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildOptionSelector({
-    required String title,
-    required String currentValue,
-    required List<String> options,
-    required Future<void> Function(String) onChanged,
-    required IconData icon,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showOptionDialog(title, currentValue, options, onChanged),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF1f2937),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      currentValue,
-                      style: FontUtils.poppins(
-                        fontSize: 12,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                LucideIcons.chevronRight,
-                size: 16,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showOptionDialog(
-    String title,
-    String currentValue,
-    List<String> options,
-    Future<void> Function(String) onChanged,
-  ) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF2c2c2c)
-              : Colors.white,
-          title: Text(
-            title,
-            style: FontUtils.poppins(
-              fontSize: 18,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFFffffff)
-                  : const Color(0xFF1f2937),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: options.map((option) {
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    await onChanged(option);
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          currentValue == option
-                              ? LucideIcons.check
-                              : LucideIcons.circle,
-                          size: 20,
-                          color: currentValue == option
-                              ? const Color(0xFF10b981)
-                              : (Theme.of(context).brightness == Brightness.dark
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            option,
-                            style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFFffffff)
-                                  : const Color(0xFF1f2937),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showM3u8ProxyUrlDialog() {
-    final controller = TextEditingController(text: _m3u8ProxyUrl);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF2c2c2c)
-              : Colors.white,
-          title: Text(
-            'M3U8 代理 URL',
-            style: FontUtils.poppins(
-              fontSize: 18,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFFffffff)
-                  : const Color(0xFF1f2937),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: TextField(
-            controller: controller,
-            style: FontUtils.poppins(
-              fontSize: 14,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFFffffff)
-                  : const Color(0xFF1f2937),
-            ),
-            decoration: InputDecoration(
-              hintText: '输入代理 URL（可选）',
-              hintStyle: FontUtils.poppins(
-                fontSize: 14,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: Color(0xFF10b981),
-                  width: 2,
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                '取消',
-                style: FontUtils.poppins(
-                  fontSize: 14,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF9ca3af)
-                      : const Color(0xFF6b7280),
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                final url = controller.text.trim();
-                await UserDataService.saveM3u8ProxyUrl(url);
-                setState(() {
-                  _m3u8ProxyUrl = url;
-                });
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(
-                '保存',
-                style: FontUtils.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF10b981),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildInputOption({
-    required String title,
-    required String currentValue,
-    required VoidCallback onTap,
-    required IconData icon,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF1f2937),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      currentValue.isEmpty ? '未设置' : currentValue,
-                      style: FontUtils.poppins(
-                        fontSize: 12,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
-                        fontWeight: FontWeight.w400,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                LucideIcons.chevronRight,
-                size: 16,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToggleOption({
-    required String title,
-    required bool value,
-    required Future<void> Function(bool) onChanged,
-    required IconData icon,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF9ca3af)
-                  : const Color(0xFF6b7280),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFFffffff)
-                      : const Color(0xFF1f2937),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () async {
-                await onChanged(!value);
-                setState(() {});
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 44,
-                height: 24,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: value
-                      ? const Color(0xFF10b981)
-                      : (Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb)),
-                ),
-                child: AnimatedAlign(
-                  duration: const Duration(milliseconds: 200),
-                  alignment:
-                      value ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -791,106 +394,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          // 设置选项区域
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1e1e1e)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // 豆瓣数据源选项
-                _buildOptionSelector(
-                  title: '豆瓣数据源',
-                  currentValue: _doubanDataSource,
-                  options: const [
-                    '直连',
-                    'Cors Proxy By Zwei',
-                    '豆瓣 CDN By CMLiussss（腾讯云）',
-                    '豆瓣 CDN By CMLiussss（阿里云）',
-                  ],
-                  onChanged: (value) async {
-                    await UserDataService.saveDoubanDataSource(value);
-                    setState(() {
-                      _doubanDataSource = value;
-                    });
-                  },
-                  icon: LucideIcons.database,
-                ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-                // 豆瓣图片源选项
-                _buildOptionSelector(
-                  title: '豆瓣图片源',
-                  currentValue: _doubanImageSource,
-                  options: const [
-                    '直连',
-                    '豆瓣官方精品 CDN',
-                    '豆瓣 CDN By CMLiussss（腾讯云）',
-                    '豆瓣 CDN By CMLiussss（阿里云）',
-                  ],
-                  onChanged: (value) async {
-                    await UserDataService.saveDoubanImageSource(value);
-                    setState(() {
-                      _doubanImageSource = value;
-                    });
-                  },
-                  icon: LucideIcons.image,
-                ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-                // M3U8 代理 URL 选项
-                _buildInputOption(
-                  title: 'M3U8 代理 URL',
-                  currentValue: _m3u8ProxyUrl,
-                  onTap: _showM3u8ProxyUrlDialog,
-                  icon: LucideIcons.link,
-                ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-                // 优选测速选项
-                _buildToggleOption(
-                  title: '优选测速',
-                  value: _preferSpeedTest,
-                  onChanged: (value) async {
-                    await UserDataService.savePreferSpeedTest(value);
-                    setState(() {
-                      _preferSpeedTest = value;
-                    });
-                  },
-                  icon: LucideIcons.zap,
-                ),
-              ],
-            ),
-          ),
+          // 设置选项区域已移除
+          // 移除了豆瓣数据源、豆瓣图片源、M3U8代理URL和优选测速功能
 
           const SizedBox(height: 16),
 
