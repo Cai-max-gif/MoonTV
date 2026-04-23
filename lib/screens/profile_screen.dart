@@ -13,6 +13,7 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/update_dialog.dart';
 import '../widgets/announcement_dialog.dart';
+import '../widgets/settings_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -396,6 +397,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // 设置选项区域已移除
           // 移除了豆瓣数据源、豆瓣图片源、M3U8代理URL和优选测速功能
+
+          const SizedBox(height: 16),
+
+          // 设置选项区域
+          const SettingsSection(),
 
           const SizedBox(height: 16),
 

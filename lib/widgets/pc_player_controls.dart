@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'dlna_device_dialog.dart';
+import 'player_download_panel.dart';
+import '../utils/device_utils.dart';
 
 // 带 hover 效果的按钮组件
 class HoverButton extends StatefulWidget {
@@ -70,6 +72,8 @@ class PCPlayerControls extends StatefulWidget {
   final bool live;
   final ValueNotifier<double> playbackSpeedListenable;
   final Future<void> Function(double speed) onSetSpeed;
+  final List<String>? episodes;
+  final List<String>? episodesTitles;
 
   const PCPlayerControls({
     super.key,
@@ -93,6 +97,8 @@ class PCPlayerControls extends StatefulWidget {
     this.live = false,
     required this.playbackSpeedListenable,
     required this.onSetSpeed,
+    this.episodes,
+    this.episodesTitles,
   });
 
   @override
@@ -265,6 +271,100 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     });
   }
 
+  void _showDownloadPanel() {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
+    // 平板模式：使用 showGeneralDialog
+    if (DeviceUtils.isTablet(context)) {
+      final isPortraitTablet =
+          MediaQuery.of(context).orientation == Orientation.portrait;
+      final panelWidth = isPortraitTablet ? screenWidth : screenWidth * 0.35;
+      final panelHeight = isPortraitTablet
+          ? (screenHeight - statusBarHeight) * 0.7
+          : screenHeight;
+      final alignment =
+          isPortraitTablet ? Alignment.bottomCenter : Alignment.centerRight;
+      final slideBegin =
+          isPortraitTablet ? const Offset(0, 1) : const Offset(1, 0);
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '',
+        barrierColor: Colors.transparent,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: alignment,
+            child: Material(
+              color: Colors.transparent,
+              child: SizedBox(
+                width: panelWidth,
+                height: panelHeight,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: slideBegin,
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: PlayerDownloadPanel(
+                    theme: theme,
+                    episodes: widget.episodes ?? [],
+                    episodesTitles: widget.episodesTitles ?? [],
+                    currentEpisodeIndex: widget.currentEpisodeIndex ?? 0,
+                    isReversed: false,
+                    onSingleEpisodeTap: (index) {
+                      debugPrint('Download single episode: $index');
+                    },
+                    onBatchDownload: (indices) {
+                      debugPrint('Download batch episodes: $indices');
+                    },
+                    onToggleOrder: () {},
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+      return;
+    }
+
+    // 手机模式：从底部弹出
+    final playerHeight = screenWidth / (16 / 9);
+    final panelHeight = screenHeight - statusBarHeight - playerHeight;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      enableDrag: false,
+      builder: (context) {
+        return SizedBox(
+          height: panelHeight,
+          width: double.infinity,
+          child: PlayerDownloadPanel(
+            theme: theme,
+            episodes: widget.episodes ?? [],
+            episodesTitles: widget.episodesTitles ?? [],
+            currentEpisodeIndex: widget.currentEpisodeIndex ?? 0,
+            isReversed: false,
+            onSingleEpisodeTap: (index) {
+              debugPrint('Download single episode: $index');
+            },
+            onBatchDownload: (indices) {
+              debugPrint('Download batch episodes: $indices');
+            },
+            onToggleOrder: () {},
+          ),
+        );
+      },
+    );
+  }
+
   void _onBlankAreaTap() {
     // live 模式下不响应空白区域点击
     if (widget.live) {
@@ -320,7 +420,9 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   }
 
   void _onSwipeUpdate(DragUpdateDetails details) {
-    if (!mounted || !_isSeekingViaSwipe || _screenSize == null || widget.live) return;
+    if (!mounted || !_isSeekingViaSwipe || _screenSize == null || widget.live) {
+      return;
+    }
 
     final screenWidth = _screenSize!.width;
     final swipeDistance = details.globalPosition.dx - _swipeStartX;
@@ -340,7 +442,9 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   }
 
   void _onSwipeEnd(DragEndDetails details) {
-    if (!mounted || !_isSeekingViaSwipe || widget.live) return;
+    if (!mounted || !_isSeekingViaSwipe || widget.live) {
+      return;
+    }
 
     if (_dragPosition != null) {
       widget.player.seek(_dragPosition!);
@@ -890,6 +994,19 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               child: _buildPositionIndicator(),
                             ),
                           if (!widget.live)
+                            HoverButton(
+                              onTap: () {
+                                _onUserInteraction();
+                                // 显示下载选集面板
+                                _showDownloadPanel();
+                              },
+                              child: Icon(
+                                Icons.download,
+                                color: Colors.white,
+                                size: effectiveFullscreen ? 22 : 20,
+                              ),
+                            ),
+                          if (!widget.live)
                             MouseRegion(
                               key: _speedButtonKey,
                               cursor: SystemMouseCursors.click,
@@ -906,8 +1023,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                   _isHoveringSpeedButton = false;
                                 });
                                 // 延迟检查是否需要隐藏菜单
-                                Future.delayed(const Duration(milliseconds: 100),
-                                    () {
+                                Future.delayed(
+                                    const Duration(milliseconds: 100), () {
                                   if (mounted &&
                                       !_isHoveringSpeedButton &&
                                       !_isHoveringSpeedMenu) {
@@ -923,7 +1040,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 decoration: _isHoveringSpeedButton
                                     ? BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.grey.withValues(alpha: 0.5),
+                                        color:
+                                            Colors.grey.withValues(alpha: 0.5),
                                       )
                                     : null,
                                 child: Icon(
@@ -1381,64 +1499,74 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
       cursor: widget.live ? MouseCursor.defer : SystemMouseCursors.click,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onHorizontalDragStart: widget.live ? null : (details) {
-          _isDragging = true;
-          widget.onDragStart?.call();
-          _updateDragPosition(details.localPosition.dx, context);
-        },
-        onHorizontalDragUpdate: widget.live ? null : (details) {
-          if (_isDragging) {
-            widget.onDragUpdate?.call();
-            _updateDragPosition(details.localPosition.dx, context);
-          }
-        },
-        onHorizontalDragEnd: widget.live ? null : (details) async {
-          if (_isDragging) {
-            final seekPosition = Duration(
-                milliseconds: (_dragValue * duration.inMilliseconds).round());
-            
-            setState(() {
-              _isDragging = false;
-              _isSeeking = true; // 标记开始 seek
-            });
-            
-            await widget.player.seek(seekPosition);
-            
-            // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
-            await Future.delayed(const Duration(milliseconds: 100));
-            
-            if (mounted) {
-              setState(() {
-                _isSeeking = false; // 标记 seek 完成
-              });
-            }
-            
-            widget.onDragEnd?.call();
-          }
-        },
-        onTapDown: widget.live ? null : (details) async {
-          widget.onDragStart?.call();
-          _updateDragPosition(details.localPosition.dx, context);
-          final seekPosition = Duration(
-              milliseconds: (_dragValue * duration.inMilliseconds).round());
-          
-          setState(() {
-            _isSeeking = true; // 标记开始 seek
-          });
-          
-          await widget.player.seek(seekPosition);
-          
-          // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
-          await Future.delayed(const Duration(milliseconds: 100));
-          
-          if (mounted) {
-            setState(() {
-              _isSeeking = false; // 标记 seek 完成
-            });
-          }
-          
-          widget.onDragEnd?.call();
-        },
+        onHorizontalDragStart: widget.live
+            ? null
+            : (details) {
+                _isDragging = true;
+                widget.onDragStart?.call();
+                _updateDragPosition(details.localPosition.dx, context);
+              },
+        onHorizontalDragUpdate: widget.live
+            ? null
+            : (details) {
+                if (_isDragging) {
+                  widget.onDragUpdate?.call();
+                  _updateDragPosition(details.localPosition.dx, context);
+                }
+              },
+        onHorizontalDragEnd: widget.live
+            ? null
+            : (details) async {
+                if (_isDragging) {
+                  final seekPosition = Duration(
+                      milliseconds:
+                          (_dragValue * duration.inMilliseconds).round());
+
+                  setState(() {
+                    _isDragging = false;
+                    _isSeeking = true; // 标记开始 seek
+                  });
+
+                  await widget.player.seek(seekPosition);
+
+                  // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
+                  await Future.delayed(const Duration(milliseconds: 100));
+
+                  if (mounted) {
+                    setState(() {
+                      _isSeeking = false; // 标记 seek 完成
+                    });
+                  }
+
+                  widget.onDragEnd?.call();
+                }
+              },
+        onTapDown: widget.live
+            ? null
+            : (details) async {
+                widget.onDragStart?.call();
+                _updateDragPosition(details.localPosition.dx, context);
+                final seekPosition = Duration(
+                    milliseconds:
+                        (_dragValue * duration.inMilliseconds).round());
+
+                setState(() {
+                  _isSeeking = true; // 标记开始 seek
+                });
+
+                await widget.player.seek(seekPosition);
+
+                // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
+                await Future.delayed(const Duration(milliseconds: 100));
+
+                if (mounted) {
+                  setState(() {
+                    _isSeeking = false; // 标记 seek 完成
+                  });
+                }
+
+                widget.onDragEnd?.call();
+              },
         child: Container(
           height: 24,
           color: Colors.transparent,

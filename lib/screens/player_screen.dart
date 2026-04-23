@@ -1004,6 +1004,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                 _isWebFullscreen = isWebFullscreen;
               });
             },
+            episodes: currentDetail?.episodes,
+            episodesTitles: currentDetail?.episodesTitles,
           ),
         if (_isCasting && _dlnaDevice != null)
           DLNAPlayer(

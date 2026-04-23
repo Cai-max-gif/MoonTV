@@ -32,6 +32,8 @@ class VideoPlayerWidget extends StatefulWidget {
   final bool live;
   final Function(bool isPipMode)? onPipModeChanged;
   final Function(String error)? onError;
+  final List<String>? episodes;
+  final List<String>? episodesTitles;
 
   const VideoPlayerWidget({
     super.key,
@@ -55,6 +57,8 @@ class VideoPlayerWidget extends StatefulWidget {
     this.live = false,
     this.onPipModeChanged,
     this.onError,
+    this.episodes,
+    this.episodesTitles,
   });
 
   @override
@@ -533,6 +537,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 live: widget.live,
                                 playbackSpeedListenable: _playbackSpeed,
                                 onSetSpeed: _setPlaybackSpeed,
+                                episodes: widget.episodes,
+                                episodesTitles: widget.episodesTitles,
                               )
                             : MobilePlayerControls(
                                 player: _player!,
@@ -556,6 +562,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 onSetSpeed: _setPlaybackSpeed,
                                 onEnterPipMode: _enterPipMode,
                                 isPipMode: _isPipMode,
+                                episodes: widget.episodes,
+                                episodesTitles: widget.episodesTitles,
                               );
                       },
                     )
@@ -586,6 +594,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                   onSetSpeed: _setPlaybackSpeed,
                   onEnterPipMode: _enterPipMode,
                   isPipMode: _isPipMode,
+                  episodes: widget.episodes,
+                  episodesTitles: widget.episodesTitles,
                 )
           : const Center(
               child: CircularProgressIndicator(

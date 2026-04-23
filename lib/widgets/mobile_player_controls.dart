@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
 import 'dlna_device_dialog.dart';
+import 'player_download_panel.dart';
 
 class MobilePlayerControls extends StatefulWidget {
   final dynamic player;
@@ -28,6 +29,8 @@ class MobilePlayerControls extends StatefulWidget {
   final Future<void> Function(double speed) onSetSpeed;
   final Future<void> Function() onEnterPipMode;
   final bool isPipMode;
+  final List<String>? episodes;
+  final List<String>? episodesTitles;
 
   const MobilePlayerControls({
     super.key,
@@ -52,6 +55,8 @@ class MobilePlayerControls extends StatefulWidget {
     required this.onSetSpeed,
     required this.onEnterPipMode,
     required this.isPipMode,
+    this.episodes,
+    this.episodesTitles,
   });
 
   @override
@@ -147,7 +152,8 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
           setState(() {});
         }));
       } catch (e) {
-        debugPrint('MobilePlayerControls: error listening to player streams $e');
+        debugPrint(
+            'MobilePlayerControls: error listening to player streams $e');
       }
     }
   }
@@ -248,7 +254,10 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   }
 
   void _onSwipeUpdate(DragUpdateDetails details) {
-    if (_isLocked || !_isSeekingViaSwipe || widget.live || _screenSize == null) {
+    if (_isLocked ||
+        !_isSeekingViaSwipe ||
+        widget.live ||
+        _screenSize == null) {
       return;
     }
     final screenWidth = _screenSize!.width;
@@ -513,6 +522,50 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       return '$hours:${twoDigits(minutes)}:${twoDigits(seconds)}';
     }
     return '${twoDigits(minutes)}:${twoDigits(seconds)}';
+  }
+
+  void _showDownloadPanel() {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
+    final playerHeight = screenWidth / (16 / 9);
+    final panelHeight = screenHeight - statusBarHeight - playerHeight;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 0),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: double.infinity,
+              height: panelHeight,
+              child: PlayerDownloadPanel(
+                theme: theme,
+                episodes: widget.episodes ?? [],
+                episodesTitles: widget.episodesTitles ?? [],
+                currentEpisodeIndex: widget.currentEpisodeIndex ?? 0,
+                isReversed: false,
+                onSingleEpisodeTap: (index) {
+                  debugPrint('Download single episode: $index');
+                },
+                onBatchDownload: (indices) {
+                  debugPrint('Download batch episodes: $indices');
+                },
+                onToggleOrder: () {},
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -913,6 +966,23 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 if (widget.live) const Spacer(),
                 if (!widget.live)
                   GestureDetector(
+                    onTap: () {
+                      _onUserInteraction();
+                      // 显示下载选集面板
+                      _showDownloadPanel();
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.download,
+                        color: Colors.white,
+                        size: _isFullscreen ? 22 : 20,
+                      ),
+                    ),
+                  ),
+                if (!widget.live)
+                  GestureDetector(
                     onTap: () async {
                       _onUserInteraction();
                       await _showSpeedDialog();
@@ -954,7 +1024,9 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: EdgeInsets.only(left: _isFullscreen ? 12 : 5, right: _isFullscreen ? 12 : 8),
+                    padding: EdgeInsets.only(
+                        left: _isFullscreen ? 12 : 5,
+                        right: _isFullscreen ? 12 : 8),
                     child: Icon(
                       _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                       color: Colors.white,
@@ -1203,7 +1275,8 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
           }
         });
       } catch (e) {
-        debugPrint('MobileVideoProgressBar: error listening to player position $e');
+        debugPrint(
+            'MobileVideoProgressBar: error listening to player position $e');
       }
     }
   }
@@ -1217,7 +1290,8 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
   @override
   Widget build(BuildContext context) {
     final duration = widget.player?.state?.duration ?? Duration.zero;
-    final position = widget.dragPosition ?? (widget.player?.state?.position ?? Duration.zero);
+    final position = widget.dragPosition ??
+        (widget.player?.state?.position ?? Duration.zero);
 
     double value = 0.0;
     if (duration.inMilliseconds > 0) {
