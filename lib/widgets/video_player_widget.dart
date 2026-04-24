@@ -93,6 +93,7 @@ class VideoPlayerWidgetController {
   bool get isPlaying => _state._player?.state.playing ?? false;
 
   Future<void> pause() async {
+    if (_state._playerDisposed) return;
     await _state._player?.pause();
   }
 
@@ -270,6 +271,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _durationSubscription?.cancel();
 
     _positionSubscription = _player!.stream.position.listen((position) {
+      if (_playerDisposed) return;
       for (final listener in List<VoidCallback>.from(_progressListeners)) {
         try {
           listener();
@@ -279,7 +281,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       }
 
       // 自动跳过片头片尾逻辑
-      if (_autoSkipOpeningEnding && _player != null) {
+      if (_autoSkipOpeningEnding && _player != null && !_playerDisposed) {
         final duration = _player!.state.duration;
         if (duration != Duration.zero) {
           // 跳过片头
@@ -292,8 +294,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
           // 跳过片尾
           if (!_hasSkippedEnding && _skipEndingDuration > 0) {
-            final endPosition =
-                duration - Duration(seconds: _skipEndingDuration);
+            final endPosition = duration - Duration(seconds: _skipEndingDuration);
             if (position >= endPosition) {
               _hasSkippedEnding = true;
               _player!.seek(duration);
@@ -304,34 +305,38 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     });
 
     _playingSubscription = _player!.stream.playing.listen((playing) {
-      if (!mounted) return;
+      if (!mounted || _playerDisposed) return;
       if (!playing) {
         setState(() {
           _hasCompleted = false;
         });
-        _pip.setup(const PipOptions(
-          autoEnterEnabled: false,
-          aspectRatioX: 16,
-          aspectRatioY: 9,
-          preferredContentWidth: 480,
-          preferredContentHeight: 270,
-          controlStyle: 2,
-        ));
+        if (Platform.isAndroid || Platform.isIOS) {
+          _pip.setup(const PipOptions(
+            autoEnterEnabled: false,
+            aspectRatioX: 16,
+            aspectRatioY: 9,
+            preferredContentWidth: 480,
+            preferredContentHeight: 270,
+            controlStyle: 2,
+          ));
+        }
       } else {
-        _pip.setup(const PipOptions(
-          autoEnterEnabled: true,
-          aspectRatioX: 16,
-          aspectRatioY: 9,
-          preferredContentWidth: 480,
-          preferredContentHeight: 270,
-          controlStyle: 2,
-        ));
+        if (Platform.isAndroid || Platform.isIOS) {
+          _pip.setup(const PipOptions(
+            autoEnterEnabled: true,
+            aspectRatioX: 16,
+            aspectRatioY: 9,
+            preferredContentWidth: 480,
+            preferredContentHeight: 270,
+            controlStyle: 2,
+          ));
+        }
       }
     });
 
     if (!widget.live) {
       _completedSubscription = _player!.stream.completed.listen((completed) {
-        if (!mounted) return;
+        if (!mounted || _playerDisposed) return;
         if (completed && !_hasCompleted) {
           _hasCompleted = true;
           widget.onVideoCompleted?.call();
@@ -340,7 +345,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
 
     _durationSubscription = _player!.stream.duration.listen((duration) {
-      if (!mounted) return;
+      if (!mounted || _playerDisposed) return;
       if (duration != Duration.zero) {
         if (_isLoadingVideo) {
           setState(() {
@@ -482,6 +487,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
   Future<void> _enterPipMode() async {
     debugPrint('_enterPipMode');
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return;
+    }
     try {
       var support = await _pip.isSupported();
       if (!support) {
