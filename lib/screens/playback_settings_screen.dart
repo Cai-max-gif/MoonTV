@@ -1,0 +1,535 @@
+import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../utils/font_utils.dart';
+
+class PlaybackSettingsScreen extends StatefulWidget {
+  const PlaybackSettingsScreen({super.key});
+
+  @override
+  State<PlaybackSettingsScreen> createState() => _PlaybackSettingsScreenState();
+}
+
+class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
+  bool _autoSkip = false;
+  bool _autoPlayNext = false;
+  bool _autoEnterPictureInPicture = false;
+  bool _incognitoMode = false;
+  bool _autoSkipOpeningEnding = false;
+  double _defaultPlaybackSpeed = 1.0;
+  int _skipDuration = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor:
+          isDarkMode ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
+      appBar: AppBar(
+        backgroundColor: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            LucideIcons.arrowLeft,
+            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '播放设置',
+          style: FontUtils.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(12),
+        children: [
+          // 自动跳转设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.skipForward,
+                      size: 24,
+                      color: Color(0xFF10b981),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '自动跳转',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _autoSkip,
+                  onChanged: (value) {
+                    setState(() {
+                      _autoSkip = value;
+                    });
+                  },
+                  activeThumbColor: const Color(0xFF10b981),
+                  inactiveTrackColor: isDarkMode
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 自动连播设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.repeat,
+                      size: 24,
+                      color: Color(0xFF8b5cf6),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '自动连播',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _autoPlayNext,
+                  onChanged: (value) {
+                    setState(() {
+                      _autoPlayNext = value;
+                    });
+                  },
+                  activeThumbColor: const Color(0xFF8b5cf6),
+                  inactiveTrackColor: isDarkMode
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 自动进入画中画设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.pictureInPicture,
+                      size: 24,
+                      color: Color(0xFF3b82f6),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '自动进入画中画',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _autoEnterPictureInPicture,
+                  onChanged: (value) {
+                    setState(() {
+                      _autoEnterPictureInPicture = value;
+                    });
+                  },
+                  activeThumbColor: const Color(0xFF3b82f6),
+                  inactiveTrackColor: isDarkMode
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 隐身模式设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.eyeOff,
+                      size: 24,
+                      color: Color(0xFFef4444),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '隐身模式',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _incognitoMode,
+                  onChanged: (value) {
+                    setState(() {
+                      _incognitoMode = value;
+                    });
+                  },
+                  activeThumbColor: const Color(0xFFef4444),
+                  inactiveTrackColor: isDarkMode
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 默认倍速设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.zap,
+                      size: 24,
+                      color: Color(0xFFf59e0b),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '默认倍速',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      '0.5x',
+                      style: FontUtils.poppins(
+                        fontSize: 14,
+                        color: isDarkMode
+                            ? const Color(0xFF9ca3af)
+                            : const Color(0xFF6b7280),
+                      ),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 20.0,
+                          thumbColor: const Color(0xFFf59e0b),
+                          activeTrackColor: const Color(0xFFf59e0b),
+                          inactiveTrackColor: isDarkMode
+                              ? const Color(0xFF374151)
+                              : const Color(0xFFe5e7eb),
+                        ),
+                        child: Slider(
+                          value: _defaultPlaybackSpeed,
+                          min: 0.5,
+                          max: 2.0,
+                          divisions: 30,
+                          onChanged: (value) {
+                            setState(() {
+                              _defaultPlaybackSpeed = value;
+                            });
+                          },
+                          label: '${_defaultPlaybackSpeed.toStringAsFixed(1)}x',
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '2.0x',
+                      style: FontUtils.poppins(
+                        fontSize: 14,
+                        color: isDarkMode
+                            ? const Color(0xFF9ca3af)
+                            : const Color(0xFF6b7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 自动跳过片头片尾设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.skipBack,
+                      size: 24,
+                      color: Color(0xFF3b82f6),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '自动跳过片头片尾',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _autoSkipOpeningEnding,
+                  onChanged: (value) {
+                    setState(() {
+                      _autoSkipOpeningEnding = value;
+                    });
+                  },
+                  activeThumbColor: const Color(0xFF3b82f6),
+                  inactiveTrackColor: isDarkMode
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 跳过时长设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.clock,
+                      size: 24,
+                      color: Color(0xFF10b981),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '跳过时长',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      '5秒',
+                      style: FontUtils.poppins(
+                        fontSize: 14,
+                        color: isDarkMode
+                            ? const Color(0xFF9ca3af)
+                            : const Color(0xFF6b7280),
+                      ),
+                    ),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 20.0,
+                          thumbColor: const Color(0xFF10b981),
+                          activeTrackColor: const Color(0xFF10b981),
+                          inactiveTrackColor: isDarkMode
+                              ? const Color(0xFF374151)
+                              : const Color(0xFFe5e7eb),
+                        ),
+                        child: Slider(
+                          value: _skipDuration.toDouble(),
+                          min: 5,
+                          max: 30,
+                          divisions: 5,
+                          onChanged: (value) {
+                            setState(() {
+                              _skipDuration = value.toInt();
+                            });
+                          },
+                          label: '$_skipDuration秒',
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '30秒',
+                      style: FontUtils.poppins(
+                        fontSize: 14,
+                        color: isDarkMode
+                            ? const Color(0xFF9ca3af)
+                            : const Color(0xFF6b7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // 说明文字
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf59e0b).withAlpha(25),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFf59e0b).withAlpha(76),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  LucideIcons.info,
+                  size: 20,
+                  color: Color(0xFFf59e0b),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '提示：开启这些设置可以提升您的观看体验，但可能会消耗更多电量和网络流量。',
+                    style: FontUtils.poppins(
+                      fontSize: 14,
+                      color: isDarkMode
+                          ? const Color(0xFFf59e0b)
+                          : const Color(0xFF92400e),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

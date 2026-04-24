@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../utils/font_utils.dart';
+import '../screens/download_management_screen.dart';
+import '../screens/download_settings_screen.dart';
+import '../screens/playback_settings_screen.dart';
 
 class SettingsSection extends StatelessWidget {
   const SettingsSection({
@@ -26,22 +29,14 @@ class SettingsSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // 下载管理按钮
           Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '下载管理功能开发中',
-                      style: FontUtils.poppins(
-                        color: Colors.white,
-                      ),
-                    ),
-                    backgroundColor: const Color(0xFF3b82f6),
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DownloadManagementScreen(),
                   ),
                 );
               },
@@ -62,19 +57,25 @@ class SettingsSection extends StatelessWidget {
                       '下载管理',
                       style: FontUtils.poppins(
                         fontSize: 16,
-                        color: Theme.of(context).brightness ==
-                                Brightness.dark
+                        color: Theme.of(context).brightness == Brightness.dark
                             ? const Color(0xFFffffff)
                             : const Color(0xFF1f2937),
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF666666)
+                          : const Color(0xFF9ca3af),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          // 分割线
           Container(
             height: 1,
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -82,22 +83,14 @@ class SettingsSection extends StatelessWidget {
                 ? const Color(0xFF374151)
                 : const Color(0xFFe5e7eb),
           ),
-          // 下载设置按钮
           Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '下载设置功能开发中',
-                      style: FontUtils.poppins(
-                        color: Colors.white,
-                      ),
-                    ),
-                    backgroundColor: const Color(0xFF3b82f6),
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DownloadSettingsScreen(),
                   ),
                 );
               },
@@ -118,19 +111,25 @@ class SettingsSection extends StatelessWidget {
                       '下载设置',
                       style: FontUtils.poppins(
                         fontSize: 16,
-                        color: Theme.of(context).brightness ==
-                                Brightness.dark
+                        color: Theme.of(context).brightness == Brightness.dark
                             ? const Color(0xFFffffff)
                             : const Color(0xFF1f2937),
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF666666)
+                          : const Color(0xFF9ca3af),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          // 分割线
           Container(
             height: 1,
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -138,22 +137,14 @@ class SettingsSection extends StatelessWidget {
                 ? const Color(0xFF374151)
                 : const Color(0xFFe5e7eb),
           ),
-          // 播放设置按钮
           Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '播放设置功能开发中',
-                      style: FontUtils.poppins(
-                        color: Colors.white,
-                      ),
-                    ),
-                    backgroundColor: const Color(0xFF3b82f6),
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PlaybackSettingsScreen(),
                   ),
                 );
               },
@@ -174,12 +165,19 @@ class SettingsSection extends StatelessWidget {
                       '播放设置',
                       style: FontUtils.poppins(
                         fontSize: 16,
-                        color: Theme.of(context).brightness ==
-                                Brightness.dark
+                        color: Theme.of(context).brightness == Brightness.dark
                             ? const Color(0xFFffffff)
                             : const Color(0xFF1f2937),
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF666666)
+                          : const Color(0xFF9ca3af),
                     ),
                   ],
                 ),
