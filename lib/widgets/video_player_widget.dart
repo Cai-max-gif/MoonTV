@@ -151,6 +151,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   VoidCallback? _exitWebFullscreenCallback;
   final Pip _pip = Pip();
   bool _isPipMode = false;
+  bool _autoSkipOpeningEnding = false;
+  int _skipOpeningDuration = 0;
+  int _skipEndingDuration = 0;
+  bool _hasSkippedOpening = false;
+  bool _hasSkippedEnding = false;
 
   @override
   void initState() {
@@ -159,6 +164,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _currentUrl = widget.url;
     _currentHeaders = widget.headers;
     _loadDefaultPlaybackSpeed();
+    _loadAutoSkipSettings();
     if (Platform.isWindows || Platform.isMacOS) {
       _initializePlayer();
     } else {
@@ -171,6 +177,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _setupPip();
     _registerPipObserver();
     widget.onControllerCreated?.call(VideoPlayerWidgetController._(this));
+  }
+
+  Future<void> _loadAutoSkipSettings() async {
+    _autoSkipOpeningEnding = await UserDataService.getAutoSkipOpeningEnding();
+    _skipOpeningDuration = await UserDataService.getSkipOpeningDuration();
+    _skipEndingDuration = await UserDataService.getSkipEndingDuration();
   }
 
   Future<void> _loadDefaultPlaybackSpeed() async {
@@ -257,12 +269,36 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _completedSubscription?.cancel();
     _durationSubscription?.cancel();
 
-    _positionSubscription = _player!.stream.position.listen((_) {
+    _positionSubscription = _player!.stream.position.listen((position) {
       for (final listener in List<VoidCallback>.from(_progressListeners)) {
         try {
           listener();
         } catch (error) {
           debugPrint('VideoPlayerWidget: progress listener error $error');
+        }
+      }
+
+      // 自动跳过片头片尾逻辑
+      if (_autoSkipOpeningEnding && _player != null) {
+        final duration = _player!.state.duration;
+        if (duration != Duration.zero) {
+          // 跳过片头
+          if (!_hasSkippedOpening &&
+              _skipOpeningDuration > 0 &&
+              position <= const Duration(seconds: 1)) {
+            _hasSkippedOpening = true;
+            _player!.seek(Duration(seconds: _skipOpeningDuration));
+          }
+
+          // 跳过片尾
+          if (!_hasSkippedEnding && _skipEndingDuration > 0) {
+            final endPosition =
+                duration - Duration(seconds: _skipEndingDuration);
+            if (position >= endPosition) {
+              _hasSkippedEnding = true;
+              _player!.seek(duration);
+            }
+          }
         }
       }
     });
@@ -328,6 +364,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     if (headers != null) {
       _currentHeaders = headers;
     }
+
+    // 重置跳过标记
+    _hasSkippedOpening = false;
+    _hasSkippedEnding = false;
 
     if (_player == null) {
       await _initializePlayer();

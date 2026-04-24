@@ -46,13 +46,14 @@ class PlaybackSettingsScreen extends StatefulWidget {
 }
 
 class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
-  bool _autoSkip = false;
   bool _autoPlayNext = false;
   bool _autoEnterPictureInPicture = false;
   bool _autoSkipOpeningEnding = false;
   double _defaultPlaybackSpeed = 1.0;
-  int _skipDuration = 0;
-  late TextEditingController _skipDurationController;
+  int _skipOpeningDuration = 0;
+  int _skipEndingDuration = 0;
+  late TextEditingController _skipOpeningDurationController;
+  late TextEditingController _skipEndingDurationController;
 
   // 倍速列表
   final List<double> _playbackSpeeds = [0.5, 0.75, 1.0, 1.5, 2.0];
@@ -62,11 +63,24 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _skipDurationController =
-        TextEditingController(text: _skipDuration.toString());
+    _skipOpeningDurationController =
+        TextEditingController(text: _skipOpeningDuration.toString());
+    _skipEndingDurationController =
+        TextEditingController(text: _skipEndingDuration.toString());
     _selectedSpeedIndex = _playbackSpeeds.indexOf(_defaultPlaybackSpeed);
     _loadDefaultPlaybackSpeed();
     _loadAutoEnterPictureInPicture();
+    _loadAutoSkipOpeningEnding();
+    _loadSkipOpeningDuration();
+    _loadSkipEndingDuration();
+    _loadAutoPlayNext();
+  }
+
+  Future<void> _loadAutoPlayNext() async {
+    final enabled = await UserDataService.getAutoPlayNext();
+    setState(() {
+      _autoPlayNext = enabled;
+    });
   }
 
   Future<void> _loadDefaultPlaybackSpeed() async {
@@ -84,9 +98,33 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
     });
   }
 
+  Future<void> _loadAutoSkipOpeningEnding() async {
+    final enabled = await UserDataService.getAutoSkipOpeningEnding();
+    setState(() {
+      _autoSkipOpeningEnding = enabled;
+    });
+  }
+
+  Future<void> _loadSkipOpeningDuration() async {
+    final duration = await UserDataService.getSkipOpeningDuration();
+    setState(() {
+      _skipOpeningDuration = duration;
+      _skipOpeningDurationController.text = duration.toString();
+    });
+  }
+
+  Future<void> _loadSkipEndingDuration() async {
+    final duration = await UserDataService.getSkipEndingDuration();
+    setState(() {
+      _skipEndingDuration = duration;
+      _skipEndingDurationController.text = duration.toString();
+    });
+  }
+
   @override
   void dispose() {
-    _skipDurationController.dispose();
+    _skipOpeningDurationController.dispose();
+    _skipEndingDurationController.dispose();
     super.dispose();
   }
 
@@ -119,60 +157,6 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          // 自动跳转设置
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.skipForward,
-                      size: 24,
-                      color: Color(0xFF10b981),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '自动跳转',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
-                ),
-                Switch(
-                  value: _autoSkip,
-                  onChanged: (value) {
-                    setState(() {
-                      _autoSkip = value;
-                    });
-                  },
-                  activeThumbColor: const Color(0xFF10b981),
-                  inactiveTrackColor: isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
           // 自动连播设置
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -215,6 +199,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     setState(() {
                       _autoPlayNext = value;
                     });
+                    UserDataService.saveAutoPlayNext(value);
                   },
                   activeThumbColor: const Color(0xFF8b5cf6),
                   inactiveTrackColor: isDarkMode
@@ -423,6 +408,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     setState(() {
                       _autoSkipOpeningEnding = value;
                     });
+                    UserDataService.saveAutoSkipOpeningEnding(value);
                   },
                   activeThumbColor: const Color(0xFF3b82f6),
                   inactiveTrackColor: isDarkMode
@@ -433,118 +419,249 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          if (_autoSkipOpeningEnding) ...[
+            const SizedBox(height: 12),
 
-          // 跳过时长设置
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.clock,
-                      size: 24,
-                      color: Color(0xFF10b981),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '跳过时长',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            // 片头跳过时长设置
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.clock,
+                        size: 24,
+                        color: Color(0xFF10b981),
                       ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      child: TextField(
-                        controller: _skipDurationController,
-                        onChanged: (value) {
-                          setState(() {
-                            // 检查输入长度，超过三位自动改为180
-                            if (value.length > 3) {
-                              _skipDuration = 180;
-                              _skipDurationController.text = '180';
-                              return;
-                            }
-
-                            int? parsedValue = int.tryParse(value);
-                            if (parsedValue != null) {
-                              if (parsedValue < 0) {
-                                _skipDuration = 0;
-                                _skipDurationController.text = '0';
-                              } else if (parsedValue > 180) {
-                                _skipDuration = 180;
-                                _skipDurationController.text = '180';
-                              } else {
-                                _skipDuration = parsedValue;
+                      const SizedBox(width: 12),
+                      Text(
+                        '片头跳过时长',
+                        style: FontUtils.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF1f2937),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: TextField(
+                          controller: _skipOpeningDurationController,
+                          onChanged: (value) {
+                            setState(() {
+                              // 检查输入长度，超过三位自动改为180
+                              if (value.length > 3) {
+                                _skipOpeningDuration = 180;
+                                _skipOpeningDurationController.text = '180';
+                                UserDataService.saveSkipOpeningDuration(180);
+                                return;
                               }
-                            } else {
-                              _skipDuration = 0;
-                              _skipDurationController.text = '0';
-                            }
-                          });
-                        },
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
+
+                              int? parsedValue = int.tryParse(value);
+                              if (parsedValue != null) {
+                                if (parsedValue < 0) {
+                                  _skipOpeningDuration = 0;
+                                  _skipOpeningDurationController.text = '0';
+                                  UserDataService.saveSkipOpeningDuration(0);
+                                } else if (parsedValue > 180) {
+                                  _skipOpeningDuration = 180;
+                                  _skipOpeningDurationController.text = '180';
+                                  UserDataService.saveSkipOpeningDuration(180);
+                                } else {
+                                  _skipOpeningDuration = parsedValue;
+                                  UserDataService.saveSkipOpeningDuration(
+                                      parsedValue);
+                                }
+                              } else {
+                                _skipOpeningDuration = 0;
+                                _skipOpeningDurationController.text = '0';
+                                UserDataService.saveSkipOpeningDuration(0);
+                              }
+                            });
+                          },
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: FontUtils.poppins(
+                            fontSize: 16,
+                            color: isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF1f2937),
+                          ),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? const Color(0xFF374151)
+                                    : const Color(0xFFe5e7eb),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF10b981),
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '秒',
                         style: FontUtils.poppins(
                           fontSize: 16,
                           color: isDarkMode
                               ? Colors.white
                               : const Color(0xFF1f2937),
                         ),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: isDarkMode
-                                  ? const Color(0xFF374151)
-                                  : const Color(0xFFe5e7eb),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF10b981),
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 8),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // 片尾跳过时长设置
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.clock,
+                        size: 24,
+                        color: Color(0xFF3b82f6),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '片尾跳过时长',
+                        style: FontUtils.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF1f2937),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '秒',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: TextField(
+                          controller: _skipEndingDurationController,
+                          onChanged: (value) {
+                            setState(() {
+                              // 检查输入长度，超过三位自动改为180
+                              if (value.length > 3) {
+                                _skipEndingDuration = 180;
+                                _skipEndingDurationController.text = '180';
+                                UserDataService.saveSkipEndingDuration(180);
+                                return;
+                              }
+
+                              int? parsedValue = int.tryParse(value);
+                              if (parsedValue != null) {
+                                if (parsedValue < 0) {
+                                  _skipEndingDuration = 0;
+                                  _skipEndingDurationController.text = '0';
+                                  UserDataService.saveSkipEndingDuration(0);
+                                } else if (parsedValue > 180) {
+                                  _skipEndingDuration = 180;
+                                  _skipEndingDurationController.text = '180';
+                                  UserDataService.saveSkipEndingDuration(180);
+                                } else {
+                                  _skipEndingDuration = parsedValue;
+                                  UserDataService.saveSkipEndingDuration(
+                                      parsedValue);
+                                }
+                              } else {
+                                _skipEndingDuration = 0;
+                                _skipEndingDurationController.text = '0';
+                                UserDataService.saveSkipEndingDuration(0);
+                              }
+                            });
+                          },
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: FontUtils.poppins(
+                            fontSize: 16,
+                            color: isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF1f2937),
+                          ),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? const Color(0xFF374151)
+                                    : const Color(0xFFe5e7eb),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF3b82f6),
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '秒',
+                        style: FontUtils.poppins(
+                          fontSize: 16,
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF1f2937),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
 
           const SizedBox(height: 16),
 

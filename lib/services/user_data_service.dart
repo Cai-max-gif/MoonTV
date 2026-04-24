@@ -10,6 +10,10 @@ class UserDataService {
   static const String _defaultPlaybackSpeedKey = 'default_playback_speed';
   static const String _autoEnterPictureInPictureKey =
       'auto_enter_picture_in_picture';
+  static const String _autoSkipOpeningEndingKey = 'auto_skip_opening_ending';
+  static const String _skipOpeningDurationKey = 'skip_opening_duration';
+  static const String _skipEndingDurationKey = 'skip_ending_duration';
+  static const String _autoPlayNextKey = 'auto_play_next';
 
   static const String _loginAttemptsKey = 'login_attempts';
   static const String _lastLoginAttemptKey = 'last_login_attempt';
@@ -227,5 +231,51 @@ class UserDataService {
     return prefs.getBool(_autoEnterPictureInPictureKey) ?? false;
   }
 
+  // 保存自动跳过片头片尾设置
+  static Future<void> saveAutoSkipOpeningEnding(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoSkipOpeningEndingKey, enabled);
+  }
 
+  // 获取自动跳过片头片尾设置（默认为 false）
+  static Future<bool> getAutoSkipOpeningEnding() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoSkipOpeningEndingKey) ?? false;
+  }
+
+  // 保存片头跳过时长设置
+  static Future<void> saveSkipOpeningDuration(int duration) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_skipOpeningDurationKey, duration);
+  }
+
+  // 获取片头跳过时长设置（默认为 90）
+  static Future<int> getSkipOpeningDuration() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_skipOpeningDurationKey) ?? 90;
+  }
+
+  // 保存片尾跳过时长设置
+  static Future<void> saveSkipEndingDuration(int duration) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_skipEndingDurationKey, duration);
+  }
+
+  // 获取片尾跳过时长设置（默认为 180）
+  static Future<int> getSkipEndingDuration() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_skipEndingDurationKey) ?? 180;
+  }
+
+  // 保存自动连播设置
+  static Future<void> saveAutoPlayNext(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoPlayNextKey, enabled);
+  }
+
+  // 获取自动连播设置（默认为 true）
+  static Future<bool> getAutoPlayNext() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoPlayNextKey) ?? true;
+  }
 }

@@ -733,11 +733,18 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   /// 处理视频播放完成
-  void _onVideoCompleted() {
+  void _onVideoCompleted() async {
     if (currentDetail == null) return;
 
     // 检查是否为最后一集
     if (currentEpisodeIndex >= currentDetail!.episodes.length - 1) {
+      _showToast('播放完成');
+      return;
+    }
+
+    // 检查自动连播设置
+    final autoPlayNext = await UserDataService.getAutoPlayNext();
+    if (!autoPlayNext) {
       _showToast('播放完成');
       return;
     }
