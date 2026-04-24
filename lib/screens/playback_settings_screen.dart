@@ -2,6 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../utils/font_utils.dart';
 
+class HollowRoundSliderThumbShape extends SliderComponentShape {
+  final double thumbRadius;
+
+  const HollowRoundSliderThumbShape({this.thumbRadius = 10});
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return Size.fromRadius(thumbRadius);
+  }
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    final Canvas canvas = context.canvas;
+    final Paint paint = Paint()
+      ..color = sliderTheme.thumbColor ?? Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    canvas.drawCircle(center, thumbRadius, paint);
+  }
+}
+
 class PlaybackSettingsScreen extends StatefulWidget {
   const PlaybackSettingsScreen({super.key});
 
@@ -16,7 +51,21 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
   bool _incognitoMode = false;
   bool _autoSkipOpeningEnding = false;
   double _defaultPlaybackSpeed = 1.0;
-  int _skipDuration = 10;
+  int _skipDuration = 0;
+  late TextEditingController _skipDurationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _skipDurationController =
+        TextEditingController(text: _skipDuration.toString());
+  }
+
+  @override
+  void dispose() {
+    _skipDurationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -315,6 +364,9 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 20.0,
+                          thumbShape: const HollowRoundSliderThumbShape(
+                              thumbRadius: 10),
+                          overlayShape: SliderComponentShape.noOverlay,
                           thumbColor: const Color(0xFFf59e0b),
                           activeTrackColor: const Color(0xFFf59e0b),
                           inactiveTrackColor: isDarkMode
@@ -324,8 +376,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         child: Slider(
                           value: _defaultPlaybackSpeed,
                           min: 0.5,
-                          max: 2.0,
-                          divisions: 30,
+                          max: 3.0,
+                          divisions: 5,
                           onChanged: (value) {
                             setState(() {
                               _defaultPlaybackSpeed = value;
@@ -336,7 +388,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                       ),
                     ),
                     Text(
-                      '2.0x',
+                      '3.0x',
                       style: FontUtils.poppins(
                         fontSize: 14,
                         color: isDarkMode
@@ -420,8 +472,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
@@ -442,49 +494,66 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
                 Row(
                   children: [
-                    Text(
-                      '5秒',
-                      style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: isDarkMode
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
+                    SizedBox(
+                      width: 80,
+                      child: TextField(
+                        controller: _skipDurationController,
+                        onChanged: (value) {
+                          setState(() {
+                            int? parsedValue = int.tryParse(value);
+                            if (parsedValue != null) {
+                              if (parsedValue < 0) {
+                                _skipDuration = 0;
+                                _skipDurationController.text = '0';
+                              } else if (parsedValue > 180) {
+                                _skipDuration = 180;
+                                _skipDurationController.text = '180';
+                              } else {
+                                _skipDuration = parsedValue;
+                              }
+                            } else {
+                              _skipDuration = 0;
+                              _skipDurationController.text = '0';
+                            }
+                          });
+                        },
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: FontUtils.poppins(
+                          fontSize: 16,
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF1f2937),
+                        ),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: isDarkMode
+                                  ? const Color(0xFF374151)
+                                  : const Color(0xFFe5e7eb),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF10b981),
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 8),
+                        ),
                       ),
                     ),
-                    Expanded(
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 20.0,
-                          thumbColor: const Color(0xFF10b981),
-                          activeTrackColor: const Color(0xFF10b981),
-                          inactiveTrackColor: isDarkMode
-                              ? const Color(0xFF374151)
-                              : const Color(0xFFe5e7eb),
-                        ),
-                        child: Slider(
-                          value: _skipDuration.toDouble(),
-                          min: 5,
-                          max: 30,
-                          divisions: 5,
-                          onChanged: (value) {
-                            setState(() {
-                              _skipDuration = value.toInt();
-                            });
-                          },
-                          label: '$_skipDuration秒',
-                        ),
-                      ),
-                    ),
+                    const SizedBox(width: 8),
                     Text(
-                      '30秒',
+                      '秒',
                       style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: isDarkMode
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
+                        fontSize: 16,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
                       ),
                     ),
                   ],
