@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pip/pip.dart';
+import '../services/user_data_service.dart';
 import 'mobile_player_controls.dart';
 import 'pc_player_controls.dart';
 import 'video_player_surface.dart';
@@ -157,6 +158,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     WidgetsBinding.instance.addObserver(this);
     _currentUrl = widget.url;
     _currentHeaders = widget.headers;
+    _loadDefaultPlaybackSpeed();
     if (Platform.isWindows || Platform.isMacOS) {
       _initializePlayer();
     } else {
@@ -169,6 +171,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _setupPip();
     _registerPipObserver();
     widget.onControllerCreated?.call(VideoPlayerWidgetController._(this));
+  }
+
+  Future<void> _loadDefaultPlaybackSpeed() async {
+    final speed = await UserDataService.getDefaultPlaybackSpeed();
+    _playbackSpeed.value = speed;
   }
 
   @override
@@ -375,6 +382,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
       await _player?.setRate(speed);
     }
+    // 保存倍速设置到 UserDataService
+    await UserDataService.saveDefaultPlaybackSpeed(speed);
   }
 
   void _exitWebFullscreen() {
@@ -483,11 +492,20 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
+        // 应用进入后台时，检查是否启用了自动进入画中画
+        _checkAutoEnterPictureInPicture();
         break;
       case AppLifecycleState.resumed:
         break;
       case AppLifecycleState.detached:
         break;
+    }
+  }
+
+  Future<void> _checkAutoEnterPictureInPicture() async {
+    final autoEnter = await UserDataService.getAutoEnterPictureInPicture();
+    if (autoEnter && !_isPipMode) {
+      await _enterPipMode();
     }
   }
 

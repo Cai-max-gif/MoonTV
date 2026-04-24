@@ -7,6 +7,10 @@ class UserDataService {
   static const String _tokenKey = 'auth_token';
   static const String _cookiesKey = 'cookies';
   static const String _localSearchKey = 'local_search';
+  static const String _defaultPlaybackSpeedKey = 'default_playback_speed';
+  static const String _autoEnterPictureInPictureKey =
+      'auto_enter_picture_in_picture';
+  static const String _incognitoModeKey = 'incognito_mode';
 
   static const String _loginAttemptsKey = 'login_attempts';
   static const String _lastLoginAttemptKey = 'last_login_attempt';
@@ -198,5 +202,41 @@ class UserDataService {
   static Future<bool> getLocalSearch() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_localSearchKey) ?? false;
+  }
+
+  // 保存默认倍速设置
+  static Future<void> saveDefaultPlaybackSpeed(double speed) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_defaultPlaybackSpeedKey, speed);
+  }
+
+  // 获取默认倍速设置（默认为 1.0）
+  static Future<double> getDefaultPlaybackSpeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_defaultPlaybackSpeedKey) ?? 1.0;
+  }
+
+  // 保存自动进入画中画设置
+  static Future<void> saveAutoEnterPictureInPicture(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoEnterPictureInPictureKey, enabled);
+  }
+
+  // 获取自动进入画中画设置（默认为 false）
+  static Future<bool> getAutoEnterPictureInPicture() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoEnterPictureInPictureKey) ?? false;
+  }
+
+  // 保存隐身模式设置
+  static Future<void> saveIncognitoMode(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_incognitoModeKey, enabled);
+  }
+
+  // 获取隐身模式设置（默认为 false）
+  static Future<bool> getIncognitoMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_incognitoModeKey) ?? false;
   }
 }

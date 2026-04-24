@@ -5,8 +5,7 @@ import '../models/favorite_item.dart';
 import 'api_service.dart';
 import 'douban_service.dart';
 import 'data_operation_interface.dart';
-
-
+import 'user_data_service.dart';
 
 /// 页面缓存服务 - 单例模式
 class PageCacheService
@@ -46,6 +45,13 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<PlayRecord>>> getPlayRecords(
       BuildContext context) async {
+    // 检查是否开启了隐身模式
+    final isIncognito = await UserDataService.getIncognitoMode();
+    if (isIncognito) {
+      // 隐身模式下返回空列表
+      return DataOperationResult.success([]);
+    }
+
     const cacheKey = 'play_records';
 
     // 先检查缓存
@@ -145,6 +151,18 @@ class PageCacheService
   @override
   Future<DataOperationResult<void>> savePlayRecord(
       PlayRecord playRecord, BuildContext context) async {
+    // 检查context是否仍然挂载
+    if (!context.mounted) {
+      return DataOperationResult.error('Context not mounted');
+    }
+
+    // 检查是否开启了隐身模式
+    final isIncognito = await UserDataService.getIncognitoMode();
+    if (isIncognito) {
+      // 隐身模式下不保存播放记录
+      return DataOperationResult.success(null);
+    }
+
     // 检查context是否仍然挂载
     if (!context.mounted) {
       return DataOperationResult.error('Context not mounted');

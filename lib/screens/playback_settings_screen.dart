@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../services/user_data_service.dart';
 import '../utils/font_utils.dart';
 
 class HollowRoundSliderThumbShape extends SliderComponentShape {
@@ -54,11 +55,34 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
   int _skipDuration = 0;
   late TextEditingController _skipDurationController;
 
+  // 倍速列表
+  final List<double> _playbackSpeeds = [0.5, 0.75, 1.0, 1.5, 2.0];
+  // 当前选中的倍速索引
+  late int _selectedSpeedIndex;
+
   @override
   void initState() {
     super.initState();
     _skipDurationController =
         TextEditingController(text: _skipDuration.toString());
+    _selectedSpeedIndex = _playbackSpeeds.indexOf(_defaultPlaybackSpeed);
+    _loadDefaultPlaybackSpeed();
+    _loadAutoEnterPictureInPicture();
+  }
+
+  Future<void> _loadDefaultPlaybackSpeed() async {
+    final speed = await UserDataService.getDefaultPlaybackSpeed();
+    setState(() {
+      _defaultPlaybackSpeed = speed;
+      _selectedSpeedIndex = _playbackSpeeds.indexOf(speed);
+    });
+  }
+
+  Future<void> _loadAutoEnterPictureInPicture() async {
+    final enabled = await UserDataService.getAutoEnterPictureInPicture();
+    setState(() {
+      _autoEnterPictureInPicture = enabled;
+    });
   }
 
   @override
@@ -246,6 +270,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     setState(() {
                       _autoEnterPictureInPicture = value;
                     });
+                    UserDataService.saveAutoEnterPictureInPicture(value);
                   },
                   activeThumbColor: const Color(0xFF3b82f6),
                   inactiveTrackColor: isDarkMode
@@ -374,21 +399,28 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                               : const Color(0xFFe5e7eb),
                         ),
                         child: Slider(
-                          value: _defaultPlaybackSpeed,
-                          min: 0.5,
-                          max: 3.0,
-                          divisions: 5,
+                          value: _selectedSpeedIndex.toDouble(),
+                          min: 0,
+                          max: _playbackSpeeds.length - 1,
+                          divisions: _playbackSpeeds.length - 1,
                           onChanged: (value) {
+                            int index = value.round();
                             setState(() {
-                              _defaultPlaybackSpeed = value;
+                              _selectedSpeedIndex = index;
+                              _defaultPlaybackSpeed = _playbackSpeeds[index];
                             });
                           },
-                          label: '${_defaultPlaybackSpeed.toStringAsFixed(1)}x',
+                          onChangeEnd: (value) {
+                            UserDataService.saveDefaultPlaybackSpeed(
+                                _defaultPlaybackSpeed);
+                          },
+                          label:
+                              '${_defaultPlaybackSpeed.toStringAsFixed(_defaultPlaybackSpeed == 1.0 ? 0 : 2)}x',
                         ),
                       ),
                     ),
                     Text(
-                      '3.0x',
+                      '2.0x',
                       style: FontUtils.poppins(
                         fontSize: 14,
                         color: isDarkMode

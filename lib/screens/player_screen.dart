@@ -363,48 +363,65 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   // 处理返回按钮点击
   void _onBackPressed() async {
-    // 如果正在投屏，停止投屏
-    if (_isCasting && _dlnaDevice != null) {
-      try {
-        // 显示弹窗让用户选择
-        final shouldStop = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('停止投屏'),
-            content: const Text('DLNA 设备可继续保持播放，是否需要停止？\n\n（保持播放时无法同步进度和播放记录）'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('保持'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('停止'),
-              ),
-            ],
-          ),
-        );
-
-        // 如果用户选择停止，才调用 stop
-        if (shouldStop == true) {
-          try {
-            _dlnaDevice.stop();
-            debugPrint('用户选择停止投屏');
-          } catch (e) {
-            debugPrint('停止投屏失败: $e');
-          }
-        } else {
-          debugPrint('用户选择保持播放');
-        }
-      } catch (e) {
-        debugPrint('停止投屏失败: $e');
+    try {
+      // 先暂停播放器
+      if (_videoPlayerController != null) {
+        _videoPlayerController!.pause();
       }
-    }
 
-    // 关闭页面前保存进度
-    _saveProgress(force: true, scene: '返回按钮');
-    if (mounted) {
-      Navigator.of(context).pop();
+      // 移除视频进度监听器
+      _removeVideoProgressListener();
+
+      // 如果正在投屏，停止投屏
+      if (_isCasting && _dlnaDevice != null) {
+        try {
+          // 显示弹窗让用户选择
+          final shouldStop = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('停止投屏'),
+              content:
+                  const Text('DLNA 设备可继续保持播放，是否需要停止？\n\n（保持播放时无法同步进度和播放记录）'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('保持'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('停止'),
+                ),
+              ],
+            ),
+          );
+
+          // 如果用户选择停止，才调用 stop
+          if (shouldStop == true) {
+            try {
+              _dlnaDevice.stop();
+              debugPrint('用户选择停止投屏');
+            } catch (e) {
+              debugPrint('停止投屏失败: $e');
+            }
+          } else {
+            debugPrint('用户选择保持播放');
+          }
+        } catch (e) {
+          debugPrint('停止投屏失败: $e');
+        }
+      }
+
+      // 关闭页面前保存进度
+      _saveProgress(force: true, scene: '返回按钮');
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      debugPrint('Back button error: $e');
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -2505,26 +2522,44 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   void dispose() {
-    // 保存进度
-    _saveProgress(force: true, scene: '页面销毁');
-    // 移除视频进度监听器
-    _removeVideoProgressListener();
-    // 移除应用生命周期监听器
-    WidgetsBinding.instance.removeObserver(this);
-    // 恢复屏幕方向
-    _restoreOrientation();
-    // 恢复原始的系统UI样式
-    SystemChrome.setSystemUIOverlayStyle(_originalStyle);
-    // 销毁播放器
-    _videoPlayerController?.dispose();
-    // 释放滚动控制器
-    _episodesScrollController.dispose();
-    _sourcesScrollController.dispose();
-    // 释放动画控制器
-    _refreshAnimationController.dispose();
-    _loadingAnimationController.dispose();
-    _textAnimationController.dispose();
-    _switchLoadingAnimationController.dispose();
+    try {
+      // 先暂停播放器
+      if (_videoPlayerController != null) {
+        _videoPlayerController!.pause();
+      }
+
+      // 移除视频进度监听器
+      _removeVideoProgressListener();
+
+      // 保存进度
+      _saveProgress(force: true, scene: '页面销毁');
+
+      // 移除应用生命周期监听器
+      WidgetsBinding.instance.removeObserver(this);
+
+      // 恢复屏幕方向
+      _restoreOrientation();
+
+      // 恢复原始的系统UI样式
+      SystemChrome.setSystemUIOverlayStyle(_originalStyle);
+
+      // 销毁播放器
+      _videoPlayerController?.dispose();
+
+      // DLNAPlayerController 没有 dispose 方法，它会随着 DLNAPlayer 组件的销毁而自动清理
+
+      // 释放滚动控制器
+      _episodesScrollController.dispose();
+      _sourcesScrollController.dispose();
+
+      // 释放动画控制器
+      _refreshAnimationController.dispose();
+      _loadingAnimationController.dispose();
+      _textAnimationController.dispose();
+      _switchLoadingAnimationController.dispose();
+    } catch (e) {
+      debugPrint('Dispose error: $e');
+    }
     super.dispose();
   }
 
