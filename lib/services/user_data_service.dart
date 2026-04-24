@@ -10,7 +10,6 @@ class UserDataService {
   static const String _defaultPlaybackSpeedKey = 'default_playback_speed';
   static const String _autoEnterPictureInPictureKey =
       'auto_enter_picture_in_picture';
-  static const String _incognitoModeKey = 'incognito_mode';
 
   static const String _loginAttemptsKey = 'login_attempts';
   static const String _lastLoginAttemptKey = 'last_login_attempt';
@@ -228,15 +227,5 @@ class UserDataService {
     return prefs.getBool(_autoEnterPictureInPictureKey) ?? false;
   }
 
-  // 保存隐身模式设置
-  static Future<void> saveIncognitoMode(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_incognitoModeKey, enabled);
-  }
 
-  // 获取隐身模式设置（默认为 false）
-  static Future<bool> getIncognitoMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_incognitoModeKey) ?? false;
-  }
 }

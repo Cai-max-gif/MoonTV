@@ -49,7 +49,6 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
   bool _autoSkip = false;
   bool _autoPlayNext = false;
   bool _autoEnterPictureInPicture = false;
-  bool _incognitoMode = false;
   bool _autoSkipOpeningEnding = false;
   double _defaultPlaybackSpeed = 1.0;
   int _skipDuration = 0;
@@ -273,60 +272,6 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     UserDataService.saveAutoEnterPictureInPicture(value);
                   },
                   activeThumbColor: const Color(0xFF3b82f6),
-                  inactiveTrackColor: isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // 隐身模式设置
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.eyeOff,
-                      size: 24,
-                      color: Color(0xFFef4444),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '隐身模式',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
-                ),
-                Switch(
-                  value: _incognitoMode,
-                  onChanged: (value) {
-                    setState(() {
-                      _incognitoMode = value;
-                    });
-                  },
-                  activeThumbColor: const Color(0xFFef4444),
                   inactiveTrackColor: isDarkMode
                       ? const Color(0xFF374151)
                       : const Color(0xFFe5e7eb),
