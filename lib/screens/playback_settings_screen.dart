@@ -502,6 +502,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         controller: _skipDurationController,
                         onChanged: (value) {
                           setState(() {
+                            // 检查输入长度，超过三位自动改为180
+                            if (value.length > 3) {
+                              _skipDuration = 180;
+                              _skipDurationController.text = '180';
+                              return;
+                            }
+
                             int? parsedValue = int.tryParse(value);
                             if (parsedValue != null) {
                               if (parsedValue < 0) {
