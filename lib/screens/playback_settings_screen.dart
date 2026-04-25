@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/user_data_service.dart';
@@ -212,60 +213,62 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
           const SizedBox(height: 12),
 
-          // 自动进入画中画设置
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.pictureInPicture,
-                      size: 24,
-                      color: Color(0xFF3b82f6),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '自动进入画中画',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+          // 自动进入画中画设置（仅移动端）
+          if (Platform.isAndroid || Platform.isIOS)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.pictureInPicture,
+                        size: 24,
+                        color: Color(0xFF3b82f6),
                       ),
-                    ),
-                  ],
-                ),
-                Switch(
-                  value: _autoEnterPictureInPicture,
-                  onChanged: (value) {
-                    setState(() {
-                      _autoEnterPictureInPicture = value;
-                    });
-                    UserDataService.saveAutoEnterPictureInPicture(value);
-                  },
-                  activeThumbColor: const Color(0xFF3b82f6),
-                  inactiveTrackColor: isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-              ],
+                      const SizedBox(width: 12),
+                      Text(
+                        '自动进入画中画',
+                        style: FontUtils.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Switch(
+                    value: _autoEnterPictureInPicture,
+                    onChanged: (value) {
+                      setState(() {
+                        _autoEnterPictureInPicture = value;
+                      });
+                      UserDataService.saveAutoEnterPictureInPicture(value);
+                    },
+                    activeThumbColor: const Color(0xFF3b82f6),
+                    inactiveTrackColor: isDarkMode
+                        ? const Color(0xFF374151)
+                        : const Color(0xFFe5e7eb),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 12),
+          if (Platform.isAndroid || Platform.isIOS)
+            const SizedBox(height: 12),
 
           // 默认倍速设置
           Container(

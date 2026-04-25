@@ -7,6 +7,9 @@ import 'mobile_player_controls.dart';
 import 'pc_player_controls.dart';
 import 'video_player_surface.dart';
 
+// 导入 unawaited 函数
+import 'package:flutter/foundation.dart';
+
 // 只在 PC 平台导入 media_kit 库
 import 'package:media_kit/media_kit.dart' if (dart.library.html) 'dart:html';
 import 'package:media_kit_video/media_kit_video.dart'
@@ -175,7 +178,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       });
       widget.onReady?.call();
     }
-    _setupPip();
+    unawaited(_setupPip());
     _registerPipObserver();
     widget.onControllerCreated?.call(VideoPlayerWidgetController._(this));
   }
@@ -294,7 +297,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
           // 跳过片尾
           if (!_hasSkippedEnding && _skipEndingDuration > 0) {
-            final endPosition = duration - Duration(seconds: _skipEndingDuration);
+            final endPosition =
+                duration - Duration(seconds: _skipEndingDuration);
             if (position >= endPosition) {
               _hasSkippedEnding = true;
               _player!.seek(duration);
@@ -304,15 +308,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       }
     });
 
-    _playingSubscription = _player!.stream.playing.listen((playing) {
+    _playingSubscription = _player!.stream.playing.listen((playing) async {
       if (!mounted || _playerDisposed) return;
       if (!playing) {
         setState(() {
           _hasCompleted = false;
         });
         if (Platform.isAndroid || Platform.isIOS) {
-          _pip.setup(const PipOptions(
-            autoEnterEnabled: false,
+          final autoEnter =
+              await UserDataService.getAutoEnterPictureInPicture();
+          _pip.setup(PipOptions(
+            autoEnterEnabled: autoEnter,
             aspectRatioX: 16,
             aspectRatioY: 9,
             preferredContentWidth: 480,
@@ -322,8 +328,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         }
       } else {
         if (Platform.isAndroid || Platform.isIOS) {
-          _pip.setup(const PipOptions(
-            autoEnterEnabled: true,
+          final autoEnter =
+              await UserDataService.getAutoEnterPictureInPicture();
+          _pip.setup(PipOptions(
+            autoEnterEnabled: autoEnter,
             aspectRatioX: 16,
             aspectRatioY: 9,
             preferredContentWidth: 480,
@@ -435,12 +443,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _exitWebFullscreenCallback?.call();
   }
 
-  void _setupPip() {
+  Future<void> _setupPip() async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
     }
-    _pip.setup(const PipOptions(
-      autoEnterEnabled: true,
+    final autoEnter = await UserDataService.getAutoEnterPictureInPicture();
+    _pip.setup(PipOptions(
+      autoEnterEnabled: autoEnter,
       aspectRatioX: 16,
       aspectRatioY: 9,
       preferredContentWidth: 480,
