@@ -16,7 +16,6 @@ class DownloadService extends ChangeNotifier {
   DownloadService._internal();
 
   final List<DownloadTask> _tasks = [];
-  final Map<String, Timer> _simulatedProgressTimers = {};
   int _maxConcurrentDownloads = 1;
   int _concurrentThreads = 4;
   String _savePath = '';
@@ -54,21 +53,11 @@ class DownloadService extends ChangeNotifier {
         final List<dynamic> decoded = json.decode(tasksJson);
         _tasks.clear();
         _tasks.addAll(decoded.map((e) => DownloadTask.fromJson(e)));
-        _restoreQueueState();
         notifyListeners();
       } catch (e) {
         debugPrint('Failed to load download tasks: $e');
       }
     }
-  }
-
-  void _restoreQueueState() {
-    for (final task in _tasks) {
-      if (task.status == DownloadStatus.downloading) {
-        _startDownload(task.id);
-      }
-    }
-    _processQueue();
   }
 
   Future<void> _saveTasks() async {
@@ -85,7 +74,6 @@ class DownloadService extends ChangeNotifier {
     if (max > 3) max = 3;
     _maxConcurrentDownloads = max;
     await _saveTasks();
-    _processQueue();
     notifyListeners();
   }
 
@@ -111,88 +99,15 @@ class DownloadService extends ChangeNotifier {
 
     _tasks.insert(0, task);
     await _saveTasks();
-    _processQueue();
     notifyListeners();
-  }
-
-  void _processQueue() {
-    final currentlyDownloading = downloadingTasks.length;
-    final slotsAvailable = _maxConcurrentDownloads - currentlyDownloading;
-
-    if (slotsAvailable <= 0) return;
-
-    final queuedList =
-        _tasks.where((t) => t.status == DownloadStatus.queued).toList();
-
-    for (int i = 0; i < slotsAvailable && i < queuedList.length; i++) {
-      final task = queuedList[i];
-      final taskIndex = _tasks.indexWhere((t) => t.id == task.id);
-      if (taskIndex >= 0) {
-        _tasks[taskIndex].status = DownloadStatus.downloading;
-        _startDownload(task.id);
-      }
-    }
-  }
-
-  void _startDownload(String taskId) {
-    final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
-    if (taskIndex < 0) return;
-
-    final task = _tasks[taskIndex];
-
-    _simulatedProgressTimers[taskId]?.cancel();
-
-    _simulatedProgressTimers[taskId] = Timer.periodic(
-      const Duration(milliseconds: 200),
-      (timer) {
-        final currentTask = _tasks.firstWhere(
-          (t) => t.id == taskId,
-          orElse: () => task,
-        );
-
-        if (currentTask.status != DownloadStatus.downloading) {
-          timer.cancel();
-          return;
-        }
-
-        final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
-        if (taskIndex < 0) {
-          timer.cancel();
-          return;
-        }
-
-        if (currentTask.progress < 1.0) {
-          _tasks[taskIndex].progress += 0.02;
-          _tasks[taskIndex].downloadedBytes =
-              (_tasks[taskIndex].totalBytes * _tasks[taskIndex].progress)
-                  .round();
-
-          if (_tasks[taskIndex].progress >= 1.0) {
-            _tasks[taskIndex].progress = 1.0;
-            _tasks[taskIndex].status = DownloadStatus.completed;
-            _tasks[taskIndex].downloadedBytes = _tasks[taskIndex].totalBytes;
-            timer.cancel();
-            _simulatedProgressTimers.remove(taskId);
-            _saveTasks();
-            _processQueue();
-          }
-
-          notifyListeners();
-        }
-      },
-    );
   }
 
   Future<void> pauseTask(String taskId) async {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex < 0) return;
 
-    _simulatedProgressTimers[taskId]?.cancel();
-    _simulatedProgressTimers.remove(taskId);
-
     _tasks[taskIndex].status = DownloadStatus.paused;
     await _saveTasks();
-    _processQueue();
     notifyListeners();
   }
 
@@ -200,25 +115,14 @@ class DownloadService extends ChangeNotifier {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex < 0) return;
 
-    final currentDownloading = downloadingTasks.length;
-    if (currentDownloading < _maxConcurrentDownloads) {
-      _tasks[taskIndex].status = DownloadStatus.downloading;
-      await _saveTasks();
-      _startDownload(taskId);
-    } else {
-      _tasks[taskIndex].status = DownloadStatus.queued;
-      await _saveTasks();
-    }
+    _tasks[taskIndex].status = DownloadStatus.queued;
+    await _saveTasks();
     notifyListeners();
   }
 
   Future<void> deleteTask(String taskId) async {
-    _simulatedProgressTimers[taskId]?.cancel();
-    _simulatedProgressTimers.remove(taskId);
-
     _tasks.removeWhere((t) => t.id == taskId);
     await _saveTasks();
-    _processQueue();
     notifyListeners();
   }
 
@@ -226,28 +130,16 @@ class DownloadService extends ChangeNotifier {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex < 0) return;
 
-    final currentDownloading = downloadingTasks.length;
-    if (currentDownloading < _maxConcurrentDownloads) {
-      _tasks[taskIndex].status = DownloadStatus.downloading;
-      _tasks[taskIndex].progress = 0.0;
-      _tasks[taskIndex].downloadedBytes = 0;
-      await _saveTasks();
-      _startDownload(taskId);
-    } else {
-      _tasks[taskIndex].status = DownloadStatus.queued;
-      _tasks[taskIndex].progress = 0.0;
-      _tasks[taskIndex].downloadedBytes = 0;
-      await _saveTasks();
-    }
-    _processQueue();
+    _tasks[taskIndex].status = DownloadStatus.queued;
+    _tasks[taskIndex].progress = 0.0;
+    _tasks[taskIndex].downloadedBytes = 0;
+    await _saveTasks();
     notifyListeners();
   }
 
   Future<void> pauseAllDownloading() async {
     for (final task in _tasks) {
       if (task.status == DownloadStatus.downloading) {
-        _simulatedProgressTimers[task.id]?.cancel();
-        _simulatedProgressTimers.remove(task.id);
         task.status = DownloadStatus.paused;
       }
     }
@@ -256,38 +148,16 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<void> resumeAllPaused() async {
-    final currentDownloadingCount = downloadingTasks.length;
-    int slotsRemaining = _maxConcurrentDownloads - currentDownloadingCount;
-
-    final tasksToProcess = _tasks
-        .where((t) =>
-            t.status == DownloadStatus.paused ||
-            t.status == DownloadStatus.failed)
-        .toList();
-
-    for (final task in tasksToProcess) {
-      final taskIndex = _tasks.indexWhere((t) => t.id == task.id);
-      if (taskIndex < 0) continue;
-
-      final wasFailed = task.status == DownloadStatus.failed;
-
-      if (slotsRemaining > 0) {
-        _tasks[taskIndex].status = DownloadStatus.downloading;
-        if (wasFailed) {
-          _tasks[taskIndex].progress = 0.0;
-          _tasks[taskIndex].downloadedBytes = 0;
-        }
-        _startDownload(task.id);
-        slotsRemaining--;
-      } else {
-        _tasks[taskIndex].status = DownloadStatus.queued;
-        if (wasFailed) {
-          _tasks[taskIndex].progress = 0.0;
-          _tasks[taskIndex].downloadedBytes = 0;
+    for (final task in _tasks) {
+      if (task.status == DownloadStatus.paused ||
+          task.status == DownloadStatus.failed) {
+        task.status = DownloadStatus.queued;
+        if (task.status == DownloadStatus.failed) {
+          task.progress = 0.0;
+          task.downloadedBytes = 0;
         }
       }
     }
-
     await _saveTasks();
     notifyListeners();
   }
@@ -309,18 +179,8 @@ class DownloadService extends ChangeNotifier {
     if (progress >= 1.0) {
       _tasks[taskIndex].status = DownloadStatus.completed;
       _tasks[taskIndex].downloadedBytes = _tasks[taskIndex].totalBytes;
-      _processQueue();
     }
 
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    for (final timer in _simulatedProgressTimers.values) {
-      timer.cancel();
-    }
-    _simulatedProgressTimers.clear();
-    super.dispose();
   }
 }

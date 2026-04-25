@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -45,11 +44,6 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           isDarkMode ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
       appBar: _buildAppBar(context, isDarkMode, isTablet),
       body: _buildBody(context, isDarkMode),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addSampleTask,
-        backgroundColor: const Color(0xFF27AE60),
-        child: const Icon(LucideIcons.plus, color: Colors.white),
-      ),
     );
   }
 
@@ -364,7 +358,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFef4444).withValues(alpha: 0.1),
+                          color: const Color(0xFFef4444).withAlpha(25),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -478,59 +472,6 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
         ],
       ),
     );
-  }
-
-  void _addSampleTask() {
-    final random = Random();
-    final sampleTitles = [
-      '庆余年 第三季',
-      '繁花',
-      '长安十二时辰',
-      '琅琊榜',
-      '甄嬛传',
-    ];
-    final sampleEpisodes = [
-      '第1集',
-      '第2集',
-      '第3集',
-      '第4集',
-      '第5集',
-      '第6集',
-      '第7集',
-      '第8集',
-      '第9集',
-      '第10集',
-    ];
-    final statuses = [
-      DownloadStatus.downloading,
-      DownloadStatus.downloading,
-      DownloadStatus.paused,
-      DownloadStatus.completed,
-      DownloadStatus.failed,
-    ];
-
-    final randomTitle = sampleTitles[random.nextInt(sampleTitles.length)];
-    final randomEpisode = sampleEpisodes[random.nextInt(sampleEpisodes.length)];
-    final randomStatus = statuses[random.nextInt(statuses.length)];
-    final randomProgress = random.nextDouble();
-
-    final task = DownloadTask(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: randomTitle,
-      episodeTitle: randomEpisode,
-      episodeIndex: sampleEpisodes.indexOf(randomEpisode) + 1,
-      cover: '',
-      videoUrl: 'https://example.com/video',
-      savePath: '/storage/downloads/$randomTitle/$randomEpisode.mp4',
-      progress: randomProgress,
-      status: randomStatus,
-      totalBytes: random.nextInt(500000000) + 100000000,
-      downloadedBytes: ((random.nextInt(500000000) + 100000000) *
-              (randomStatus == DownloadStatus.completed ? 1.0 : randomProgress))
-          .round(),
-    );
-
-    _downloadService.addTask(task);
   }
 
   void _showDeleteConfirmation(BuildContext context, DownloadTask task) {

@@ -33,7 +33,7 @@ class DownloadItemWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withAlpha(25),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -175,7 +175,7 @@ class DownloadItemWidget extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: const Color(0xFFf59e0b).withValues(alpha: 0.1),
+            color: const Color(0xFFf59e0b).withAlpha(25),
             shape: BoxShape.circle,
             border: Border.all(
               color: const Color(0xFFf59e0b),
@@ -210,7 +210,7 @@ class DownloadItemWidget extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: const Color(0xFF6b7280).withValues(alpha: 0.1),
+          color: const Color(0xFF6b7280).withAlpha(25),
           shape: BoxShape.circle,
           border: Border.all(
             color: const Color(0xFF6b7280),
@@ -245,7 +245,7 @@ class DownloadItemWidget extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withAlpha(25),
           shape: BoxShape.circle,
         ),
         child: Center(
@@ -266,7 +266,7 @@ class DownloadItemWidget extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFFef4444).withValues(alpha: 0.1),
+          color: const Color(0xFFef4444).withAlpha(25),
           shape: BoxShape.circle,
         ),
         child: const Center(
