@@ -130,7 +130,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '下载选集 (${widget.episodes.length})',
+                  '下载 (${widget.episodes.length})',
                   style: widget.theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -218,7 +218,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
                 ),
               ),
               child: Text(
-                '下载选中 (${_selectedEpisodes.where((selected) => selected).length})',
+                '下载 (${_selectedEpisodes.where((selected) => selected).length})',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,

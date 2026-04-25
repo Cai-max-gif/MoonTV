@@ -197,29 +197,65 @@ class _PlayerScreenState extends State<PlayerScreen>
     initParam();
 
     // 执行查询
-    allSources = await fetchSourcesData(
-        (searchTitle.isNotEmpty) ? searchTitle : videoTitle);
-    if (currentSource.isNotEmpty &&
-        currentID.isNotEmpty &&
-        !allSources.any((source) =>
-            source.source == currentSource && source.id == currentID)) {
-      allSources = await fetchSourceDetail(currentSource, currentID);
-    }
-    if (allSources.isEmpty) {
-      showError('未找到匹配结果');
-      return;
-    }
+    if (widget.stype == 'shortdrama' && currentID.isNotEmpty) {
+      // 使用短剧专用API
+      final detailResult = await ApiService.getShortDramaDetail(
+        int.tryParse(currentID) ?? 0,
+        1, // 默认从第一集开始
+        widget.title,
+        context,
+      );
 
-    // 指定源和id
-    currentDetail = allSources.first;
-    if (currentSource.isNotEmpty && currentID.isNotEmpty) {
-      final target = allSources.where(
-          (source) => source.source == currentSource && source.id == currentID);
-      currentDetail = target.isNotEmpty ? target.first : null;
-    }
-    if (currentDetail == null) {
-      showError('未找到匹配结果');
-      return;
+      if (detailResult.success && detailResult.data != null) {
+        final detailData = detailResult.data!;
+        // 转换为SearchResult格式
+        final searchResult = SearchResult(
+          id: currentID,
+          title: detailData['name'] ?? widget.title,
+          poster: detailData['cover'] ?? '',
+          year: detailData['update_time']?.toString().substring(0, 4) ?? '',
+          typeName: '短剧',
+          source: 'shortdrama',
+          sourceName: '短剧',
+          episodes: List<String>.from(detailData['episodes'] ?? []),
+          episodesTitles:
+              List<String>.from(detailData['episodes_titles'] ?? []),
+          desc: detailData['desc'] ?? '',
+          doubanId: null,
+          class_: detailData['class'] ?? '',
+        );
+        allSources = [searchResult];
+        currentDetail = searchResult;
+      } else {
+        showError(detailResult.message ?? '获取短剧详情失败');
+        return;
+      }
+    } else {
+      // 使用通用API
+      allSources = await fetchSourcesData(
+          (searchTitle.isNotEmpty) ? searchTitle : videoTitle);
+      if (currentSource.isNotEmpty &&
+          currentID.isNotEmpty &&
+          !allSources.any((source) =>
+              source.source == currentSource && source.id == currentID)) {
+        allSources = await fetchSourceDetail(currentSource, currentID);
+      }
+      if (allSources.isEmpty) {
+        showError('未找到匹配结果');
+        return;
+      }
+
+      // 指定源和id
+      currentDetail = allSources.first;
+      if (currentSource.isNotEmpty && currentID.isNotEmpty) {
+        final target = allSources.where((source) =>
+            source.source == currentSource && source.id == currentID);
+        currentDetail = target.isNotEmpty ? target.first : null;
+      }
+      if (currentDetail == null) {
+        showError('未找到匹配结果');
+        return;
+      }
     }
 
     setInfosByDetail(currentDetail!);

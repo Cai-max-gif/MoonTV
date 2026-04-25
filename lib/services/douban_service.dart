@@ -425,7 +425,8 @@ class DoubanService {
       // 缓存读取失败，继续执行网络请求
     }
     // 直接使用默认的豆瓣数据源
-    String apiUrl = 'https://m.douban.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
+    String apiUrl =
+        'https://m.douban.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
 
     try {
       final headers = {
@@ -609,7 +610,8 @@ class DoubanService {
     }
 
     // 直接使用默认的豆瓣数据源
-    String baseUrl = 'https://m.douban.com/rexxar/api/v2/${params.kind}/recommend';
+    String baseUrl =
+        'https://m.douban.com/rexxar/api/v2/${params.kind}/recommend';
 
     // 构建查询参数
     final queryParams = <String, String>{
