@@ -74,7 +74,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
 
   Future<void> _selectPath() async {
     try {
-      final result = await FilePicker.platform.getDirectoryPath();
+      final result = await FilePicker.getDirectoryPath();
 
       if (result != null) {
         final newPath = result;
