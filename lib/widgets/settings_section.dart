@@ -4,6 +4,7 @@ import '../utils/font_utils.dart';
 import '../screens/download_management_screen.dart';
 import '../screens/download_settings_screen.dart';
 import '../screens/playback_settings_screen.dart';
+import '../screens/danmaku_settings_screen.dart';
 
 class SettingsSection extends StatelessWidget {
   const SettingsSection({
@@ -163,6 +164,60 @@ class SettingsSection extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       '播放设置',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFFffffff)
+                            : const Color(0xFF1f2937),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF666666)
+                          : const Color(0xFF9ca3af),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF374151)
+                : const Color(0xFFe5e7eb),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DanmakuSettingsScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.messageSquare,
+                      size: 20,
+                      color: Color(0xFFec4899),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '弹幕设置',
                       style: FontUtils.poppins(
                         fontSize: 16,
                         color: Theme.of(context).brightness == Brightness.dark
