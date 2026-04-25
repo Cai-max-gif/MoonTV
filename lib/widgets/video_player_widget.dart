@@ -7,9 +7,6 @@ import 'mobile_player_controls.dart';
 import 'pc_player_controls.dart';
 import 'video_player_surface.dart';
 
-// 导入 unawaited 函数
-import 'package:flutter/foundation.dart';
-
 // 只在 PC 平台导入 media_kit 库
 import 'package:media_kit/media_kit.dart' if (dart.library.html) 'dart:html';
 import 'package:media_kit_video/media_kit_video.dart'
