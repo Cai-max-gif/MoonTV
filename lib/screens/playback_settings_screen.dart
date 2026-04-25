@@ -244,8 +244,9 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         style: FontUtils.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color:
-                              isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF1f2937),
                         ),
                       ),
                     ],
@@ -267,8 +268,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
               ),
             ),
 
-          if (Platform.isAndroid || Platform.isIOS)
-            const SizedBox(height: 12),
+          if (Platform.isAndroid || Platform.isIOS) const SizedBox(height: 12),
 
           // 默认倍速设置
           Container(
