@@ -14,6 +14,7 @@ import '../utils/font_utils.dart';
 import '../widgets/update_dialog.dart';
 import '../widgets/announcement_dialog.dart';
 import '../widgets/settings_section.dart';
+import '../widgets/appearance_sync_settings_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -402,6 +403,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // 设置选项区域
           const SettingsSection(),
+
+          const SizedBox(height: 16),
+
+          // 外观和同步设置区域
+          const AppearanceSyncSettingsSection(),
 
           const SizedBox(height: 16),
 

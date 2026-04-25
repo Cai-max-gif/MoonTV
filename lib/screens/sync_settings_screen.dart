@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../utils/font_utils.dart';
 
-class DanmakuSettingsScreen extends StatelessWidget {
-  const DanmakuSettingsScreen({super.key});
+class SyncSettingsScreen extends StatelessWidget {
+  const SyncSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '弹幕设置',
+          '同步设置',
           style: FontUtils.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -19,7 +19,7 @@ class DanmakuSettingsScreen extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          '弹幕设置页面',
+          '同步设置页面',
           style: FontUtils.poppins(
             fontSize: 16,
             color: Theme.of(context).brightness == Brightness.dark
