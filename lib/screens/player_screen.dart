@@ -1528,6 +1528,11 @@ class _PlayerScreenState extends State<PlayerScreen>
       return const SizedBox.shrink();
     }
 
+    // 在PC端（平板横屏模式）下隐藏左侧选集区域，因为右侧已经有选集了
+    if (_isTablet && !_isPortraitTablet) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       children: [
         // 选集标题行
@@ -2841,17 +2846,32 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ],
                 ),
               ),
-              // 右侧：详情面板（35%）
+              // 右侧：选集面板（35%）
               Expanded(
                 flex: 35,
                 child: Container(
                   color: Colors.transparent,
-                  child: PlayerDetailsPanel(
+                  child: PlayerEpisodesPanel(
                     theme: theme,
-                    doubanDetails: doubanDetails,
-                    currentDetail: currentDetail,
+                    episodes: currentDetail?.episodes ?? [],
+                    episodesTitles: currentDetail?.episodesTitles ?? [],
+                    currentEpisodeIndex: currentEpisodeIndex,
+                    isReversed: _isEpisodesReversed,
+                    crossAxisCount: 3,
                     showCloseButton: false,
-                    showTitle: false,
+                    onEpisodeTap: (index) {
+                      setState(() {
+                        _showSwitchLoadingOverlay = true;
+                        _switchLoadingMessage = '切换选集...';
+                      });
+                      _saveProgress(force: true, scene: '选集面板点击');
+                      startPlay(index, 0);
+                    },
+                    onToggleOrder: () {
+                      setState(() {
+                        _isEpisodesReversed = !_isEpisodesReversed;
+                      });
+                    },
                   ),
                 ),
               ),

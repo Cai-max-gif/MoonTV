@@ -95,7 +95,7 @@ class _HistoryGridState extends State<HistoryGrid>
     try {
       final cachedRecordsResult =
           await _cacheService.getPlayRecordsDirect(context);
-      if (cachedRecordsResult.success && cachedRecordsResult.data != null) {
+      if (cachedRecordsResult.success && cachedRecordsResult.data != null && mounted) {
         final cachedRecords = cachedRecordsResult.data!;
         setState(() {
           _playRecords = cachedRecords;

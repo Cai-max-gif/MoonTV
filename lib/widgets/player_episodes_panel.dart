@@ -10,6 +10,7 @@ class PlayerEpisodesPanel extends StatefulWidget {
   final Function(int) onEpisodeTap;
   final VoidCallback onToggleOrder;
   final int crossAxisCount;
+  final bool showCloseButton;
 
   const PlayerEpisodesPanel({
     super.key,
@@ -21,6 +22,7 @@ class PlayerEpisodesPanel extends StatefulWidget {
     required this.onEpisodeTap,
     required this.onToggleOrder,
     this.crossAxisCount = 2,
+    this.showCloseButton = true,
   });
 
   @override
@@ -99,10 +101,11 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                if (widget.showCloseButton)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
               ],
             ),
           ),

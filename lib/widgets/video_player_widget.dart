@@ -524,16 +524,27 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       return;
     }
     _playerDisposed = true;
+
+    // 先取消所有订阅，确保不会有新的回调被触发
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _completedSubscription?.cancel();
     _durationSubscription?.cancel();
     _progressListeners.clear();
-    if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
-      await _player?.dispose();
-    }
+
+    // 保存引用并立即置为null，确保不会有新的操作使用它们
+    final player = _player;
     _player = null;
     _videoController = null;
+
+    // 最后dispose播放器
+    if (player != null && (Platform.isWindows || Platform.isMacOS)) {
+      try {
+        await player.dispose();
+      } catch (e) {
+        debugPrint('VideoPlayerWidget: error disposing player $e');
+      }
+    }
   }
 
   @override
