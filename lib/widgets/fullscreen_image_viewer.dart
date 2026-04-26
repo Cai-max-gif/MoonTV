@@ -261,7 +261,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '图片已保存到相册',
+              '图片已保存',
               style: FontUtils.poppins(color: Colors.white),
             ),
             backgroundColor: Colors.green.withValues(alpha: 0.8),

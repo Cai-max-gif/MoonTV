@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/download_task.dart';
+import '../utils/storage_utils.dart';
 
 class DownloadService extends ChangeNotifier {
   static const String _downloadTasksKey = 'download_tasks';
@@ -47,6 +48,15 @@ class DownloadService extends ChangeNotifier {
     _maxConcurrentDownloads = prefs.getInt(_maxConcurrentKey) ?? 1;
     _concurrentThreads = prefs.getInt(_concurrentThreadsKey) ?? 4;
     _savePath = prefs.getString(_savePathKey) ?? '';
+
+    // 如果保存路径为空，设置默认下载路径
+    if (_savePath.isEmpty) {
+      final defaultDir = await StorageUtils.getDefaultDownloadDirectory();
+      if (defaultDir != null) {
+        _savePath = defaultDir.path;
+        await prefs.setString(_savePathKey, _savePath);
+      }
+    }
 
     if (tasksJson != null) {
       try {

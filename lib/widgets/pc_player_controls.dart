@@ -1446,7 +1446,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
       // 保存到相册
       await Gal.putImageBytes(imageData);
-      _showScreenshotToastMessage('截图已保存到相册');
+      _showScreenshotToastMessage('截图已保存');
     } catch (e) {
       _showScreenshotToastMessage('保存到相册失败: $e');
     }
@@ -1504,7 +1504,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
       // 验证文件是否存在
       if (await file.exists()) {
-        _showScreenshotToastMessage('截图已保存到: ${file.path}');
+        _showScreenshotToastMessage('截图已保存');
       } else {
         _showScreenshotToastMessage('保存截图失败：文件未创建');
       }
@@ -1522,7 +1522,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         final file = File(path.join(fallbackDir.path, fileName));
         await file.writeAsBytes(imageData);
         if (await file.exists()) {
-          _showScreenshotToastMessage('截图已保存到: ${file.path}');
+          _showScreenshotToastMessage('截图已保存');
         } else {
           _showScreenshotToastMessage('保存截图失败：文件未创建');
         }
