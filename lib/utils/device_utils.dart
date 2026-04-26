@@ -49,6 +49,11 @@ class DeviceUtils {
     return isWindows() || isMacOS();
   }
 
+  /// 判断当前平台是否是移动端
+  static bool isMobile() {
+    return Platform.isAndroid || Platform.isIOS;
+  }
+
   /// 根据屏幕宽度动态计算平板模式下的列数（6～8列）
   ///
   /// 宽度范围：

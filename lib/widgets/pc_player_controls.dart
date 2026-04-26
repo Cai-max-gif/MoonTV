@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:gal/gal.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dlna_device_dialog.dart';
 import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
@@ -128,6 +133,11 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   double _volumeBeforeMute = 1.0;
   Timer? _volumeMenuHideTimer;
   final FocusNode _focusNode = FocusNode();
+
+  // 截图相关
+  bool _showScreenshotToast = false;
+  String _screenshotToastMessage = '';
+  Timer? _screenshotToastTimer;
 
   @override
   void initState() {
@@ -1007,6 +1017,19 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               ),
                             ),
                           if (!widget.live)
+                            HoverButton(
+                              onTap: () {
+                                _onUserInteraction();
+                                // 触发截图功能
+                                _takeScreenshot();
+                              },
+                              child: Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: effectiveFullscreen ? 22 : 20,
+                              ),
+                            ),
+                          if (!widget.live)
                             MouseRegion(
                               key: _speedButtonKey,
                               cursor: SystemMouseCursors.click,
@@ -1093,6 +1116,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             if (_showSpeedMenu) _buildSpeedMenu(),
             // 音量调节弹窗
             if (_showVolumeMenu) _buildVolumeMenu(),
+            // 截图提示
+            _buildScreenshotToast(),
           ],
         ),
       ),
@@ -1374,6 +1399,181 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       return '$hours:${twoDigits(minutes)}:${twoDigits(seconds)}';
     }
     return '${twoDigits(minutes)}:${twoDigits(seconds)}';
+  }
+
+  // 截图功能
+  Future<void> _takeScreenshot() async {
+    try {
+      // 使用media_kit的screenshot方法获取真实的视频帧
+      final screenshot = await widget.player.screenshot(format: 'image/png');
+
+      if (screenshot != null && screenshot.isNotEmpty) {
+        await _saveScreenshot(screenshot);
+      } else {
+        _showScreenshotToastMessage('截图失败');
+      }
+    } catch (e) {
+      _showScreenshotToastMessage('截图失败: $e');
+    }
+  }
+
+  // 保存截图
+  Future<void> _saveScreenshot(Uint8List imageData) async {
+    try {
+      if (DeviceUtils.isMobile()) {
+        // 移动端：保存到相册
+        await _saveToGallery(imageData);
+      } else {
+        // PC端：保存到截图文件夹
+        await _saveToScreenshotsFolder(imageData);
+      }
+    } catch (e) {
+      _showScreenshotToastMessage('保存失败: $e');
+    }
+  }
+
+  // 保存到相册
+  Future<void> _saveToGallery(Uint8List imageData) async {
+    try {
+      // 检查权限
+      if (Platform.isAndroid || Platform.isIOS) {
+        final status = await Permission.photos.request();
+        if (!status.isGranted) {
+          _showScreenshotToastMessage('需要相册权限才能保存截图');
+          return;
+        }
+      }
+
+      // 保存到相册
+      await Gal.putImageBytes(imageData);
+      _showScreenshotToastMessage('截图已保存到相册');
+    } catch (e) {
+      _showScreenshotToastMessage('保存到相册失败: $e');
+    }
+  }
+
+  // 保存到截图文件夹
+  Future<void> _saveToScreenshotsFolder(Uint8List imageData) async {
+    try {
+      // 获取截图文件夹路径
+      Directory screenshotsDir;
+
+      if (Platform.isWindows) {
+        // Windows平台：C:\Users\用户名\Pictures\Screenshots
+        final userProfile = Platform.environment['USERPROFILE'];
+        if (userProfile != null) {
+          // 使用path包构建路径，避免反斜杠问题
+          final picturesDir = path.join(userProfile, 'Pictures');
+          screenshotsDir = Directory(path.join(picturesDir, 'Screenshots'));
+        } else {
+          //  fallback to documents directory if USERPROFILE is not available
+          final documentsDir = await getApplicationDocumentsDirectory();
+          screenshotsDir =
+              Directory(path.join(documentsDir.path, 'Screenshots'));
+        }
+      } else if (Platform.isMacOS) {
+        // macOS平台：~/Pictures/Screenshots
+        final homeDir = Platform.environment['HOME'];
+        if (homeDir != null) {
+          screenshotsDir =
+              Directory(path.join(homeDir, 'Pictures', 'Screenshots'));
+        } else {
+          //  fallback to documents directory if HOME is not available
+          final documentsDir = await getApplicationDocumentsDirectory();
+          screenshotsDir =
+              Directory(path.join(documentsDir.path, 'Screenshots'));
+        }
+      } else {
+        // 其他平台：文档目录下的Screenshots文件夹
+        final documentsDir = await getApplicationDocumentsDirectory();
+        screenshotsDir = Directory(path.join(documentsDir.path, 'Screenshots'));
+      }
+
+      // 创建文件夹
+      if (!await screenshotsDir.exists()) {
+        await screenshotsDir.create(recursive: true);
+      }
+
+      // 生成文件名
+      final fileName =
+          'screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = File(path.join(screenshotsDir.path, fileName));
+
+      // 保存文件
+      await file.writeAsBytes(imageData);
+
+      // 验证文件是否存在
+      if (await file.exists()) {
+        _showScreenshotToastMessage('截图已保存到: ${file.path}');
+      } else {
+        _showScreenshotToastMessage('保存截图失败：文件未创建');
+      }
+    } catch (e) {
+      // 尝试使用应用支持目录作为fallback
+      try {
+        final appSupportDir = await getApplicationSupportDirectory();
+        final fallbackDir =
+            Directory(path.join(appSupportDir.path, 'Screenshots'));
+        if (!await fallbackDir.exists()) {
+          await fallbackDir.create(recursive: true);
+        }
+        final fileName =
+            'screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+        final file = File(path.join(fallbackDir.path, fileName));
+        await file.writeAsBytes(imageData);
+        if (await file.exists()) {
+          _showScreenshotToastMessage('截图已保存到: ${file.path}');
+        } else {
+          _showScreenshotToastMessage('保存截图失败：文件未创建');
+        }
+      } catch (fallbackError) {
+        _showScreenshotToastMessage('保存到文件夹失败: $e');
+      }
+    }
+  }
+
+  // 显示截图提示
+  void _showScreenshotToastMessage(String message) {
+    setState(() {
+      _screenshotToastMessage = message;
+      _showScreenshotToast = true;
+    });
+
+    // 取消之前的定时器
+    _screenshotToastTimer?.cancel();
+
+    // 3秒后隐藏提示
+    _screenshotToastTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showScreenshotToast = false;
+        });
+      }
+    });
+  }
+
+  // 构建截图提示组件
+  Widget _buildScreenshotToast() {
+    if (!_showScreenshotToast) return const SizedBox.shrink();
+
+    return Positioned.fill(
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            _screenshotToastMessage,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

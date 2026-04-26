@@ -26,6 +26,8 @@ void main() async {
     MediaKit.ensureInitialized();
   }
 
+  // Gal 库不需要显式初始化，直接使用即可
+
   // 初始化 macOS 窗口配置
   if (Platform.isMacOS) {
     await WindowManipulator.initialize(enableWindowDelegate: true);

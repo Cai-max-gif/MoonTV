@@ -18,7 +18,7 @@ import '../widgets/switch_loading_overlay.dart';
 import '../widgets/dlna_player.dart';
 import '../widgets/dlna_device_dialog.dart';
 import '../utils/device_utils.dart';
-import '../widgets/player_details_panel.dart';
+
 import '../widgets/player_episodes_panel.dart';
 import '../widgets/player_sources_panel.dart';
 import '../widgets/windows_title_bar.dart';
@@ -1321,42 +1321,6 @@ class _PlayerScreenState extends State<PlayerScreen>
                   const SizedBox(width: 12),
 
                   // 详情按钮（平板横屏模式下不显示）
-                  if (!(_isTablet && !_isPortraitTablet))
-                    GestureDetector(
-                      onTap: () {
-                        _showDetailsPanel();
-                      },
-                      child: Stack(
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '详情',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: isDarkMode
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                              const SizedBox(width: 18),
-                            ],
-                          ),
-                          Positioned(
-                            right: 0,
-                            top: 4,
-                            child: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -1839,88 +1803,6 @@ class _PlayerScreenState extends State<PlayerScreen>
                     _isEpisodesReversed = !_isEpisodesReversed;
                   });
                 },
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// 构建详情底部滑出面板
-  void _showDetailsPanel() {
-    final theme = Theme.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final statusBarHeight = MediaQuery.of(context).padding.top;
-
-    // 平板模式：使用 showGeneralDialog
-    if (_isTablet) {
-      final panelWidth = _isPortraitTablet ? screenWidth : screenWidth * 0.35;
-      final panelHeight = _isPortraitTablet
-          ? (screenHeight - statusBarHeight) * 0.5
-          : screenHeight;
-      final alignment =
-          _isPortraitTablet ? Alignment.bottomCenter : Alignment.centerRight;
-      final slideBegin =
-          _isPortraitTablet ? const Offset(0, 1) : const Offset(1, 0);
-
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: '',
-        barrierColor: Colors.transparent,
-        transitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return Align(
-            alignment: alignment,
-            child: Material(
-              color: Colors.transparent,
-              child: SizedBox(
-                width: panelWidth,
-                height: panelHeight,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: slideBegin,
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeInOut,
-                  )),
-                  child: PlayerDetailsPanel(
-                    theme: theme,
-                    doubanDetails: doubanDetails,
-                    currentDetail: currentDetail,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-      return;
-    }
-
-    // 手机模式：从底部弹出
-    final playerHeight = screenWidth / (16 / 9);
-    final panelHeight = screenHeight - statusBarHeight - playerHeight;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.transparent,
-      enableDrag: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return SizedBox(
-              height: panelHeight,
-              width: double.infinity,
-              child: PlayerDetailsPanel(
-                theme: theme,
-                doubanDetails: doubanDetails,
-                currentDetail: currentDetail,
               ),
             );
           },

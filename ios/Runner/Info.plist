@@ -52,5 +52,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- 相册权限 -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MoonTV需要访问您的相册以保存截图</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>MoonTV需要向您的相册添加截图</string>
 </dict>
 </plist>
