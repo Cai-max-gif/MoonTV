@@ -7,6 +7,7 @@ import '../services/theme_service.dart';
 import '../services/api_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
+import '../pages/ai_page.dart';
 import 'dart:io' show Platform;
 import 'dart:async';
 import 'windows_title_bar.dart';
@@ -785,7 +786,10 @@ class _MainLayoutState extends State<MainLayout> {
               : null,
           child: GestureDetector(
             onTap: () {
-              themeService.toggleTheme(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AIPage()),
+              );
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
@@ -800,22 +804,14 @@ class _MainLayoutState extends State<MainLayout> {
                     : Colors.transparent,
               ),
               child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder:
-                      (Widget child, Animation<double> animation) {
-                    return ScaleTransition(scale: animation, child: child);
-                  },
-                  child: Icon(
-                    themeService.isDarkMode
-                        ? LucideIcons.sun
-                        : LucideIcons.moon,
-                    key: ValueKey(themeService.isDarkMode),
+                child: Text(
+                  'AI',
+                  style: TextStyle(
                     color: themeService.isDarkMode
                         ? const Color(0xFFffffff)
                         : const Color(0xFF2c3e50),
-                    size: 24,
-                    weight: 1.0,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
