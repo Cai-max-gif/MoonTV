@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:gpt_markdown/gpt_markdown.dart';
 import '../services/theme_service.dart';
+import '../services/ai_service.dart';
 import '../utils/font_utils.dart';
 import '../utils/device_utils.dart';
 import 'ai_settings_page.dart';
@@ -18,6 +20,14 @@ class _AIPageState extends State<AIPage> {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
+  AISettings? _settings;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAISettings();
+    _loadChatHistory();
+  }
 
   @override
   void dispose() {
@@ -26,9 +36,51 @@ class _AIPageState extends State<AIPage> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<void> _loadAISettings() async {
+    final settings = await AIService.loadSettings();
+    if (mounted) {
+      setState(() {
+        _settings = settings;
+      });
+    }
+  }
+
+  Future<void> _loadChatHistory() async {
+    final history = await AIService.loadChatHistory();
+    if (mounted && history.isNotEmpty) {
+      setState(() {
+        _messages.clear();
+        _messages.addAll(history);
+      });
+    }
+  }
+
+  Future<void> _saveChatHistory() async {
+    await AIService.saveChatHistory(_messages);
+  }
+
+  void _sendMessage() async {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
+
+    if (_settings == null || !_settings!.isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '请先在设置中配置AI API密钥',
+              style: FontUtils.poppins(fontSize: 14, color: Colors.white),
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
 
     setState(() {
       _messages.add({
@@ -41,19 +93,55 @@ class _AIPageState extends State<AIPage> {
     _messageController.clear();
     _scrollToBottom();
 
-    // 模拟 AI 回复
-    Future.delayed(const Duration(seconds: 1), () {
+    _saveChatHistory();
+
+    final settings = _settings!;
+    final history = _buildConversationHistory();
+
+    try {
+      final reply = await AIService.sendMessage(
+        settings: settings,
+        userMessage: message,
+        conversationHistory: history,
+      );
+
       if (mounted) {
         setState(() {
           _messages.add({
-            'text': '这是一个 AI 回复示例。你可以根据需要实现真正的 AI 功能。',
+            'text': reply,
             'isUser': false,
+          });
+          _isLoading = false;
+        });
+        _saveChatHistory();
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'text': '错误：${e.toString()}',
+            'isUser': false,
+            'isError': true,
           });
           _isLoading = false;
         });
         _scrollToBottom();
       }
-    });
+    }
+  }
+
+  List<Map<String, String>> _buildConversationHistory() {
+    final history = <Map<String, String>>[];
+    final startIndex = (_messages.length > 20) ? _messages.length - 10 : 0;
+    for (int i = startIndex; i < _messages.length; i++) {
+      final msg = _messages[i];
+      history.add({
+        'role': msg['isUser'] ? 'user' : 'assistant',
+        'content': msg['text'].toString(),
+      });
+    }
+    return history;
   }
 
   void _scrollToBottom() {
@@ -119,11 +207,13 @@ class _AIPageState extends State<AIPage> {
                     ? SystemMouseCursors.click
                     : MouseCursor.defer,
                 child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AISettingsPage()),
+                      MaterialPageRoute(
+                          builder: (context) => const AISettingsPage()),
                     );
+                    _loadAISettings();
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
@@ -169,18 +259,33 @@ class _AIPageState extends State<AIPage> {
 
   Widget _buildMessageBubble(
       Map<String, dynamic> message, ThemeService themeService) {
-    final isUser = message['isUser'];
+    final isUser = message['isUser'] as bool;
+    final isError = message['isError'] as bool? ?? false;
+    final bgColor = isUser
+        ? const Color(0xFF27ae60)
+        : isError
+            ? Colors.redAccent.withValues(alpha: 0.15)
+            : themeService.isDarkMode
+                ? const Color(0xFF1e1e1e)
+                : const Color(0xFFe0e0e0);
+    final textColor = isUser
+        ? Colors.white
+        : isError
+            ? Colors.redAccent
+            : themeService.isDarkMode
+                ? const Color(0xFFffffff)
+                : const Color(0xFF2c3e50);
+
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         decoration: BoxDecoration(
-          color: isUser
-              ? const Color(0xFF27ae60)
-              : themeService.isDarkMode
-                  ? const Color(0xFF1e1e1e)
-                  : const Color(0xFFe0e0e0),
+          color: bgColor,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -190,17 +295,21 @@ class _AIPageState extends State<AIPage> {
                 isUser ? const Radius.circular(4) : const Radius.circular(16),
           ),
         ),
-        child: Text(
-          message['text'],
-          style: FontUtils.poppins(
-            fontSize: 14,
-            color: isUser
-                ? Colors.white
-                : themeService.isDarkMode
-                    ? const Color(0xFFffffff)
-                    : const Color(0xFF2c3e50),
-          ),
-        ),
+        child: isUser || isError
+            ? Text(
+                message['text'].toString(),
+                style: FontUtils.poppins(
+                  fontSize: 14,
+                  color: textColor,
+                ),
+              )
+            : GptMarkdown(
+                message['text'].toString(),
+                style: FontUtils.poppins(
+                  fontSize: 14,
+                  color: textColor,
+                ),
+              ),
       ),
     );
   }
