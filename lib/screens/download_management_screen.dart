@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import '../models/download_task.dart';
 import '../widgets/download_item_widget.dart';
 import '../utils/font_utils.dart';
 import '../utils/device_utils.dart';
+import 'local_player_screen.dart';
 
 class DownloadManagementScreen extends StatefulWidget {
   const DownloadManagementScreen({super.key});
@@ -97,7 +99,8 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           final downloadingTasks = _sortTasks(downloadService.downloadingTasks +
               downloadService.queuedTasks +
               downloadService.pausedTasks +
-              downloadService.failedTasks);
+              downloadService.failedTasks +
+              downloadService.retryingTasks);
           final completedTasks =
               _deduplicateTasks(_sortTasks(downloadService.completedTasks));
 
@@ -134,7 +137,9 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
         final hasDownloading = downloadService.downloadingTasks.isNotEmpty;
         final hasPaused = downloadService.pausedTasks.isNotEmpty;
         final hasFailed = downloadService.failedTasks.isNotEmpty;
-        final isPausedMode = !hasDownloading && (hasPaused || hasFailed);
+        final hasRetrying = downloadService.retryingTasks.isNotEmpty;
+        final isPausedMode =
+            !hasDownloading && (hasPaused || hasFailed || hasRetrying);
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -534,16 +539,33 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
   }
 
   void _playDownloadedVideo(DownloadTask task) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '播放: ${task.displayName}',
-          style: FontUtils.poppins(color: Colors.white),
+    final filePath = task.localFilePath;
+    final file = File(filePath);
+
+    if (!file.existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '文件不存在: ${task.displayName}',
+            style: FontUtils.poppins(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFFef4444),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: const EdgeInsets.all(16),
         ),
-        backgroundColor: const Color(0xFF27AE60),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocalPlayerScreen(
+          filePath: filePath,
+          title: task.displayName,
+        ),
       ),
     );
   }

@@ -79,6 +79,8 @@ class PCPlayerControls extends StatefulWidget {
   final Future<void> Function(double speed) onSetSpeed;
   final List<String>? episodes;
   final List<String>? episodesTitles;
+  final Function(int episodeIndex)? onSingleEpisodeDownload;
+  final Function(List<int> episodeIndices)? onBatchEpisodesDownload;
 
   const PCPlayerControls({
     super.key,
@@ -104,6 +106,8 @@ class PCPlayerControls extends StatefulWidget {
     required this.onSetSpeed,
     this.episodes,
     this.episodesTitles,
+    this.onSingleEpisodeDownload,
+    this.onBatchEpisodesDownload,
   });
 
   @override
@@ -326,10 +330,10 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                     currentEpisodeIndex: widget.currentEpisodeIndex ?? 0,
                     isReversed: false,
                     onSingleEpisodeTap: (index) {
-                      debugPrint('Download single episode: $index');
+                      widget.onSingleEpisodeDownload?.call(index);
                     },
                     onBatchDownload: (indices) {
-                      debugPrint('Download batch episodes: $indices');
+                      widget.onBatchEpisodesDownload?.call(indices);
                     },
                     onToggleOrder: () {},
                   ),
@@ -363,10 +367,10 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             currentEpisodeIndex: widget.currentEpisodeIndex ?? 0,
             isReversed: false,
             onSingleEpisodeTap: (index) {
-              debugPrint('Download single episode: $index');
+              widget.onSingleEpisodeDownload?.call(index);
             },
             onBatchDownload: (indices) {
-              debugPrint('Download batch episodes: $indices');
+              widget.onBatchEpisodesDownload?.call(indices);
             },
             onToggleOrder: () {},
           ),

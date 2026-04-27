@@ -14,6 +14,8 @@ import '../models/search_result.dart';
 import '../models/douban_movie.dart';
 import '../models/play_record.dart';
 import '../services/page_cache_service.dart';
+import '../services/download_service.dart';
+import '../models/download_task.dart';
 import '../widgets/switch_loading_overlay.dart';
 import '../widgets/dlna_player.dart';
 import '../widgets/dlna_device_dialog.dart';
@@ -400,18 +402,21 @@ class _PlayerScreenState extends State<PlayerScreen>
   // 处理返回按钮点击
   void _onBackPressed() async {
     try {
-      // 先暂停播放器
-      if (_videoPlayerController != null) {
-        _videoPlayerController!.pause();
-      }
-
-      // 移除视频进度监听器
+      // 1. 立即拿走控制器引用并置空，阻止进度回调继续访问
+      final controller = _videoPlayerController;
+      _videoPlayerController = null;
       _removeVideoProgressListener();
 
-      // 如果正在投屏，停止投屏
-      if (_isCasting && _dlnaDevice != null) {
+      // 2. 暂停播放器（异步但安全，引用已取出）
+      if (controller != null) {
         try {
-          // 显示弹窗让用户选择
+          await controller.pause();
+        } catch (_) {}
+      }
+
+      // 如果正在投屏，停止投屏
+      if (_isCasting && _dlnaDevice != null && mounted) {
+        try {
           final shouldStop = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
@@ -431,24 +436,22 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           );
 
-          // 如果用户选择停止，才调用 stop
           if (shouldStop == true) {
             try {
               _dlnaDevice.stop();
-              debugPrint('用户选择停止投屏');
             } catch (e) {
               debugPrint('停止投屏失败: $e');
             }
-          } else {
-            debugPrint('用户选择保持播放');
           }
         } catch (e) {
           debugPrint('停止投屏失败: $e');
         }
       }
 
-      // 关闭页面前保存进度
-      _saveProgress(force: true, scene: '返回按钮');
+      // 关闭页面前保存进度（从已取出的 controller 读取，安全）
+      if (controller != null) {
+        _saveProgressWithController(controller, force: true, scene: '返回按钮');
+      }
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -459,6 +462,108 @@ class _PlayerScreenState extends State<PlayerScreen>
         Navigator.of(context).pop();
       }
     }
+  }
+
+  void _onSingleEpisodeDownload(int episodeIndex) {
+    if (currentDetail == null) return;
+    if (episodeIndex < 0 || episodeIndex >= currentDetail!.episodes.length) {
+      return;
+    }
+
+    final url = currentDetail!.episodes[episodeIndex];
+    final title = currentDetail!.title;
+    final poster = currentDetail!.poster;
+    final episodeTitle = currentDetail!.episodesTitles.isNotEmpty &&
+            episodeIndex < currentDetail!.episodesTitles.length
+        ? currentDetail!.episodesTitles[episodeIndex]
+        : '第${episodeIndex + 1}集';
+
+    _createDownloadTask(
+      url: url,
+      title: title,
+      poster: poster,
+      episodeTitle: episodeTitle,
+      episodeIndex: episodeIndex + 1,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已添加到下载队列: $episodeTitle'),
+          backgroundColor: const Color(0xFF27AE60),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _onBatchEpisodesDownload(List<int> episodeIndices) {
+    if (currentDetail == null) return;
+
+    int count = 0;
+    for (final epIndex in episodeIndices) {
+      final realIndex = epIndex - 1;
+      if (realIndex < 0 || realIndex >= currentDetail!.episodes.length) {
+        continue;
+      }
+
+      final url = currentDetail!.episodes[realIndex];
+      final title = currentDetail!.title;
+      final poster = currentDetail!.poster;
+      final episodeTitle = currentDetail!.episodesTitles.isNotEmpty &&
+              realIndex < currentDetail!.episodesTitles.length
+          ? currentDetail!.episodesTitles[realIndex]
+          : '第$epIndex集';
+
+      _createDownloadTask(
+        url: url,
+        title: title,
+        poster: poster,
+        episodeTitle: episodeTitle,
+        episodeIndex: epIndex,
+      );
+      count++;
+    }
+
+    if (mounted && count > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已添加 $count 个任务到下载队列'),
+          backgroundColor: const Color(0xFF27AE60),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _createDownloadTask({
+    required String url,
+    required String title,
+    required String poster,
+    required String episodeTitle,
+    required int episodeIndex,
+  }) {
+    final downloadService = DownloadService();
+    final taskId =
+        '${title}_${episodeTitle}_${DateTime.now().millisecondsSinceEpoch}';
+
+    final task = DownloadTask(
+      id: taskId,
+      title: title,
+      episodeTitle: episodeTitle,
+      episodeIndex: episodeIndex,
+      cover: poster,
+      videoUrl: url,
+      savePath: downloadService.savePath,
+    );
+
+    downloadService.addTask(task);
   }
 
   // 退出网页全屏
@@ -475,6 +580,16 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   /// 保存播放进度（同步函数，提前获取参数避免异步问题）
   void _saveProgress({bool force = false, required String scene}) {
+    if (_videoPlayerController == null) return;
+    _saveProgressWithController(_videoPlayerController!,
+        force: force, scene: scene);
+  }
+
+  void _saveProgressWithController(
+    VideoPlayerWidgetController controller, {
+    bool force = false,
+    required String scene,
+  }) {
     try {
       if (currentDetail == null) return;
 
@@ -487,13 +602,11 @@ class _PlayerScreenState extends State<PlayerScreen>
         currentPosition = _dlnaCurrentPosition;
         duration = _dlnaCurrentDuration;
       } else {
-        // 本地播放：根据设备类型从对应播放器获取
-        if (_videoPlayerController == null) return;
+        // 本地播放：使用传入的 controller
         try {
-          currentPosition = _videoPlayerController!.currentPosition;
-          duration = _videoPlayerController!.duration;
+          currentPosition = controller.currentPosition;
+          duration = controller.duration;
         } catch (e) {
-          // 播放器可能已经被销毁，静默处理
           debugPrint('获取播放器状态失败: $e');
           return;
         }
@@ -1066,6 +1179,8 @@ class _PlayerScreenState extends State<PlayerScreen>
             },
             episodes: currentDetail?.episodes,
             episodesTitles: currentDetail?.episodesTitles,
+            onSingleEpisodeDownload: _onSingleEpisodeDownload,
+            onBatchEpisodesDownload: _onBatchEpisodesDownload,
           ),
         if (_isCasting && _dlnaDevice != null)
           DLNAPlayer(
@@ -2453,40 +2568,45 @@ class _PlayerScreenState extends State<PlayerScreen>
   @override
   void dispose() {
     try {
-      // 先暂停播放器
-      if (_videoPlayerController != null) {
-        _videoPlayerController!.pause();
-      }
-
-      // 移除视频进度监听器
+      // 1. 先移除进度监听器，防止后续回调访问播放器
       _removeVideoProgressListener();
 
-      // 保存进度
-      _saveProgress(force: true, scene: '页面销毁');
+      // 2. 立即提取并置空控制器引用，阻止任何后续异步代码访问 native 播放器
+      final controller = _videoPlayerController;
+      _videoPlayerController = null;
 
-      // 移除应用生命周期监听器
+      // 3. 移除应用生命周期监听器
       WidgetsBinding.instance.removeObserver(this);
 
-      // 恢复屏幕方向
+      // 4. 恢复屏幕方向
       _restoreOrientation();
 
-      // 恢复原始的系统UI样式
+      // 5. 恢复原始的系统UI样式
       SystemChrome.setSystemUIOverlayStyle(_originalStyle);
 
-      // 销毁播放器
-      _videoPlayerController?.dispose();
-
-      // DLNAPlayerController 没有 dispose 方法，它会随着 DLNAPlayer 组件的销毁而自动清理
-
-      // 释放滚动控制器
+      // 6. 释放滚动控制器（同步安全）
       _episodesScrollController.dispose();
       _sourcesScrollController.dispose();
 
-      // 释放动画控制器
+      // 7. 释放动画控制器（同步安全）
       _refreshAnimationController.dispose();
       _loadingAnimationController.dispose();
       _textAnimationController.dispose();
       _switchLoadingAnimationController.dispose();
+
+      // 8. 异步释放播放器（在 microtask 中，不阻塞 dispose）
+      //    必须先暂停再释放，否则 native 回调可能在资源释放中触发
+      if (controller != null) {
+        Future.microtask(() async {
+          try {
+            await controller.pause();
+          } catch (_) {}
+          await Future.delayed(const Duration(milliseconds: 250));
+          try {
+            await controller.dispose();
+          } catch (_) {}
+        });
+      }
     } catch (e) {
       debugPrint('Dispose error: $e');
     }

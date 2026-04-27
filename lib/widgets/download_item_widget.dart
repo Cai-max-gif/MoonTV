@@ -119,6 +119,16 @@ class DownloadItemWidget extends StatelessWidget {
             ),
           ),
         ],
+        if (task.isRetrying) ...[
+          const SizedBox(height: 4),
+          Text(
+            '重试中 (${task.retryCount}/5)',
+            style: FontUtils.poppins(
+              fontSize: 10,
+              color: const Color(0xFFf59e0b),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -202,6 +212,31 @@ class DownloadItemWidget extends StatelessWidget {
         color: const Color(0xFFef4444),
         onTap: onResume,
         size: size,
+      );
+    }
+
+    if (task.isRetrying) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: const Color(0xFFf59e0b).withAlpha(25),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: const Color(0xFFf59e0b),
+            width: 2,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            '重试${task.retryCount}/5',
+            style: FontUtils.poppins(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFf59e0b),
+            ),
+          ),
+        ),
       );
     }
 

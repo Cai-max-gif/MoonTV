@@ -35,6 +35,8 @@ class VideoPlayerWidget extends StatefulWidget {
   final Function(String error)? onError;
   final List<String>? episodes;
   final List<String>? episodesTitles;
+  final Function(int episodeIndex)? onSingleEpisodeDownload;
+  final Function(List<int> episodeIndices)? onBatchEpisodesDownload;
 
   const VideoPlayerWidget({
     super.key,
@@ -60,6 +62,8 @@ class VideoPlayerWidget extends StatefulWidget {
     this.onError,
     this.episodes,
     this.episodesTitles,
+    this.onSingleEpisodeDownload,
+    this.onBatchEpisodesDownload,
   });
 
   @override
@@ -207,7 +211,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       return;
     }
     try {
-      _player = Player();
+      _player = Player(
+        configuration: PlayerConfiguration(
+          vo: Platform.isWindows ? 'libmpv' : 'gpu',
+          title: 'MoonTV',
+        ),
+      );
+      if (Platform.isWindows) {
+        try {
+          await _player!.setProperty('hwdec', 'no');
+        } catch (_) {}
+      }
       _videoController = VideoController(_player!);
       _setupPlayerListeners();
       if (_currentUrl != null) {
@@ -271,7 +285,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _durationSubscription?.cancel();
 
     _positionSubscription = _player!.stream.position.listen((position) {
-      if (_playerDisposed) return;
+      if (_playerDisposed || _player == null) return;
       for (final listener in List<VoidCallback>.from(_progressListeners)) {
         try {
           listener();
@@ -280,7 +294,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         }
       }
 
-      // 自动跳过片头片尾逻辑
       if (_autoSkipOpeningEnding && _player != null && !_playerDisposed) {
         final duration = _player!.state.duration;
         if (duration != Duration.zero) {
@@ -306,7 +319,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     });
 
     _playingSubscription = _player!.stream.playing.listen((playing) async {
-      if (!mounted || _playerDisposed) return;
+      if (!mounted || _playerDisposed || _player == null) return;
       if (!playing) {
         setState(() {
           _hasCompleted = false;
@@ -341,7 +354,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
     if (!widget.live) {
       _completedSubscription = _player!.stream.completed.listen((completed) {
-        if (!mounted || _playerDisposed) return;
+        if (!mounted || _playerDisposed || _player == null) return;
         if (completed && !_hasCompleted) {
           _hasCompleted = true;
           widget.onVideoCompleted?.call();
@@ -350,7 +363,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
 
     _durationSubscription = _player!.stream.duration.listen((duration) {
-      if (!mounted || _playerDisposed) return;
+      if (!mounted || _playerDisposed || _player == null) return;
       if (duration != Duration.zero) {
         if (_isLoadingVideo) {
           setState(() {
@@ -525,20 +538,22 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
     _playerDisposed = true;
 
-    // 先取消所有订阅，确保不会有新的回调被触发
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _completedSubscription?.cancel();
     _durationSubscription?.cancel();
     _progressListeners.clear();
 
-    // 保存引用并立即置为null，确保不会有新的操作使用它们
     final player = _player;
+    final videoController = _videoController;
     _player = null;
     _videoController = null;
 
-    // 最后dispose播放器
     if (player != null && (Platform.isWindows || Platform.isMacOS)) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      try {
+        videoController?.dispose();
+      } catch (_) {}
       try {
         await player.dispose();
       } catch (e) {
@@ -550,7 +565,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (_player == null) {
+    if (_player == null || _playerDisposed) {
       return;
     }
     switch (state) {
@@ -622,6 +637,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 onSetSpeed: _setPlaybackSpeed,
                                 episodes: widget.episodes,
                                 episodesTitles: widget.episodesTitles,
+                                onSingleEpisodeDownload:
+                                    widget.onSingleEpisodeDownload,
+                                onBatchEpisodesDownload:
+                                    widget.onBatchEpisodesDownload,
                               )
                             : MobilePlayerControls(
                                 player: _player!,
@@ -647,6 +666,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 isPipMode: _isPipMode,
                                 episodes: widget.episodes,
                                 episodesTitles: widget.episodesTitles,
+                                onSingleEpisodeDownload:
+                                    widget.onSingleEpisodeDownload,
+                                onBatchEpisodesDownload:
+                                    widget.onBatchEpisodesDownload,
                               );
                       },
                     )
@@ -679,6 +702,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                   isPipMode: _isPipMode,
                   episodes: widget.episodes,
                   episodesTitles: widget.episodesTitles,
+                  onSingleEpisodeDownload: widget.onSingleEpisodeDownload,
+                  onBatchEpisodesDownload: widget.onBatchEpisodesDownload,
                 )
           : const Center(
               child: CircularProgressIndicator(

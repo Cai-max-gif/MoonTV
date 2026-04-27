@@ -1,9 +1,12 @@
+import 'dart:io' show Platform;
+
 enum DownloadStatus {
   downloading,
   queued,
   paused,
   completed,
   failed,
+  retrying,
 }
 
 class DownloadTask {
@@ -13,12 +16,15 @@ class DownloadTask {
   final int episodeIndex;
   final String cover;
   final String videoUrl;
-  final String savePath;
+  String savePath;
   double progress;
   DownloadStatus status;
   int totalBytes;
   int downloadedBytes;
+  int retryCount;
   DateTime createdAt;
+
+  final String localFileName;
 
   DownloadTask({
     required this.id,
@@ -29,11 +35,30 @@ class DownloadTask {
     required this.videoUrl,
     required this.savePath,
     this.progress = 0.0,
-    this.status = DownloadStatus.downloading,
+    this.status = DownloadStatus.queued,
     this.totalBytes = 0,
     this.downloadedBytes = 0,
+    this.retryCount = 0,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    String? localFileName,
+  })  : localFileName = localFileName ??
+            _generateLocalFileName(title, episodeTitle, episodeIndex),
+        createdAt = createdAt ?? DateTime.now();
+
+  static String _generateLocalFileName(
+      String title, String episodeTitle, int episodeIndex) {
+    final safeTitle = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+    final safeEpisode =
+        episodeTitle.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+    return '${safeTitle}_${safeEpisode}_$episodeIndex.ts';
+  }
+
+  String get localFilePath {
+    if (savePath.isEmpty) return localFileName;
+    final sep = Platform.pathSeparator;
+    final dir = savePath.endsWith(sep) ? savePath : '$savePath$sep';
+    return '$dir$localFileName';
+  }
 
   String get displayName => '$title $episodeTitle';
 
@@ -44,6 +69,7 @@ class DownloadTask {
   bool get isDownloading => status == DownloadStatus.downloading;
   bool get isCompleted => status == DownloadStatus.completed;
   bool get isFailed => status == DownloadStatus.failed;
+  bool get isRetrying => status == DownloadStatus.retrying;
 
   Map<String, dynamic> toJson() {
     return {
@@ -59,23 +85,29 @@ class DownloadTask {
       'total_bytes': totalBytes,
       'downloaded_bytes': downloadedBytes,
       'created_at': createdAt.millisecondsSinceEpoch,
+      'local_file_name': localFileName,
+      'retry_count': retryCount,
     };
   }
 
   factory DownloadTask.fromJson(Map<String, dynamic> json) {
     return DownloadTask(
-      id: json['id'],
-      title: json['title'],
-      episodeTitle: json['episode_title'],
-      episodeIndex: json['episode_index'],
-      cover: json['cover'],
-      videoUrl: json['video_url'],
-      savePath: json['save_path'],
-      progress: (json['progress'] as num).toDouble(),
-      status: DownloadStatus.values[json['status']],
-      totalBytes: json['total_bytes'] ?? 0,
-      downloadedBytes: json['downloaded_bytes'] ?? 0,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(json['created_at']),
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      episodeTitle: json['episode_title']?.toString() ?? '',
+      episodeIndex: json['episode_index'] as int? ?? 0,
+      cover: json['cover']?.toString() ?? '',
+      videoUrl: json['video_url']?.toString() ?? '',
+      savePath: json['save_path']?.toString() ?? '',
+      progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
+      status: DownloadStatus.values[json['status'] as int? ?? 0],
+      totalBytes: json['total_bytes'] as int? ?? 0,
+      downloadedBytes: json['downloaded_bytes'] as int? ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int)
+          : DateTime.now(),
+      localFileName: json['local_file_name']?.toString(),
+      retryCount: json['retry_count'] as int? ?? 0,
     );
   }
 
@@ -91,7 +123,9 @@ class DownloadTask {
     DownloadStatus? status,
     int? totalBytes,
     int? downloadedBytes,
+    int? retryCount,
     DateTime? createdAt,
+    String? localFileName,
   }) {
     return DownloadTask(
       id: id ?? this.id,
@@ -105,7 +139,9 @@ class DownloadTask {
       status: status ?? this.status,
       totalBytes: totalBytes ?? this.totalBytes,
       downloadedBytes: downloadedBytes ?? this.downloadedBytes,
+      retryCount: retryCount ?? this.retryCount,
       createdAt: createdAt ?? this.createdAt,
+      localFileName: localFileName ?? this.localFileName,
     );
   }
 }

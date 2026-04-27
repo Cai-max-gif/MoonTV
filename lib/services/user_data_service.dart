@@ -16,6 +16,19 @@ class UserDataService {
   static const String _autoPlayNextKey = 'auto_play_next';
   static const String _familyModeKey = 'family_mode';
 
+  static const String _danmakuEnabledKey = 'danmaku_enabled';
+  static const String _danmakuSpeedKey = 'danmaku_speed';
+  static const String _danmakuOpacityKey = 'danmaku_opacity';
+  static const String _danmakuFontSizeKey = 'danmaku_font_size';
+  static const String _danmakuDisplayAreaKey = 'danmaku_display_area';
+  static const String _danmakuMaxCountKey = 'danmaku_max_count';
+  static const String _danmakuAntiBlockKey = 'danmaku_anti_block';
+
+  static const String _syncPlaybackProgressKey = 'sync_playback_progress';
+  static const String _syncFavoritesKey = 'sync_favorites';
+  static const String _syncWatchHistoryKey = 'sync_watch_history';
+  static const String _syncSettingsKey = 'sync_settings';
+
   static const String _loginAttemptsKey = 'login_attempts';
   static const String _lastLoginAttemptKey = 'last_login_attempt';
   static const String _accountLockedUntilKey = 'account_locked_until';
@@ -290,5 +303,119 @@ class UserDataService {
   static Future<bool> getFamilyMode() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_familyModeKey) ?? false;
+  }
+
+  // ==================== 弹幕设置 ====================
+
+  static Future<void> saveDanmakuEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_danmakuEnabledKey, enabled);
+  }
+
+  static Future<bool> getDanmakuEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_danmakuEnabledKey) ?? true;
+  }
+
+  static Future<void> saveDanmakuSpeed(double speed) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_danmakuSpeedKey, speed.clamp(0.5, 2.0));
+  }
+
+  static Future<double> getDanmakuSpeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getDouble(_danmakuSpeedKey) ?? 1.0).clamp(0.5, 2.0);
+  }
+
+  static Future<void> saveDanmakuOpacity(double opacity) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_danmakuOpacityKey, opacity.clamp(0.1, 1.0));
+  }
+
+  static Future<double> getDanmakuOpacity() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getDouble(_danmakuOpacityKey) ?? 1.0).clamp(0.1, 1.0);
+  }
+
+  static Future<void> saveDanmakuFontSize(double fontSize) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_danmakuFontSizeKey, fontSize.clamp(0.5, 2.0));
+  }
+
+  static Future<double> getDanmakuFontSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getDouble(_danmakuFontSizeKey) ?? 1.0).clamp(0.5, 2.0);
+  }
+
+  static Future<void> saveDanmakuDisplayArea(double area) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_danmakuDisplayAreaKey, area.clamp(0.25, 1.0));
+  }
+
+  static Future<double> getDanmakuDisplayArea() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getDouble(_danmakuDisplayAreaKey) ?? 1.0).clamp(0.25, 1.0);
+  }
+
+  static Future<void> saveDanmakuMaxCount(int count) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_danmakuMaxCountKey, count.clamp(10, 500));
+  }
+
+  static Future<int> getDanmakuMaxCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getInt(_danmakuMaxCountKey) ?? 100).clamp(10, 500);
+  }
+
+  static Future<void> saveDanmakuAntiBlock(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_danmakuAntiBlockKey, enabled);
+  }
+
+  static Future<bool> getDanmakuAntiBlock() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_danmakuAntiBlockKey) ?? true;
+  }
+
+  // ==================== 同步设置 ====================
+
+  static Future<void> saveSyncPlaybackProgress(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_syncPlaybackProgressKey, enabled);
+  }
+
+  static Future<bool> getSyncPlaybackProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_syncPlaybackProgressKey) ?? true;
+  }
+
+  static Future<void> saveSyncFavorites(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_syncFavoritesKey, enabled);
+  }
+
+  static Future<bool> getSyncFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_syncFavoritesKey) ?? true;
+  }
+
+  static Future<void> saveSyncWatchHistory(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_syncWatchHistoryKey, enabled);
+  }
+
+  static Future<bool> getSyncWatchHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_syncWatchHistoryKey) ?? true;
+  }
+
+  static Future<void> saveSyncSettings(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_syncSettingsKey, enabled);
+  }
+
+  static Future<bool> getSyncSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_syncSettingsKey) ?? true;
   }
 }
