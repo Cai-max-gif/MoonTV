@@ -6,6 +6,7 @@ import '../models/search_resource.dart';
 import '../models/search_result.dart';
 import 'content_filter_service.dart';
 import 'local_search_cache_service.dart';
+import 'user_data_service.dart';
 
 /// 分页搜索结果
 class SearchPageResult {
@@ -93,9 +94,10 @@ class DownstreamService {
         }
       }
 
-      // 过滤包含黄色关键词的结果
+      // 过滤屏蔽的播放源和关键词
+      final familyMode = await UserDataService.getFamilyMode();
       final filteredResults = results.where((result) {
-        return !ContentFilterService.shouldFilter(result.typeName);
+        return !ContentFilterService.shouldFilter(result.sourceName, familyMode: familyMode, title: result.title);
       }).toList();
 
       return filteredResults;

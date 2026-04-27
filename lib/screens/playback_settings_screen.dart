@@ -47,9 +47,10 @@ class PlaybackSettingsScreen extends StatefulWidget {
 }
 
 class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
-  bool _autoPlayNext = false;
+  bool _autoPlayNext = true;
   bool _autoEnterPictureInPicture = false;
   bool _autoSkipOpeningEnding = false;
+  bool _familyMode = false;
   double _defaultPlaybackSpeed = 1.0;
   int _skipOpeningDuration = 0;
   int _skipEndingDuration = 0;
@@ -75,6 +76,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
     _loadSkipOpeningDuration();
     _loadSkipEndingDuration();
     _loadAutoPlayNext();
+    _loadFamilyMode();
   }
 
   Future<void> _loadAutoPlayNext() async {
@@ -122,6 +124,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
     });
   }
 
+  Future<void> _loadFamilyMode() async {
+    final enabled = await UserDataService.getFamilyMode();
+    setState(() {
+      _familyMode = enabled;
+    });
+  }
+
   @override
   void dispose() {
     _skipOpeningDurationController.dispose();
@@ -158,6 +167,61 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          // 家庭模式设置
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.house,
+                      size: 24,
+                      color: Color(0xFF27AE60),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '家庭模式',
+                      style: FontUtils.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _familyMode,
+                  onChanged: (value) {
+                    setState(() {
+                      _familyMode = value;
+                    });
+                    UserDataService.saveFamilyMode(value);
+                  },
+                  activeThumbColor: const Color(0xFF27AE60),
+                  inactiveTrackColor: isDarkMode
+                      ? const Color(0xFF374151)
+                      : const Color(0xFFe5e7eb),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
           // 自动连播设置
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../services/page_cache_service.dart';
 import '../services/theme_service.dart';
 import '../services/sse_search_service.dart';
+import '../services/user_data_service.dart';
+import '../services/content_filter_service.dart';
 import '../models/search_result.dart';
 import '../models/video_info.dart';
 import '../widgets/video_menu_bottom_sheet.dart';
@@ -172,22 +174,34 @@ class _SearchScreenState extends State<SearchScreen>
     _incrementalResultsSubscription =
         _searchService.incrementalResultsStream.listen((incrementalResults) {
       if (mounted && incrementalResults.isNotEmpty) {
-        // 将增量结果添加到现有结果列表中
-        _searchResults.addAll(incrementalResults);
-
-        // 使用防抖机制，避免过于频繁的UI更新，同时确保用户交互不受影响
-        _updateTimer?.cancel();
-        _updateTimer = Timer(const Duration(milliseconds: 50), () {
-          if (mounted) {
-            // 使用 scheduleMicrotask 确保UI更新在下一个微任务中执行，不阻塞用户交互
-            scheduleMicrotask(() {
-              if (mounted) {
-                setState(() {
-                  // 触发UI更新
-                });
-              }
-            });
+        // 应用家庭模式过滤
+        UserDataService.getFamilyMode().then((familyMode) {
+          if (familyMode) {
+            final filteredResults = incrementalResults.where((result) {
+              return !ContentFilterService.shouldFilter(result.sourceName,
+                  familyMode: familyMode, title: result.title);
+            }).toList();
+            // 将过滤后的结果添加到现有结果列表中
+            _searchResults.addAll(filteredResults);
+          } else {
+            // 家庭模式未开启，直接添加所有结果
+            _searchResults.addAll(incrementalResults);
           }
+
+          // 使用防抖机制，避免过于频繁的UI更新，同时确保用户交互不受影响
+          _updateTimer?.cancel();
+          _updateTimer = Timer(const Duration(milliseconds: 50), () {
+            if (mounted) {
+              // 使用 scheduleMicrotask 确保UI更新在下一个微任务中执行，不阻塞用户交互
+              scheduleMicrotask(() {
+                if (mounted) {
+                  setState(() {
+                    // 触发UI更新
+                  });
+                }
+              });
+            }
+          });
         });
       }
     });

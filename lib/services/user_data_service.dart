@@ -14,6 +14,7 @@ class UserDataService {
   static const String _skipOpeningDurationKey = 'skip_opening_duration';
   static const String _skipEndingDurationKey = 'skip_ending_duration';
   static const String _autoPlayNextKey = 'auto_play_next';
+  static const String _familyModeKey = 'family_mode';
 
   static const String _loginAttemptsKey = 'login_attempts';
   static const String _lastLoginAttemptKey = 'last_login_attempt';
@@ -277,5 +278,17 @@ class UserDataService {
   static Future<bool> getAutoPlayNext() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_autoPlayNextKey) ?? true;
+  }
+
+  // 保存家庭模式设置
+  static Future<void> saveFamilyMode(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_familyModeKey, enabled);
+  }
+
+  // 获取家庭模式设置（默认为 false）
+  static Future<bool> getFamilyMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_familyModeKey) ?? false;
   }
 }

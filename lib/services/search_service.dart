@@ -5,8 +5,8 @@ import '../models/search_result.dart';
 import '../models/search_resource.dart';
 import 'api_service.dart';
 import 'downstream_service.dart';
-
-
+import 'user_data_service.dart';
+import 'content_filter_service.dart';
 
 /// 搜索服务
 class SearchService {
@@ -31,11 +31,12 @@ class SearchService {
 
   /// 刷新缓存（仅用于服务器模式）
   static Completer<List<SearchResource>>? _refreshCacheCompleter;
-  
+
   static Future<List<SearchResource>> _refreshCache() async {
     if (_isRefreshing) {
       // 如果正在刷新，等待当前刷新完成
-      if (_refreshCacheCompleter != null && !_refreshCacheCompleter!.isCompleted) {
+      if (_refreshCacheCompleter != null &&
+          !_refreshCacheCompleter!.isCompleted) {
         return await _refreshCacheCompleter!.future;
       }
       return _cachedResources ?? [];
@@ -44,7 +45,7 @@ class SearchService {
     _isRefreshing = true;
     final completer = Completer<List<SearchResource>>();
     _refreshCacheCompleter = completer;
-    
+
     try {
       final resources = await ApiService.getSearchResources();
       _cachedResources = resources;
@@ -134,7 +135,16 @@ class SearchService {
         }
       }
 
-      return results;
+      // 应用家庭模式过滤
+      final familyMode = await UserDataService.getFamilyMode();
+      final filteredResults = results
+          .where((result) => !ContentFilterService.shouldFilter(
+              result.sourceName,
+              familyMode: familyMode,
+              title: result.title))
+          .toList();
+
+      return filteredResults;
     } catch (e) {
       return [];
     }

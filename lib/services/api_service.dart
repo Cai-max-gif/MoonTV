@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'user_data_service.dart';
+import 'content_filter_service.dart';
 import '../screens/login_screen.dart';
 import '../models/favorite_item.dart';
 import '../models/search_result.dart';
@@ -861,9 +862,14 @@ class ApiService {
         final data = response.data!;
         final results = data['results'] as List<dynamic>? ?? [];
 
-        // 直接返回所有搜索结果，不进行过滤
+        // 应用家庭模式过滤
+        final familyMode = await UserDataService.getFamilyMode();
         return results
             .map((item) => SearchResult.fromJson(item as Map<String, dynamic>))
+            .where((result) => !ContentFilterService.shouldFilter(
+                result.sourceName,
+                familyMode: familyMode,
+                title: result.title))
             .toList();
       } else {
         // 生产环境中移除print语句
