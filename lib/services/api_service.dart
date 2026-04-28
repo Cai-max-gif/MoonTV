@@ -13,6 +13,7 @@ import '../models/live_source.dart';
 import '../models/live_channel.dart';
 import '../models/epg_program.dart';
 import '../models/search_suggestion.dart';
+import '../models/danmu_item.dart';
 
 /// API响应结果类
 class ApiResponse<T> {
@@ -1151,6 +1152,70 @@ class ApiService {
       return response;
     } catch (e) {
       return ApiResponse.error('获取短剧集数信息失败: ${e.toString()}');
+    }
+  }
+
+  /// 获取外部弹幕数据
+  static Future<ApiResponse<List<DanmuItem>>> fetchDanmuExternal({
+    String? title,
+    String? year,
+    String? episode,
+    String? doubanId,
+    String? episodeId,
+    BuildContext? context,
+  }) async {
+    try {
+      final params = <String, String>{};
+      if (title != null) params['title'] = title;
+      if (year != null) params['year'] = year;
+      if (episode != null) params['episode'] = episode;
+      if (doubanId != null) params['douban_id'] = doubanId;
+      if (episodeId != null) params['episode_id'] = episodeId;
+
+      final response = await get<List<DanmuItem>>(
+        '/api/danmu-external',
+        queryParameters: params.isNotEmpty ? params : null,
+        context: context,
+        fromJson: (data) {
+          if (data is List) {
+            return data
+                .map((e) => DanmuItem.fromJson(e as Map<String, dynamic>))
+                .toList();
+          }
+          if (data is Map<String, dynamic>) {
+            final danmuList = data['danmu'] as List?;
+            if (danmuList != null) {
+              return danmuList
+                  .map((e) => DanmuItem.fromJson(e as Map<String, dynamic>))
+                  .toList();
+            }
+          }
+          return <DanmuItem>[];
+        },
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('获取弹幕数据失败: ${e.toString()}');
+    }
+  }
+
+  /// 搜索弹幕库中的动漫
+  static Future<ApiResponse<Map<String, dynamic>>> searchDanmuAnime(
+    String keyword, {
+    BuildContext? context,
+  }) async {
+    try {
+      final response = await get<Map<String, dynamic>>(
+        '/api/danmu-external/search',
+        queryParameters: {'keyword': keyword.trim()},
+        context: context,
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('搜索弹幕库失败: ${e.toString()}');
     }
   }
 }

@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dlna_device_dialog.dart';
 import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
+import '../services/user_data_service.dart';
 
 class MobilePlayerControls extends StatefulWidget {
   final dynamic player;
@@ -106,6 +107,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     _listenPlayerStreams();
     _updateCurrentTime();
     _startTimeUpdateTimer();
+    UserDataService.initDanmakuEnabled();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _forceStartHideTimer();
@@ -171,6 +173,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
             'MobilePlayerControls: error listening to player streams $e');
       }
     }
+  }
+
+  Future<void> _toggleDanmaku() async {
+    _onUserInteraction();
+    final newValue = !UserDataService.danmakuEnabledNotifier.value;
+    await UserDataService.saveDanmakuEnabled(newValue);
   }
 
   @override
@@ -1173,6 +1181,26 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                         size: _isFullscreen ? 22 : 20,
                       ),
                     ),
+                  ),
+                if (!widget.live)
+                  ValueListenableBuilder<bool>(
+                    valueListenable: UserDataService.danmakuEnabledNotifier,
+                    builder: (context, enabled, _) {
+                      return GestureDetector(
+                        onTap: _toggleDanmaku,
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.closed_caption,
+                            color: enabled
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.4),
+                            size: _isFullscreen ? 22 : 20,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 if (!widget.live)
                   GestureDetector(

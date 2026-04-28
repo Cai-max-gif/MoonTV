@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 
 class UserDataService {
   static const String _usernameKey = 'username';
@@ -36,6 +37,9 @@ class UserDataService {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static const int _maxLoginAttempts = 5;
   static const Duration _lockDuration = Duration(minutes: 15);
+
+  static final ValueNotifier<bool> danmakuEnabledNotifier =
+      ValueNotifier<bool>(true);
 
   // 保存用户登录信息（支持令牌认证）
   static Future<void> saveUserData({
@@ -307,9 +311,15 @@ class UserDataService {
 
   // ==================== 弹幕设置 ====================
 
+  static Future<void> initDanmakuEnabled() async {
+    final enabled = await getDanmakuEnabled();
+    danmakuEnabledNotifier.value = enabled;
+  }
+
   static Future<void> saveDanmakuEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_danmakuEnabledKey, enabled);
+    danmakuEnabledNotifier.value = enabled;
   }
 
   static Future<bool> getDanmakuEnabled() async {

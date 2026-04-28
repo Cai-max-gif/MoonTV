@@ -500,6 +500,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
+                          const Spacer(),
+                          MouseRegion(
+                            cursor: DeviceUtils.isPC()
+                                ? SystemMouseCursors.click
+                                : MouseCursor.defer,
+                            child: GestureDetector(
+                              onTap: () async {
+                                final url = Uri.parse(
+                                  'https://github.com/Cai-max-gif/MoonTV',
+                                );
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(
+                                    url,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                }
+                              },
+                              child: Text(
+                                _version.isEmpty ? 'v1.4.3' : 'v$_version',
+                                style: FontUtils.poppins(
+                                  fontSize: 14,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? const Color(0xFF9ca3af)
+                                      : const Color(0xFF6b7280),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -545,46 +575,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // 版本号
-          MouseRegion(
-            cursor: DeviceUtils.isPC()
-                ? SystemMouseCursors.click
-                : MouseCursor.defer,
-            child: GestureDetector(
-              onTap: () async {
-                final url = Uri.parse(
-                  'https://github.com/Cai-max-gif/MoonTV',
-                );
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(
-                    url,
-                    mode: LaunchMode.externalApplication,
-                  );
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                child: Center(
-                  child: Text(
-                    _version.isEmpty ? 'v1.4.3' : 'v$_version',
-                    style: FontUtils.poppins(
-                      fontSize: 14,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF9ca3af)
-                          : const Color(0xFF6b7280),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
 

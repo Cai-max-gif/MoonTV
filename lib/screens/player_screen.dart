@@ -16,9 +16,12 @@ import '../models/play_record.dart';
 import '../services/page_cache_service.dart';
 import '../services/download_service.dart';
 import '../models/download_task.dart';
+import '../models/danmu_item.dart';
 import '../widgets/switch_loading_overlay.dart';
 import '../widgets/dlna_player.dart';
 import '../widgets/dlna_device_dialog.dart';
+import '../widgets/danmu_layer.dart';
+import '../services/danmu_cache.dart';
 import '../utils/device_utils.dart';
 
 import '../widgets/player_episodes_panel.dart';
@@ -132,6 +135,17 @@ class _PlayerScreenState extends State<PlayerScreen>
   // 播放器的 GlobalKey，用于保持播放器状态
   final GlobalKey _playerKey = GlobalKey();
 
+  // 弹幕相关
+  List<DanmuItem> _danmuList = [];
+  final ValueNotifier<double> _currentTimeNotifier = ValueNotifier<double>(0.0);
+  bool _danmuLoaded = false;
+  double _danmuFontSize = 1.0;
+  double _danmuSpeed = 1.0;
+  double _danmuOpacity = 1.0;
+  double _danmuDisplayArea = 1.0;
+  int _danmuMaxCount = 100;
+  bool _danmuAntiBlock = true;
+
   @override
   void initState() {
     super.initState();
@@ -153,6 +167,11 @@ class _PlayerScreenState extends State<PlayerScreen>
     )..repeat();
     // 添加应用生命周期监听器
     WidgetsBinding.instance.addObserver(this);
+    UserDataService.danmakuEnabledNotifier.addListener(_onDanmakuEnabledChanged);
+  }
+
+  void _onDanmakuEnabledChanged() {
+    if (mounted) setState(() {});
   }
 
   /// 设置竖屏方向
@@ -810,21 +829,17 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   /// 处理视频播放器 ready 事件
   void _onVideoPlayerReady() {
-    // 视频播放器准备就绪时的处理逻辑
     debugPrint('Video player is ready!');
 
     setState(() {
-      // 隐藏切换加载蒙版
       _showSwitchLoadingOverlay = false;
     });
 
-    // 重置最后保存时间，允许立即保存
     _lastSaveTime = null;
-
-    // 添加视频播放状态监听器来触发保存检查
     _addVideoProgressListener();
 
-    // 延时三秒 seek 到 _resumeStartAt
+    _loadDanmu();
+
     if (_resumeStartAt != null) {
       final tmpStartAt = _resumeStartAt;
       _resumeStartAt = null;
@@ -855,6 +870,77 @@ class _PlayerScreenState extends State<PlayerScreen>
   void _onVideoProgressUpdate() {
     // 检查并保存进度（基于时间间隔）
     _checkAndSaveProgress();
+    // 同步弹幕时间
+    final position = _videoPlayerController?.currentPosition;
+    if (position != null) {
+      _currentTimeNotifier.value = position.inMilliseconds / 1000.0;
+    }
+  }
+
+  Future<void> _loadDanmu() async {
+    _danmuLoaded = false;
+    _danmuList = [];
+
+    final fontSize = await UserDataService.getDanmakuFontSize();
+    final speed = await UserDataService.getDanmakuSpeed();
+    final opacity = await UserDataService.getDanmakuOpacity();
+    final displayArea = await UserDataService.getDanmakuDisplayArea();
+    final maxCount = await UserDataService.getDanmakuMaxCount();
+    final antiBlock = await UserDataService.getDanmakuAntiBlock();
+    if (mounted) {
+      setState(() {
+        _danmuFontSize = fontSize;
+        _danmuSpeed = speed;
+        _danmuOpacity = opacity;
+        _danmuDisplayArea = displayArea;
+        _danmuMaxCount = maxCount;
+        _danmuAntiBlock = antiBlock;
+      });
+    }
+
+    final title = videoTitle;
+    final year = videoYear;
+    final episode =
+        currentEpisodeIndex < totalEpisodes ? '${currentEpisodeIndex + 1}' : '1';
+    final doubanId =
+        videoDoubanID > 0 ? videoDoubanID.toString() : null;
+
+    final cached = await DanmuCache.load(
+      title: title,
+      doubanId: doubanId,
+      episode: episode,
+    );
+    if (cached != null) {
+      if (mounted) {
+        setState(() {
+          _danmuList = cached;
+          _danmuLoaded = true;
+        });
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    final result = await ApiService.fetchDanmuExternal(
+      title: title,
+      year: year,
+      episode: episode,
+      doubanId: doubanId,
+      context: context,
+    );
+
+    if (result.success && result.data != null && mounted) {
+      await DanmuCache.save(
+        title: title,
+        doubanId: doubanId,
+        episode: episode,
+        data: result.data!,
+      );
+      setState(() {
+        _danmuList = result.data!;
+        _danmuLoaded = true;
+      });
+    }
   }
 
   /// 处理下一集按钮点击
@@ -1202,6 +1288,22 @@ class _PlayerScreenState extends State<PlayerScreen>
             onControllerCreated: (controller) {
               _dlnaPlayerController = controller;
             },
+          ),
+        // 弹幕渲染层
+        if (_danmuLoaded && _danmuList.isNotEmpty)
+          Positioned.fill(
+            child: DanmuLayer(
+              danmuList: _danmuList,
+              currentTime: _currentTimeNotifier,
+              fontSize: _danmuFontSize,
+              speed: _danmuSpeed,
+              opacity: _danmuOpacity,
+              displayArea: _danmuDisplayArea,
+              maxCount: _danmuMaxCount,
+              antiOverlap: _danmuAntiBlock,
+              visible:
+                  UserDataService.danmakuEnabledNotifier.value,
+            ),
           ),
         // 切换播放源/集数时的加载蒙版（只遮挡播放器）
         SwitchLoadingOverlay(
@@ -2610,6 +2712,9 @@ class _PlayerScreenState extends State<PlayerScreen>
     } catch (e) {
       debugPrint('Dispose error: $e');
     }
+    UserDataService.danmakuEnabledNotifier
+        .removeListener(_onDanmakuEnabledChanged);
+    _currentTimeNotifier.dispose();
     super.dispose();
   }
 

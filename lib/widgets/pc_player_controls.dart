@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dlna_device_dialog.dart';
 import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
+import '../services/user_data_service.dart';
 
 // 带 hover 效果的按钮组件
 class HoverButton extends StatefulWidget {
@@ -147,6 +148,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   void initState() {
     super.initState();
     _setupPlayerListeners();
+    UserDataService.initDanmakuEnabled();
     // 注册退出网页全屏的回调
     widget.onExitWebFullscreenCallbackReady?.call(exitWebFullscreen);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -182,6 +184,12 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         setState(() {});
       }
     });
+  }
+
+  Future<void> _toggleDanmaku() async {
+    _onUserInteraction();
+    final newValue = !UserDataService.danmakuEnabledNotifier.value;
+    await UserDataService.saveDanmakuEnabled(newValue);
   }
 
   @override
@@ -1019,6 +1027,25 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 color: Colors.white,
                                 size: effectiveFullscreen ? 22 : 20,
                               ),
+                            ),
+                          if (!widget.live)
+                            ValueListenableBuilder<bool>(
+                              valueListenable:
+                                  UserDataService.danmakuEnabledNotifier,
+                              builder: (context, enabled, _) {
+                                return HoverButton(
+                                  onTap: _toggleDanmaku,
+                                  child: Icon(
+                                    Icons.closed_caption,
+                                    color: enabled
+                                        ? Colors.white
+                                        : Colors.white
+                                            .withValues(alpha: 0.4),
+                                    size:
+                                        effectiveFullscreen ? 22 : 20,
+                                  ),
+                                );
+                              },
                             ),
                           if (!widget.live)
                             HoverButton(
