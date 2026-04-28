@@ -85,6 +85,7 @@ class PCPlayerControls extends StatefulWidget {
   final Future<void> Function(List<int> episodeIndices)?
       onBatchEpisodesDownload;
   final VoidCallback? onDanmakuSettings;
+  final bool isLocalFile;
 
   const PCPlayerControls({
     super.key,
@@ -113,6 +114,7 @@ class PCPlayerControls extends StatefulWidget {
     this.onSingleEpisodeDownload,
     this.onBatchEpisodesDownload,
     this.onDanmakuSettings,
+    this.isLocalFile = false,
   });
 
   @override
@@ -129,7 +131,6 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   Duration _swipeStartPosition = Duration.zero;
   StreamSubscription? _playingSubscription;
   StreamSubscription? _positionSubscription;
-  bool _isFullscreen = false;
   bool _isWebFullscreen = false;
   bool _showSpeedMenu = false;
   final GlobalKey _speedButtonKey = GlobalKey();
@@ -204,22 +205,6 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   @override
   void didUpdateWidget(PCPlayerControls oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 当 widget 更新时，尝试同步全屏状态
-    // 使用 try-catch 避免在不安全的时机访问 InheritedWidget
-    try {
-      final actualFullscreen = widget.state.isFullscreen();
-      if (_isFullscreen != actualFullscreen) {
-        // 检测到从全屏退出
-        if (_isFullscreen && !actualFullscreen) {
-          widget.onExitFullScreen?.call();
-        }
-        setState(() {
-          _isFullscreen = actualFullscreen;
-        });
-      }
-    } catch (e) {
-      // 如果无法安全获取状态，保持当前状态不变
-    }
   }
 
   @override
@@ -406,12 +391,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   }
 
   void _onBlankAreaDoubleTap() {
-    // 双击空白区域切换全屏
-    // 如果在网页全屏模式，先切换到真全屏
-    if (_isWebFullscreen && !_isFullscreen) {
-      _toggleWebFullscreen();
-    }
-    _toggleFullscreen();
+    _toggleWebFullscreen();
   }
 
   void _onSeekStart() {
@@ -483,16 +463,6 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     _startHideTimer();
   }
 
-  void _toggleFullscreen() {
-    // 直接触发全屏切换，不要提前更新本地状态
-    // 状态会在 didUpdateWidget 中同步
-    if (_isFullscreen) {
-      widget.state.exitFullscreen();
-    } else {
-      widget.state.enterFullscreen();
-    }
-  }
-
   void _toggleWebFullscreen() {
     final wasWebFullscreen = _isWebFullscreen;
     setState(() {
@@ -530,9 +500,9 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     }
 
     // 如果在全屏状态，通知父组件并退出全屏
-    if (_isFullscreen) {
+    if (_isWebFullscreen) {
       widget.onDLNAButtonPressed?.call(true);
-      _toggleFullscreen();
+      _toggleWebFullscreen();
     } else {
       // 非全屏状态，直接显示对话框
       await _showDLNADialogInternal();
@@ -565,8 +535,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     if (event is KeyDownEvent) {
       // ESC 键退出全屏
       if (event.logicalKey == LogicalKeyboardKey.escape) {
-        if (_isFullscreen) {
-          _toggleFullscreen();
+        if (_isWebFullscreen) {
+          _toggleWebFullscreen();
           return KeyEventResult.handled;
         }
       }
@@ -584,11 +554,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       }
       // F 键切换全屏
       else if (event.logicalKey == LogicalKeyboardKey.keyF) {
-        if (_isWebFullscreen) {
-          _toggleWebFullscreen();
-          return KeyEventResult.handled;
-        }
-        _toggleFullscreen();
+        _toggleWebFullscreen();
         return KeyEventResult.handled;
       }
       // 左方向键快退 10 秒
@@ -671,7 +637,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     }
 
     // 使用网页全屏或真全屏的样式
-    final effectiveFullscreen = _isWebFullscreen || _isFullscreen;
+    final effectiveFullscreen = _isWebFullscreen;
 
     return Focus(
       focusNode: _focusNode,
@@ -791,9 +757,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                   child: HoverButton(
                     onTap: () async {
                       _onUserInteraction();
-                      if (_isFullscreen) {
-                        _toggleFullscreen();
-                      } else if (_isWebFullscreen) {
+                      if (_isWebFullscreen) {
                         _toggleWebFullscreen();
                       } else {
                         widget.onBackPressed?.call();
@@ -808,29 +772,30 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                 ),
               ),
             ),
-            // 顶部投屏按钮
-            Positioned(
-              top: effectiveFullscreen ? 8 : 4,
-              right: effectiveFullscreen ? 16.0 : 8.0,
-              child: AnimatedOpacity(
-                opacity: _controlsVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                child: IgnorePointer(
-                  ignoring: !_controlsVisible,
-                  child: HoverButton(
-                    onTap: () async {
-                      _onUserInteraction();
-                      await _showDLNADialog();
-                    },
-                    child: Icon(
-                      Icons.cast,
-                      color: Colors.white,
-                      size: effectiveFullscreen ? 24 : 20,
+            // 顶部投屏按钮（本地文件播放时隐藏）
+            if (!widget.isLocalFile)
+              Positioned(
+                top: effectiveFullscreen ? 8 : 4,
+                right: effectiveFullscreen ? 16.0 : 8.0,
+                child: AnimatedOpacity(
+                  opacity: _controlsVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !_controlsVisible,
+                    child: HoverButton(
+                      onTap: () async {
+                        _onUserInteraction();
+                        await _showDLNADialog();
+                      },
+                      child: Icon(
+                        Icons.cast,
+                        color: Colors.white,
+                        size: effectiveFullscreen ? 24 : 20,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
             // 中央播放/暂停按钮 - 暂停时始终显示
             Positioned.fill(
               child: Center(
@@ -1018,7 +983,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                             Expanded(
                               child: _buildPositionIndicator(),
                             ),
-                          if (!widget.live)
+                          if (!widget.live && !widget.isLocalFile)
                             HoverButton(
                               onTap: () {
                                 _onUserInteraction();
@@ -1031,7 +996,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 size: effectiveFullscreen ? 22 : 20,
                               ),
                             ),
-                          if (!widget.live)
+                          if (!widget.live && !widget.isLocalFile)
                             ValueListenableBuilder<bool>(
                               valueListenable:
                                   UserDataService.danmakuEnabledNotifier,
@@ -1110,36 +1075,19 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               ),
                             ),
                           if (widget.live) const Spacer(),
-                          // 网页全屏按钮（仅在非真全屏时显示）
-                          if (!_isFullscreen)
-                            HoverButton(
-                              onTap: () {
-                                _onUserInteraction();
-                                _toggleWebFullscreen();
-                              },
-                              child: Icon(
-                                _isWebFullscreen
-                                    ? Icons.fullscreen_exit
-                                    : Icons.fit_screen,
-                                color: Colors.white,
-                                size: effectiveFullscreen ? 28 : 24,
-                              ),
+                          HoverButton(
+                            onTap: () {
+                              _onUserInteraction();
+                              _toggleWebFullscreen();
+                            },
+                            child: Icon(
+                              _isWebFullscreen
+                                  ? Icons.fullscreen_exit
+                                  : Icons.fullscreen,
+                              color: Colors.white,
+                              size: effectiveFullscreen ? 28 : 24,
                             ),
-                          // 完全全屏按钮（仅在非网页全屏时显示）
-                          if (!_isWebFullscreen)
-                            HoverButton(
-                              onTap: () {
-                                _onUserInteraction();
-                                _toggleFullscreen();
-                              },
-                              child: Icon(
-                                _isFullscreen
-                                    ? Icons.fullscreen_exit
-                                    : Icons.fullscreen,
-                                color: Colors.white,
-                                size: effectiveFullscreen ? 28 : 24,
-                              ),
-                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1182,7 +1130,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     final buttonSize = renderBox.size;
 
     // 根据全屏状态调整弹窗大小
-    final effectiveFullscreen = _isWebFullscreen || _isFullscreen;
+    final effectiveFullscreen = _isWebFullscreen;
     final menuWidth = effectiveFullscreen ? 120.0 : 90.0;
     final itemHeight = effectiveFullscreen ? 48.0 : 36.0;
     final menuHeight = speeds.length * itemHeight;
@@ -1190,7 +1138,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     final menuLeft =
         buttonPosition.dx + (buttonSize.width / 2) - (menuWidth / 2);
     // 计算垂直位置：按钮顶部 - 弹框高度 - 间距
-    final menuTop = buttonPosition.dy - menuHeight - (_isFullscreen ? 2 : 36);
+    final menuTop =
+        buttonPosition.dy - menuHeight - (_isWebFullscreen ? 2 : 36);
 
     return Positioned(
       left: menuLeft,
@@ -1268,7 +1217,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     final buttonSize = renderBox.size;
 
     // 根据全屏状态调整弹窗大小 - 更高更瘦
-    final effectiveFullscreen = _isWebFullscreen || _isFullscreen;
+    final effectiveFullscreen = _isWebFullscreen;
     final menuWidth = effectiveFullscreen ? 42.0 : 36.0;
     final menuHeight = effectiveFullscreen ? 200.0 : 150.0;
 
@@ -1276,7 +1225,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     final menuLeft =
         buttonPosition.dx + (buttonSize.width / 2) - (menuWidth / 2);
     // 计算垂直位置：按钮顶部 - 弹框高度 - 间距
-    final menuTop = buttonPosition.dy - menuHeight - (_isFullscreen ? 2 : 36);
+    final menuTop =
+        buttonPosition.dy - menuHeight - (_isWebFullscreen ? 2 : 36);
 
     return Positioned(
       left: menuLeft,

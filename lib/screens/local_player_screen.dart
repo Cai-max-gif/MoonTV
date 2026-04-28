@@ -60,6 +60,7 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
             onBackPressed: _onBackPressed,
             videoTitle: widget.title,
             live: false,
+            isLocalFile: true,
           ),
         ),
       ),

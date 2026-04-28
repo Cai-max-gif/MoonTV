@@ -172,10 +172,33 @@ class _PlayerScreenState extends State<PlayerScreen>
     WidgetsBinding.instance.addObserver(this);
     UserDataService.danmakuEnabledNotifier
         .addListener(_onDanmakuEnabledChanged);
+    UserDataService.danmakuSpeedNotifier
+        .addListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuOpacityNotifier
+        .addListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuFontSizeNotifier
+        .addListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuDisplayAreaNotifier
+        .addListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuAntiBlockNotifier
+        .addListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuSyncSpeedNotifier
+        .addListener(_onDanmakuSettingChanged);
   }
 
   void _onDanmakuEnabledChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _onDanmakuSettingChanged() {
+    if (!mounted) return;
+    _danmuFontSize = UserDataService.danmakuFontSizeNotifier.value;
+    _danmuSpeedIndex = UserDataService.danmakuSpeedNotifier.value;
+    _danmuOpacity = UserDataService.danmakuOpacityNotifier.value;
+    _danmuDisplayArea = UserDataService.danmakuDisplayAreaNotifier.value;
+    _danmuAntiBlock = UserDataService.danmakuAntiBlockNotifier.value;
+    _danmuSyncSpeed = UserDataService.danmakuSyncSpeedNotifier.value;
+    setState(() {});
   }
 
   void _openDanmakuSettings() {
@@ -2752,6 +2775,18 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
     UserDataService.danmakuEnabledNotifier
         .removeListener(_onDanmakuEnabledChanged);
+    UserDataService.danmakuSpeedNotifier
+        .removeListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuOpacityNotifier
+        .removeListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuFontSizeNotifier
+        .removeListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuDisplayAreaNotifier
+        .removeListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuAntiBlockNotifier
+        .removeListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuSyncSpeedNotifier
+        .removeListener(_onDanmakuSettingChanged);
     _currentTimeNotifier.dispose();
     super.dispose();
   }

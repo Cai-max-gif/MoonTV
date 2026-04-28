@@ -300,6 +300,21 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
 
   List<DownloadTask> _sortTasks(List<DownloadTask> tasks) {
     tasks.sort((a, b) {
+      final aCompleted = a.completedAt;
+      final bCompleted = b.completedAt;
+
+      if (aCompleted != null && bCompleted != null) {
+        return bCompleted.compareTo(aCompleted);
+      }
+
+      if (aCompleted != null) {
+        return -1;
+      }
+
+      if (bCompleted != null) {
+        return 1;
+      }
+
       final titleCompare = a.title.compareTo(b.title);
       if (titleCompare != 0) return titleCompare;
       return a.episodeIndex.compareTo(b.episodeIndex);

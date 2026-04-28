@@ -74,6 +74,7 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
   Future<void> _loadSettings() async {
     UserDataService.initDanmakuEnabled();
+    UserDataService.initDanmakuSettings();
     final speedIndex = await UserDataService.getDanmakuSpeed();
     final opacity = await UserDataService.getDanmakuOpacity();
     final fontSize = await UserDataService.getDanmakuFontSize();

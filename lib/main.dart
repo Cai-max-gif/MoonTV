@@ -111,6 +111,7 @@ class _AppWrapperState extends State<AppWrapper> {
     _checkLoginStatus();
     _startAccountStatusCheck();
     UserDataService.initDanmakuEnabled();
+    UserDataService.initDanmakuSettings();
   }
 
   @override

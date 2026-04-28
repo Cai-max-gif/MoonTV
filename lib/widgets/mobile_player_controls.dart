@@ -43,6 +43,7 @@ class MobilePlayerControls extends StatefulWidget {
   final Future<void> Function(List<int> episodeIndices)?
       onBatchEpisodesDownload;
   final VoidCallback? onDanmakuSettings;
+  final bool isLocalFile;
 
   const MobilePlayerControls({
     super.key,
@@ -72,6 +73,7 @@ class MobilePlayerControls extends StatefulWidget {
     this.onSingleEpisodeDownload,
     this.onBatchEpisodesDownload,
     this.onDanmakuSettings,
+    this.isLocalFile = false,
   });
 
   @override
@@ -1008,6 +1010,9 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   }
 
   Widget _buildCastButton() {
+    if (widget.isLocalFile) {
+      return const SizedBox.shrink();
+    }
     return Positioned(
       top: _isFullscreen ? 8 : 4,
       right: _isFullscreen ? 16.0 : 8.0,
@@ -1168,7 +1173,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     ),
                   ),
                 if (widget.live) const Spacer(),
-                if (!widget.live)
+                if (!widget.live && !widget.isLocalFile)
                   GestureDetector(
                     onTap: () {
                       _onUserInteraction();
@@ -1185,7 +1190,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                       ),
                     ),
                   ),
-                if (!widget.live)
+                if (!widget.live && !widget.isLocalFile)
                   ValueListenableBuilder<bool>(
                     valueListenable: UserDataService.danmakuEnabledNotifier,
                     builder: (context, enabled, _) {

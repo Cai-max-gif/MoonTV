@@ -40,6 +40,17 @@ class UserDataService {
 
   static final ValueNotifier<bool> danmakuEnabledNotifier =
       ValueNotifier<bool>(true);
+  static final ValueNotifier<int> danmakuSpeedNotifier = ValueNotifier<int>(2);
+  static final ValueNotifier<int> danmakuOpacityNotifier =
+      ValueNotifier<int>(100);
+  static final ValueNotifier<double> danmakuFontSizeNotifier =
+      ValueNotifier<double>(1.0);
+  static final ValueNotifier<double> danmakuDisplayAreaNotifier =
+      ValueNotifier<double>(1.0);
+  static final ValueNotifier<bool> danmakuAntiBlockNotifier =
+      ValueNotifier<bool>(true);
+  static final ValueNotifier<bool> danmakuSyncSpeedNotifier =
+      ValueNotifier<bool>(true);
 
   // 保存用户登录信息（支持令牌认证）
   static Future<void> saveUserData({
@@ -316,6 +327,15 @@ class UserDataService {
     danmakuEnabledNotifier.value = enabled;
   }
 
+  static Future<void> initDanmakuSettings() async {
+    danmakuSpeedNotifier.value = await getDanmakuSpeed();
+    danmakuOpacityNotifier.value = await getDanmakuOpacity();
+    danmakuFontSizeNotifier.value = await getDanmakuFontSize();
+    danmakuDisplayAreaNotifier.value = await getDanmakuDisplayArea();
+    danmakuAntiBlockNotifier.value = await getDanmakuAntiBlock();
+    danmakuSyncSpeedNotifier.value = await getDanmakuSyncSpeed();
+  }
+
   static Future<void> saveDanmakuEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_danmakuEnabledKey, enabled);
@@ -328,8 +348,10 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuSpeed(int speedIndex) async {
+    final clamped = speedIndex.clamp(0, 4);
+    danmakuSpeedNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_danmakuSpeedKey, speedIndex.clamp(0, 4));
+    await prefs.setInt(_danmakuSpeedKey, clamped);
   }
 
   static Future<int> getDanmakuSpeed() async {
@@ -342,8 +364,10 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuOpacity(int opacity) async {
+    final clamped = opacity.clamp(0, 100);
+    danmakuOpacityNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_danmakuOpacityKey, opacity.clamp(0, 100));
+    await prefs.setInt(_danmakuOpacityKey, clamped);
   }
 
   static Future<int> getDanmakuOpacity() async {
@@ -356,8 +380,10 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuFontSize(double fontSize) async {
+    final clamped = fontSize.clamp(0.5, 2.0);
+    danmakuFontSizeNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_danmakuFontSizeKey, fontSize.clamp(0.5, 2.0));
+    await prefs.setDouble(_danmakuFontSizeKey, clamped);
   }
 
   static Future<double> getDanmakuFontSize() async {
@@ -366,8 +392,10 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuDisplayArea(double area) async {
+    final clamped = area.clamp(0.25, 1.0);
+    danmakuDisplayAreaNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_danmakuDisplayAreaKey, area.clamp(0.25, 1.0));
+    await prefs.setDouble(_danmakuDisplayAreaKey, clamped);
   }
 
   static Future<double> getDanmakuDisplayArea() async {
@@ -376,6 +404,7 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuAntiBlock(bool enabled) async {
+    danmakuAntiBlockNotifier.value = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_danmakuAntiBlockKey, enabled);
   }
@@ -386,6 +415,7 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuSyncSpeed(bool enabled) async {
+    danmakuSyncSpeedNotifier.value = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_danmakuSyncSpeedKey, enabled);
   }

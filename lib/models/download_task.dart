@@ -23,6 +23,7 @@ class DownloadTask {
   int downloadedBytes;
   int retryCount;
   DateTime createdAt;
+  DateTime? completedAt;
 
   final String localFileName;
 
@@ -40,6 +41,7 @@ class DownloadTask {
     this.downloadedBytes = 0,
     this.retryCount = 0,
     DateTime? createdAt,
+    this.completedAt,
     String? localFileName,
   })  : localFileName = localFileName ??
             _generateLocalFileName(title, episodeTitle, episodeIndex),
@@ -85,6 +87,7 @@ class DownloadTask {
       'total_bytes': totalBytes,
       'downloaded_bytes': downloadedBytes,
       'created_at': createdAt.millisecondsSinceEpoch,
+      'completed_at': completedAt?.millisecondsSinceEpoch,
       'local_file_name': localFileName,
       'retry_count': retryCount,
     };
@@ -106,6 +109,9 @@ class DownloadTask {
       createdAt: json['created_at'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int)
           : DateTime.now(),
+      completedAt: json['completed_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['completed_at'] as int)
+          : null,
       localFileName: json['local_file_name']?.toString(),
       retryCount: json['retry_count'] as int? ?? 0,
     );
@@ -125,6 +131,7 @@ class DownloadTask {
     int? downloadedBytes,
     int? retryCount,
     DateTime? createdAt,
+    DateTime? completedAt,
     String? localFileName,
   }) {
     return DownloadTask(
@@ -141,6 +148,7 @@ class DownloadTask {
       downloadedBytes: downloadedBytes ?? this.downloadedBytes,
       retryCount: retryCount ?? this.retryCount,
       createdAt: createdAt ?? this.createdAt,
+      completedAt: completedAt ?? this.completedAt,
       localFileName: localFileName ?? this.localFileName,
     );
   }

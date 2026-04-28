@@ -91,20 +91,38 @@ class DownloadService extends ChangeNotifier {
             task.status = DownloadStatus.paused;
           }
           if (task.status == DownloadStatus.completed) {
-            if (!File(task.localFilePath).existsSync()) {
-              task.status = DownloadStatus.failed;
-            } else {
-              try {
-                final tempDir = Directory('${task.localFilePath}_temp');
-                if (tempDir.existsSync()) {
-                  tempDir.deleteSync(recursive: true);
+            final originalFilePath = task.localFilePath;
+            if (!File(originalFilePath).existsSync()) {
+              if (_savePath.isNotEmpty && task.savePath != _savePath) {
+                final alternativePath =
+                    _savePath + (Platform.pathSeparator) + task.localFileName;
+                if (File(alternativePath).existsSync()) {
+                  task.savePath = _savePath;
+                } else if (task.savePath.isEmpty && _savePath.isNotEmpty) {
+                  task.savePath = _savePath;
+                } else {
+                  task.status = DownloadStatus.failed;
+                  continue;
                 }
-              } catch (_) {}
+              } else if (task.savePath.isEmpty && _savePath.isNotEmpty) {
+                task.savePath = _savePath;
+              } else {
+                task.status = DownloadStatus.failed;
+                continue;
+              }
             }
+            try {
+              final tempDir = Directory('${task.localFilePath}_temp');
+              if (tempDir.existsSync()) {
+                tempDir.deleteSync(recursive: true);
+              }
+            } catch (_) {}
           }
         }
 
         _normalizeRetryingTasks();
+
+        await _scanLocalDownloads();
 
         notifyListeners();
       } catch (e) {
@@ -224,7 +242,8 @@ class DownloadService extends ChangeNotifier {
   }
 
   void _swapQueueIfNeeded(String targetTaskId) {
-    final downloading = _tasks.where((t) => t.status == DownloadStatus.downloading).toList();
+    final downloading =
+        _tasks.where((t) => t.status == DownloadStatus.downloading).toList();
 
     if (downloading.length >= _maxConcurrentDownloads) {
       final excess = downloading.length - _maxConcurrentDownloads + 1;
@@ -394,12 +413,14 @@ class DownloadService extends ChangeNotifier {
 
         notifyListeners();
       },
-    ).then((_) {
+    )
+        .then((_) {
       final idx = _tasks.indexWhere((t) => t.id == task.id);
       if (idx >= 0) {
         _tasks[idx].status = DownloadStatus.completed;
         _tasks[idx].progress = 1.0;
         _tasks[idx].retryCount = 0;
+        _tasks[idx].completedAt = DateTime.now();
         notifyListeners();
       }
       _activeEngines.remove(task.id);
@@ -420,8 +441,7 @@ class DownloadService extends ChangeNotifier {
 
         Future.delayed(const Duration(seconds: 2), () {
           final idx2 = _tasks.indexWhere((t) => t.id == task.id);
-          if (idx2 >= 0 &&
-              _tasks[idx2].status == DownloadStatus.retrying) {
+          if (idx2 >= 0 && _tasks[idx2].status == DownloadStatus.retrying) {
             _tasks[idx2].status = DownloadStatus.queued;
             notifyListeners();
             _saveTasks();
@@ -452,6 +472,115 @@ class DownloadService extends ChangeNotifier {
         tempDir.deleteSync(recursive: true);
       }
     } catch (_) {}
+  }
+
+  Future<void> _scanLocalDownloads() async {
+    final existingFileNames = _tasks
+        .where((t) => t.status == DownloadStatus.completed)
+        .map((t) => t.localFileName)
+        .toSet();
+
+    bool hasNewTasks = false;
+
+    if (_savePath.isNotEmpty) {
+      hasNewTasks =
+          await _scanDirectory(_savePath, existingFileNames) || hasNewTasks;
+    }
+
+    final defaultDir = await StorageUtils.getDefaultDownloadDirectory();
+    if (defaultDir != null && defaultDir.path != _savePath) {
+      hasNewTasks = await _scanDirectory(defaultDir.path, existingFileNames) ||
+          hasNewTasks;
+    }
+
+    if (hasNewTasks) {
+      await _saveTasks();
+    }
+  }
+
+  Future<bool> _scanDirectory(
+      String dirPath, Set<String> existingFileNames) async {
+    final downloadDir = Directory(dirPath);
+    if (!await downloadDir.exists()) {
+      return false;
+    }
+
+    bool hasNewTasks = false;
+
+    try {
+      final files = downloadDir.listSync().where((entity) {
+        return entity is File && entity.path.endsWith('.ts');
+      }).cast<File>();
+
+      for (final file in files) {
+        final fileName = file.path.split(Platform.pathSeparator).last;
+        if (existingFileNames.contains(fileName)) {
+          continue;
+        }
+
+        final task = _parseFileNameToTask(fileName, dirPath);
+        if (task != null) {
+          _tasks.add(task);
+          existingFileNames.add(fileName);
+          hasNewTasks = true;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error scanning directory $dirPath: $e');
+    }
+
+    return hasNewTasks;
+  }
+
+  DownloadTask? _parseFileNameToTask(String fileName, String savePath) {
+    final match = RegExp(r'^(.+)_第(\d+)集_(\d+)\.ts$').firstMatch(fileName);
+    if (match != null) {
+      final title = match.group(1) ?? '';
+      final episodeNum = match.group(2) ?? '';
+      final episodeIndex = int.tryParse(match.group(3) ?? '0') ?? 0;
+
+      if (title.isNotEmpty) {
+        return DownloadTask(
+          id: 'local_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode}',
+          title: title,
+          episodeTitle: '第$episodeNum集',
+          episodeIndex: episodeIndex,
+          cover: '',
+          videoUrl: '',
+          savePath: savePath,
+          progress: 1.0,
+          status: DownloadStatus.completed,
+          totalBytes: 0,
+          downloadedBytes: 0,
+          localFileName: fileName,
+        );
+      }
+    }
+
+    final simpleMatch = RegExp(r'^(.+)_(\d+)\.ts$').firstMatch(fileName);
+    if (simpleMatch != null) {
+      final title = simpleMatch.group(1) ?? '';
+      final episodeIndex = int.tryParse(simpleMatch.group(2) ?? '0') ?? 0;
+
+      if (title.isNotEmpty) {
+        return DownloadTask(
+          id: 'local_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode}',
+          title: title,
+          episodeTitle: '第$episodeIndex集',
+          episodeIndex: episodeIndex,
+          cover: '',
+          videoUrl: '',
+          savePath: savePath,
+          progress: 1.0,
+          status: DownloadStatus.completed,
+          totalBytes: 0,
+          downloadedBytes: 0,
+          localFileName: fileName,
+        );
+      }
+    }
+
+    return null;
   }
 
   @override
