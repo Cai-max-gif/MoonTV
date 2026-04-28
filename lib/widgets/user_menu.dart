@@ -544,7 +544,7 @@ class _UserMenuState extends State<UserMenu> {
                           ),
                           child: Center(
                             child: Text(
-                              _version.isEmpty ? 'v1.4.3' : 'v$_version',
+                              _version.isEmpty ? '1.4.3' : _version,
                               style: FontUtils.poppins(
                                 fontSize: 14,
                                 color: widget.isDarkMode

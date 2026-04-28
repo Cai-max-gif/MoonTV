@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dlna_device_dialog.dart';
 import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/user_data_service.dart';
 
 class MobilePlayerControls extends StatefulWidget {
@@ -39,7 +40,9 @@ class MobilePlayerControls extends StatefulWidget {
   final List<String>? episodes;
   final List<String>? episodesTitles;
   final Function(int episodeIndex)? onSingleEpisodeDownload;
-  final Function(List<int> episodeIndices)? onBatchEpisodesDownload;
+  final Future<void> Function(List<int> episodeIndices)?
+      onBatchEpisodesDownload;
+  final VoidCallback? onDanmakuSettings;
 
   const MobilePlayerControls({
     super.key,
@@ -68,6 +71,7 @@ class MobilePlayerControls extends StatefulWidget {
     this.episodesTitles,
     this.onSingleEpisodeDownload,
     this.onBatchEpisodesDownload,
+    this.onDanmakuSettings,
   });
 
   @override
@@ -175,10 +179,9 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     }
   }
 
-  Future<void> _toggleDanmaku() async {
+  void _openDanmakuSettings() {
     _onUserInteraction();
-    final newValue = !UserDataService.danmakuEnabledNotifier.value;
-    await UserDataService.saveDanmakuEnabled(newValue);
+    widget.onDanmakuSettings?.call();
   }
 
   @override
@@ -580,8 +583,8 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 onSingleEpisodeTap: (index) {
                   widget.onSingleEpisodeDownload?.call(index);
                 },
-                onBatchDownload: (indices) {
-                  widget.onBatchEpisodesDownload?.call(indices);
+                onBatchDownload: (indices) async {
+                  await widget.onBatchEpisodesDownload?.call(indices);
                 },
                 onToggleOrder: () {},
               ),
@@ -1187,16 +1190,19 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     valueListenable: UserDataService.danmakuEnabledNotifier,
                     builder: (context, enabled, _) {
                       return GestureDetector(
-                        onTap: _toggleDanmaku,
+                        onTap: _openDanmakuSettings,
                         behavior: HitTestBehavior.opaque,
                         child: Container(
                           padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.closed_caption,
-                            color: enabled
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.4),
-                            size: _isFullscreen ? 22 : 20,
+                          child: Opacity(
+                            opacity: enabled ? 1.0 : 0.4,
+                            child: SvgPicture.asset(
+                              'danmu.svg',
+                              width: _isFullscreen ? 22 : 20,
+                              height: _isFullscreen ? 22 : 20,
+                              colorFilter: const ColorFilter.mode(
+                                  Colors.white, BlendMode.srcIn),
+                            ),
                           ),
                         ),
                       );

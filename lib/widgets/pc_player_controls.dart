@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dlna_device_dialog.dart';
 import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/user_data_service.dart';
 
 // 带 hover 效果的按钮组件
@@ -81,7 +82,9 @@ class PCPlayerControls extends StatefulWidget {
   final List<String>? episodes;
   final List<String>? episodesTitles;
   final Function(int episodeIndex)? onSingleEpisodeDownload;
-  final Function(List<int> episodeIndices)? onBatchEpisodesDownload;
+  final Future<void> Function(List<int> episodeIndices)?
+      onBatchEpisodesDownload;
+  final VoidCallback? onDanmakuSettings;
 
   const PCPlayerControls({
     super.key,
@@ -109,6 +112,7 @@ class PCPlayerControls extends StatefulWidget {
     this.episodesTitles,
     this.onSingleEpisodeDownload,
     this.onBatchEpisodesDownload,
+    this.onDanmakuSettings,
   });
 
   @override
@@ -186,10 +190,9 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     });
   }
 
-  Future<void> _toggleDanmaku() async {
+  void _openDanmakuSettings() {
     _onUserInteraction();
-    final newValue = !UserDataService.danmakuEnabledNotifier.value;
-    await UserDataService.saveDanmakuEnabled(newValue);
+    widget.onDanmakuSettings?.call();
   }
 
   @override
@@ -340,8 +343,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                     onSingleEpisodeTap: (index) {
                       widget.onSingleEpisodeDownload?.call(index);
                     },
-                    onBatchDownload: (indices) {
-                      widget.onBatchEpisodesDownload?.call(indices);
+                    onBatchDownload: (indices) async {
+                      await widget.onBatchEpisodesDownload?.call(indices);
                     },
                     onToggleOrder: () {},
                   ),
@@ -377,8 +380,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             onSingleEpisodeTap: (index) {
               widget.onSingleEpisodeDownload?.call(index);
             },
-            onBatchDownload: (indices) {
-              widget.onBatchEpisodesDownload?.call(indices);
+            onBatchDownload: (indices) async {
+              await widget.onBatchEpisodesDownload?.call(indices);
             },
             onToggleOrder: () {},
           ),
@@ -1034,15 +1037,16 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                   UserDataService.danmakuEnabledNotifier,
                               builder: (context, enabled, _) {
                                 return HoverButton(
-                                  onTap: _toggleDanmaku,
-                                  child: Icon(
-                                    Icons.closed_caption,
-                                    color: enabled
-                                        ? Colors.white
-                                        : Colors.white
-                                            .withValues(alpha: 0.4),
-                                    size:
-                                        effectiveFullscreen ? 22 : 20,
+                                  onTap: _openDanmakuSettings,
+                                  child: Opacity(
+                                    opacity: enabled ? 1.0 : 0.4,
+                                    child: SvgPicture.asset(
+                                      'danmu.svg',
+                                      width: effectiveFullscreen ? 22 : 20,
+                                      height: effectiveFullscreen ? 22 : 20,
+                                      colorFilter: const ColorFilter.mode(
+                                          Colors.white, BlendMode.srcIn),
+                                    ),
                                   ),
                                 );
                               },

@@ -18,6 +18,7 @@ import '../services/download_service.dart';
 import '../models/download_task.dart';
 import '../models/danmu_item.dart';
 import '../widgets/switch_loading_overlay.dart';
+import 'danmaku_settings_screen.dart';
 import '../widgets/dlna_player.dart';
 import '../widgets/dlna_device_dialog.dart';
 import '../widgets/danmu_layer.dart';
@@ -140,11 +141,13 @@ class _PlayerScreenState extends State<PlayerScreen>
   final ValueNotifier<double> _currentTimeNotifier = ValueNotifier<double>(0.0);
   bool _danmuLoaded = false;
   double _danmuFontSize = 1.0;
-  double _danmuSpeed = 1.0;
-  double _danmuOpacity = 1.0;
+  int _danmuSpeedIndex = 2;
+  int _danmuOpacity = 100;
   double _danmuDisplayArea = 1.0;
-  int _danmuMaxCount = 100;
   bool _danmuAntiBlock = true;
+  bool _danmuSyncSpeed = true;
+  double _videoPlaybackSpeed = 1.0;
+  bool _showDanmakuSettings = false;
 
   @override
   void initState() {
@@ -167,11 +170,23 @@ class _PlayerScreenState extends State<PlayerScreen>
     )..repeat();
     // 添加应用生命周期监听器
     WidgetsBinding.instance.addObserver(this);
-    UserDataService.danmakuEnabledNotifier.addListener(_onDanmakuEnabledChanged);
+    UserDataService.danmakuEnabledNotifier
+        .addListener(_onDanmakuEnabledChanged);
   }
 
   void _onDanmakuEnabledChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _openDanmakuSettings() {
+    setState(() => _showDanmakuSettings = true);
+  }
+
+  void _closeDanmakuSettings() {
+    setState(() => _showDanmakuSettings = false);
+    if (UserDataService.danmakuEnabledNotifier.value && !_danmuLoaded) {
+      _loadDanmu();
+    }
   }
 
   /// 设置竖屏方向
@@ -472,6 +487,12 @@ class _PlayerScreenState extends State<PlayerScreen>
         _saveProgressWithController(controller, force: true, scene: '返回按钮');
       }
 
+      if (controller != null) {
+        try {
+          await controller.dispose();
+        } catch (_) {}
+      }
+
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -519,7 +540,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
   }
 
-  void _onBatchEpisodesDownload(List<int> episodeIndices) {
+  Future<void> _onBatchEpisodesDownload(List<int> episodeIndices) async {
     if (currentDetail == null) return;
 
     int count = 0;
@@ -537,7 +558,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           ? currentDetail!.episodesTitles[realIndex]
           : '第$epIndex集';
 
-      _createDownloadTask(
+      await _createDownloadTask(
         url: url,
         title: title,
         poster: poster,
@@ -561,13 +582,13 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
   }
 
-  void _createDownloadTask({
+  Future<void> _createDownloadTask({
     required String url,
     required String title,
     required String poster,
     required String episodeTitle,
     required int episodeIndex,
-  }) {
+  }) async {
     final downloadService = DownloadService();
     final taskId =
         '${title}_${episodeTitle}_${DateTime.now().millisecondsSinceEpoch}';
@@ -582,7 +603,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       savePath: downloadService.savePath,
     );
 
-    downloadService.addTask(task);
+    await downloadService.addTask(task);
   }
 
   // 退出网页全屏
@@ -868,42 +889,51 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   /// 视频播放进度更新回调
   void _onVideoProgressUpdate() {
-    // 检查并保存进度（基于时间间隔）
     _checkAndSaveProgress();
-    // 同步弹幕时间
     final position = _videoPlayerController?.currentPosition;
     if (position != null) {
       _currentTimeNotifier.value = position.inMilliseconds / 1000.0;
     }
+    final speed = _videoPlayerController?.playbackSpeed ?? 1.0;
+    if (speed != _videoPlaybackSpeed) {
+      _videoPlaybackSpeed = speed;
+    }
   }
 
   Future<void> _loadDanmu() async {
+    debugPrint(
+        '弹幕加载开始: title=$videoTitle, year=$videoYear, episode=${currentEpisodeIndex + 1}/$totalEpisodes, doubanId=$videoDoubanID');
     _danmuLoaded = false;
     _danmuList = [];
 
     final fontSize = await UserDataService.getDanmakuFontSize();
-    final speed = await UserDataService.getDanmakuSpeed();
+    final speedIndex = await UserDataService.getDanmakuSpeed();
     final opacity = await UserDataService.getDanmakuOpacity();
     final displayArea = await UserDataService.getDanmakuDisplayArea();
-    final maxCount = await UserDataService.getDanmakuMaxCount();
     final antiBlock = await UserDataService.getDanmakuAntiBlock();
+    final syncSpeed = await UserDataService.getDanmakuSyncSpeed();
+    final videoSpeed = _videoPlayerController?.playbackSpeed ?? 1.0;
     if (mounted) {
       setState(() {
         _danmuFontSize = fontSize;
-        _danmuSpeed = speed;
+        _danmuSpeedIndex = speedIndex;
         _danmuOpacity = opacity;
         _danmuDisplayArea = displayArea;
-        _danmuMaxCount = maxCount;
         _danmuAntiBlock = antiBlock;
+        _danmuSyncSpeed = syncSpeed;
+        _videoPlaybackSpeed = videoSpeed;
       });
     }
 
     final title = videoTitle;
     final year = videoYear;
-    final episode =
-        currentEpisodeIndex < totalEpisodes ? '${currentEpisodeIndex + 1}' : '1';
-    final doubanId =
-        videoDoubanID > 0 ? videoDoubanID.toString() : null;
+    final episode = currentEpisodeIndex < totalEpisodes
+        ? '${currentEpisodeIndex + 1}'
+        : '1';
+    final doubanId = videoDoubanID > 0 ? videoDoubanID.toString() : null;
+
+    debugPrint(
+        '弹幕加载: 查询参数 title=$title, year=$year, episode=$episode, doubanId=$doubanId');
 
     final cached = await DanmuCache.load(
       title: title,
@@ -911,6 +941,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       episode: episode,
     );
     if (cached != null) {
+      debugPrint('弹幕加载成功(缓存): 共${cached.length}条');
       if (mounted) {
         setState(() {
           _danmuList = cached;
@@ -921,6 +952,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
 
     if (!mounted) return;
+    debugPrint('弹幕加载: 缓存未命中，请求远程API...');
     final result = await ApiService.fetchDanmuExternal(
       title: title,
       year: year,
@@ -930,6 +962,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
 
     if (result.success && result.data != null && mounted) {
+      debugPrint('弹幕加载成功(API): 共${result.data!.length}条');
       await DanmuCache.save(
         title: title,
         doubanId: doubanId,
@@ -940,6 +973,9 @@ class _PlayerScreenState extends State<PlayerScreen>
         _danmuList = result.data!;
         _danmuLoaded = true;
       });
+    } else {
+      debugPrint(
+          '弹幕加载失败: success=${result.success}, data=${result.data}, message=${result.message}');
     }
   }
 
@@ -1234,6 +1270,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     final isPC = DeviceUtils.isPC();
 
     return Stack(
+      clipBehavior: Clip.hardEdge,
       children: [
         if (!_isCasting)
           VideoPlayerWidget(
@@ -1267,6 +1304,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             episodesTitles: currentDetail?.episodesTitles,
             onSingleEpisodeDownload: _onSingleEpisodeDownload,
             onBatchEpisodesDownload: _onBatchEpisodesDownload,
+            onDanmakuSettings: _openDanmakuSettings,
           ),
         if (_isCasting && _dlnaDevice != null)
           DLNAPlayer(
@@ -1296,13 +1334,13 @@ class _PlayerScreenState extends State<PlayerScreen>
               danmuList: _danmuList,
               currentTime: _currentTimeNotifier,
               fontSize: _danmuFontSize,
-              speed: _danmuSpeed,
+              speedLevel: _danmuSpeedIndex,
               opacity: _danmuOpacity,
               displayArea: _danmuDisplayArea,
-              maxCount: _danmuMaxCount,
               antiOverlap: _danmuAntiBlock,
-              visible:
-                  UserDataService.danmakuEnabledNotifier.value,
+              syncVideoSpeed: _danmuSyncSpeed,
+              videoPlaybackSpeed: _videoPlaybackSpeed,
+              visible: UserDataService.danmakuEnabledNotifier.value,
             ),
           ),
         // 切换播放源/集数时的加载蒙版（只遮挡播放器）
@@ -2735,59 +2773,65 @@ class _PlayerScreenState extends State<PlayerScreen>
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: isDarkMode
-                ? null
-                : const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFFe6f3fb),
-                      Color(0xFFeaf3f7),
-                      Color(0xFFf7f7f3),
-                      Color(0xFFe9ecef),
-                      Color(0xFFdbe3ea),
-                      Color(0xFFd3dde6),
-                    ],
-                    stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
-                  ),
-            color: isDarkMode ? theme.scaffoldBackgroundColor : null,
-          ),
-          child: Column(
-            children: [
-              // Windows 自定义标题栏（播放页使用纯黑背景）
-              if (Platform.isWindows)
-                const WindowsTitleBar(
-                  customBackgroundColor: Color(0xFF000000),
-                ),
-              // 主要内容
-              Expanded(
-                child: Stack(
-                  children: [
-                    // 主要内容（不包含播放器）
-                    if (!_isWebFullscreen)
-                      if (_isTablet && !_isPortraitTablet)
-                        // 平板横屏模式：左右布局
-                        _buildTabletLandscapeLayout(theme)
-                      else if (_isPortraitTablet)
-                        // 平板竖屏模式：上下布局，播放器占50%高度
-                        _buildPortraitTabletLayout(theme)
-                      else
-                        // 手机模式：保持原有布局
-                        _buildPhoneLayout(theme),
-                    // 播放器层（使用 Positioned 控制位置和大小）
-                    _buildPlayerLayer(theme),
-                    // 错误覆盖层
-                    if (_showError && _errorMessage != null)
-                      _buildErrorOverlay(theme),
-                    // 加载覆盖层
-                    if (_isLoading) _buildLoadingOverlay(theme),
-                  ],
-                ),
+        body: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: isDarkMode
+                    ? null
+                    : const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFFe6f3fb),
+                          Color(0xFFeaf3f7),
+                          Color(0xFFf7f7f3),
+                          Color(0xFFe9ecef),
+                          Color(0xFFdbe3ea),
+                          Color(0xFFd3dde6),
+                        ],
+                        stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
+                      ),
+                color: isDarkMode ? theme.scaffoldBackgroundColor : null,
               ),
-            ],
-          ),
+              child: Column(
+                children: [
+                  // Windows 自定义标题栏（播放页使用纯黑背景）
+                  if (Platform.isWindows)
+                    const WindowsTitleBar(
+                      customBackgroundColor: Color(0xFF000000),
+                    ),
+                  // 主要内容
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // 主要内容（不包含播放器）
+                        if (!_isWebFullscreen)
+                          if (_isTablet && !_isPortraitTablet)
+                            // 平板横屏模式：左右布局
+                            _buildTabletLandscapeLayout(theme)
+                          else if (_isPortraitTablet)
+                            // 平板竖屏模式：上下布局，播放器占50%高度
+                            _buildPortraitTabletLayout(theme)
+                          else
+                            // 手机模式：保持原有布局
+                            _buildPhoneLayout(theme),
+                        // 播放器层（使用 Positioned 控制位置和大小）
+                        _buildPlayerLayer(theme),
+                        // 错误覆盖层
+                        if (_showError && _errorMessage != null)
+                          _buildErrorOverlay(theme),
+                        // 加载覆盖层
+                        if (_isLoading) _buildLoadingOverlay(theme),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_showDanmakuSettings)
+              DanmakuSettingsScreen(onBack: _closeDanmakuSettings),
+          ],
         ),
       ),
     );

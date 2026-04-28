@@ -22,8 +22,8 @@ class UserDataService {
   static const String _danmakuOpacityKey = 'danmaku_opacity';
   static const String _danmakuFontSizeKey = 'danmaku_font_size';
   static const String _danmakuDisplayAreaKey = 'danmaku_display_area';
-  static const String _danmakuMaxCountKey = 'danmaku_max_count';
   static const String _danmakuAntiBlockKey = 'danmaku_anti_block';
+  static const String _danmakuSyncSpeedKey = 'danmaku_sync_speed';
 
   static const String _syncPlaybackProgressKey = 'sync_playback_progress';
   static const String _syncFavoritesKey = 'sync_favorites';
@@ -327,24 +327,32 @@ class UserDataService {
     return prefs.getBool(_danmakuEnabledKey) ?? true;
   }
 
-  static Future<void> saveDanmakuSpeed(double speed) async {
+  static Future<void> saveDanmakuSpeed(int speedIndex) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_danmakuSpeedKey, speed.clamp(0.5, 2.0));
+    await prefs.setInt(_danmakuSpeedKey, speedIndex.clamp(0, 4));
   }
 
-  static Future<double> getDanmakuSpeed() async {
+  static Future<int> getDanmakuSpeed() async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getDouble(_danmakuSpeedKey) ?? 1.0).clamp(0.5, 2.0);
+    try {
+      return prefs.getInt(_danmakuSpeedKey)?.clamp(0, 4) ?? 2;
+    } catch (_) {
+      return (prefs.getDouble(_danmakuSpeedKey) ?? 2).toInt().clamp(0, 4);
+    }
   }
 
-  static Future<void> saveDanmakuOpacity(double opacity) async {
+  static Future<void> saveDanmakuOpacity(int opacity) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_danmakuOpacityKey, opacity.clamp(0.1, 1.0));
+    await prefs.setInt(_danmakuOpacityKey, opacity.clamp(0, 100));
   }
 
-  static Future<double> getDanmakuOpacity() async {
+  static Future<int> getDanmakuOpacity() async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getDouble(_danmakuOpacityKey) ?? 1.0).clamp(0.1, 1.0);
+    try {
+      return prefs.getInt(_danmakuOpacityKey)?.clamp(0, 100) ?? 100;
+    } catch (_) {
+      return (prefs.getDouble(_danmakuOpacityKey) ?? 100).toInt().clamp(0, 100);
+    }
   }
 
   static Future<void> saveDanmakuFontSize(double fontSize) async {
@@ -367,16 +375,6 @@ class UserDataService {
     return (prefs.getDouble(_danmakuDisplayAreaKey) ?? 1.0).clamp(0.25, 1.0);
   }
 
-  static Future<void> saveDanmakuMaxCount(int count) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_danmakuMaxCountKey, count.clamp(10, 500));
-  }
-
-  static Future<int> getDanmakuMaxCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    return (prefs.getInt(_danmakuMaxCountKey) ?? 100).clamp(10, 500);
-  }
-
   static Future<void> saveDanmakuAntiBlock(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_danmakuAntiBlockKey, enabled);
@@ -385,6 +383,16 @@ class UserDataService {
   static Future<bool> getDanmakuAntiBlock() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_danmakuAntiBlockKey) ?? true;
+  }
+
+  static Future<void> saveDanmakuSyncSpeed(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_danmakuSyncSpeedKey, enabled);
+  }
+
+  static Future<bool> getDanmakuSyncSpeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_danmakuSyncSpeedKey) ?? true;
   }
 
   // ==================== 同步设置 ====================

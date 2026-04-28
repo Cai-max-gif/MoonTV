@@ -39,7 +39,9 @@ class HollowRoundSliderThumbShape extends SliderComponentShape {
 }
 
 class DanmakuSettingsScreen extends StatefulWidget {
-  const DanmakuSettingsScreen({super.key});
+  final VoidCallback? onBack;
+
+  const DanmakuSettingsScreen({super.key, this.onBack});
 
   @override
   State<DanmakuSettingsScreen> createState() => _DanmakuSettingsScreenState();
@@ -47,14 +49,11 @@ class DanmakuSettingsScreen extends StatefulWidget {
 
 class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
   double _danmakuSpeed = 1.0;
-  double _danmakuOpacity = 1.0;
+  double _danmakuOpacity = 100;
   double _danmakuFontSize = 1.0;
-  double _danmakuDisplayArea = 1.0;
-  int _danmakuMaxCount = 100;
-  bool _danmakuAntiBlock = true;
+  double _danmakuDisplayArea = 0.25;
 
-  bool get _danmakuEnabled =>
-      UserDataService.danmakuEnabledNotifier.value;
+  bool get _danmakuEnabled => UserDataService.danmakuEnabledNotifier.value;
 
   @override
   void initState() {
@@ -75,21 +74,19 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
   Future<void> _loadSettings() async {
     UserDataService.initDanmakuEnabled();
-    final speed = await UserDataService.getDanmakuSpeed();
+    final speedIndex = await UserDataService.getDanmakuSpeed();
     final opacity = await UserDataService.getDanmakuOpacity();
     final fontSize = await UserDataService.getDanmakuFontSize();
     final displayArea = await UserDataService.getDanmakuDisplayArea();
-    final maxCount = await UserDataService.getDanmakuMaxCount();
-    final antiBlock = await UserDataService.getDanmakuAntiBlock();
+
+    final speedValues = [0.5, 0.75, 1.0, 1.5, 2.0];
 
     if (mounted) {
       setState(() {
-        _danmakuSpeed = speed.clamp(0.5, 2.0);
-        _danmakuOpacity = opacity.clamp(0.1, 1.0);
+        _danmakuSpeed = speedValues[speedIndex.clamp(0, 4)];
+        _danmakuOpacity = opacity.clamp(0, 100).toDouble();
         _danmakuFontSize = fontSize.clamp(0.5, 2.0);
         _danmakuDisplayArea = displayArea.clamp(0.25, 1.0);
-        _danmakuMaxCount = maxCount.clamp(10, 500);
-        _danmakuAntiBlock = antiBlock;
       });
     }
   }
@@ -109,7 +106,13 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
             LucideIcons.arrowLeft,
             color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!.call();
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
         title: Text(
           '弹幕设置',
@@ -132,10 +135,6 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           _buildDanmakuFontSizeCard(isDarkMode),
           const SizedBox(height: 12),
           _buildDanmakuDisplayAreaCard(isDarkMode),
-          const SizedBox(height: 12),
-          _buildDanmakuMaxCountCard(isDarkMode),
-          const SizedBox(height: 12),
-          _buildDanmakuAntiBlockCard(isDarkMode),
           const SizedBox(height: 16),
           _buildHintCard(isDarkMode),
         ],
@@ -193,6 +192,12 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
   }
 
   Widget _buildDanmakuSpeedCard(bool isDarkMode) {
+    const speedValues = [0.5, 0.75, 1.0, 1.5, 2.0];
+    final speedLabels = ['极慢', '较慢', '适中', '较快', '极快'];
+    final currentIndex =
+        speedValues.indexWhere((v) => (v - _danmakuSpeed).abs() < 0.01);
+    final currentLabel = currentIndex >= 0 ? speedLabels[currentIndex] : '适中';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -212,30 +217,24 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.forward,
-                      size: 24,
-                      color: Color(0xFF3B82F6),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '弹幕速度',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
+                const Icon(
+                  LucideIcons.forward,
+                  size: 24,
+                  color: Color(0xFF3B82F6),
                 ),
+                const SizedBox(width: 12),
                 Text(
-                  '${_danmakuSpeed.toStringAsFixed(1)}x',
+                  '弹幕速度',
+                  style: FontUtils.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$currentLabel (${_danmakuSpeed.toStringAsFixed(1)}x)',
                   style: FontUtils.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -246,55 +245,56 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 4,
-                thumbShape: const HollowRoundSliderThumbShape(thumbRadius: 10),
-                activeTrackColor: const Color(0xFF3B82F6),
-                inactiveTrackColor: isDarkMode
-                    ? const Color(0xFF374151)
-                    : const Color(0xFFe5e7eb),
-                thumbColor: Colors.white,
-                overlayColor:
-                    const Color(0xFF3B82F6).withAlpha(30),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: _danmakuSpeed,
-                min: 0.5,
-                max: 2.0,
-                divisions: 15,
-                onChanged: _danmakuEnabled
-                    ? (value) {
-                        setState(() {
-                          _danmakuSpeed = value;
-                        });
-                      }
-                    : null,
-                onChangeEnd: _danmakuEnabled
-                    ? (value) {
-                        UserDataService.saveDanmakuSpeed(value);
-                      }
-                    : null,
-              ),
-            ),
+            const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '0.5x',
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDarkMode
                         ? const Color(0xFF9ca3af)
                         : const Color(0xFF6b7280),
                   ),
                 ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 20.0,
+                      thumbShape:
+                          const HollowRoundSliderThumbShape(thumbRadius: 10),
+                      overlayShape: SliderComponentShape.noOverlay,
+                      thumbColor: const Color(0xFF3B82F6),
+                      activeTrackColor: const Color(0xFF3B82F6),
+                      inactiveTrackColor: isDarkMode
+                          ? const Color(0xFF374151)
+                          : const Color(0xFFe5e7eb),
+                    ),
+                    child: Slider(
+                      value: _danmakuSpeed,
+                      min: 0.5,
+                      max: 2.0,
+                      divisions: 3,
+                      onChanged: _danmakuEnabled
+                          ? (value) {
+                              setState(() {
+                                _danmakuSpeed = value;
+                              });
+                              final index = speedValues
+                                  .indexWhere((v) => (v - value).abs() < 0.01);
+                              if (index >= 0) {
+                                UserDataService.saveDanmakuSpeed(index);
+                              }
+                            }
+                          : null,
+                      label: '${_danmakuSpeed.toStringAsFixed(1)}x',
+                    ),
+                  ),
+                ),
                 Text(
                   '2.0x',
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDarkMode
                         ? const Color(0xFF9ca3af)
                         : const Color(0xFF6b7280),
@@ -328,30 +328,24 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.eye,
-                      size: 24,
-                      color: Color(0xFF8B5CF6),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '弹幕透明度',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
+                const Icon(
+                  LucideIcons.eye,
+                  size: 24,
+                  color: Color(0xFF8B5CF6),
                 ),
+                const SizedBox(width: 12),
                 Text(
-                  '${(_danmakuOpacity * 100).round()}%',
+                  '弹幕透明度',
+                  style: FontUtils.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_danmakuOpacity.round()}%',
                   style: FontUtils.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -362,55 +356,52 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 4,
-                thumbShape: const HollowRoundSliderThumbShape(thumbRadius: 10),
-                activeTrackColor: const Color(0xFF8B5CF6),
-                inactiveTrackColor: isDarkMode
-                    ? const Color(0xFF374151)
-                    : const Color(0xFFe5e7eb),
-                thumbColor: Colors.white,
-                overlayColor:
-                    const Color(0xFF8B5CF6).withAlpha(30),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: _danmakuOpacity,
-                min: 0.1,
-                max: 1.0,
-                divisions: 9,
-                onChanged: _danmakuEnabled
-                    ? (value) {
-                        setState(() {
-                          _danmakuOpacity = value;
-                        });
-                      }
-                    : null,
-                onChangeEnd: _danmakuEnabled
-                    ? (value) {
-                        UserDataService.saveDanmakuOpacity(value);
-                      }
-                    : null,
-              ),
-            ),
+            const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '10%',
+                  '0%',
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDarkMode
                         ? const Color(0xFF9ca3af)
                         : const Color(0xFF6b7280),
                   ),
                 ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 20.0,
+                      thumbShape:
+                          const HollowRoundSliderThumbShape(thumbRadius: 10),
+                      overlayShape: SliderComponentShape.noOverlay,
+                      thumbColor: const Color(0xFF8B5CF6),
+                      activeTrackColor: const Color(0xFF8B5CF6),
+                      inactiveTrackColor: isDarkMode
+                          ? const Color(0xFF374151)
+                          : const Color(0xFFe5e7eb),
+                    ),
+                    child: Slider(
+                      value: _danmakuOpacity,
+                      min: 0,
+                      max: 100,
+                      divisions: 4,
+                      onChanged: _danmakuEnabled
+                          ? (value) {
+                              setState(() {
+                                _danmakuOpacity = value;
+                              });
+                              UserDataService.saveDanmakuOpacity(value.round());
+                            }
+                          : null,
+                      label: '${_danmakuOpacity.round()}%',
+                    ),
+                  ),
+                ),
                 Text(
                   '100%',
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDarkMode
                         ? const Color(0xFF9ca3af)
                         : const Color(0xFF6b7280),
@@ -444,30 +435,24 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.type,
-                      size: 24,
-                      color: Color(0xFFF59E0B),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '弹幕字体大小',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
+                const Icon(
+                  LucideIcons.type,
+                  size: 24,
+                  color: Color(0xFFF59E0B),
                 ),
+                const SizedBox(width: 12),
                 Text(
-                  '${_danmakuFontSize.toStringAsFixed(1)}x',
+                  '弹幕字体大小',
+                  style: FontUtils.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_danmakuFontSize.toStringAsFixed(1)}x (${(_danmakuFontSize * 24).round()}px)',
                   style: FontUtils.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -478,55 +463,52 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 4,
-                thumbShape: const HollowRoundSliderThumbShape(thumbRadius: 10),
-                activeTrackColor: const Color(0xFFF59E0B),
-                inactiveTrackColor: isDarkMode
-                    ? const Color(0xFF374151)
-                    : const Color(0xFFe5e7eb),
-                thumbColor: Colors.white,
-                overlayColor:
-                    const Color(0xFFF59E0B).withAlpha(30),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: _danmakuFontSize,
-                min: 0.5,
-                max: 2.0,
-                divisions: 15,
-                onChanged: _danmakuEnabled
-                    ? (value) {
-                        setState(() {
-                          _danmakuFontSize = value;
-                        });
-                      }
-                    : null,
-                onChangeEnd: _danmakuEnabled
-                    ? (value) {
-                        UserDataService.saveDanmakuFontSize(value);
-                      }
-                    : null,
-              ),
-            ),
+            const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '0.5x',
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDarkMode
                         ? const Color(0xFF9ca3af)
                         : const Color(0xFF6b7280),
                   ),
                 ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 20.0,
+                      thumbShape:
+                          const HollowRoundSliderThumbShape(thumbRadius: 10),
+                      overlayShape: SliderComponentShape.noOverlay,
+                      thumbColor: const Color(0xFFF59E0B),
+                      activeTrackColor: const Color(0xFFF59E0B),
+                      inactiveTrackColor: isDarkMode
+                          ? const Color(0xFF374151)
+                          : const Color(0xFFe5e7eb),
+                    ),
+                    child: Slider(
+                      value: _danmakuFontSize,
+                      min: 0.5,
+                      max: 2.0,
+                      divisions: 3,
+                      onChanged: _danmakuEnabled
+                          ? (value) {
+                              setState(() {
+                                _danmakuFontSize = value;
+                              });
+                              UserDataService.saveDanmakuFontSize(value);
+                            }
+                          : null,
+                      label: '${_danmakuFontSize.toStringAsFixed(1)}x',
+                    ),
+                  ),
+                ),
                 Text(
                   '2.0x',
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDarkMode
                         ? const Color(0xFF9ca3af)
                         : const Color(0xFF6b7280),
@@ -541,6 +523,12 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
   }
 
   Widget _buildDanmakuDisplayAreaCard(bool isDarkMode) {
+    const areaLabels = ['1/4', '半屏', '3/4', '满屏'];
+    const areaValues = [0.25, 0.5, 0.75, 1.0];
+    final currentIndex =
+        areaValues.indexWhere((v) => (v - _danmakuDisplayArea).abs() < 0.01);
+    final currentLabel = currentIndex >= 0 ? areaLabels[currentIndex] : '满屏';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -558,271 +546,88 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
         opacity: _danmakuEnabled ? 1.0 : 0.4,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.maximize,
-                      size: 24,
-                      color: Color(0xFFEF4444),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '弹幕显示区域',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${(_danmakuDisplayArea * 100).round()}%',
-                  style: FontUtils.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 4,
-                thumbShape: const HollowRoundSliderThumbShape(thumbRadius: 10),
-                activeTrackColor: const Color(0xFFEF4444),
-                inactiveTrackColor: isDarkMode
-                    ? const Color(0xFF374151)
-                    : const Color(0xFFe5e7eb),
-                thumbColor: Colors.white,
-                overlayColor:
-                    const Color(0xFFEF4444).withAlpha(30),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: _danmakuDisplayArea,
-                min: 0.25,
-                max: 1.0,
-                divisions: 15,
-                onChanged: _danmakuEnabled
-                    ? (value) {
-                        setState(() {
-                          _danmakuDisplayArea = value;
-                        });
-                      }
-                    : null,
-                onChangeEnd: _danmakuEnabled
-                    ? (value) {
-                        UserDataService.saveDanmakuDisplayArea(value);
-                      }
-                    : null,
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '1/4 屏',
-                  style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
-                  ),
-                ),
-                Text(
-                  '全屏',
-                  style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDanmakuMaxCountCard(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(25),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Opacity(
-        opacity: _danmakuEnabled ? 1.0 : 0.4,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.list,
-                      size: 24,
-                      color: Color(0xFF10B981),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '弹幕最大数量',
-                      style: FontUtils.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1f2937),
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '$_danmakuMaxCount',
-                  style: FontUtils.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 4,
-                thumbShape: const HollowRoundSliderThumbShape(thumbRadius: 10),
-                activeTrackColor: const Color(0xFF10B981),
-                inactiveTrackColor: isDarkMode
-                    ? const Color(0xFF374151)
-                    : const Color(0xFFe5e7eb),
-                thumbColor: Colors.white,
-                overlayColor:
-                    const Color(0xFF10B981).withAlpha(30),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: _danmakuMaxCount.toDouble(),
-                min: 10,
-                max: 500,
-                divisions: 49,
-                onChanged: _danmakuEnabled
-                    ? (value) {
-                        setState(() {
-                          _danmakuMaxCount = value.round();
-                        });
-                      }
-                    : null,
-                onChangeEnd: _danmakuEnabled
-                    ? (value) {
-                        UserDataService.saveDanmakuMaxCount(value.round());
-                      }
-                    : null,
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '10',
-                  style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
-                  ),
-                ),
-                Text(
-                  '500',
-                  style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDanmakuAntiBlockCard(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(25),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Opacity(
-        opacity: _danmakuEnabled ? 1.0 : 0.4,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
                 const Icon(
-                  LucideIcons.shield,
+                  LucideIcons.maximize,
                   size: 24,
-                  color: Color(0xFF27AE60),
+                  color: Color(0xFFEF4444),
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '弹幕防遮挡',
+                  '弹幕显示区域',
                   style: FontUtils.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
                   ),
                 ),
+                const Spacer(),
+                Text(
+                  currentLabel,
+                  style: FontUtils.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isDarkMode
+                        ? const Color(0xFF9ca3af)
+                        : const Color(0xFF6b7280),
+                  ),
+                ),
               ],
             ),
-            Switch(
-              value: _danmakuAntiBlock,
-              onChanged: _danmakuEnabled
-                  ? (value) {
-                      setState(() {
-                        _danmakuAntiBlock = value;
-                      });
-                      UserDataService.saveDanmakuAntiBlock(value);
-                    }
-                  : null,
-              activeThumbColor: const Color(0xFF27AE60),
-              inactiveTrackColor: isDarkMode
-                  ? const Color(0xFF374151)
-                  : const Color(0xFFe5e7eb),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  '1/4',
+                  style: FontUtils.poppins(
+                    fontSize: 14,
+                    color: isDarkMode
+                        ? const Color(0xFF9ca3af)
+                        : const Color(0xFF6b7280),
+                  ),
+                ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 20.0,
+                      thumbShape:
+                          const HollowRoundSliderThumbShape(thumbRadius: 10),
+                      overlayShape: SliderComponentShape.noOverlay,
+                      thumbColor: const Color(0xFFEF4444),
+                      activeTrackColor: const Color(0xFFEF4444),
+                      inactiveTrackColor: isDarkMode
+                          ? const Color(0xFF374151)
+                          : const Color(0xFFe5e7eb),
+                    ),
+                    child: Slider(
+                      value: _danmakuDisplayArea,
+                      min: 0.25,
+                      max: 1.0,
+                      divisions: 3,
+                      onChanged: _danmakuEnabled
+                          ? (value) {
+                              setState(() {
+                                _danmakuDisplayArea = value;
+                              });
+                              UserDataService.saveDanmakuDisplayArea(value);
+                            }
+                          : null,
+                      label: currentLabel,
+                    ),
+                  ),
+                ),
+                Text(
+                  '满屏',
+                  style: FontUtils.poppins(
+                    fontSize: 14,
+                    color: isDarkMode
+                        ? const Color(0xFF9ca3af)
+                        : const Color(0xFF6b7280),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -851,7 +656,7 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '提示：弹幕开关与播放器中的弹幕图标状态同步。关闭弹幕开关后，其他弹幕设置将被禁用。弹幕数量过多可能影响播放性能。',
+              '提示：弹幕开关与播放器中的弹幕图标状态同步。关闭弹幕开关后，其他弹幕设置将被禁用。防弹幕重叠功能默认开启，同步视频速度功能默认开启。',
               style: FontUtils.poppins(
                 fontSize: 14,
                 color: isDarkMode

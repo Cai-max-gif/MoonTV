@@ -36,7 +36,8 @@ class VideoPlayerWidget extends StatefulWidget {
   final List<String>? episodes;
   final List<String>? episodesTitles;
   final Function(int episodeIndex)? onSingleEpisodeDownload;
-  final Function(List<int> episodeIndices)? onBatchEpisodesDownload;
+  final Future<void> Function(List<int> episodeIndices)? onBatchEpisodesDownload;
+  final VoidCallback? onDanmakuSettings;
 
   const VideoPlayerWidget({
     super.key,
@@ -64,6 +65,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.episodesTitles,
     this.onSingleEpisodeDownload,
     this.onBatchEpisodesDownload,
+    this.onDanmakuSettings,
   });
 
   @override
@@ -170,15 +172,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _currentHeaders = widget.headers;
     _loadDefaultPlaybackSpeed();
     _loadAutoSkipSettings();
-    if (Platform.isWindows || Platform.isMacOS) {
-      _initializePlayer();
-    } else {
-      // 移动端不使用 media_kit，直接标记为初始化完成
-      setState(() {
-        _isInitialized = true;
-      });
-      widget.onReady?.call();
-    }
+    _initializePlayer();
     unawaited(_setupPip());
     _registerPipObserver();
     widget.onControllerCreated?.call(VideoPlayerWidgetController._(this));
@@ -207,7 +201,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Future<void> _initializePlayer() async {
-    if (_playerDisposed || !(Platform.isWindows || Platform.isMacOS)) {
+    if (_playerDisposed) {
       return;
     }
     try {
@@ -242,8 +236,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   Future<void> _openCurrentMedia({Duration? startAt}) async {
     if (_playerDisposed ||
         _player == null ||
-        _currentUrl == null ||
-        !(Platform.isWindows || Platform.isMacOS)) {
+        _currentUrl == null) {
       return;
     }
     setState(() {
@@ -276,7 +269,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   void _setupPlayerListeners() {
-    if (_player == null || !(Platform.isWindows || Platform.isMacOS)) {
+    if (_player == null) {
       return;
     }
     _positionSubscription?.cancel();
@@ -380,7 +373,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     Duration? startAt,
     Map<String, String>? headers,
   }) async {
-    if (_playerDisposed || !(Platform.isWindows || Platform.isMacOS)) {
+    if (_playerDisposed) {
       return;
     }
     _currentUrl = url;
@@ -442,7 +435,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
   Future<void> _setPlaybackSpeed(double speed) async {
     _playbackSpeed.value = speed;
-    if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
+    if (_player != null) {
       await _player?.setRate(speed);
     }
     // 保存倍速设置到 UserDataService
@@ -515,7 +508,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         debugPrint('Device does not support PiP!');
         return;
       }
-      if (_player != null && (Platform.isWindows || Platform.isMacOS)) {
+      if (_player != null) {
         await _player?.play();
       }
       await _pip.start();
@@ -549,7 +542,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _player = null;
     _videoController = null;
 
-    if (player != null && (Platform.isWindows || Platform.isMacOS)) {
+    if (player != null) {
       await Future.delayed(const Duration(milliseconds: 250));
       try {
         videoController?.dispose();
@@ -606,104 +599,80 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     return Container(
       color: Colors.black,
       child: _isInitialized
-          ? (Platform.isWindows || Platform.isMacOS)
-              ? _videoController != null
-                  ? Video(
-                      controller: _videoController!,
-                      controls: (state) {
-                        return widget.surface == VideoPlayerSurface.desktop
-                            ? PCPlayerControls(
-                                state: state,
-                                player: _player!,
-                                onBackPressed: widget.onBackPressed,
-                                onNextEpisode: widget.onNextEpisode,
-                                onPause: widget.onPause,
-                                videoUrl: _currentUrl ?? '',
-                                isLastEpisode: widget.isLastEpisode,
-                                isLoadingVideo: _isLoadingVideo,
-                                onCastStarted: widget.onCastStarted,
-                                videoTitle: widget.videoTitle,
-                                currentEpisodeIndex: widget.currentEpisodeIndex,
-                                totalEpisodes: widget.totalEpisodes,
-                                sourceName: widget.sourceName,
-                                onWebFullscreenChanged:
-                                    widget.onWebFullscreenChanged,
-                                onExitWebFullscreenCallbackReady: (callback) {
-                                  _exitWebFullscreenCallback = callback;
-                                },
-                                onExitFullScreen: widget.onExitFullScreen,
-                                live: widget.live,
-                                playbackSpeedListenable: _playbackSpeed,
-                                onSetSpeed: _setPlaybackSpeed,
-                                episodes: widget.episodes,
-                                episodesTitles: widget.episodesTitles,
-                                onSingleEpisodeDownload:
-                                    widget.onSingleEpisodeDownload,
-                                onBatchEpisodesDownload:
-                                    widget.onBatchEpisodesDownload,
-                              )
-                            : MobilePlayerControls(
-                                player: _player!,
-                                state: state,
-                                onControlsVisibilityChanged: (_) {},
-                                onBackPressed: widget.onBackPressed,
-                                onFullscreenChange: (_) {},
-                                onNextEpisode: widget.onNextEpisode,
-                                onPause: widget.onPause,
-                                videoUrl: _currentUrl ?? '',
-                                isLastEpisode: widget.isLastEpisode,
-                                isLoadingVideo: _isLoadingVideo,
-                                onCastStarted: widget.onCastStarted,
-                                videoTitle: widget.videoTitle,
-                                currentEpisodeIndex: widget.currentEpisodeIndex,
-                                totalEpisodes: widget.totalEpisodes,
-                                sourceName: widget.sourceName,
-                                onExitFullScreen: widget.onExitFullScreen,
-                                live: widget.live,
-                                playbackSpeedListenable: _playbackSpeed,
-                                onSetSpeed: _setPlaybackSpeed,
-                                onEnterPipMode: _enterPipMode,
-                                isPipMode: _isPipMode,
-                                episodes: widget.episodes,
-                                episodesTitles: widget.episodesTitles,
-                                onSingleEpisodeDownload:
-                                    widget.onSingleEpisodeDownload,
-                                onBatchEpisodesDownload:
-                                    widget.onBatchEpisodesDownload,
-                              );
-                      },
-                    )
-                  : const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    )
-              : MobilePlayerControls(
-                  player: _player,
-                  state: null,
-                  onControlsVisibilityChanged: (_) {},
-                  onBackPressed: widget.onBackPressed,
-                  onFullscreenChange: (_) {},
-                  onNextEpisode: widget.onNextEpisode,
-                  onPause: widget.onPause,
-                  videoUrl: _currentUrl ?? '',
-                  isLastEpisode: widget.isLastEpisode,
-                  isLoadingVideo: _isLoadingVideo,
-                  onCastStarted: widget.onCastStarted,
-                  videoTitle: widget.videoTitle,
-                  currentEpisodeIndex: widget.currentEpisodeIndex,
-                  totalEpisodes: widget.totalEpisodes,
-                  sourceName: widget.sourceName,
-                  onExitFullScreen: widget.onExitFullScreen,
-                  live: widget.live,
-                  playbackSpeedListenable: _playbackSpeed,
-                  onSetSpeed: _setPlaybackSpeed,
-                  onEnterPipMode: _enterPipMode,
-                  isPipMode: _isPipMode,
-                  episodes: widget.episodes,
-                  episodesTitles: widget.episodesTitles,
-                  onSingleEpisodeDownload: widget.onSingleEpisodeDownload,
-                  onBatchEpisodesDownload: widget.onBatchEpisodesDownload,
+          ? _videoController != null
+              ? Video(
+                  controller: _videoController!,
+                  controls: (state) {
+                    return widget.surface == VideoPlayerSurface.desktop
+                        ? PCPlayerControls(
+                            state: state,
+                            player: _player!,
+                            onBackPressed: widget.onBackPressed,
+                            onNextEpisode: widget.onNextEpisode,
+                            onPause: widget.onPause,
+                            videoUrl: _currentUrl ?? '',
+                            isLastEpisode: widget.isLastEpisode,
+                            isLoadingVideo: _isLoadingVideo,
+                            onCastStarted: widget.onCastStarted,
+                            videoTitle: widget.videoTitle,
+                            currentEpisodeIndex: widget.currentEpisodeIndex,
+                            totalEpisodes: widget.totalEpisodes,
+                            sourceName: widget.sourceName,
+                            onWebFullscreenChanged:
+                                widget.onWebFullscreenChanged,
+                            onExitWebFullscreenCallbackReady: (callback) {
+                              _exitWebFullscreenCallback = callback;
+                            },
+                            onExitFullScreen: widget.onExitFullScreen,
+                            live: widget.live,
+                            playbackSpeedListenable: _playbackSpeed,
+                            onSetSpeed: _setPlaybackSpeed,
+                            episodes: widget.episodes,
+                            episodesTitles: widget.episodesTitles,
+                            onSingleEpisodeDownload:
+                                widget.onSingleEpisodeDownload,
+                            onBatchEpisodesDownload:
+                                widget.onBatchEpisodesDownload,
+                            onDanmakuSettings:
+                                widget.onDanmakuSettings,
+                          )
+                        : MobilePlayerControls(
+                            player: _player!,
+                            state: state,
+                            onControlsVisibilityChanged: (_) {},
+                            onBackPressed: widget.onBackPressed,
+                            onFullscreenChange: (_) {},
+                            onNextEpisode: widget.onNextEpisode,
+                            onPause: widget.onPause,
+                            videoUrl: _currentUrl ?? '',
+                            isLastEpisode: widget.isLastEpisode,
+                            isLoadingVideo: _isLoadingVideo,
+                            onCastStarted: widget.onCastStarted,
+                            videoTitle: widget.videoTitle,
+                            currentEpisodeIndex: widget.currentEpisodeIndex,
+                            totalEpisodes: widget.totalEpisodes,
+                            sourceName: widget.sourceName,
+                            onExitFullScreen: widget.onExitFullScreen,
+                            live: widget.live,
+                            playbackSpeedListenable: _playbackSpeed,
+                            onSetSpeed: _setPlaybackSpeed,
+                            onEnterPipMode: _enterPipMode,
+                            isPipMode: _isPipMode,
+                            episodes: widget.episodes,
+                            episodesTitles: widget.episodesTitles,
+                            onSingleEpisodeDownload:
+                                widget.onSingleEpisodeDownload,
+                            onBatchEpisodesDownload:
+                                widget.onBatchEpisodesDownload,
+                            onDanmakuSettings:
+                                widget.onDanmakuSettings,
+                          );
+                  },
+                )
+              : const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
                 )
           : const Center(
               child: CircularProgressIndicator(

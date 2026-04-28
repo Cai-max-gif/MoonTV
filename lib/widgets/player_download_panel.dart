@@ -98,7 +98,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
     _selectAll = _selectedEpisodes.every((selected) => selected);
   }
 
-  void _downloadSelected() {
+  void _downloadSelected() async {
     List<int> selectedIndices = [];
     for (int i = 0; i < _selectedEpisodes.length; i++) {
       if (_selectedEpisodes[i]) {
@@ -108,8 +108,10 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
       }
     }
     if (selectedIndices.isNotEmpty) {
-      widget.onBatchDownload(selectedIndices);
-      Navigator.pop(context);
+      await widget.onBatchDownload(selectedIndices);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 

@@ -33,24 +33,26 @@ class DanmuLayer extends StatefulWidget {
   final List<DanmuItem> danmuList;
   final ValueNotifier<double> currentTime;
   final double fontSize;
-  final double speed;
-  final double opacity;
+  final int speedLevel;
+  final int opacity;
   final double displayArea;
-  final int maxCount;
   final bool antiOverlap;
   final bool visible;
+  final bool syncVideoSpeed;
+  final double videoPlaybackSpeed;
 
   const DanmuLayer({
     super.key,
     required this.danmuList,
     required this.currentTime,
     this.fontSize = 1.0,
-    this.speed = 1.0,
-    this.opacity = 1.0,
+    this.speedLevel = 2,
+    this.opacity = 100,
     this.displayArea = 1.0,
-    this.maxCount = 100,
     this.antiOverlap = true,
     this.visible = true,
+    this.syncVideoSpeed = true,
+    this.videoPlaybackSpeed = 1.0,
   });
 
   @override
@@ -63,7 +65,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   late final Ticker _ticker;
   Duration _lastTickTime = Duration.zero;
   Size _screenSize = Size.zero;
-  final double _baseFontSize = 18.0;
+  final double _baseFontSize = 24.0;
   int _currentTrackCount = 0;
   int _emittedCount = 0;
 
@@ -146,8 +148,6 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   }
 
   void _emitNewDanmu(double currentPlayTime) {
-    if (_runningDanmu.length >= widget.maxCount) return;
-
     while (_emittedCount < widget.danmuList.length) {
       final item = widget.danmuList[_emittedCount];
 
@@ -249,11 +249,20 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   }
 
   void _updateRunningDanmu(double deltaSeconds) {
-    final scrollSpeed = (100 + widget.speed * 50) * deltaSeconds;
+    final speedFactors = [0.5, 0.75, 1.0, 1.5, 2.0];
+    final speed = speedFactors[widget.speedLevel.clamp(0, 4)];
+    final videoSpeedMultiplier =
+        widget.syncVideoSpeed ? widget.videoPlaybackSpeed : 1.0;
+    final scrollSpeed =
+        (100 + speed * 50) * deltaSeconds * videoSpeedMultiplier;
 
     for (final danmu in _runningDanmu) {
       if (danmu.item.mode == DanmuMode.scroll) {
         danmu.x -= scrollSpeed;
+        if (widget.antiOverlap && danmu.trackIndex < _tracks.length) {
+          _tracks[danmu.trackIndex].occupiedUntilX =
+              danmu.x + danmu.textWidth - _screenSize.width * 0.3;
+        }
       } else {
         danmu.displayDuration -= deltaSeconds;
       }
@@ -263,30 +272,40 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   void _removeExpiredDanmu() {
     _runningDanmu.removeWhere((danmu) {
       if (danmu.item.mode == DanmuMode.scroll) {
-        return danmu.x + danmu.textWidth < 0;
+        final expired = danmu.x + danmu.textWidth < 0;
+        if (expired && danmu.trackIndex < _tracks.length) {
+          _tracks[danmu.trackIndex].occupiedUntilX = -1;
+        }
+        return expired;
       } else {
-        return danmu.displayDuration <= 0;
+        final expired = danmu.displayDuration <= 0;
+        if (expired && danmu.trackIndex < _tracks.length) {
+          _tracks[danmu.trackIndex].occupiedUntilX = -1;
+        }
+        return expired;
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.visible || widget.danmuList.isEmpty) {
+    if (!widget.visible || widget.danmuList.isEmpty || widget.opacity == 0) {
       return const SizedBox.shrink();
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         _screenSize = Size(constraints.maxWidth, constraints.maxHeight);
-        return IgnorePointer(
-          child: CustomPaint(
-            painter: _DanmuPainter(
-              runningDanmu: _runningDanmu,
-              opacity: widget.opacity,
-              fontSize: _baseFontSize * widget.fontSize,
+        return ClipRect(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _DanmuPainter(
+                runningDanmu: _runningDanmu,
+                opacity: widget.opacity / 100.0,
+                fontSize: _baseFontSize * widget.fontSize,
+              ),
+              size: Size(constraints.maxWidth, constraints.maxHeight),
             ),
-            size: Size.infinite,
           ),
         );
       },

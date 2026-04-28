@@ -21,10 +21,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 初始化 media_kit (仅用于 PC 端播放器)
-  if (Platform.isWindows || Platform.isMacOS) {
-    MediaKit.ensureInitialized();
-  }
+  MediaKit.ensureInitialized();
 
   // Gal 库不需要显式初始化，直接使用即可
 
