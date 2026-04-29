@@ -13,6 +13,7 @@ import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/user_data_service.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 // 带 hover 效果的按钮组件
 class HoverButton extends StatefulWidget {
@@ -474,6 +475,18 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     if (wasWebFullscreen && !_isWebFullscreen) {
       widget.onExitFullScreen?.call();
     }
+    // 真正的窗口全屏切换
+    if (Platform.isWindows) {
+      try {
+        if (_isWebFullscreen) {
+          appWindow.maximize();
+        } else {
+          appWindow.restore();
+        }
+      } catch (e) {
+        debugPrint('Window fullscreen toggle error: $e');
+      }
+    }
     _onUserInteraction();
   }
 
@@ -487,6 +500,14 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       widget.onWebFullscreenChanged?.call(false);
       // 触发退出全屏回调
       widget.onExitFullScreen?.call();
+      // 恢复窗口状态
+      if (Platform.isWindows) {
+        try {
+          appWindow.restore();
+        } catch (e) {
+          debugPrint('Window restore error: $e');
+        }
+      }
       _onUserInteraction();
     }
   }

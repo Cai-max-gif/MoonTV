@@ -88,7 +88,8 @@ class DownloadService extends ChangeNotifier {
         _tasks.addAll(decoded.map((e) => DownloadTask.fromJson(e)));
 
         for (final task in _tasks) {
-          if (task.status == DownloadStatus.downloading) {
+          if (task.status == DownloadStatus.downloading &&
+              !_activeEngines.containsKey(task.id)) {
             task.status = DownloadStatus.paused;
           }
           if (task.status == DownloadStatus.completed) {

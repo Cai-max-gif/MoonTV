@@ -153,8 +153,7 @@ class DownloadEngine {
         downloadedSegments++;
 
         final progress = downloadedSegments / totalSegments;
-        _safeProgressCallback(
-            onProgress, progress, totalBytes, totalBytes);
+        _safeProgressCallback(onProgress, progress, totalBytes, totalBytes);
       });
 
       downloadFutures.add(future);
@@ -163,14 +162,10 @@ class DownloadEngine {
     await Future.wait(downloadFutures);
 
     if (_cancelled) {
-      _safeProgressCallback(
-          onProgress, initialDone / totalSegments, totalBytes, totalBytes);
       throw Exception('下载已取消');
     }
 
     if (hasFailed) {
-      _safeProgressCallback(
-          onProgress, initialDone / totalSegments, totalBytes, totalBytes);
       throw Exception('下载失败：部分片段下载出错');
     }
 
@@ -319,8 +314,8 @@ class DownloadEngine {
           final encryptedFile = File(tempPath);
           try {
             final encryptedData = await encryptedFile.readAsBytes();
-            final decryptedData =
-                _decryptAes128CBC(encryptedData, keyBytes, ivString, segmentIndex);
+            final decryptedData = _decryptAes128CBC(
+                encryptedData, keyBytes, ivString, segmentIndex);
             await File(savePath).writeAsBytes(decryptedData);
             return decryptedData.length;
           } finally {

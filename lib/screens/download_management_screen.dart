@@ -396,7 +396,9 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                   isDarkMode: isDarkMode,
                   onPause: () => _downloadService.pauseTask(task.id),
                   onResume: () => _downloadService.resumeTask(task.id),
-                  onDelete: () => _showDeleteConfirmation(context, task),
+                  onDelete: () => enableDeleteMode
+                      ? _showDeleteConfirmation(context, task)
+                      : _downloadService.deleteTask(task.id),
                   onPlay: () => _playDownloadedVideo(task),
                   showDeleteButton: enableDeleteMode && _isDeleteMode,
                 )),
@@ -566,8 +568,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           ),
           backgroundColor: const Color(0xFFef4444),
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),
         ),
       );
