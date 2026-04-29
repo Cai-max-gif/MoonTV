@@ -36,7 +36,8 @@ class VideoPlayerWidget extends StatefulWidget {
   final List<String>? episodes;
   final List<String>? episodesTitles;
   final Function(int episodeIndex)? onSingleEpisodeDownload;
-  final Future<void> Function(List<int> episodeIndices)? onBatchEpisodesDownload;
+  final Future<void> Function(List<int> episodeIndices)?
+      onBatchEpisodesDownload;
   final VoidCallback? onDanmakuSettings;
   final bool isLocalFile;
 
@@ -236,9 +237,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Future<void> _openCurrentMedia({Duration? startAt}) async {
-    if (_playerDisposed ||
-        _player == null ||
-        _currentUrl == null) {
+    if (_playerDisposed || _player == null || _currentUrl == null) {
       return;
     }
     setState(() {
@@ -533,6 +532,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
     _playerDisposed = true;
 
+    // 1. 先取消所有订阅
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _completedSubscription?.cancel();
@@ -550,9 +550,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
     if (player != null) {
       try {
+        // 2. 先暂停播放
+        await player.pause();
+      } catch (_) {}
+
+      try {
+        // 3. 先释放 VideoController
         videoController?.dispose();
       } catch (_) {}
+
       try {
+        // 4. 最后释放 Player
         await player.dispose();
       } catch (e) {
         debugPrint('VideoPlayerWidget: error disposing player $e');
@@ -594,6 +602,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       _pip.unregisterStateChangedObserver();
       _pip.dispose();
     }
+    // 释放播放器资源（不等待，避免阻塞 dispose）
     _disposePlayer();
     _playbackSpeed.dispose();
     super.dispose();
@@ -638,8 +647,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 widget.onSingleEpisodeDownload,
                             onBatchEpisodesDownload:
                                 widget.onBatchEpisodesDownload,
-                            onDanmakuSettings:
-                                widget.onDanmakuSettings,
+                            onDanmakuSettings: widget.onDanmakuSettings,
                             isLocalFile: widget.isLocalFile,
                           )
                         : MobilePlayerControls(
@@ -670,8 +678,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 widget.onSingleEpisodeDownload,
                             onBatchEpisodesDownload:
                                 widget.onBatchEpisodesDownload,
-                            onDanmakuSettings:
-                                widget.onDanmakuSettings,
+                            onDanmakuSettings: widget.onDanmakuSettings,
                             isLocalFile: widget.isLocalFile,
                           );
                   },
