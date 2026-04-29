@@ -118,6 +118,10 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       if (!mounted) return;
       _forceStartHideTimer();
       widget.onControlsVisibilityChanged(true);
+      // 本地文件播放时，移动端默认进入全屏
+      if (widget.isLocalFile && DeviceUtils.isMobile()) {
+        _enterFullscreen();
+      }
     });
   }
 
@@ -989,7 +993,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
             onTap: () {
               _onUserInteraction();
               if (_isFullscreen) {
-                _exitFullscreen();
+                  _exitFullscreen();
               } else {
                 widget.onBackPressed?.call();
               }
@@ -1238,7 +1242,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: EdgeInsets.only(right: _isFullscreen ? 22 : 10),
+                      padding: const EdgeInsets.all(8),
                       child: Icon(
                         Icons.speed,
                         color: Colors.white,
@@ -1273,9 +1277,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: EdgeInsets.only(
-                        left: _isFullscreen ? 12 : 5,
-                        right: _isFullscreen ? 12 : 8),
+                    padding: const EdgeInsets.all(8),
                     child: Icon(
                       _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                       color: Colors.white,
