@@ -73,6 +73,25 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
   }
 
   Future<void> _selectPath() async {
+    if (_downloadService.downloadingTasks.isNotEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '有正在下载的任务，无法修改保存路径',
+              style: FontUtils.poppins(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFef4444),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final result = await FilePicker.getDirectoryPath();
 
@@ -414,18 +433,24 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: _selectPath,
-                          icon: const Icon(
+                          onPressed: downloadService.downloadingTasks.isNotEmpty
+                              ? null
+                              : _selectPath,
+                          icon: Icon(
                             LucideIcons.folderOpen,
                             size: 20,
-                            color: Colors.white,
+                            color: downloadService.downloadingTasks.isNotEmpty
+                                ? const Color(0xFF9ca3af)
+                                : Colors.white,
                           ),
                           label: Text(
                             '选择路径',
                             style: FontUtils.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: downloadService.downloadingTasks.isNotEmpty
+                                  ? const Color(0xFF9ca3af)
+                                  : Colors.white,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(

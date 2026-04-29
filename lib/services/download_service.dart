@@ -25,6 +25,7 @@ class DownloadService extends ChangeNotifier {
 
   final Map<String, DownloadEngine> _activeEngines = {};
   bool _queueProcessing = false;
+  bool _restarting = false;
 
   List<DownloadTask> get tasks => List.unmodifiable(_tasks);
 
@@ -92,11 +93,11 @@ class DownloadService extends ChangeNotifier {
           }
           if (task.status == DownloadStatus.completed) {
             final originalFilePath = task.localFilePath;
-            if (!File(originalFilePath).existsSync()) {
+            if (!await File(originalFilePath).exists()) {
               if (_savePath.isNotEmpty && task.savePath != _savePath) {
                 final alternativePath =
                     _savePath + (Platform.pathSeparator) + task.localFileName;
-                if (File(alternativePath).existsSync()) {
+                if (await File(alternativePath).exists()) {
                   task.savePath = _savePath;
                 } else if (task.savePath.isEmpty && _savePath.isNotEmpty) {
                   task.savePath = _savePath;
@@ -113,8 +114,8 @@ class DownloadService extends ChangeNotifier {
             }
             try {
               final tempDir = Directory('${task.localFilePath}_temp');
-              if (tempDir.existsSync()) {
-                tempDir.deleteSync(recursive: true);
+              if (await tempDir.exists()) {
+                await tempDir.delete(recursive: true);
               }
             } catch (_) {}
           }
@@ -214,7 +215,7 @@ class DownloadService extends ChangeNotifier {
     if (hasNew) {
       await _saveTasks();
       notifyListeners();
-      _processQueue();
+      await _pauseAllAndRestartDownloads();
     }
   }
 
@@ -260,6 +261,34 @@ class DownloadService extends ChangeNotifier {
     _processQueue();
   }
 
+  Future<void> _pauseAllAndRestartDownloads() async {
+    if (_restarting) return;
+    _restarting = true;
+
+    try {
+      for (final engine in _activeEngines.values) {
+        engine.cancel();
+      }
+      _activeEngines.clear();
+
+      for (final task in _tasks) {
+        if (task.status == DownloadStatus.downloading) {
+          task.status = DownloadStatus.queued;
+        }
+      }
+
+      notifyListeners();
+      await _saveTasks();
+
+      await Future.delayed(const Duration(seconds: 1));
+
+      _queueProcessing = false;
+      _processQueue();
+    } finally {
+      _restarting = false;
+    }
+  }
+
   Future<void> deleteTask(String taskId) async {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex < 0) return;
@@ -268,7 +297,7 @@ class DownloadService extends ChangeNotifier {
     _activeEngines[taskId]?.cancel();
     _activeEngines.remove(taskId);
 
-    _cleanupTaskFiles(task);
+    await _cleanupTaskFiles(task);
 
     _tasks.removeAt(taskIndex);
     await _saveTasks();
@@ -282,7 +311,7 @@ class DownloadService extends ChangeNotifier {
     _activeEngines[taskId]?.cancel();
     _activeEngines.remove(taskId);
 
-    _cleanupTaskFiles(_tasks[taskIndex]);
+    await _cleanupTaskFiles(_tasks[taskIndex]);
 
     _tasks[taskIndex].status = DownloadStatus.queued;
     _tasks[taskIndex].progress = 0.0;
@@ -320,14 +349,14 @@ class DownloadService extends ChangeNotifier {
     }
     await _saveTasks();
     notifyListeners();
-    _processQueue();
+    await _pauseAllAndRestartDownloads();
   }
 
   Future<void> deleteAllCompleted() async {
     final completed =
         _tasks.where((t) => t.status == DownloadStatus.completed).toList();
     for (final task in completed) {
-      _cleanupTaskFiles(task);
+      await _cleanupTaskFiles(task);
     }
     _tasks.removeWhere((t) => t.status == DownloadStatus.completed);
     await _saveTasks();
@@ -430,6 +459,7 @@ class DownloadService extends ChangeNotifier {
       final idx = _tasks.indexWhere((t) => t.id == task.id);
       if (idx < 0) return;
       if (_tasks[idx].status == DownloadStatus.paused) return;
+      if (_tasks[idx].status == DownloadStatus.queued) return;
 
       final currentRetry = _tasks[idx].retryCount;
       if (currentRetry < 5) {
@@ -458,18 +488,18 @@ class DownloadService extends ChangeNotifier {
     });
   }
 
-  void _cleanupTaskFiles(DownloadTask task) {
+  Future<void> _cleanupTaskFiles(DownloadTask task) async {
     try {
       final outputFile = File(task.localFilePath);
-      if (outputFile.existsSync()) {
-        outputFile.deleteSync();
+      if (await outputFile.exists()) {
+        await outputFile.delete();
       }
     } catch (_) {}
 
     try {
       final tempDir = Directory('${task.localFilePath}_temp');
-      if (tempDir.existsSync()) {
-        tempDir.deleteSync(recursive: true);
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
       }
     } catch (_) {}
   }
@@ -508,7 +538,7 @@ class DownloadService extends ChangeNotifier {
     bool hasNewTasks = false;
 
     try {
-      final files = downloadDir.listSync().where((entity) {
+      final files = (await downloadDir.list().toList()).where((entity) {
         return entity is File && entity.path.endsWith('.ts');
       }).cast<File>();
 

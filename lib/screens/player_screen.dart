@@ -2764,7 +2764,6 @@ class _PlayerScreenState extends State<PlayerScreen>
           try {
             await controller.pause();
           } catch (_) {}
-          await Future.delayed(const Duration(milliseconds: 250));
           try {
             await controller.dispose();
           } catch (_) {}

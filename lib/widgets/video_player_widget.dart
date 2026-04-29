@@ -537,6 +537,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _playingSubscription?.cancel();
     _completedSubscription?.cancel();
     _durationSubscription?.cancel();
+    _positionSubscription = null;
+    _playingSubscription = null;
+    _completedSubscription = null;
+    _durationSubscription = null;
     _progressListeners.clear();
 
     final player = _player;
@@ -545,7 +549,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _videoController = null;
 
     if (player != null) {
-      await Future.delayed(const Duration(milliseconds: 250));
       try {
         videoController?.dispose();
       } catch (_) {}

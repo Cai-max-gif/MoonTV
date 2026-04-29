@@ -72,7 +72,7 @@ class DownloadEngine {
 
     final alreadyDone = <int>{};
     if (await tempDir.exists()) {
-      final entries = tempDir.listSync();
+      final entries = await tempDir.list().toList();
       for (final entry in entries) {
         if (entry is File) {
           final name = entry.path.split(Platform.pathSeparator).last;
@@ -108,8 +108,8 @@ class DownloadEngine {
 
     for (final idx in alreadyDone) {
       final f = File(_segmentPath(tempDir, idx));
-      if (f.existsSync()) {
-        totalBytes += f.lengthSync();
+      if (await f.exists()) {
+        totalBytes += await f.length();
       }
     }
 
@@ -133,8 +133,9 @@ class DownloadEngine {
       final future = semaphore.withPermit(() async {
         if (_cancelled || hasFailed) return;
 
+        int segSize = 0;
         try {
-          await _downloadSegment(
+          segSize = await _downloadSegment(
             url: segment.url,
             savePath: segmentPath,
             keyBytes: keyBytes,
@@ -148,16 +149,12 @@ class DownloadEngine {
 
         if (_cancelled) return;
 
-        int segSize = 0;
-        final f = File(segmentPath);
-        if (f.existsSync()) {
-          segSize = f.lengthSync();
-        }
         totalBytes += segSize;
         downloadedSegments++;
 
         final progress = downloadedSegments / totalSegments;
-        _safeProgressCallback(onProgress, progress, totalBytes, totalBytes);
+        _safeProgressCallback(
+            onProgress, progress, totalBytes, totalBytes);
       });
 
       downloadFutures.add(future);
@@ -185,8 +182,8 @@ class DownloadEngine {
     int finalTotalBytes = 0;
     for (final segPath in allSegmentPaths) {
       final f = File(segPath);
-      if (f.existsSync()) {
-        finalTotalBytes += f.lengthSync();
+      if (await f.exists()) {
+        finalTotalBytes += await f.length();
       }
     }
 
@@ -297,7 +294,7 @@ class DownloadEngine {
     return Uint8List.fromList(response.data as List<int>);
   }
 
-  Future<void> _downloadSegment({
+  Future<int> _downloadSegment({
     required String url,
     required String savePath,
     required Uint8List? keyBytes,
@@ -311,20 +308,29 @@ class DownloadEngine {
       try {
         final response = await _dio.get(
           url,
-          options: Options(responseType: ResponseType.bytes),
+          options: Options(responseType: ResponseType.stream),
         );
 
-        Uint8List data = Uint8List.fromList(response.data as List<int>);
+        final responseStream = (response.data as ResponseBody).stream;
 
         if (keyBytes != null) {
+          final tempPath = '$savePath._enc';
+          await _streamToFile(responseStream, tempPath);
+          final encryptedFile = File(tempPath);
           try {
-            data = _decryptAes128CBC(data, keyBytes, ivString, segmentIndex);
-          } catch (_) {}
+            final encryptedData = await encryptedFile.readAsBytes();
+            final decryptedData =
+                _decryptAes128CBC(encryptedData, keyBytes, ivString, segmentIndex);
+            await File(savePath).writeAsBytes(decryptedData);
+            return decryptedData.length;
+          } finally {
+            if (await encryptedFile.exists()) {
+              await encryptedFile.delete();
+            }
+          }
+        } else {
+          return await _streamToFile(responseStream, savePath);
         }
-
-        final file = File(savePath);
-        await file.writeAsBytes(data);
-        return;
       } catch (e) {
         retryCount++;
         if (retryCount >= maxRetries) {
@@ -333,6 +339,22 @@ class DownloadEngine {
         await Future.delayed(Duration(seconds: retryCount));
       }
     }
+    return 0;
+  }
+
+  Future<int> _streamToFile(Stream<List<int>> stream, String path) async {
+    final file = File(path);
+    final sink = file.openWrite();
+    int totalBytes = 0;
+    try {
+      await for (final chunk in stream) {
+        sink.add(chunk);
+        totalBytes += chunk.length;
+      }
+    } finally {
+      await sink.close();
+    }
+    return totalBytes;
   }
 
   Uint8List _decryptAes128CBC(
@@ -340,9 +362,8 @@ class DownloadEngine {
     final engine = AESEngine();
     engine.init(false, KeyParameter(keyBytes));
 
-    final dataCopy = Uint8List.fromList(data);
     const blockSize = 16;
-    final numBlocks = dataCopy.length ~/ blockSize;
+    final numBlocks = data.length ~/ blockSize;
 
     Uint8List prevCipher = _buildIvBytes(ivString, segmentIndex);
     final currentIn = Uint8List(blockSize);
@@ -350,33 +371,33 @@ class DownloadEngine {
 
     for (int i = 0; i < numBlocks; i++) {
       final offset = i * blockSize;
-      final blockCipher =
-          Uint8List.fromList(dataCopy.sublist(offset, offset + blockSize));
       for (int j = 0; j < blockSize; j++) {
-        currentIn[j] = blockCipher[j];
+        currentIn[j] = data[offset + j];
       }
       engine.processBlock(currentIn, 0, currentOut, 0);
       for (int j = 0; j < blockSize; j++) {
-        dataCopy[offset + j] = currentOut[j] ^ prevCipher[j];
+        data[offset + j] = currentOut[j] ^ prevCipher[j];
       }
-      prevCipher = blockCipher;
+      for (int j = 0; j < blockSize; j++) {
+        prevCipher[j] = currentIn[j];
+      }
     }
 
-    final padLen = dataCopy[dataCopy.length - 1];
+    final padLen = data[data.length - 1];
     if (padLen > 0 && padLen <= blockSize) {
       bool valid = true;
-      for (int i = dataCopy.length - padLen; i < dataCopy.length; i++) {
-        if (dataCopy[i] != padLen) {
+      for (int i = data.length - padLen; i < data.length; i++) {
+        if (data[i] != padLen) {
           valid = false;
           break;
         }
       }
       if (valid) {
-        return dataCopy.sublist(0, dataCopy.length - padLen);
+        return Uint8List.sublistView(data, 0, data.length - padLen);
       }
     }
 
-    return dataCopy;
+    return data;
   }
 
   Uint8List _buildIvBytes(String? ivString, int segmentIndex) {
@@ -404,16 +425,15 @@ class DownloadEngine {
     if (segmentPaths.isEmpty) return;
 
     final outputFile = File(outputPath);
-    final output = await outputFile.open(mode: FileMode.write);
+    final output = outputFile.openWrite();
     try {
       for (final segPath in segmentPaths) {
         final segFile = File(segPath);
-        if (segFile.existsSync()) {
-          final bytes = segFile.readAsBytesSync();
-          output.writeFromSync(bytes);
+        if (await segFile.exists()) {
+          final stream = segFile.openRead();
+          await output.addStream(stream);
         }
       }
-      await output.flush();
     } finally {
       await output.close();
     }

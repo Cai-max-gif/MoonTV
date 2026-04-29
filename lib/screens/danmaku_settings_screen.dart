@@ -136,8 +136,6 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           _buildDanmakuFontSizeCard(isDarkMode),
           const SizedBox(height: 12),
           _buildDanmakuDisplayAreaCard(isDarkMode),
-          const SizedBox(height: 16),
-          _buildHintCard(isDarkMode),
         ],
       ),
     );
@@ -636,38 +634,4 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
     );
   }
 
-  Widget _buildHintCard(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFf59e0b).withAlpha(25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFf59e0b).withAlpha(76),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            LucideIcons.info,
-            size: 20,
-            color: Color(0xFFf59e0b),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              '提示：弹幕开关与播放器中的弹幕图标状态同步。关闭弹幕开关后，其他弹幕设置将被禁用。防弹幕重叠功能默认开启，同步视频速度功能默认开启。',
-              style: FontUtils.poppins(
-                fontSize: 14,
-                color: isDarkMode
-                    ? const Color(0xFFf59e0b)
-                    : const Color(0xFF92400e),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

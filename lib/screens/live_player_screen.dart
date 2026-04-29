@@ -179,9 +179,20 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
   @override
   void dispose() {
-    // 释放播放器控制器
-    _videoPlayerController?.dispose();
-    // 恢复原始的系统UI样式
+    final controller = _videoPlayerController;
+    _videoPlayerController = null;
+
+    if (controller != null) {
+      try {
+        controller.pause();
+      } catch (_) {}
+      Future.microtask(() async {
+        try {
+          await controller.dispose();
+        } catch (_) {}
+      });
+    }
+
     SystemChrome.setSystemUIOverlayStyle(_originalStyle);
     _programScrollController.dispose();
     _verticalProgramScrollController.dispose();
