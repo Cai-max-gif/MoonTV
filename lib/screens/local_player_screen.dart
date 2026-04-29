@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/video_player_surface.dart';
 import '../utils/device_utils.dart';
-import '../utils/font_utils.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LocalPlayerScreen extends StatefulWidget {
   final String filePath;
