@@ -29,7 +29,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final int? totalEpisodes;
   final String? sourceName;
   final Function(bool isWebFullscreen)? onWebFullscreenChanged;
-  final Function(VoidCallback? pendingAction)? onExitFullScreen;
+  final VoidCallback? onExitFullScreen;
   final bool live;
   final Function(bool isPipMode)? onPipModeChanged;
   final Function(String error)? onError;
@@ -42,7 +42,6 @@ class VideoPlayerWidget extends StatefulWidget {
   final bool isLocalFile;
   final VoidCallback? onNetdiskSearch;
   final Widget Function()? danmuOverlayBuilder;
-  final VoidCallback? onShowDownloadPanel;
 
   const VideoPlayerWidget({
     super.key,
@@ -74,7 +73,6 @@ class VideoPlayerWidget extends StatefulWidget {
     this.isLocalFile = false,
     this.onNetdiskSearch,
     this.danmuOverlayBuilder,
-    this.onShowDownloadPanel,
   });
 
   @override
@@ -645,7 +643,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 onExitWebFullscreenCallbackReady: (callback) {
                                   _exitWebFullscreenCallback = callback;
                                 },
-                                onExitFullScreen: null,
+                                onExitFullScreen: widget.onExitFullScreen,
                                 live: widget.live,
                                 playbackSpeedListenable: _playbackSpeed,
                                 onSetSpeed: _setPlaybackSpeed,
@@ -690,7 +688,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 onDanmakuSettings: widget.onDanmakuSettings,
                                 isLocalFile: widget.isLocalFile,
                                 onNetdiskSearch: widget.onNetdiskSearch,
-                                onShowDownloadPanel: widget.onShowDownloadPanel,
                               );
                     if (danmuOverlay == null) return controls;
                     return SizedBox.expand(

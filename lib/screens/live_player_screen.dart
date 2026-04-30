@@ -632,15 +632,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           _isWebFullscreen = isWebFullscreen;
         });
       },
-      onExitFullScreen: (pendingAction) {
+      onExitFullScreen: () {
         // 退出全屏后，重新滚动到当前节目
         _scrollToCurrentProgram();
-        // 执行 pendingAction（如果有的话）
-        if (pendingAction != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            pendingAction.call();
-          });
-        }
       },
       onReady: _onVideoPlayerReady,
       onError: (error) {
