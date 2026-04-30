@@ -187,8 +187,17 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     }
   }
 
-  void _openDanmakuSettings() {
+  Future<void> _exitFullscreenIfNeeded() async {
+    if (_isFullscreen) {
+      _exitFullscreen();
+      await Future.delayed(const Duration(milliseconds: 250));
+    }
+  }
+
+  void _openDanmakuSettings() async {
     _onUserInteraction();
+    await _exitFullscreenIfNeeded();
+    if (!mounted) return;
     widget.onDanmakuSettings?.call();
   }
 
@@ -996,7 +1005,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
             onTap: () {
               _onUserInteraction();
               if (_isFullscreen) {
-                  _exitFullscreen();
+                _exitFullscreen();
               } else {
                 widget.onBackPressed?.call();
               }
@@ -1022,7 +1031,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     }
     return Positioned(
       top: _isFullscreen ? 8 : 4,
-      right: widget.isLocalFile 
+      right: widget.isLocalFile
           ? (_isFullscreen ? 16.0 : 8.0)
           : (_isFullscreen ? 60.0 : 52.0),
       child: AnimatedOpacity(
@@ -1031,18 +1040,20 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         child: IgnorePointer(
           ignoring: !_controlsVisible || _isLocked,
           child: GestureDetector(
-            onTap: () {
+            onTap: () async {
               _onUserInteraction();
+              await _exitFullscreenIfNeeded();
+              if (!mounted) return;
               widget.onNetdiskSearch?.call();
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: const EdgeInsets.all(8),
               child: Icon(
-              Icons.cloud,
-              color: Colors.white,
-              size: _isFullscreen ? 24 : 20,
-            ),
+                Icons.cloud,
+                color: Colors.white,
+                size: _isFullscreen ? 24 : 20,
+              ),
             ),
           ),
         ),
@@ -1216,9 +1227,10 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 if (widget.live) const Spacer(),
                 if (!widget.live && !widget.isLocalFile)
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       _onUserInteraction();
-                      // 显示下载选集面板
+                      await _exitFullscreenIfNeeded();
+                      if (!mounted) return;
                       _showDownloadPanel();
                     },
                     behavior: HitTestBehavior.opaque,

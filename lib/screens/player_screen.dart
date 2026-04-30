@@ -1360,6 +1360,20 @@ class _PlayerScreenState extends State<PlayerScreen>
             onBatchEpisodesDownload: _onBatchEpisodesDownload,
             onDanmakuSettings: _openDanmakuSettings,
             onNetdiskSearch: _openNetdiskSearch,
+            danmuOverlayBuilder: (!_danmuLoaded || _danmuList.isEmpty)
+                ? null
+                : () => DanmuLayer(
+                      danmuList: _danmuList,
+                      currentTime: _currentTimeNotifier,
+                      fontSize: _danmuFontSize,
+                      speedLevel: _danmuSpeedIndex,
+                      opacity: _danmuOpacity,
+                      displayArea: _danmuDisplayArea,
+                      antiOverlap: _danmuAntiBlock,
+                      syncVideoSpeed: _danmuSyncSpeed,
+                      videoPlaybackSpeed: _videoPlaybackSpeed,
+                      visible: UserDataService.danmakuEnabledNotifier.value,
+                    ),
           ),
         if (_isCasting && _dlnaDevice != null)
           DLNAPlayer(
@@ -1381,22 +1395,6 @@ class _PlayerScreenState extends State<PlayerScreen>
             onControllerCreated: (controller) {
               _dlnaPlayerController = controller;
             },
-          ),
-        // 弹幕渲染层
-        if (_danmuLoaded && _danmuList.isNotEmpty)
-          Positioned.fill(
-            child: DanmuLayer(
-              danmuList: _danmuList,
-              currentTime: _currentTimeNotifier,
-              fontSize: _danmuFontSize,
-              speedLevel: _danmuSpeedIndex,
-              opacity: _danmuOpacity,
-              displayArea: _danmuDisplayArea,
-              antiOverlap: _danmuAntiBlock,
-              syncVideoSpeed: _danmuSyncSpeed,
-              videoPlaybackSpeed: _videoPlaybackSpeed,
-              visible: UserDataService.danmakuEnabledNotifier.value,
-            ),
           ),
         // 切换播放源/集数时的加载蒙版（只遮挡播放器）
         SwitchLoadingOverlay(

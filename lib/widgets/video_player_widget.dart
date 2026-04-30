@@ -41,6 +41,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final VoidCallback? onDanmakuSettings;
   final bool isLocalFile;
   final VoidCallback? onNetdiskSearch;
+  final Widget Function()? danmuOverlayBuilder;
 
   const VideoPlayerWidget({
     super.key,
@@ -71,6 +72,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.onDanmakuSettings,
     this.isLocalFile = false,
     this.onNetdiskSearch,
+    this.danmuOverlayBuilder,
   });
 
   @override
@@ -619,72 +621,85 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
               ? Video(
                   controller: _videoController!,
                   controls: (state) {
-                    return widget.surface == VideoPlayerSurface.desktop
-                        ? PCPlayerControls(
-                            state: state,
-                            player: _player!,
-                            onBackPressed: widget.onBackPressed,
-                            onNextEpisode: widget.onNextEpisode,
-                            onPause: widget.onPause,
-                            videoUrl: _currentUrl ?? '',
-                            isLastEpisode: widget.isLastEpisode,
-                            isLoadingVideo: _isLoadingVideo,
-                            onCastStarted: widget.onCastStarted,
-                            videoTitle: widget.videoTitle,
-                            currentEpisodeIndex: widget.currentEpisodeIndex,
-                            totalEpisodes: widget.totalEpisodes,
-                            sourceName: widget.sourceName,
-                            onWebFullscreenChanged:
-                                widget.onWebFullscreenChanged,
-                            onExitWebFullscreenCallbackReady: (callback) {
-                              _exitWebFullscreenCallback = callback;
-                            },
-                            onExitFullScreen: widget.onExitFullScreen,
-                            live: widget.live,
-                            playbackSpeedListenable: _playbackSpeed,
-                            onSetSpeed: _setPlaybackSpeed,
-                            episodes: widget.episodes,
-                            episodesTitles: widget.episodesTitles,
-                            onSingleEpisodeDownload:
-                                widget.onSingleEpisodeDownload,
-                            onBatchEpisodesDownload:
-                                widget.onBatchEpisodesDownload,
-                            onDanmakuSettings: widget.onDanmakuSettings,
-                            isLocalFile: widget.isLocalFile,
-                            onNetdiskSearch: widget.onNetdiskSearch,
-                          )
-                        : MobilePlayerControls(
-                            player: _player!,
-                            state: state,
-                            onControlsVisibilityChanged: (_) {},
-                            onBackPressed: widget.onBackPressed,
-                            onFullscreenChange: (_) {},
-                            onNextEpisode: widget.onNextEpisode,
-                            onPause: widget.onPause,
-                            videoUrl: _currentUrl ?? '',
-                            isLastEpisode: widget.isLastEpisode,
-                            isLoadingVideo: _isLoadingVideo,
-                            onCastStarted: widget.onCastStarted,
-                            videoTitle: widget.videoTitle,
-                            currentEpisodeIndex: widget.currentEpisodeIndex,
-                            totalEpisodes: widget.totalEpisodes,
-                            sourceName: widget.sourceName,
-                            onExitFullScreen: widget.onExitFullScreen,
-                            live: widget.live,
-                            playbackSpeedListenable: _playbackSpeed,
-                            onSetSpeed: _setPlaybackSpeed,
-                            onEnterPipMode: _enterPipMode,
-                            isPipMode: _isPipMode,
-                            episodes: widget.episodes,
-                            episodesTitles: widget.episodesTitles,
-                            onSingleEpisodeDownload:
-                                widget.onSingleEpisodeDownload,
-                            onBatchEpisodesDownload:
-                                widget.onBatchEpisodesDownload,
-                            onDanmakuSettings: widget.onDanmakuSettings,
-                            isLocalFile: widget.isLocalFile,
-                            onNetdiskSearch: widget.onNetdiskSearch,
-                          );
+                    final danmuOverlay = widget.danmuOverlayBuilder?.call();
+                    final controls =
+                        widget.surface == VideoPlayerSurface.desktop
+                            ? PCPlayerControls(
+                                state: state,
+                                player: _player!,
+                                onBackPressed: widget.onBackPressed,
+                                onNextEpisode: widget.onNextEpisode,
+                                onPause: widget.onPause,
+                                videoUrl: _currentUrl ?? '',
+                                isLastEpisode: widget.isLastEpisode,
+                                isLoadingVideo: _isLoadingVideo,
+                                onCastStarted: widget.onCastStarted,
+                                videoTitle: widget.videoTitle,
+                                currentEpisodeIndex: widget.currentEpisodeIndex,
+                                totalEpisodes: widget.totalEpisodes,
+                                sourceName: widget.sourceName,
+                                onWebFullscreenChanged:
+                                    widget.onWebFullscreenChanged,
+                                onExitWebFullscreenCallbackReady: (callback) {
+                                  _exitWebFullscreenCallback = callback;
+                                },
+                                onExitFullScreen: widget.onExitFullScreen,
+                                live: widget.live,
+                                playbackSpeedListenable: _playbackSpeed,
+                                onSetSpeed: _setPlaybackSpeed,
+                                episodes: widget.episodes,
+                                episodesTitles: widget.episodesTitles,
+                                onSingleEpisodeDownload:
+                                    widget.onSingleEpisodeDownload,
+                                onBatchEpisodesDownload:
+                                    widget.onBatchEpisodesDownload,
+                                onDanmakuSettings: widget.onDanmakuSettings,
+                                isLocalFile: widget.isLocalFile,
+                                onNetdiskSearch: widget.onNetdiskSearch,
+                              )
+                            : MobilePlayerControls(
+                                player: _player!,
+                                state: state,
+                                onControlsVisibilityChanged: (_) {},
+                                onBackPressed: widget.onBackPressed,
+                                onFullscreenChange: (_) {},
+                                onNextEpisode: widget.onNextEpisode,
+                                onPause: widget.onPause,
+                                videoUrl: _currentUrl ?? '',
+                                isLastEpisode: widget.isLastEpisode,
+                                isLoadingVideo: _isLoadingVideo,
+                                onCastStarted: widget.onCastStarted,
+                                videoTitle: widget.videoTitle,
+                                currentEpisodeIndex: widget.currentEpisodeIndex,
+                                totalEpisodes: widget.totalEpisodes,
+                                sourceName: widget.sourceName,
+                                onExitFullScreen: widget.onExitFullScreen,
+                                live: widget.live,
+                                playbackSpeedListenable: _playbackSpeed,
+                                onSetSpeed: _setPlaybackSpeed,
+                                onEnterPipMode: _enterPipMode,
+                                isPipMode: _isPipMode,
+                                episodes: widget.episodes,
+                                episodesTitles: widget.episodesTitles,
+                                onSingleEpisodeDownload:
+                                    widget.onSingleEpisodeDownload,
+                                onBatchEpisodesDownload:
+                                    widget.onBatchEpisodesDownload,
+                                onDanmakuSettings: widget.onDanmakuSettings,
+                                isLocalFile: widget.isLocalFile,
+                                onNetdiskSearch: widget.onNetdiskSearch,
+                              );
+                    if (danmuOverlay == null) return controls;
+                    return SizedBox.expand(
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: IgnorePointer(child: danmuOverlay),
+                          ),
+                          Positioned.fill(child: controls),
+                        ],
+                      ),
+                    );
                   },
                 )
               : const Center(
