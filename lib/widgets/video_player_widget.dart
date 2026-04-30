@@ -40,6 +40,7 @@ class VideoPlayerWidget extends StatefulWidget {
       onBatchEpisodesDownload;
   final VoidCallback? onDanmakuSettings;
   final bool isLocalFile;
+  final VoidCallback? onNetdiskSearch;
 
   const VideoPlayerWidget({
     super.key,
@@ -69,6 +70,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.onBatchEpisodesDownload,
     this.onDanmakuSettings,
     this.isLocalFile = false,
+    this.onNetdiskSearch,
   });
 
   @override
@@ -649,6 +651,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 widget.onBatchEpisodesDownload,
                             onDanmakuSettings: widget.onDanmakuSettings,
                             isLocalFile: widget.isLocalFile,
+                            onNetdiskSearch: widget.onNetdiskSearch,
                           )
                         : MobilePlayerControls(
                             player: _player!,
@@ -680,6 +683,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                                 widget.onBatchEpisodesDownload,
                             onDanmakuSettings: widget.onDanmakuSettings,
                             isLocalFile: widget.isLocalFile,
+                            onNetdiskSearch: widget.onNetdiskSearch,
                           );
                   },
                 )

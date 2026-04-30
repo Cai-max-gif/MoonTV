@@ -44,6 +44,7 @@ class MobilePlayerControls extends StatefulWidget {
       onBatchEpisodesDownload;
   final VoidCallback? onDanmakuSettings;
   final bool isLocalFile;
+  final VoidCallback? onNetdiskSearch;
 
   const MobilePlayerControls({
     super.key,
@@ -74,6 +75,7 @@ class MobilePlayerControls extends StatefulWidget {
     this.onBatchEpisodesDownload,
     this.onDanmakuSettings,
     this.isLocalFile = false,
+    this.onNetdiskSearch,
   });
 
   @override
@@ -802,6 +804,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         _buildBottomGradient(),
         if (_isFullscreen) _buildCurrentTime(),
         _buildBackButton(),
+        _buildNetdiskButton(),
         _buildCastButton(),
         _buildCenterPlayPause(),
         _buildProgressBar(),
@@ -1006,6 +1009,40 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 color: Colors.white,
                 size: _isFullscreen ? 24 : 20,
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNetdiskButton() {
+    if (widget.isLocalFile) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      top: _isFullscreen ? 8 : 4,
+      right: widget.isLocalFile 
+          ? (_isFullscreen ? 16.0 : 8.0)
+          : (_isFullscreen ? 60.0 : 52.0),
+      child: AnimatedOpacity(
+        opacity: (_controlsVisible && !_isLocked) ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 200),
+        child: IgnorePointer(
+          ignoring: !_controlsVisible || _isLocked,
+          child: GestureDetector(
+            onTap: () {
+              _onUserInteraction();
+              widget.onNetdiskSearch?.call();
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+              Icons.cloud,
+              color: Colors.white,
+              size: _isFullscreen ? 24 : 20,
+            ),
             ),
           ),
         ),

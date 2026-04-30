@@ -1,0 +1,626 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../models/netdisk_item.dart';
+import '../models/cloud_type.dart';
+import '../services/api_service.dart';
+
+/// 网盘搜索页面
+class NetdiskSearchScreen extends StatefulWidget {
+  final String? initialQuery;
+
+  const NetdiskSearchScreen({
+    super.key,
+    this.initialQuery,
+  });
+
+  @override
+  State<NetdiskSearchScreen> createState() => _NetdiskSearchScreenState();
+}
+
+class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  NetDiskSearchResult? _result;
+  bool _loading = false;
+  String? _error;
+
+  // 密码可见状态映射: "${typeKey}-${index}" -> 是否可见
+  final Map<String, bool> _visiblePasswords = {};
+  // 标题展开状态映射
+  final Map<String, bool> _expandedTitles = {};
+
+  // 筛选模式: false=全部显示, true=仅显示选中
+  bool _filterMode = false;
+  final List<String> _selectedTypes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
+      _searchController.text = widget.initialQuery!;
+      _searchFocusNode.requestFocus();
+      // 自动搜索
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _doSearch(widget.initialQuery!);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _doSearch(String query) async {
+    if (query.trim().isEmpty) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+      _result = null;
+      _visiblePasswords.clear();
+      _expandedTitles.clear();
+    });
+
+    try {
+      final response = await ApiService.searchNetdisk(
+        query.trim(),
+        context: context,
+      );
+
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          if (response.success && response.data != null) {
+            _result = response.data;
+            if (!_result!.success) {
+              _error = _result!.error;
+            }
+          } else {
+            _error = response.message ?? '搜索失败';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = '搜索失败: ${e.toString()}';
+        });
+      }
+    }
+  }
+
+  /// 根据筛选状态返回当前要显示的结果
+  Map<String, List<NetDiskLink>> get _filteredResults {
+    if (_result == null) return {};
+    if (!_filterMode || _selectedTypes.isEmpty) {
+      return _result!.mergedByType;
+    }
+    return Map.fromEntries(
+      _result!.mergedByType.entries
+          .where((e) => _selectedTypes.contains(e.key)),
+    );
+  }
+
+  /// 按链接数量降序排列的类型列表
+  List<MapEntry<String, List<NetDiskLink>>> get _sortedTypes {
+    return _filteredResults.entries.toList()
+      ..sort((a, b) => b.value.length.compareTo(a.value.length));
+  }
+
+  Future<void> _launchUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('无法打开链接')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('打开链接失败: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _togglePasswordVisibility(String key) {
+    setState(() {
+      _visiblePasswords[key] = !(_visiblePasswords[key] ?? false);
+    });
+  }
+
+  void _toggleTitleExpansion(String key) {
+    setState(() {
+      _expandedTitles[key] = !(_expandedTitles[key] ?? false);
+    });
+  }
+
+  void _toggleFilterMode() {
+    setState(() {
+      _filterMode = !_filterMode;
+      if (!_filterMode) {
+        _selectedTypes.clear();
+      }
+    });
+  }
+
+  void _toggleTypeSelection(String typeKey) {
+    setState(() {
+      if (_selectedTypes.contains(typeKey)) {
+        _selectedTypes.remove(typeKey);
+      } else {
+        _selectedTypes.add(typeKey);
+      }
+    });
+  }
+
+  Future<void> _copyToClipboard(String text, String description) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$description已复制')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('复制失败: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('网盘资源搜索'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              decoration: InputDecoration(
+                hintText: '输入关键词搜索网盘资源',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _loading
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _result = null;
+                                _error = null;
+                              });
+                            },
+                          )
+                        : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor:
+                    Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              onSubmitted: _doSearch,
+              textInputAction: TextInputAction.search,
+            ),
+          ),
+        ),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    // 加载状态
+    if (_loading) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('正在搜索网盘资源...'),
+          ],
+        ),
+      );
+    }
+
+    // 错误状态
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _error!.contains('未启用')
+                    ? Icons.info_outline
+                    : Icons.error_outline,
+                size: 48,
+                color: _error!.contains('未启用') ? Colors.blue : Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _error!.contains('未启用') ? Colors.blue : Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 初始状态
+    if (_result == null) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('输入关键词开始搜索', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    // 无结果
+    if (_result!.mergedByType.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('未找到相关资源'),
+            SizedBox(height: 8),
+            Text('尝试使用其他关键词搜索', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    // 搜索结果列表
+    return Column(
+      children: [
+        if (_result!.mergedByType.isNotEmpty) _buildFilterBar(),
+        if (_result!.total > 0) _buildStatsBar(),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 32),
+            itemCount: _sortedTypes.length,
+            itemBuilder: (context, index) {
+              final entry = _sortedTypes[index];
+              return _buildCloudTypeSection(entry.key, entry.value);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                _filterMode ? '仅显示选中' : '快速筛选',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const Spacer(),
+              ChoiceChip(
+                label: Text(_filterMode ? '仅显示选中' : '显示全部'),
+                selected: _filterMode,
+                onSelected: (_) => _toggleFilterMode(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _result!.mergedByType.entries.map((entry) {
+              final type = CloudType.get(entry.key);
+              final selected = _selectedTypes.contains(entry.key);
+
+              return ActionChip(
+                avatar: Text(type.icon, style: const TextStyle(fontSize: 14)),
+                label: Text(
+                  '${type.name} ${entry.value.length}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: (_filterMode && selected) ? Colors.white : null,
+                  ),
+                ),
+                backgroundColor:
+                    (_filterMode && selected) ? type.color : type.lightColor,
+                side: BorderSide(
+                  color: (_filterMode && selected)
+                      ? type.color
+                      : Colors.grey.shade300,
+                ),
+                onPressed: () {
+                  if (_filterMode) {
+                    _toggleTypeSelection(entry.key);
+                  }
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsBar() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: '共找到 '),
+            TextSpan(
+              text: '${_result!.total}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: ' 个网盘资源，覆盖 '),
+            TextSpan(
+              text: '${_result!.mergedByType.length}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: ' 种网盘类型'),
+          ],
+        ),
+        style: const TextStyle(color: Colors.blue),
+      ),
+    );
+  }
+
+  Widget _buildCloudTypeSection(String typeKey, List<NetDiskLink> links) {
+    final type = CloudType.get(typeKey);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 类型头部（带颜色背景）
+          Container(
+            width: double.infinity,
+            color: type.color,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Text(type.icon, style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: 8),
+                Text(
+                  type.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${links.length} 个链接',
+                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 链接列表
+          ...links.asMap().entries.expand((entry) {
+            final index = entry.key;
+            final link = entry.value;
+            final items = [_buildLinkItem(typeKey, index, link)];
+            if (index < links.length - 1) {
+              items.add(const Divider(height: 16));
+            }
+            return items;
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLinkItem(String typeKey, int index, NetDiskLink link) {
+    final linkKey = '$typeKey-$index';
+    final isPasswordVisible = _visiblePasswords[linkKey] ?? false;
+    final isTitleExpanded = _expandedTitles[linkKey] ?? false;
+    final title = link.displayTitle;
+    final titleTooLong = title.length > 40;
+
+    return InkWell(
+      onTap: () => _launchUrl(link.url),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 标题行
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: isTitleExpanded ? null : 2,
+                    overflow: isTitleExpanded ? null : TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // 标题过长时显示展开/收起按钮
+            if (titleTooLong)
+              GestureDetector(
+                onTap: () => _toggleTitleExpansion(linkKey),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    isTitleExpanded ? '收起' : '展开',
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            // 链接行
+            Row(
+              children: [
+                const Icon(Icons.link, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    link.url,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 18),
+                  onPressed: () => _copyToClipboard(link.url, '链接'),
+                  tooltip: '复制链接',
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+
+            // 密码行（仅当有密码时显示）
+            if (link.hasPassword) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.lock, size: 16, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      isPasswordVisible ? link.password : '****',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      isPasswordVisible
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      size: 18,
+                    ),
+                    onPressed: () => _togglePasswordVisibility(linkKey),
+                    tooltip: isPasswordVisible ? '隐藏密码' : '显示密码',
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    padding: EdgeInsets.zero,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: () => _copyToClipboard(link.password, '密码'),
+                    tooltip: '复制密码',
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 8),
+
+            // 元信息行
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '来源: ${link.source}',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.open_in_new, size: 14),
+                  label: const Text('访问链接', style: TextStyle(fontSize: 12)),
+                  onPressed: () => _launchUrl(link.url),
+                  style: TextButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    minimumSize: Size.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

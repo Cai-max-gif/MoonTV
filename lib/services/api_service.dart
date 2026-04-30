@@ -14,6 +14,7 @@ import '../models/live_channel.dart';
 import '../models/epg_program.dart';
 import '../models/search_suggestion.dart';
 import '../models/danmu_item.dart';
+import '../models/netdisk_item.dart';
 
 /// API响应结果类
 class ApiResponse<T> {
@@ -1216,6 +1217,25 @@ class ApiService {
       return response;
     } catch (e) {
       return ApiResponse.error('搜索弹幕库失败: ${e.toString()}');
+    }
+  }
+
+  /// 搜索网盘资源
+  static Future<ApiResponse<NetDiskSearchResult>> searchNetdisk(
+    String query, {
+    BuildContext? context,
+  }) async {
+    try {
+      final response = await get<NetDiskSearchResult>(
+        '/api/netdisk/search',
+        queryParameters: {'q': query.trim()},
+        context: context,
+        fromJson: (data) => NetDiskSearchResult.fromJson(data as Map<String, dynamic>),
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error('搜索网盘资源失败: ${e.toString()}');
     }
   }
 }

@@ -19,6 +19,7 @@ import '../models/download_task.dart';
 import '../models/danmu_item.dart';
 import '../widgets/switch_loading_overlay.dart';
 import 'danmaku_settings_screen.dart';
+import 'netdisk_search_screen.dart';
 import '../widgets/dlna_player.dart';
 import '../widgets/dlna_device_dialog.dart';
 import '../widgets/danmu_layer.dart';
@@ -558,6 +559,18 @@ class _PlayerScreenState extends State<PlayerScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _openNetdiskSearch() {
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => NetdiskSearchScreen(
+            initialQuery: videoTitle,
+          ),
         ),
       );
     }
@@ -1328,6 +1341,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             onSingleEpisodeDownload: _onSingleEpisodeDownload,
             onBatchEpisodesDownload: _onBatchEpisodesDownload,
             onDanmakuSettings: _openDanmakuSettings,
+            onNetdiskSearch: _openNetdiskSearch,
           ),
         if (_isCasting && _dlnaDevice != null)
           DLNAPlayer(

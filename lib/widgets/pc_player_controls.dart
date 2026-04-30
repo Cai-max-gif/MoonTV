@@ -87,6 +87,7 @@ class PCPlayerControls extends StatefulWidget {
       onBatchEpisodesDownload;
   final VoidCallback? onDanmakuSettings;
   final bool isLocalFile;
+  final VoidCallback? onNetdiskSearch;
 
   const PCPlayerControls({
     super.key,
@@ -116,6 +117,7 @@ class PCPlayerControls extends StatefulWidget {
     this.onBatchEpisodesDownload,
     this.onDanmakuSettings,
     this.isLocalFile = false,
+    this.onNetdiskSearch,
   });
 
   @override
@@ -793,6 +795,30 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                 ),
               ),
             ),
+            // 顶部网盘按钮（本地文件播放时隐藏）
+            if (!widget.isLocalFile)
+              Positioned(
+                top: effectiveFullscreen ? 8 : 4,
+                right: effectiveFullscreen ? 60.0 : 52.0,
+                child: AnimatedOpacity(
+                  opacity: _controlsVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !_controlsVisible,
+                    child: HoverButton(
+                      onTap: () {
+                        _onUserInteraction();
+                        widget.onNetdiskSearch?.call();
+                      },
+                      child: Icon(
+              Icons.cloud,
+              color: Colors.white,
+              size: effectiveFullscreen ? 24 : 20,
+            ),
+                    ),
+                  ),
+                ),
+              ),
             // 顶部投屏按钮（本地文件播放时隐藏）
             if (!widget.isLocalFile)
               Positioned(

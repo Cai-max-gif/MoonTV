@@ -52,26 +52,33 @@ android {
         }
     }
 
+    splits {
+        abi {
+            isEnable = false
+        }
+    }
+
     buildTypes {
         release {
             if (hasSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             } else {
-                // Fallback to debug signing for local development
                 signingConfig = signingConfigs.getByName("debug")
             }
             
-            // Enable R8 code shrinking, obfuscation, and optimization
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "NONE"
+            }
         }
         
         debug {
-            // Keep debug builds fast
             isMinifyEnabled = false
         }
     }
