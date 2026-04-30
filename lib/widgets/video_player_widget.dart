@@ -615,7 +615,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     return Container(
       color: Colors.black,
       child: _isInitialized
-          ? _videoController != null
+          ? _videoController != null && _player != null
               ? Video(
                   controller: _videoController!,
                   controls: (state) {

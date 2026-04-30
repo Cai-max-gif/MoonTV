@@ -173,8 +173,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     WidgetsBinding.instance.addObserver(this);
     UserDataService.danmakuEnabledNotifier
         .addListener(_onDanmakuEnabledChanged);
-    UserDataService.danmakuSpeedNotifier
-        .addListener(_onDanmakuSettingChanged);
+    UserDataService.danmakuSpeedNotifier.addListener(_onDanmakuSettingChanged);
     UserDataService.danmakuOpacityNotifier
         .addListener(_onDanmakuSettingChanged);
     UserDataService.danmakuFontSizeNotifier
@@ -203,11 +202,19 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   void _openDanmakuSettings() {
+    // 暂停播放
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.pause();
+    }
     setState(() => _showDanmakuSettings = true);
   }
 
   void _closeDanmakuSettings() {
     setState(() => _showDanmakuSettings = false);
+    // 继续播放
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.play();
+    }
     if (UserDataService.danmakuEnabledNotifier.value && !_danmuLoaded) {
       _loadDanmu();
     }
@@ -565,14 +572,25 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   void _openNetdiskSearch() {
+    // 暂停播放
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.pause();
+    }
     if (mounted) {
-      Navigator.of(context).push(
+      Navigator.of(context)
+          .push(
         MaterialPageRoute(
           builder: (context) => NetdiskSearchScreen(
             initialQuery: videoTitle,
           ),
         ),
-      );
+      )
+          .then((_) {
+        // 从网盘页面返回后继续播放
+        if (_videoPlayerController != null) {
+          _videoPlayerController!.play();
+        }
+      });
     }
   }
 

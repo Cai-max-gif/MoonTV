@@ -25,15 +25,14 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
   NetDiskSearchResult? _result;
   bool _loading = false;
   String? _error;
+  bool _showStats = false;
+  Timer? _statsTimer;
+  String? _selectedType;
 
   // 密码可见状态映射: "${typeKey}-${index}" -> 是否可见
   final Map<String, bool> _visiblePasswords = {};
   // 标题展开状态映射
   final Map<String, bool> _expandedTitles = {};
-
-  // 筛选模式: false=全部显示, true=仅显示选中
-  bool _filterMode = false;
-  final List<String> _selectedTypes = [];
 
   @override
   void initState() {
@@ -54,6 +53,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _statsTimer?.cancel();
     super.dispose();
   }
 
@@ -63,6 +63,8 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
       _loading = true;
       _error = null;
       _result = null;
+      _showStats = false;
+      _selectedType = null;
       _visiblePasswords.clear();
       _expandedTitles.clear();
     });
@@ -78,6 +80,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
           _loading = false;
           if (response.success && response.data != null) {
             _result = response.data;
+            _showStats = _result!.total > 0;
             if (!_result!.success) {
               _error = _result!.error;
             }
@@ -85,6 +88,17 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
             _error = response.message ?? '搜索失败';
           }
         });
+
+        if (_showStats) {
+          _statsTimer?.cancel();
+          _statsTimer = Timer(const Duration(seconds: 3), () {
+            if (mounted) {
+              setState(() {
+                _showStats = false;
+              });
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -96,22 +110,14 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     }
   }
 
-  /// 根据筛选状态返回当前要显示的结果
-  Map<String, List<NetDiskLink>> get _filteredResults {
-    if (_result == null) return {};
-    if (!_filterMode || _selectedTypes.isEmpty) {
-      return _result!.mergedByType;
-    }
-    return Map.fromEntries(
-      _result!.mergedByType.entries
-          .where((e) => _selectedTypes.contains(e.key)),
-    );
-  }
-
   /// 按链接数量降序排列的类型列表
   List<MapEntry<String, List<NetDiskLink>>> get _sortedTypes {
-    return _filteredResults.entries.toList()
-      ..sort((a, b) => b.value.length.compareTo(a.value.length));
+    if (_result == null) return [];
+    var entries = _result!.mergedByType.entries.toList();
+    if (_selectedType != null) {
+      entries = entries.where((e) => e.key == _selectedType).toList();
+    }
+    return entries..sort((a, b) => b.value.length.compareTo(a.value.length));
   }
 
   Future<void> _launchUrl(String url) async {
@@ -147,25 +153,6 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     });
   }
 
-  void _toggleFilterMode() {
-    setState(() {
-      _filterMode = !_filterMode;
-      if (!_filterMode) {
-        _selectedTypes.clear();
-      }
-    });
-  }
-
-  void _toggleTypeSelection(String typeKey) {
-    setState(() {
-      if (_selectedTypes.contains(typeKey)) {
-        _selectedTypes.remove(typeKey);
-      } else {
-        _selectedTypes.add(typeKey);
-      }
-    });
-  }
-
   Future<void> _copyToClipboard(String text, String description) async {
     try {
       await Clipboard.setData(ClipboardData(text: text));
@@ -198,27 +185,18 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
               decoration: InputDecoration(
                 hintText: '输入关键词搜索网盘资源',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _loading
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _result = null;
+                            _error = null;
+                          });
+                        },
                       )
-                    : _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _result = null;
-                                _error = null;
-                              });
-                            },
-                          )
-                        : null,
+                    : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -314,7 +292,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     return Column(
       children: [
         if (_result!.mergedByType.isNotEmpty) _buildFilterBar(),
-        if (_result!.total > 0) _buildStatsBar(),
+        if (_showStats) _buildStatsBar(),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 32),
@@ -333,56 +311,35 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     return Container(
       color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                _filterMode ? '仅显示选中' : '快速筛选',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const Spacer(),
-              ChoiceChip(
-                label: Text(_filterMode ? '仅显示选中' : '显示全部'),
-                selected: _filterMode,
-                onSelected: (_) => _toggleFilterMode(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: _result!.mergedByType.entries.map((entry) {
-              final type = CloudType.get(entry.key);
-              final selected = _selectedTypes.contains(entry.key);
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: _result!.mergedByType.entries.map((entry) {
+          final type = CloudType.get(entry.key);
+          final isSelected = _selectedType == entry.key;
 
-              return ActionChip(
-                avatar: Text(type.icon, style: const TextStyle(fontSize: 14)),
-                label: Text(
-                  '${type.name} ${entry.value.length}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: (_filterMode && selected) ? Colors.white : null,
-                  ),
-                ),
-                backgroundColor:
-                    (_filterMode && selected) ? type.color : type.lightColor,
-                side: BorderSide(
-                  color: (_filterMode && selected)
-                      ? type.color
-                      : Colors.grey.shade300,
-                ),
-                onPressed: () {
-                  if (_filterMode) {
-                    _toggleTypeSelection(entry.key);
-                  }
-                },
-              );
-            }).toList(),
-          ),
-        ],
+          return ActionChip(
+            avatar: Text(type.icon, style: const TextStyle(fontSize: 14)),
+            label: Text(
+              '${type.name} ${entry.value.length}',
+              style: const TextStyle(
+                fontSize: 12,
+              ),
+            ),
+            backgroundColor: isSelected ? type.color : type.lightColor,
+            side: BorderSide(
+              color: isSelected ? type.color : Colors.grey.shade300,
+            ),
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : null,
+            ),
+            onPressed: () {
+              setState(() {
+                _selectedType = isSelected ? null : entry.key;
+              });
+            },
+          );
+        }).toList(),
       ),
     );
   }
