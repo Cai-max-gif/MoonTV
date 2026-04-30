@@ -187,18 +187,25 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     }
   }
 
-  Future<void> _exitFullscreenIfNeeded() async {
+  Future<void> _exitFullscreenIfNeeded({VoidCallback? then}) async {
     if (_isFullscreen) {
       _exitFullscreen();
       await Future.delayed(const Duration(milliseconds: 250));
+      if (!mounted) return;
+      if (then != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          then.call();
+        });
+      }
+      return;
     }
+    then?.call();
   }
 
-  void _openDanmakuSettings() async {
+  void _openDanmakuSettings() {
     _onUserInteraction();
-    await _exitFullscreenIfNeeded();
-    if (!mounted) return;
-    widget.onDanmakuSettings?.call();
+    _exitFullscreenIfNeeded(then: widget.onDanmakuSettings);
   }
 
   @override
@@ -1040,11 +1047,9 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         child: IgnorePointer(
           ignoring: !_controlsVisible || _isLocked,
           child: GestureDetector(
-            onTap: () async {
+            onTap: () {
               _onUserInteraction();
-              await _exitFullscreenIfNeeded();
-              if (!mounted) return;
-              widget.onNetdiskSearch?.call();
+              _exitFullscreenIfNeeded(then: widget.onNetdiskSearch);
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
@@ -1227,11 +1232,9 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 if (widget.live) const Spacer(),
                 if (!widget.live && !widget.isLocalFile)
                   GestureDetector(
-                    onTap: () async {
+                    onTap: () {
                       _onUserInteraction();
-                      await _exitFullscreenIfNeeded();
-                      if (!mounted) return;
-                      _showDownloadPanel();
+                      _exitFullscreenIfNeeded(then: _showDownloadPanel);
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
