@@ -97,6 +97,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   // VideoPlayerWidget 的控制器
   VideoPlayerWidgetController? _videoPlayerController;
+  
+  // VideoState 引用（用于全屏控制）
+  dynamic _videoState;
 
   // 收藏状态
   bool _isFavorite = false;
@@ -201,12 +204,18 @@ class _PlayerScreenState extends State<PlayerScreen>
     setState(() {});
   }
 
-  void _openDanmakuSettings() {
+  void _openDanmakuSettings() async {
+    // 如果在全屏模式，先退出全屏
+    if (_videoState != null && _videoState.isFullscreen()) {
+      await _videoState.exitFullscreen();
+    }
     // 暂停播放
     if (_videoPlayerController != null) {
       _videoPlayerController!.pause();
     }
-    setState(() => _showDanmakuSettings = true);
+    if (mounted) {
+      setState(() => _showDanmakuSettings = true);
+    }
   }
 
   void _closeDanmakuSettings() {
@@ -571,7 +580,11 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
   }
 
-  void _openNetdiskSearch() {
+  void _openNetdiskSearch() async {
+    // 如果在全屏模式，先退出全屏
+    if (_videoState != null && _videoState.isFullscreen()) {
+      await _videoState.exitFullscreen();
+    }
     // 暂停播放
     if (_videoPlayerController != null) {
       _videoPlayerController!.pause();
@@ -1374,6 +1387,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                       videoPlaybackSpeed: _videoPlaybackSpeed,
                       visible: UserDataService.danmakuEnabledNotifier.value,
                     ),
+            onVideoStateChanged: (state) {
+              _videoState = state;
+            },
           ),
         if (_isCasting && _dlnaDevice != null)
           DLNAPlayer(

@@ -42,6 +42,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final bool isLocalFile;
   final VoidCallback? onNetdiskSearch;
   final Widget Function()? danmuOverlayBuilder;
+  final Function(VideoState?)? onVideoStateChanged;
 
   const VideoPlayerWidget({
     super.key,
@@ -73,6 +74,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.isLocalFile = false,
     this.onNetdiskSearch,
     this.danmuOverlayBuilder,
+    this.onVideoStateChanged,
   });
 
   @override
@@ -621,6 +623,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
               ? Video(
                   controller: _videoController!,
                   controls: (state) {
+                    // 保存 VideoState 引用（只在非全屏路由时保存）
+                    if (!state.isFullscreen()) {
+                      widget.onVideoStateChanged?.call(state);
+                    }
                     final danmuOverlay = widget.danmuOverlayBuilder?.call();
                     final controls =
                         widget.surface == VideoPlayerSurface.desktop

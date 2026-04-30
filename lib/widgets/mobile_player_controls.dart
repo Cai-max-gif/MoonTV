@@ -187,25 +187,9 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     }
   }
 
-  Future<void> _exitFullscreenIfNeeded({VoidCallback? then}) async {
-    if (_isFullscreen) {
-      _exitFullscreen();
-      await Future.delayed(const Duration(milliseconds: 250));
-      if (!mounted) return;
-      if (then != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          then.call();
-        });
-      }
-      return;
-    }
-    then?.call();
-  }
-
   void _openDanmakuSettings() {
     _onUserInteraction();
-    _exitFullscreenIfNeeded(then: widget.onDanmakuSettings);
+    widget.onDanmakuSettings?.call();
   }
 
   @override
@@ -1049,7 +1033,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
           child: GestureDetector(
             onTap: () {
               _onUserInteraction();
-              _exitFullscreenIfNeeded(then: widget.onNetdiskSearch);
+              widget.onNetdiskSearch?.call();
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
@@ -1234,7 +1218,8 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   GestureDetector(
                     onTap: () {
                       _onUserInteraction();
-                      _exitFullscreenIfNeeded(then: _showDownloadPanel);
+                      // 显示下载选集面板
+                      _showDownloadPanel();
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(

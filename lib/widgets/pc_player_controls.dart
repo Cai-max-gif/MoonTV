@@ -811,10 +811,10 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                         widget.onNetdiskSearch?.call();
                       },
                       child: Icon(
-              Icons.cloud,
-              color: Colors.white,
-              size: effectiveFullscreen ? 24 : 20,
-            ),
+                        Icons.cloud,
+                        color: Colors.white,
+                        size: effectiveFullscreen ? 24 : 20,
+                      ),
                     ),
                   ),
                 ),
