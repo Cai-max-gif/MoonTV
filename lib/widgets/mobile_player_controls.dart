@@ -10,7 +10,6 @@ import 'package:volume_controller/volume_controller.dart';
 import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dlna_device_dialog.dart';
-import 'player_download_panel.dart';
 import '../utils/device_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/user_data_service.dart';
@@ -31,7 +30,7 @@ class MobilePlayerControls extends StatefulWidget {
   final int? currentEpisodeIndex;
   final int? totalEpisodes;
   final String? sourceName;
-  final VoidCallback? onExitFullScreen;
+  final Function(VoidCallback? pendingAction)? onExitFullScreen;
   final bool live;
   final ValueNotifier<double> playbackSpeedListenable;
   final Future<void> Function(double speed) onSetSpeed;
@@ -45,6 +44,7 @@ class MobilePlayerControls extends StatefulWidget {
   final VoidCallback? onDanmakuSettings;
   final bool isLocalFile;
   final VoidCallback? onNetdiskSearch;
+  final VoidCallback? onShowDownloadPanel;
 
   const MobilePlayerControls({
     super.key,
@@ -76,6 +76,7 @@ class MobilePlayerControls extends StatefulWidget {
     this.onDanmakuSettings,
     this.isLocalFile = false,
     this.onNetdiskSearch,
+    this.onShowDownloadPanel,
   });
 
   @override
@@ -189,18 +190,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
 
   Future<void> _exitFullscreenIfNeeded({VoidCallback? then}) async {
     if (_isFullscreen) {
+      // 向上传递 pendingAction
+      widget.onExitFullScreen?.call(then);
       _exitFullscreen();
-      await Future.delayed(const Duration(milliseconds: 250));
-      if (!mounted) return;
-      if (then != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          then.call();
-        });
-      }
-      return;
+    } else {
+      then?.call();
     }
-    then?.call();
   }
 
   void _openDanmakuSettings() {
@@ -465,8 +460,6 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       try {
         widget.state.exitFullscreen();
         widget.onFullscreenChange(false);
-        // 触发退出全屏回调
-        widget.onExitFullScreen?.call();
         // 确保控制栏可见并重新启动隐藏计时器
         setState(() {
           _controlsVisible = true;
@@ -573,50 +566,6 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       return '$hours:${twoDigits(minutes)}:${twoDigits(seconds)}';
     }
     return '${twoDigits(minutes)}:${twoDigits(seconds)}';
-  }
-
-  void _showDownloadPanel() {
-    final theme = Theme.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final statusBarHeight = MediaQuery.of(context).padding.top;
-
-    final playerHeight = screenWidth / (16 / 9);
-    final panelHeight = screenHeight - statusBarHeight - playerHeight;
-
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 0),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: Material(
-            color: Colors.transparent,
-            child: SizedBox(
-              width: double.infinity,
-              height: panelHeight,
-              child: PlayerDownloadPanel(
-                theme: theme,
-                episodes: widget.episodes ?? [],
-                episodesTitles: widget.episodesTitles ?? [],
-                currentEpisodeIndex: widget.currentEpisodeIndex ?? 0,
-                isReversed: false,
-                onSingleEpisodeTap: (index) {
-                  widget.onSingleEpisodeDownload?.call(index);
-                },
-                onBatchDownload: (indices) async {
-                  await widget.onBatchEpisodesDownload?.call(indices);
-                },
-                onToggleOrder: () {},
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   // 截图功能
@@ -1234,7 +1183,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   GestureDetector(
                     onTap: () {
                       _onUserInteraction();
-                      _exitFullscreenIfNeeded(then: _showDownloadPanel);
+                      _exitFullscreenIfNeeded(then: widget.onShowDownloadPanel);
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(

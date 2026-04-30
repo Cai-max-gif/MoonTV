@@ -28,6 +28,7 @@ import '../utils/device_utils.dart';
 
 import '../widgets/player_episodes_panel.dart';
 import '../widgets/player_sources_panel.dart';
+import '../widgets/player_download_panel.dart';
 import '../widgets/windows_title_bar.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -137,6 +138,9 @@ class _PlayerScreenState extends State<PlayerScreen>
   // 播放器的 GlobalKey，用于保持播放器状态
   final GlobalKey _playerKey = GlobalKey();
 
+  // 全屏退出后待执行的 pending action
+  VoidCallback? _pendingFullscreenAction;
+
   // 弹幕相关
   List<DanmuItem> _danmuList = [];
   final ValueNotifier<double> _currentTimeNotifier = ValueNotifier<double>(0.0);
@@ -218,6 +222,50 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (UserDataService.danmakuEnabledNotifier.value && !_danmuLoaded) {
       _loadDanmu();
     }
+  }
+
+  void _showDownloadPanel() {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
+    final playerHeight = screenWidth / (16 / 9);
+    final panelHeight = screenHeight - statusBarHeight - playerHeight;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 0),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: double.infinity,
+              height: panelHeight,
+              child: PlayerDownloadPanel(
+                theme: theme,
+                episodes: currentDetail?.episodes ?? [],
+                episodesTitles: currentDetail?.episodesTitles ?? [],
+                currentEpisodeIndex: currentEpisodeIndex,
+                isReversed: false,
+                onSingleEpisodeTap: (index) {
+                  _onSingleEpisodeDownload(index);
+                },
+                onBatchDownload: (indices) async {
+                  await _onBatchEpisodesDownload(indices);
+                },
+                onToggleOrder: () {},
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// 设置竖屏方向
@@ -1354,12 +1402,25 @@ class _PlayerScreenState extends State<PlayerScreen>
                 _isWebFullscreen = isWebFullscreen;
               });
             },
+            onExitFullScreen: (pendingAction) {
+              // 保存 pendingAction，在下一帧执行
+              _pendingFullscreenAction = pendingAction;
+              if (pendingAction != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _pendingFullscreenAction?.call();
+                    _pendingFullscreenAction = null;
+                  }
+                });
+              }
+            },
             episodes: currentDetail?.episodes,
             episodesTitles: currentDetail?.episodesTitles,
             onSingleEpisodeDownload: _onSingleEpisodeDownload,
             onBatchEpisodesDownload: _onBatchEpisodesDownload,
             onDanmakuSettings: _openDanmakuSettings,
             onNetdiskSearch: _openNetdiskSearch,
+            onShowDownloadPanel: _showDownloadPanel,
             danmuOverlayBuilder: (!_danmuLoaded || _danmuList.isEmpty)
                 ? null
                 : () => DanmuLayer(
