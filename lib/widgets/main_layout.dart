@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../pages/ai_page.dart';
+import '../screens/netdisk_search_screen.dart';
 import 'dart:io' show Platform;
 import 'dart:async';
 import 'windows_title_bar.dart';
@@ -30,6 +31,7 @@ class MainLayout extends StatefulWidget {
   final bool showBottomNav;
   final Function(int)? onTopCategoryChanged;
   final int? currentTopNavIndex;
+  final bool useNetdiskIcon;
 
   const MainLayout({
     super.key,
@@ -50,6 +52,7 @@ class MainLayout extends StatefulWidget {
     this.onSearchSubmitted,
     this.onClearSearch,
     this.showBottomNav = true,
+    this.useNetdiskIcon = false,
   });
 
   @override
@@ -785,12 +788,21 @@ class _MainLayoutState extends State<MainLayout> {
                 }
               : null,
           child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AIPage()),
-              );
-            },
+            onTap: widget.useNetdiskIcon
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NetdiskSearchScreen(),
+                      ),
+                    );
+                  }
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AIPage()),
+                    );
+                  },
             behavior: HitTestBehavior.opaque,
             child: Container(
               width: 32,
@@ -804,16 +816,24 @@ class _MainLayoutState extends State<MainLayout> {
                     : Colors.transparent,
               ),
               child: Center(
-                child: Text(
-                  'AI',
-                  style: TextStyle(
-                    color: themeService.isDarkMode
-                        ? const Color(0xFFffffff)
-                        : const Color(0xFF2c3e50),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: widget.useNetdiskIcon
+                    ? Icon(
+                        Icons.cloud,
+                        color: themeService.isDarkMode
+                            ? const Color(0xFFffffff)
+                            : const Color(0xFF2c3e50),
+                        size: 24,
+                      )
+                    : Text(
+                        'AI',
+                        style: TextStyle(
+                          color: themeService.isDarkMode
+                              ? const Color(0xFFffffff)
+                              : const Color(0xFF2c3e50),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ),

@@ -613,6 +613,7 @@ class _SearchScreenState extends State<SearchScreen>
           onHomeTap: () {
             Navigator.pop(context);
           },
+          useNetdiskIcon: true,
         );
         if (Platform.isIOS) {
           return PopScope(

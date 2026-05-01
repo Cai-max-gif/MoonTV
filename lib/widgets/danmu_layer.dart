@@ -72,7 +72,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   final double _baseFontSize = 24.0;
   int _currentTrackCount = 0;
   int _emittedCount = 0;
-  
+
   static const int _maxRunningDanmu = 50;
   static const double _trackSpacing = 2.0;
 
@@ -163,7 +163,6 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   int? _findBestTrack(double textWidth) {
     if (!widget.antiOverlap || _tracks.isEmpty) return null;
 
-    final screenWidth = _screenSize.width;
     int bestTrack = 0;
     double bestOccupied = double.infinity;
 
@@ -179,13 +178,13 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   }
 
   void _emitNewDanmu(double currentPlayTime) {
-    final tolerance = 0.1;
-    final maxToEmit = 5;
+    const tolerance = 0.1;
+    const maxToEmit = 5;
     int emitted = 0;
 
     while (_emittedCount < widget.danmuList.length && emitted < maxToEmit) {
       final item = widget.danmuList[_emittedCount];
-      
+
       if (item.time > currentPlayTime + tolerance) {
         break;
       }
@@ -202,7 +201,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
 
       final fontSize = _baseFontSize * widget.fontSize;
       final color = item.color ?? Colors.white;
-      
+
       final textPainter = TextPainter(
         textDirection: TextDirection.ltr,
         text: TextSpan(
@@ -231,9 +230,11 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       if (item.mode == DanmuMode.scroll) {
         _emitScrollDanmu(item, textWidth, textPainter, shadowPainter);
       } else if (item.mode == DanmuMode.top) {
-        _emitFixedDanmu(item, textWidth, textPainter, shadowPainter, isTop: true);
+        _emitFixedDanmu(item, textWidth, textPainter, shadowPainter,
+            isTop: true);
       } else if (item.mode == DanmuMode.bottom) {
-        _emitFixedDanmu(item, textWidth, textPainter, shadowPainter, isTop: false);
+        _emitFixedDanmu(item, textWidth, textPainter, shadowPainter,
+            isTop: false);
       }
 
       _emittedCount++;
@@ -241,7 +242,8 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
     }
   }
 
-  void _emitScrollDanmu(DanmuItem item, double textWidth, TextPainter textPainter, TextPainter shadowPainter) {
+  void _emitScrollDanmu(DanmuItem item, double textWidth,
+      TextPainter textPainter, TextPainter shadowPainter) {
     final screenWidth = _screenSize.width;
     final lineHeight = _baseFontSize * widget.fontSize * _trackSpacing;
     final trackCount = _tracks.length;
@@ -269,7 +271,9 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
     ));
   }
 
-  void _emitFixedDanmu(DanmuItem item, double textWidth, TextPainter textPainter, TextPainter shadowPainter, {required bool isTop}) {
+  void _emitFixedDanmu(DanmuItem item, double textWidth,
+      TextPainter textPainter, TextPainter shadowPainter,
+      {required bool isTop}) {
     final screenWidth = _screenSize.width;
     final lineHeight = _baseFontSize * widget.fontSize * _trackSpacing;
     final trackCount = _tracks.length;
@@ -281,7 +285,8 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       chosenTrack = Random().nextInt(trackCount > 5 ? 5 : trackCount);
       y = chosenTrack * lineHeight + lineHeight * 0.8;
     } else {
-      chosenTrack = trackCount - 1 - Random().nextInt(trackCount > 5 ? 5 : trackCount);
+      chosenTrack =
+          trackCount - 1 - Random().nextInt(trackCount > 5 ? 5 : trackCount);
       y = chosenTrack * lineHeight + lineHeight * 0.8;
     }
 
@@ -304,8 +309,10 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   void _updateRunningDanmu(double deltaSeconds) {
     final speedFactors = [0.5, 0.75, 1.0, 1.5, 2.0];
     final speed = speedFactors[widget.speedLevel.clamp(0, 4)];
-    final videoSpeedMultiplier = widget.syncVideoSpeed ? widget.videoPlaybackSpeed : 1.0;
-    final scrollSpeed = (120 + speed * 60) * deltaSeconds * videoSpeedMultiplier;
+    final videoSpeedMultiplier =
+        widget.syncVideoSpeed ? widget.videoPlaybackSpeed : 1.0;
+    final scrollSpeed =
+        (120 + speed * 60) * deltaSeconds * videoSpeedMultiplier;
 
     for (final danmu in _runningDanmu) {
       if (danmu.item.mode == DanmuMode.scroll) {
@@ -327,7 +334,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       } else {
         expired = danmu.displayDuration <= 0;
       }
-      
+
       if (expired) {
         if (danmu.trackIndex < _tracks.length) {
           final track = _tracks[danmu.trackIndex];
@@ -391,10 +398,13 @@ class _DanmuPainter extends CustomPainter {
         final shadowColor = Colors.black.withValues(alpha: alpha * 0.5);
         shadowPainter.text = TextSpan(
           text: danmu.text,
-          style: (shadowPainter.text as TextSpan?)?.style?.copyWith(color: shadowColor) ?? TextStyle(
-            fontSize: fontSize,
-            color: shadowColor,
-          ),
+          style: (shadowPainter.text as TextSpan?)
+                  ?.style
+                  ?.copyWith(color: shadowColor) ??
+              TextStyle(
+                fontSize: fontSize,
+                color: shadowColor,
+              ),
         );
         shadowPainter.paint(canvas, Offset(danmu.x + 1, danmu.y + 1));
         shadowPainter.paint(canvas, Offset(danmu.x - 1, danmu.y - 1));
@@ -406,10 +416,13 @@ class _DanmuPainter extends CustomPainter {
         final textColor = danmu.color.withValues(alpha: alpha);
         textPainter.text = TextSpan(
           text: danmu.text,
-          style: (textPainter.text as TextSpan?)?.style?.copyWith(color: textColor) ?? TextStyle(
-            fontSize: fontSize,
-            color: textColor,
-          ),
+          style: (textPainter.text as TextSpan?)
+                  ?.style
+                  ?.copyWith(color: textColor) ??
+              TextStyle(
+                fontSize: fontSize,
+                color: textColor,
+              ),
         );
         textPainter.paint(canvas, Offset(danmu.x, danmu.y));
       }
