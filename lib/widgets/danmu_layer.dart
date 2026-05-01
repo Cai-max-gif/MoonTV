@@ -12,6 +12,8 @@ class _RunningDanmu {
   final double textWidth;
   final Color color;
   final int trackIndex;
+  final TextPainter? cachedTextPainter;
+  final TextPainter? cachedShadowPainter;
 
   _RunningDanmu({
     required this.item,
@@ -22,6 +24,8 @@ class _RunningDanmu {
     required this.textWidth,
     required this.color,
     required this.trackIndex,
+    this.cachedTextPainter,
+    this.cachedShadowPainter,
   });
 }
 
@@ -68,6 +72,9 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   final double _baseFontSize = 24.0;
   int _currentTrackCount = 0;
   int _emittedCount = 0;
+  
+  static const int _maxRunningDanmu = 50;
+  static const double _trackSpacing = 2.0;
 
   @override
   void initState() {
@@ -101,16 +108,24 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   @override
   void dispose() {
     _ticker.dispose();
+    for (final danmu in _runningDanmu) {
+      danmu.cachedTextPainter?.dispose();
+      danmu.cachedShadowPainter?.dispose();
+    }
     super.dispose();
   }
 
   void _resetDanmuState() {
+    for (final danmu in _runningDanmu) {
+      danmu.cachedTextPainter?.dispose();
+      danmu.cachedShadowPainter?.dispose();
+    }
     _runningDanmu.clear();
     _emittedCount = 0;
   }
 
   void _initTracks(double availableHeight, double lineHeight) {
-    final trackCount = (availableHeight / lineHeight).floor().clamp(1, 50);
+    final trackCount = (availableHeight / lineHeight).floor().clamp(1, 30);
     if (trackCount == _currentTrackCount) return;
     _currentTrackCount = trackCount;
     _tracks.clear();
@@ -136,73 +151,109 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
     _updateRunningDanmu(deltaSeconds);
     _removeExpiredDanmu();
 
-    if (_runningDanmu.isNotEmpty || _emittedCount < widget.danmuList.length) {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   void _initTracksIfNeeded() {
     final availableHeight = _screenSize.height * widget.displayArea;
-    final lineHeight = _baseFontSize * widget.fontSize * 1.8;
+    final lineHeight = _baseFontSize * widget.fontSize * _trackSpacing;
     _initTracks(availableHeight, lineHeight);
   }
 
+  int? _findBestTrack(double textWidth) {
+    if (!widget.antiOverlap || _tracks.isEmpty) return null;
+
+    final screenWidth = _screenSize.width;
+    int bestTrack = 0;
+    double bestOccupied = double.infinity;
+
+    for (int i = 0; i < _tracks.length; i++) {
+      final track = _tracks[i];
+      if (track.occupiedUntilX < bestOccupied) {
+        bestOccupied = track.occupiedUntilX;
+        bestTrack = i;
+      }
+    }
+
+    return bestTrack;
+  }
+
   void _emitNewDanmu(double currentPlayTime) {
-    while (_emittedCount < widget.danmuList.length) {
+    final tolerance = 0.1;
+    final maxToEmit = 5;
+    int emitted = 0;
+
+    while (_emittedCount < widget.danmuList.length && emitted < maxToEmit) {
       final item = widget.danmuList[_emittedCount];
+      
+      if (item.time > currentPlayTime + tolerance) {
+        break;
+      }
 
-      if (item.time > currentPlayTime) break;
+      if (item.time < currentPlayTime - 5.0) {
+        _emittedCount++;
+        continue;
+      }
 
+      if (_runningDanmu.length >= _maxRunningDanmu) {
+        _emittedCount++;
+        break;
+      }
+
+      final fontSize = _baseFontSize * widget.fontSize;
+      final color = item.color ?? Colors.white;
+      
       final textPainter = TextPainter(
         textDirection: TextDirection.ltr,
         text: TextSpan(
           text: item.text,
           style: TextStyle(
-            fontSize: _baseFontSize * widget.fontSize,
-            color: item.color ?? Colors.white,
+            fontSize: fontSize,
+            color: color,
           ),
         ),
       );
-      textPainter.layout();
+      textPainter.layout(maxWidth: _screenSize.width);
       final textWidth = textPainter.width;
 
-      _emittedCount++;
+      final shadowPainter = TextPainter(
+        textDirection: TextDirection.ltr,
+        text: TextSpan(
+          text: item.text,
+          style: TextStyle(
+            fontSize: fontSize,
+            color: Colors.black.withValues(alpha: 0.5),
+          ),
+        ),
+      );
+      shadowPainter.layout(maxWidth: _screenSize.width);
 
       if (item.mode == DanmuMode.scroll) {
-        _emitScrollDanmu(item, textWidth);
+        _emitScrollDanmu(item, textWidth, textPainter, shadowPainter);
       } else if (item.mode == DanmuMode.top) {
-        _emitFixedDanmu(item, textWidth, isTop: true);
+        _emitFixedDanmu(item, textWidth, textPainter, shadowPainter, isTop: true);
       } else if (item.mode == DanmuMode.bottom) {
-        _emitFixedDanmu(item, textWidth, isTop: false);
+        _emitFixedDanmu(item, textWidth, textPainter, shadowPainter, isTop: false);
       }
+
+      _emittedCount++;
+      emitted++;
     }
   }
 
-  void _emitScrollDanmu(DanmuItem item, double textWidth) {
+  void _emitScrollDanmu(DanmuItem item, double textWidth, TextPainter textPainter, TextPainter shadowPainter) {
     final screenWidth = _screenSize.width;
-    final lineHeight = _baseFontSize * widget.fontSize * 1.8;
+    final lineHeight = _baseFontSize * widget.fontSize * _trackSpacing;
     final trackCount = _tracks.length;
 
-    int? chosenTrack;
-
-    if (widget.antiOverlap && trackCount > 0) {
-      for (int attempt = 0; attempt < trackCount; attempt++) {
-        final trackIndex = (attempt + item.time.toInt()) % trackCount;
-        final track = _tracks[trackIndex];
-        if (track.occupiedUntilX < 0) {
-          chosenTrack = trackIndex;
-          break;
-        }
-      }
-    }
-
-    chosenTrack ??= Random().nextInt(trackCount.clamp(1, 50));
+    int? chosenTrack = _findBestTrack(textWidth);
+    chosenTrack ??= Random().nextInt(trackCount.clamp(1, 30));
 
     final y = chosenTrack * lineHeight + lineHeight * 0.8;
     final x = screenWidth;
 
     final track = _tracks[chosenTrack];
-    track.occupiedUntilX = x + textWidth - screenWidth * 0.3;
+    track.occupiedUntilX = x + textWidth;
 
     _runningDanmu.add(_RunningDanmu(
       item: item,
@@ -213,24 +264,24 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       textWidth: textWidth,
       color: item.color ?? Colors.white,
       trackIndex: chosenTrack,
+      cachedTextPainter: textPainter,
+      cachedShadowPainter: shadowPainter,
     ));
   }
 
-  void _emitFixedDanmu(DanmuItem item, double textWidth,
-      {required bool isTop}) {
+  void _emitFixedDanmu(DanmuItem item, double textWidth, TextPainter textPainter, TextPainter shadowPainter, {required bool isTop}) {
     final screenWidth = _screenSize.width;
-    final lineHeight = _baseFontSize * widget.fontSize * 1.8;
+    final lineHeight = _baseFontSize * widget.fontSize * _trackSpacing;
     final trackCount = _tracks.length;
 
     int chosenTrack;
     double y;
 
     if (isTop) {
-      chosenTrack = _emittedCount % (trackCount.clamp(1, 10));
+      chosenTrack = Random().nextInt(trackCount > 5 ? 5 : trackCount);
       y = chosenTrack * lineHeight + lineHeight * 0.8;
     } else {
-      chosenTrack =
-          trackCount - 1 - (_emittedCount % (trackCount.clamp(1, 10)));
+      chosenTrack = trackCount - 1 - Random().nextInt(trackCount > 5 ? 5 : trackCount);
       y = chosenTrack * lineHeight + lineHeight * 0.8;
     }
 
@@ -245,23 +296,22 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       textWidth: textWidth,
       color: item.color ?? Colors.white,
       trackIndex: chosenTrack,
+      cachedTextPainter: textPainter,
+      cachedShadowPainter: shadowPainter,
     ));
   }
 
   void _updateRunningDanmu(double deltaSeconds) {
     final speedFactors = [0.5, 0.75, 1.0, 1.5, 2.0];
     final speed = speedFactors[widget.speedLevel.clamp(0, 4)];
-    final videoSpeedMultiplier =
-        widget.syncVideoSpeed ? widget.videoPlaybackSpeed : 1.0;
-    final scrollSpeed =
-        (100 + speed * 50) * deltaSeconds * videoSpeedMultiplier;
+    final videoSpeedMultiplier = widget.syncVideoSpeed ? widget.videoPlaybackSpeed : 1.0;
+    final scrollSpeed = (120 + speed * 60) * deltaSeconds * videoSpeedMultiplier;
 
     for (final danmu in _runningDanmu) {
       if (danmu.item.mode == DanmuMode.scroll) {
         danmu.x -= scrollSpeed;
         if (widget.antiOverlap && danmu.trackIndex < _tracks.length) {
-          _tracks[danmu.trackIndex].occupiedUntilX =
-              danmu.x + danmu.textWidth - _screenSize.width * 0.3;
+          _tracks[danmu.trackIndex].occupiedUntilX = danmu.x + danmu.textWidth;
         }
       } else {
         danmu.displayDuration -= deltaSeconds;
@@ -271,19 +321,24 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
 
   void _removeExpiredDanmu() {
     _runningDanmu.removeWhere((danmu) {
+      bool expired = false;
       if (danmu.item.mode == DanmuMode.scroll) {
-        final expired = danmu.x + danmu.textWidth < 0;
-        if (expired && danmu.trackIndex < _tracks.length) {
-          _tracks[danmu.trackIndex].occupiedUntilX = -1;
-        }
-        return expired;
+        expired = danmu.x + danmu.textWidth < 0;
       } else {
-        final expired = danmu.displayDuration <= 0;
-        if (expired && danmu.trackIndex < _tracks.length) {
-          _tracks[danmu.trackIndex].occupiedUntilX = -1;
-        }
-        return expired;
+        expired = danmu.displayDuration <= 0;
       }
+      
+      if (expired) {
+        if (danmu.trackIndex < _tracks.length) {
+          final track = _tracks[danmu.trackIndex];
+          if (track.occupiedUntilX >= danmu.x) {
+            track.occupiedUntilX = -1;
+          }
+        }
+        danmu.cachedTextPainter?.dispose();
+        danmu.cachedShadowPainter?.dispose();
+      }
+      return expired;
     });
   }
 
@@ -331,34 +386,33 @@ class _DanmuPainter extends CustomPainter {
           ? opacity
           : min(opacity, danmu.displayDuration / 3.0).clamp(0.0, opacity);
 
-      final shadowPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
+      if (danmu.cachedShadowPainter != null) {
+        final shadowPainter = danmu.cachedShadowPainter!;
+        final shadowColor = Colors.black.withValues(alpha: alpha * 0.5);
+        shadowPainter.text = TextSpan(
           text: danmu.text,
-          style: TextStyle(
+          style: (shadowPainter.text as TextSpan?)?.style?.copyWith(color: shadowColor) ?? TextStyle(
             fontSize: fontSize,
-            color: Colors.black.withValues(alpha: alpha * 0.5),
+            color: shadowColor,
           ),
-        ),
-      );
-      shadowPainter.layout(maxWidth: size.width);
+        );
+        shadowPainter.paint(canvas, Offset(danmu.x + 1, danmu.y + 1));
+        shadowPainter.paint(canvas, Offset(danmu.x - 1, danmu.y - 1));
+        shadowPainter.paint(canvas, Offset(danmu.x, danmu.y - 1));
+      }
 
-      shadowPainter.paint(canvas, Offset(danmu.x + 1, danmu.y + 1));
-      shadowPainter.paint(canvas, Offset(danmu.x - 1, danmu.y - 1));
-      shadowPainter.paint(canvas, Offset(danmu.x, danmu.y - 1));
-
-      final textPainter = TextPainter(
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
+      if (danmu.cachedTextPainter != null) {
+        final textPainter = danmu.cachedTextPainter!;
+        final textColor = danmu.color.withValues(alpha: alpha);
+        textPainter.text = TextSpan(
           text: danmu.text,
-          style: TextStyle(
+          style: (textPainter.text as TextSpan?)?.style?.copyWith(color: textColor) ?? TextStyle(
             fontSize: fontSize,
-            color: danmu.color.withValues(alpha: alpha),
+            color: textColor,
           ),
-        ),
-      );
-      textPainter.layout(maxWidth: size.width);
-      textPainter.paint(canvas, Offset(danmu.x, danmu.y));
+        );
+        textPainter.paint(canvas, Offset(danmu.x, danmu.y));
+      }
     }
   }
 
