@@ -29,7 +29,6 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
 
 - **YouTube集成**：支持直接播放YouTube视频
 - **Emby集成**：支持连接Emby服务器
-- **观影室**：支持多人同时观看同一视频
 - **OIDC认证**：支持通过OIDC进行身份验证(支持 Google、Microsoft、GitHub、Facebook、微信、Apple、LinuxDo 等提供商)
 - **Telegram集成**：支持通过Telegram认证和接收通知
 

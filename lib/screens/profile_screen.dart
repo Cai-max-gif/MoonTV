@@ -578,7 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          SizedBox(height: DeviceUtils.isTablet(context) && !DeviceUtils.isPortraitTablet(context) ? 100 : 40),
         ],
       ),
     );
