@@ -761,11 +761,14 @@ class ApiService {
 
   /// 检查账号状态
   static Future<ApiResponse<bool>> checkAccountStatus(
-      BuildContext context) async {
+      BuildContext context, {
+    bool forceRefresh = false,
+  }) async {
     try {
-      // 检查缓存是否有效
+      // 检查缓存是否有效（除非强制刷新）
       final now = DateTime.now();
-      if (_lastAccountStatusCheck != null &&
+      if (!forceRefresh &&
+          _lastAccountStatusCheck != null &&
           _cachedAccountStatus != null &&
           now.difference(_lastAccountStatusCheck!).inSeconds <
               _accountStatusCacheDuration.inSeconds) {
@@ -792,6 +795,12 @@ class ApiService {
     } catch (e) {
       return ApiResponse.error('检查账号状态异常: ${e.toString()}');
     }
+  }
+
+  /// 清除账号状态缓存
+  static void clearAccountStatusCache() {
+    _lastAccountStatusCheck = null;
+    _cachedAccountStatus = null;
   }
 
   /// 自动登录方法

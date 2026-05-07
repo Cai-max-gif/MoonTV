@@ -139,9 +139,12 @@ class _AppWrapperState extends State<AppWrapper> {
           return;
         }
 
-        // 检查账号状态
+        // 检查账号状态 - 使用强制刷新以获取服务器最新状态
         if (!mounted) return;
-        final statusResult = await ApiService.checkAccountStatus(context);
+        final statusResult = await ApiService.checkAccountStatus(
+          context,
+          forceRefresh: true,
+        );
 
         if (!statusResult.success && statusResult.statusCode == 401) {
           // 账号被封禁或登录已过期

@@ -275,8 +275,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             );
           }
 
-
-
           if (mounted) {
             _showToast('注册成功！', const Color(0xFF27ae60));
             await Future.delayed(const Duration(milliseconds: 500));
@@ -374,56 +372,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildVerificationCodeField() {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: TextFormField(
-              controller: _verificationCodeController,
-              keyboardType: TextInputType.number,
-              style: FontUtils.poppins(
-                fontSize: 16,
-                color: const Color(0xFF2c3e50),
-              ),
-              decoration: _buildInputDecoration(
-                labelText: '验证码',
-                hintText: '请输入验证码',
-                prefixIcon: Icons.verified_user,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '请输入验证码';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed:
-                (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: (_isSendingCode || _countdown > 0)
-                  ? const Color(0xFFbdc3c7)
-                  : const Color(0xFF2c3e50),
-              foregroundColor: (_isSendingCode || _countdown > 0)
-                  ? const Color(0xFF7f8c8d)
-                  : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-              shadowColor: Colors.transparent,
-            ),
+    return TextFormField(
+      controller: _verificationCodeController,
+      keyboardType: TextInputType.number,
+      style: FontUtils.poppins(
+        fontSize: 16,
+        color: const Color(0xFF2c3e50),
+      ),
+      decoration: InputDecoration(
+        labelText: '验证码',
+        labelStyle: FontUtils.poppins(
+          color: const Color(0xFF7f8c8d),
+          fontSize: 14,
+        ),
+        hintText: '请输入验证码',
+        hintStyle: FontUtils.poppins(
+          color: const Color(0xFFbdc3c7),
+          fontSize: 16,
+        ),
+        prefixIcon: const Icon(
+          Icons.verified_user,
+          color: Color(0xFF7f8c8d),
+          size: 20,
+        ),
+        suffixIcon: Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
             child: _isSendingCode
                 ? const SizedBox(
                     height: 18,
                     width: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF2c3e50)),
                     ),
                   )
                 : Text(
@@ -431,11 +414,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: FontUtils.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
+                      color: (_countdown > 0)
+                          ? const Color(0xFF7f8c8d)
+                          : const Color(0xFF2c3e50),
                     ),
                   ),
           ),
-        ],
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.6),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return '请输入验证码';
+        }
+        return null;
+      },
     );
   }
 
@@ -638,15 +648,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed:
-                    (_isLoading || !_isFormValid) ? null : _handleRegister,
+                onPressed: _isLoading ? null : _handleRegister,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isFormValid && !_isLoading
-                      ? const Color(0xFF2c3e50)
-                      : const Color(0xFFbdc3c7),
-                  foregroundColor: _isFormValid && !_isLoading
-                      ? Colors.white
-                      : const Color(0xFF7f8c8d),
+                  backgroundColor: _isLoading
+                      ? const Color(0xFFbdc3c7)
+                      : const Color(0xFF2c3e50),
+                  foregroundColor: _isLoading
+                      ? const Color(0xFF7f8c8d)
+                      : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -881,15 +890,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _buildVerificationCodeField(),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed:
-                      (_isLoading || !_isFormValid) ? null : _handleRegister,
+                  onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isFormValid && !_isLoading
-                        ? const Color(0xFF2c3e50)
-                        : const Color(0xFFbdc3c7),
-                    foregroundColor: _isFormValid && !_isLoading
-                        ? Colors.white
-                        : const Color(0xFF7f8c8d),
+                    backgroundColor: _isLoading
+                        ? const Color(0xFFbdc3c7)
+                        : const Color(0xFF2c3e50),
+                    foregroundColor: _isLoading
+                        ? const Color(0xFF7f8c8d)
+                        : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

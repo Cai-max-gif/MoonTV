@@ -6,6 +6,7 @@ import '../services/user_data_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/windows_title_bar.dart';
+import 'forgot_password_screen.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -462,26 +463,58 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 onFieldSubmitted: (_) => _handleSubmit(),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 12),
+
+              // 注册 + 忘记密码
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const RegisterScreen()),
+                      );
+                    },
+                    child: Text(
+                      '注册',
+                      style: FontUtils.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF2c3e50),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen()),
+                      );
+                    },
+                    child: Text(
+                      '忘记密码',
+                      style: FontUtils.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF2c3e50),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
               // 登录按钮
               ElevatedButton(
-                onPressed: (_isLoading ||
-                        !_isFormValid ||
-                        _passwordController.text.isEmpty)
-                    ? null
-                    : _handleLogin,
+                onPressed: _isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isFormValid &&
-                          !_isLoading &&
-                          _passwordController.text.isNotEmpty
-                      ? const Color(0xFF2c3e50) // 与MoonTV logo相同的颜色
-                      : const Color(0xFFbdc3c7), // 禁用时的浅灰色
-                  foregroundColor: _isFormValid &&
-                          !_isLoading &&
-                          _passwordController.text.isNotEmpty
-                      ? Colors.white
-                      : const Color(0xFF7f8c8d), // 禁用时的文字颜色
+                  backgroundColor: _isLoading
+                      ? const Color(0xFFbdc3c7)
+                      : const Color(0xFF2c3e50),
+                  foregroundColor:
+                      _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -523,37 +556,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
               ),
+              // const SizedBox(height: 20),
+              // // Telegram 登录图标（暂未开发，待后续实现）
+              // Center(
+              //   child: InkWell(
+              //     onTap: () {},
+              //     child: const Icon(
+              //       Icons.telegram,
+              //       color: Color(0xFF0088cc),
+              //       size: 40,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '没有账户？',
-              style: FontUtils.poppins(
-                fontSize: 14,
-                color: const Color(0xFF7f8c8d),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) => const RegisterScreen()),
-                );
-              },
-              child: Text(
-                '立即注册',
-                style: FontUtils.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF2c3e50),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -709,26 +725,59 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   onFieldSubmitted: (_) => _handleSubmit(),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
+
+                // 注册 + 忘记密码
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) => const RegisterScreen()),
+                        );
+                      },
+                      child: Text(
+                        '注册',
+                        style: FontUtils.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF2c3e50),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const ForgotPasswordScreen()),
+                        );
+                      },
+                      child: Text(
+                        '忘记密码',
+                        style: FontUtils.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF2c3e50),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
                 // 登录按钮
                 ElevatedButton(
-                  onPressed: (_isLoading ||
-                          !_isFormValid ||
-                          _passwordController.text.isEmpty)
-                      ? null
-                      : _handleLogin,
+                  onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isFormValid &&
-                            !_isLoading &&
-                            _passwordController.text.isNotEmpty
-                        ? const Color(0xFF2c3e50)
-                        : const Color(0xFFbdc3c7),
-                    foregroundColor: _isFormValid &&
-                            !_isLoading &&
-                            _passwordController.text.isNotEmpty
-                        ? Colors.white
-                        : const Color(0xFF7f8c8d),
+                    backgroundColor: _isLoading
+                        ? const Color(0xFFbdc3c7)
+                        : const Color(0xFF2c3e50),
+                    foregroundColor:
+                        _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -770,37 +819,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                 ),
+                // const SizedBox(height: 20),
+                // // Telegram 登录图标（暂未开发，待后续实现）
+                // Center(
+                //   child: InkWell(
+                //     onTap: () {},
+                //     child: const Icon(
+                //       Icons.telegram,
+                //       color: Color(0xFF0088cc),
+                //       size: 40,
+                //     ),
+                //   ),
+                // ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '没有账户？',
-                style: FontUtils.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF7f8c8d),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (context) => const RegisterScreen()),
-                  );
-                },
-                child: Text(
-                  '立即注册',
-                  style: FontUtils.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF2c3e50),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),

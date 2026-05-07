@@ -220,12 +220,25 @@ class DownloadService extends ChangeNotifier {
     }
   }
 
+  void _releaseEngine(String taskId, {bool cancel = true}) {
+    final engine = _activeEngines.remove(taskId);
+    if (engine == null) return;
+    if (cancel) engine.cancel();
+    engine.dispose();
+  }
+
+  void _releaseAllEngines({bool cancel = true}) {
+    final ids = _activeEngines.keys.toList();
+    for (final id in ids) {
+      _releaseEngine(id, cancel: cancel);
+    }
+  }
+
   Future<void> pauseTask(String taskId) async {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex < 0) return;
 
-    _activeEngines[taskId]?.cancel();
-    _activeEngines.remove(taskId);
+    _releaseEngine(taskId);
 
     _tasks[taskIndex].status = DownloadStatus.paused;
     await _saveTasks();
@@ -251,8 +264,7 @@ class DownloadService extends ChangeNotifier {
       final excess = downloading.length - _maxConcurrentDownloads + 1;
       for (int i = 0; i < excess && i < downloading.length; i++) {
         final taskToPause = downloading[i];
-        _activeEngines[taskToPause.id]?.cancel();
-        _activeEngines.remove(taskToPause.id);
+        _releaseEngine(taskToPause.id);
         taskToPause.status = DownloadStatus.paused;
       }
       notifyListeners();
@@ -267,10 +279,7 @@ class DownloadService extends ChangeNotifier {
     _restarting = true;
 
     try {
-      for (final engine in _activeEngines.values) {
-        engine.cancel();
-      }
-      _activeEngines.clear();
+      _releaseAllEngines();
 
       for (final task in _tasks) {
         if (task.status == DownloadStatus.downloading) {
@@ -295,8 +304,7 @@ class DownloadService extends ChangeNotifier {
     if (taskIndex < 0) return;
 
     final task = _tasks[taskIndex];
-    _activeEngines[taskId]?.cancel();
-    _activeEngines.remove(taskId);
+    _releaseEngine(taskId);
 
     await _cleanupTaskFiles(task);
 
@@ -309,8 +317,7 @@ class DownloadService extends ChangeNotifier {
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex < 0) return;
 
-    _activeEngines[taskId]?.cancel();
-    _activeEngines.remove(taskId);
+    _releaseEngine(taskId);
 
     await _cleanupTaskFiles(_tasks[taskIndex]);
 
@@ -327,8 +334,7 @@ class DownloadService extends ChangeNotifier {
   Future<void> pauseAllDownloading() async {
     for (final task in _tasks) {
       if (task.status == DownloadStatus.downloading) {
-        _activeEngines[task.id]?.cancel();
-        _activeEngines.remove(task.id);
+        _releaseEngine(task.id);
         task.status = DownloadStatus.paused;
       }
     }
@@ -453,7 +459,6 @@ class DownloadService extends ChangeNotifier {
         _tasks[idx].completedAt = DateTime.now();
         notifyListeners();
       }
-      _activeEngines.remove(task.id);
       _saveTasks();
       _processQueue();
     }).catchError((e) {
@@ -466,7 +471,6 @@ class DownloadService extends ChangeNotifier {
       if (currentRetry < 5) {
         _tasks[idx].status = DownloadStatus.retrying;
         _tasks[idx].retryCount = currentRetry + 1;
-        _activeEngines.remove(task.id);
         notifyListeners();
         _saveTasks();
 
@@ -481,11 +485,12 @@ class DownloadService extends ChangeNotifier {
         });
       } else {
         _tasks[idx].status = DownloadStatus.failed;
-        _activeEngines.remove(task.id);
         notifyListeners();
         _saveTasks();
         _processQueue();
       }
+    }).whenComplete(() {
+      _releaseEngine(task.id, cancel: false);
     });
   }
 
@@ -616,11 +621,7 @@ class DownloadService extends ChangeNotifier {
 
   @override
   void dispose() {
-    for (final engine in _activeEngines.values) {
-      engine.cancel();
-      engine.dispose();
-    }
-    _activeEngines.clear();
+    _releaseAllEngines();
     super.dispose();
   }
 }
