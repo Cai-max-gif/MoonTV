@@ -199,9 +199,6 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
                   episodeTitle: episodeTitle,
                   isSelected: _selectedEpisodes[index],
                   onTap: () => _toggleEpisodeSelection(index),
-                  onDoubleTap: () {
-                    widget.onSingleEpisodeTap(episodeIndex);
-                  },
                 );
               },
             ),
@@ -241,7 +238,6 @@ class _DownloadEpisodeItem extends StatefulWidget {
   final String episodeTitle;
   final bool isSelected;
   final VoidCallback onTap;
-  final VoidCallback onDoubleTap;
 
   const _DownloadEpisodeItem({
     required this.isCurrentEpisode,
@@ -249,7 +245,6 @@ class _DownloadEpisodeItem extends StatefulWidget {
     required this.episodeTitle,
     required this.isSelected,
     required this.onTap,
-    required this.onDoubleTap,
   });
 
   @override
@@ -275,7 +270,6 @@ class _DownloadEpisodeItemState extends State<_DownloadEpisodeItem> {
       },
       child: GestureDetector(
         onTap: widget.onTap,
-        onDoubleTap: widget.onDoubleTap,
         child: Container(
           decoration: BoxDecoration(
             color: widget.isSelected

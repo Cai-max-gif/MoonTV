@@ -97,7 +97,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   // VideoPlayerWidget 的控制器
   VideoPlayerWidgetController? _videoPlayerController;
-  
+
   // VideoState 引用（用于全屏控制）
   dynamic _videoState;
 
@@ -2910,7 +2910,15 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
             ),
             if (_showDanmakuSettings)
-              DanmakuSettingsScreen(onBack: _closeDanmakuSettings),
+              PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, result) {
+                  if (!didPop) {
+                    _closeDanmakuSettings();
+                  }
+                },
+                child: DanmakuSettingsScreen(onBack: _closeDanmakuSettings),
+              ),
           ],
         ),
       ),

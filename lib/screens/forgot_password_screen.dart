@@ -326,8 +326,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         suffixIcon: Material(
           color: Colors.transparent,
-          child: GestureDetector(
-            onTap: (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
+          child: TextButton(
+            onPressed:
+                (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+              backgroundColor: Colors.transparent,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              minimumSize: Size.zero,
+            ),
             child: _isSendingCode
                 ? const SizedBox(
                     height: 18,

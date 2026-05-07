@@ -98,6 +98,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   bool _showBrightnessIndicator = false;
   double _currentVolume = 0.5;
   double _currentBrightness = 0.5;
+  bool _autoEnterPipEnabled = false;
   Timer? _volumeHideTimer;
   Timer? _brightnessHideTimer;
   Timer? _timeUpdateTimer;
@@ -116,6 +117,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     _updateCurrentTime();
     _startTimeUpdateTimer();
     UserDataService.initDanmakuEnabled();
+    _initAutoEnterPip();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _forceStartHideTimer();
@@ -125,6 +127,13 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         _enterFullscreen();
       }
     });
+  }
+
+  Future<void> _initAutoEnterPip() async {
+    _autoEnterPipEnabled = await UserDataService.getAutoEnterPictureInPicture();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -1178,11 +1187,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   onTap: _togglePlayPause,
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(8, 8, 0, 8),
+                    padding:
+                        EdgeInsets.fromLTRB(_isFullscreen ? 8 : 6, 8, 0, 8),
                     child: Icon(
                       _isPlaying ? Icons.pause : Icons.play_arrow,
                       color: Colors.white,
-                      size: _isFullscreen ? 28 : 24,
+                      size: _isFullscreen ? 24 : 22,
                     ),
                   ),
                 ),
@@ -1194,11 +1204,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                       child: Icon(
                         Icons.skip_next,
                         color: Colors.white,
-                        size: _isFullscreen ? 28 : 24,
+                        size: _isFullscreen ? 24 : 22,
                       ),
                     ),
                   ),
@@ -1223,11 +1234,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                       child: Icon(
                         Icons.download,
                         color: Colors.white,
-                        size: _isFullscreen ? 22 : 20,
+                        size: _isFullscreen ? 20 : 18,
                       ),
                     ),
                   ),
@@ -1239,13 +1251,14 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                         onTap: _openDanmakuSettings,
                         behavior: HitTestBehavior.opaque,
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                           child: Opacity(
                             opacity: enabled ? 1.0 : 0.4,
                             child: SvgPicture.asset(
                               'danmu.svg',
-                              width: _isFullscreen ? 22 : 20,
-                              height: _isFullscreen ? 22 : 20,
+                              width: _isFullscreen ? 20 : 18,
+                              height: _isFullscreen ? 20 : 18,
                               colorFilter: const ColorFilter.mode(
                                   Colors.white, BlendMode.srcIn),
                             ),
@@ -1263,11 +1276,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                       child: Icon(
                         Icons.camera_alt,
                         color: Colors.white,
-                        size: _isFullscreen ? 22 : 20,
+                        size: _isFullscreen ? 20 : 18,
                       ),
                     ),
                   ),
@@ -1279,15 +1293,16 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                       child: Icon(
                         Icons.speed,
                         color: Colors.white,
-                        size: _isFullscreen ? 22 : 20,
+                        size: _isFullscreen ? 20 : 18,
                       ),
                     ),
                   ),
-                if (Platform.isAndroid)
+                if ((Platform.isAndroid || Platform.isIOS) && !_autoEnterPipEnabled)
                   GestureDetector(
                     onTap: () async {
                       _onUserInteraction();
@@ -1295,11 +1310,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                       child: Icon(
                         Icons.picture_in_picture_alt,
                         color: Colors.white,
-                        size: _isFullscreen ? 22 : 20,
+                        size: _isFullscreen ? 20 : 18,
                       ),
                     ),
                   ),
@@ -1314,11 +1330,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: _isFullscreen ? 8 : 6, vertical: 8),
                     child: Icon(
                       _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                       color: Colors.white,
-                      size: _isFullscreen ? 28 : 24,
+                      size: _isFullscreen ? 24 : 22,
                     ),
                   ),
                 ),

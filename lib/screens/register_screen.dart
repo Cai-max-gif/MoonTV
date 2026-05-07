@@ -397,8 +397,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         suffixIcon: Material(
           color: Colors.transparent,
-          child: GestureDetector(
-            onTap: (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
+          child: TextButton(
+            onPressed:
+                (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+              backgroundColor: Colors.transparent,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              minimumSize: Size.zero,
+            ),
             child: _isSendingCode
                 ? const SizedBox(
                     height: 18,
@@ -653,9 +660,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   backgroundColor: _isLoading
                       ? const Color(0xFFbdc3c7)
                       : const Color(0xFF2c3e50),
-                  foregroundColor: _isLoading
-                      ? const Color(0xFF7f8c8d)
-                      : Colors.white,
+                  foregroundColor:
+                      _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -895,9 +901,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     backgroundColor: _isLoading
                         ? const Color(0xFFbdc3c7)
                         : const Color(0xFF2c3e50),
-                    foregroundColor: _isLoading
-                        ? const Color(0xFF7f8c8d)
-                        : Colors.white,
+                    foregroundColor:
+                        _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

@@ -39,7 +39,7 @@ class UserDataService {
   static const Duration _lockDuration = Duration(minutes: 15);
 
   static final ValueNotifier<bool> danmakuEnabledNotifier =
-      ValueNotifier<bool>(true);
+      ValueNotifier<bool>(false);
   static final ValueNotifier<int> danmakuSpeedNotifier = ValueNotifier<int>(2);
   static final ValueNotifier<int> danmakuOpacityNotifier =
       ValueNotifier<int>(100);
@@ -302,10 +302,10 @@ class UserDataService {
     await prefs.setBool(_autoPlayNextKey, enabled);
   }
 
-  // 获取自动连播设置（默认为 true）
+  // 获取自动连播设置（默认为 false）
   static Future<bool> getAutoPlayNext() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_autoPlayNextKey) ?? true;
+    return prefs.getBool(_autoPlayNextKey) ?? false;
   }
 
   // 保存家庭模式设置
@@ -314,10 +314,10 @@ class UserDataService {
     await prefs.setBool(_familyModeKey, enabled);
   }
 
-  // 获取家庭模式设置（默认为 false）
+  // 获取家庭模式设置（默认为 true）
   static Future<bool> getFamilyMode() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_familyModeKey) ?? false;
+    return prefs.getBool(_familyModeKey) ?? true;
   }
 
   // ==================== 弹幕设置 ====================
@@ -342,9 +342,10 @@ class UserDataService {
     danmakuEnabledNotifier.value = enabled;
   }
 
+  // 获取弹幕启用状态（默认为 false）
   static Future<bool> getDanmakuEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_danmakuEnabledKey) ?? true;
+    return prefs.getBool(_danmakuEnabledKey) ?? false;
   }
 
   static Future<void> saveDanmakuSpeed(int speedIndex) async {

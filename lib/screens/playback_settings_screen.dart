@@ -47,10 +47,10 @@ class PlaybackSettingsScreen extends StatefulWidget {
 }
 
 class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
-  bool _autoPlayNext = true;
+  bool _autoPlayNext = false;
   bool _autoEnterPictureInPicture = false;
   bool _autoSkipOpeningEnding = false;
-  bool _familyMode = false;
+  bool _familyMode = true;
   double _defaultPlaybackSpeed = 1.0;
   int _skipOpeningDuration = 0;
   int _skipEndingDuration = 0;
