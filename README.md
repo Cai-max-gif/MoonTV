@@ -24,13 +24,10 @@ MoonTV是一款基于Flutter开发的跨平台视频播放应用，支持Android
 - **AI功能**：支持联网搜索影视并进行智能推荐，帮助用户发现更多优质内容
 - **同步功能**：支持多设备数据同步，包括收藏、观看历史等
 - **网盘集成**：支持从网盘获取视频
+- **Telegram集成**：支持通过Telegram认证和接收通知
 
 ### 计划功能
 
-- **YouTube集成**：支持直接播放YouTube视频
-- **Emby集成**：支持连接Emby服务器
-- **OIDC认证**：支持通过OIDC进行身份验证(支持 Google、Microsoft、GitHub、Facebook、微信、Apple、LinuxDo 等提供商)
-- **Telegram集成**：支持通过Telegram认证和接收通知
 
 ## 安装指南
 

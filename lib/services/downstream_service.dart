@@ -94,9 +94,10 @@ class DownstreamService {
         }
       }
 
-      // 过滤屏蔽的播放源和关键词
+      // 过滤屏蔽的播放源和关键词（仅在家庭模式下生效）
       final familyMode = await UserDataService.getFamilyMode();
       final filteredResults = results.where((result) {
+        if (ContentFilterService.isYellowContent(result.typeName, familyMode: familyMode)) return false;
         return !ContentFilterService.shouldFilter(result.sourceName, familyMode: familyMode, title: result.title);
       }).toList();
 

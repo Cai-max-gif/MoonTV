@@ -5,6 +5,7 @@ import '../models/search_result.dart';
 import '../models/search_resource.dart';
 import 'user_data_service.dart';
 import 'api_service.dart';
+import 'content_filter_service.dart';
 import 'downstream_service.dart';
 
 
@@ -332,10 +333,15 @@ class SSESearchService {
   void _handleSourceResultEvent(SearchSourceResultEvent event) {
     _completedSources++;
 
-    // 只发送增量结果更新，避免全量重渲染
-    if (event.results.isNotEmpty) {
-      _incrementalResultsController?.add(List.from(event.results));
-    }
+    // 黄色内容过滤（仅在家庭模式下生效）
+    UserDataService.getFamilyMode().then((familyMode) {
+      final filteredResults = ContentFilterService.yellowFilter(event.results, familyMode: familyMode);
+
+      // 只发送增量结果更新，避免全量重渲染
+      if (filteredResults.isNotEmpty) {
+        _incrementalResultsController?.add(List.from(filteredResults));
+      }
+    });
 
     // 更新进度（无论是否有结果都要更新）
     _progressController?.add(SearchProgress(

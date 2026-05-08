@@ -3,6 +3,48 @@ import '../models/aggregated_search_result.dart';
 
 /// 内容过滤服务
 class ContentFilterService {
+  /// 黄色内容关键词列表（基于 type_name 字段过滤，与 web 端 yellowFilter 一致）
+  static const List<String> yellowWords = [
+    '伦理片',
+    '福利',
+    '里番动漫',
+    '门事件',
+    '萝莉少女',
+    '制服诱惑',
+    '国产传媒',
+    'cosplay',
+    '黑丝诱惑',
+    '无码',
+    '日本无码',
+    '有码',
+    '日本有码',
+    'SWAG',
+    '网红主播',
+    '色情片',
+    '同性片',
+    '福利视频',
+    '福利片',
+    '写真热舞',
+    '倫理片',
+    '理论片',
+    '韩国伦理',
+    '港台三级',
+    '电影解说',
+    '伦理',
+    '日本伦理',
+  ];
+
+  /// 黄色内容过滤（基于 type_name，仅在家庭模式下生效）
+  static bool isYellowContent(String? typeName, {bool familyMode = false}) {
+    if (!familyMode) return false;
+    if (typeName == null || typeName.isEmpty) {
+      return false;
+    }
+    final lowerTypeName = typeName.toLowerCase();
+    return yellowWords
+        .any((word) => lowerTypeName.contains(word.toLowerCase()));
+  }
+
   /// 屏蔽的播放源列表
   static const List<String> blockedSources = [
     // 成人内容播放源
@@ -372,6 +414,14 @@ class ContentFilterService {
     }
 
     return blockedKeywords.any((keyword) => title.contains(keyword));
+  }
+
+  /// 批量过滤黄色内容（基于 type_name，仅在家庭模式下生效）
+  static List<SearchResult> yellowFilter(List<SearchResult> results, {bool familyMode = false}) {
+    if (!familyMode) return results;
+    return results
+        .where((result) => !isYellowContent(result.typeName, familyMode: familyMode))
+        .toList();
   }
 
   /// 检查搜索结果是否应该被过滤

@@ -556,18 +556,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
               ),
-              // const SizedBox(height: 20),
-              // // Telegram 登录图标（暂未开发，待后续实现）
-              // Center(
-              //   child: InkWell(
-              //     onTap: () {},
-              //     child: const Icon(
-              //       Icons.telegram,
-              //       color: Color(0xFF0088cc),
-              //       size: 40,
-              //     ),
-              //   ),
-              // ),
+              const SizedBox(height: 20),
+              // Telegram 登录图标
+              Center(
+                child: InkWell(
+                  onTap: () {},
+                  child: const Icon(
+                    Icons.telegram,
+                    color: Color(0xFF0088cc),
+                    size: 40,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

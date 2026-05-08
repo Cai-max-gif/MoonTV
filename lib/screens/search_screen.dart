@@ -47,6 +47,7 @@ class _SearchScreenState extends State<SearchScreen>
   SearchProgress? _searchProgress;
   Timer? _updateTimer; // 用于防抖的定时器
   bool _useAggregatedView = true; // 是否使用聚合视图，默认开启
+  final bool _exactSearch = true; // 精确搜索开关，默认开启
 
   // 筛选和排序状态
   String _selectedSource = 'all';
@@ -73,6 +74,13 @@ class _SearchScreenState extends State<SearchScreen>
 
   List<SearchResult> get _filteredSearchResults {
     List<SearchResult> results = List.from(_searchResults);
+
+    // 精确搜索过滤（与 web 端 titleContainsQuery 一致）
+    if (_exactSearch && _searchQuery.isNotEmpty) {
+      results = results
+          .where((r) => _titleContainsQuery(r.title, _searchQuery))
+          .toList();
+    }
 
     // Source filter
     if (_selectedSource != 'all') {
@@ -118,6 +126,14 @@ class _SearchScreenState extends State<SearchScreen>
     }
 
     return results;
+  }
+
+  /// 精确搜索匹配（与 web 端 titleContainsQuery 一致）
+  bool _titleContainsQuery(String title, String query) {
+    if (query.isEmpty || title.isEmpty) return true;
+    final normalizedTitle = title.toLowerCase();
+    final normalizedQuery = query.toLowerCase();
+    return normalizedTitle.contains(normalizedQuery);
   }
 
   @override
