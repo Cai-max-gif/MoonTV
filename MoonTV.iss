@@ -1,6 +1,6 @@
 [Setup]
 AppName=MoonTV
-AppVersion=1.2.1
+AppVersion=1.3.0
 AppPublisher=MoonTV Team
 AppPublisherURL=https://moontv.cc.cd
 AppSupportURL=https://moontv.cc.cd

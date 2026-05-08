@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
 import '../services/user_data_service.dart';
+import '../services/telegram_auth_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/windows_title_bar.dart';
@@ -24,6 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _isFormValid = false;
+  bool _isTelegramLoading = false;
+  String? _telegramStatus;
 
   @override
   void initState() {
@@ -53,6 +56,44 @@ class _LoginScreenState extends State<LoginScreen> {
         // 触发表单验证
         _validateForm();
       });
+    }
+  }
+
+  void _handleTelegramLogin() async {
+    if (_isTelegramLoading) return;
+
+    setState(() {
+      _isTelegramLoading = true;
+      _telegramStatus = '正在连接 Telegram...';
+    });
+
+    final result = await TelegramAuthService.authenticate(
+      isMounted: () => mounted,
+      onStatusChanged: (status) {
+        if (mounted) {
+          setState(() {
+            _telegramStatus = status;
+          });
+        }
+      },
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isTelegramLoading = false;
+      _telegramStatus = null;
+    });
+
+    if (result.success) {
+      _showToast('登录成功', const Color(0xFF2ecc71));
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (route) => false,
+      );
+    } else {
+      _showToast(result.error ?? 'Telegram 登录失败', const Color(0xFFe74c3c));
     }
   }
 
@@ -559,13 +600,36 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
               // Telegram 登录图标
               Center(
-                child: InkWell(
-                  onTap: () {},
-                  child: const Icon(
-                    Icons.telegram,
-                    color: Color(0xFF0088cc),
-                    size: 40,
-                  ),
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: _isTelegramLoading ? null : _handleTelegramLogin,
+                      child: _isTelegramLoading
+                          ? const SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Color(0xFF0088cc),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.telegram,
+                              color: Color(0xFF0088cc),
+                              size: 40,
+                            ),
+                    ),
+                    if (_telegramStatus != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _telegramStatus!,
+                        style: FontUtils.poppins(
+                          fontSize: 12,
+                          color: const Color(0xFF666666),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -820,17 +884,40 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
                 // const SizedBox(height: 20),
-                // // Telegram 登录图标（暂未开发，待后续实现）
-                // Center(
-                //   child: InkWell(
-                //     onTap: () {},
-                //     child: const Icon(
-                //       Icons.telegram,
-                //       color: Color(0xFF0088cc),
-                //       size: 40,
-                //     ),
-                //   ),
-                // ),
+                // Telegram 登录图标
+                Center(
+                  child: Column(
+                    children: [
+                      InkWell(
+                        onTap: _isTelegramLoading ? null : _handleTelegramLogin,
+                        child: _isTelegramLoading
+                            ? const SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Color(0xFF0088cc),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.telegram,
+                                color: Color(0xFF0088cc),
+                                size: 40,
+                              ),
+                      ),
+                      if (_telegramStatus != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _telegramStatus!,
+                          style: FontUtils.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF666666),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

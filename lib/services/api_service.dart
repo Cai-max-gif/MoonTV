@@ -58,13 +58,47 @@ class ApiService {
   static bool? _cachedAccountStatus;
   static const Duration _accountStatusCacheDuration = Duration(minutes: 1);
 
+  // 内存级 cookie（绕过 SecureStorage 延迟，Telegram 登录专用）
+  static String? _inMemoryCookies;
+
+  // 内存级 X-User-Auth 值（传给自定义 header，绕过 dart:io Cookie 头限制）
+  static String? _inMemoryUserAuth;
+
+  // Telegram 登录保护：阻止所有跳回登录页的请求
+  static bool _loginRedirectBlocked = false;
+
+  static void setInMemoryCookies(String? cookies) {
+    _inMemoryCookies = cookies;
+  }
+
+  static void setInMemoryUserAuth(String? authValue) {
+    _inMemoryUserAuth = authValue;
+  }
+
+  static void blockLoginRedirects() {
+    _loginRedirectBlocked = true;
+  }
+
+  static void allowLoginRedirects() {
+    _loginRedirectBlocked = false;
+  }
+
+  static bool get isLoginRedirectBlocked => _loginRedirectBlocked;
+
+  static bool _shouldNavigateToLogin() {
+    return !_loginRedirectBlocked;
+  }
+
   /// 获取基础URL
   static Future<String> _getBaseUrl() async {
     return await UserDataService.getServerUrlWithDefault();
   }
 
-  /// 获取认证cookies
+  /// 获取认证cookies（内存优先，回退 SecureStorage）
   static Future<String?> _getCookies() async {
+    if (_inMemoryCookies != null && _inMemoryCookies!.isNotEmpty) {
+      return _inMemoryCookies;
+    }
     return await UserDataService.getCookies();
   }
 
@@ -109,6 +143,11 @@ class ApiService {
           headers['Cookie'] = cookies;
         }
       }
+
+      // 额外发送 X-User-Auth header（绕过 dart:io Cookie 头限制）
+      if (_inMemoryUserAuth != null && _inMemoryUserAuth!.isNotEmpty) {
+        headers['X-User-Auth'] = _inMemoryUserAuth!;
+      }
     }
 
     // 添加额外头部
@@ -147,15 +186,17 @@ class ApiService {
         // 解析失败，使用默认错误信息
       }
 
-      // 清除用户认证数据
-      await UserDataService.clearAuthData();
+      if (_shouldNavigateToLogin()) {
+        // 清除用户认证数据
+        await UserDataService.clearAuthData();
 
-      // 跳转到登录页
-      if (context != null && context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false,
-        );
+        // 跳转到登录页
+        if (context != null && context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
       }
 
       return ApiResponse.error(
@@ -566,7 +607,7 @@ class ApiService {
         return ApiResponse.success(favorites, statusCode: response.statusCode);
       } else if (response.statusCode == 401) {
         // 未授权，跳转到登录页面
-        if (context.mounted) {
+        if (_shouldNavigateToLogin() && context.mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
           );
@@ -761,7 +802,7 @@ class ApiService {
 
   /// 检查账号状态
   static Future<ApiResponse<bool>> checkAccountStatus(
-      BuildContext context, {
+    BuildContext context, {
     bool forceRefresh = false,
   }) async {
     try {
@@ -1239,7 +1280,8 @@ class ApiService {
         '/api/netdisk/search',
         queryParameters: {'q': query.trim()},
         context: context,
-        fromJson: (data) => NetDiskSearchResult.fromJson(data as Map<String, dynamic>),
+        fromJson: (data) =>
+            NetDiskSearchResult.fromJson(data as Map<String, dynamic>),
       );
 
       return response;

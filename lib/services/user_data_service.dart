@@ -64,9 +64,11 @@ class UserDataService {
 
     // 不再存储密码，只在需要时使用
 
-    // 存储令牌（如果提供）
+    // 存储令牌（如果提供），否则清除旧令牌
     if (token != null && token.isNotEmpty) {
       await _secureStorage.write(key: _tokenKey, value: token);
+    } else {
+      await _secureStorage.delete(key: _tokenKey);
     }
 
     // 存储cookies（如果提供）

@@ -130,6 +130,9 @@ class _AppWrapperState extends State<AppWrapper> {
   }
 
   void _checkAccountStatus() {
+    // Telegram 登录保护期：禁止跳回登录页
+    if (ApiService.isLoginRedirectBlocked) return;
+
     // 在后台执行检查，不阻塞主线程
     Future.microtask(() async {
       try {
@@ -148,25 +151,34 @@ class _AppWrapperState extends State<AppWrapper> {
 
         if (!statusResult.success && statusResult.statusCode == 401) {
           // 账号被封禁或登录已过期
-          await UserDataService.clearAuthData();
+          if (!ApiService.isLoginRedirectBlocked) {
+            await UserDataService.clearAuthData();
 
-          // 跳转到登录页
-          if (mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-            );
+            // 跳转到登录页
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            }
           }
         } else if (statusResult.success && statusResult.data == false) {
           // 账号状态为非活跃（被封禁）
-          await UserDataService.clearAuthData();
+          if (!ApiService.isLoginRedirectBlocked) {
+            await UserDataService.clearAuthData();
 
-          // 跳转到登录页
-          if (mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-            );
+            // 跳转到登录页
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            }
+          }
+        } else if (statusResult.success && statusResult.data == true) {
+          // 账号正常，首次成功请求后自动取消登录保护
+          if (ApiService.isLoginRedirectBlocked) {
+            ApiService.allowLoginRedirects();
           }
         }
       } catch (e) {
