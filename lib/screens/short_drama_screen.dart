@@ -20,7 +20,11 @@ class ShortDramaScreen extends StatefulWidget {
 }
 
 class _ShortDramaScreenState extends State<ShortDramaScreen> {
-  // 短剧的一级选择器选项
+  // 短剧的一级选择器选项（热门/最新/高分）
+  // 注意：由于后端 API 不支持排序参数，_selectedCategoryValue 仅用于：
+  // 1. UI 状态显示（展示当前选中的标签）
+  // 2. 请求过期检查（stale-check），避免返回的是旧筛选条件的数据
+  // API 调用始终使用 _selectedCategoryId（分类ID），排序选项不会传递给后端
   final List<SelectorOption> _shortDramaPrimaryOptions = const [
     SelectorOption(label: '全部', value: '全部'),
     SelectorOption(label: '热门短剧', value: '热门'),
@@ -41,7 +45,8 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   List<dynamic> _categories = [];
   int _selectedCategoryId = 1;
 
-  /// 获取当前筛选状态
+  /// 获取当前筛选状态（用于 stale-check）
+  /// 返回格式: "筛选值|分类ID"
   String _getCurrentFilterState() {
     return '$_selectedCategoryValue|$_selectedCategoryId';
   }
@@ -104,74 +109,89 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   }
 
   Future<void> _fetchShortDramas({bool isRefresh = false}) async {
-    // 记录发起请求时的筛选状态
     final requestFilterState = _getCurrentFilterState();
+
+    if (isRefresh) {
+      _page = 1;
+      _hasMore = true;
+    }
 
     setState(() {
       _isLoading = true;
-      if (isRefresh) {
-        _shortDramas.clear();
-        _page = 1;
-        _hasMore = true;
-      }
       _errorMessage = null;
     });
 
-    // 首先加载分类列表
+    // 并行加载分类列表和短剧列表
+    final futures = <Future>[
+      ApiService.getShortDramaList(
+        _selectedCategoryId,
+        isRefresh ? 1 : _page,
+        _pageLimit,
+        context,
+      ),
+    ];
+
     if (_categories.isEmpty) {
-      final categoriesResult =
-          await ApiService.getShortDramaCategories(context);
-      if (mounted &&
-          categoriesResult.success &&
-          categoriesResult.data != null) {
-        setState(() {
-          _categories = categoriesResult.data!;
-          if (_categories.isNotEmpty) {
-            _selectedCategoryId = _categories[0]['type_id'] ?? 1;
+      futures.add(ApiService.getShortDramaCategories(context));
+    }
+
+    final results = await Future.wait(futures);
+
+    if (!mounted) return;
+
+    // 处理短剧列表结果（始终是第一个）
+    final result = results[0] as ApiResponse<Map<String, dynamic>>;
+
+    // 处理分类结果（如果有）
+    if (results.length > 1) {
+      final categoriesResult = results[1] as ApiResponse<List<dynamic>>;
+      if (categoriesResult.success && categoriesResult.data != null) {
+        final newCategories = categoriesResult.data!;
+        if (newCategories.isNotEmpty) {
+          final newCategoryId = newCategories[0]['type_id'] ?? 1;
+          if (_selectedCategoryId != newCategoryId && !isRefresh) {
+            _selectedCategoryId = newCategoryId;
           }
-        });
+          _categories = newCategories;
+        }
       }
     }
 
-    // 获取短剧列表
-    if (!mounted) return;
-    final result = await ApiService.getShortDramaList(
-      _selectedCategoryId,
-      isRefresh ? 1 : _page,
-      _pageLimit,
-      context,
-    );
-
-    if (mounted) {
-      // 检查当前筛选状态是否仍然与发起请求时一致
-      if (requestFilterState != _getCurrentFilterState()) {
-        // 筛选状态已改变，忽略这个过期的响应
-        return;
-      }
-
+    // 检查当前筛选状态是否仍然与发起请求时一致
+    if (requestFilterState != _getCurrentFilterState()) {
       setState(() {
-        if (result.success && result.data != null) {
-          final list = result.data!['list'] as List<dynamic>;
-          _shortDramas.addAll(list.cast<Map<String, dynamic>>());
-          _page++;
-          // 只有当返回的数据为空时才停止分页
-          if (list.isEmpty) {
-            _hasMore = false;
-          }
-        } else {
-          _errorMessage = result.message ?? '加载失败';
-        }
         _isLoading = false;
       });
+      return;
+    }
 
-      // 如果是刷新且内容不足一屏，尝试自动加载更多
-      if (isRefresh && result.success && result.data != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _checkAndLoadMoreIfNeeded();
-          }
-        });
+    setState(() {
+      if (result.success && result.data != null) {
+        final list = result.data!['list'] as List<dynamic>;
+        if (isRefresh) {
+          _shortDramas.clear();
+        }
+        _shortDramas.addAll(list.cast<Map<String, dynamic>>());
+        _page++;
+        if (list.isEmpty) {
+          _hasMore = false;
+        }
+      } else {
+        // 只有在首次加载（列表为空）时才显示错误
+        if (_shortDramas.isEmpty) {
+          _errorMessage = result.message ?? '加载失败';
+        }
       }
+      _isLoading = false;
+    });
+
+    // 如果是刷新且内容不足一屏，尝试自动加载更多
+    if (isRefresh && result.success && result.data != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _checkAndLoadMoreIfNeeded();
+        }
+      });
     }
   }
 
@@ -244,10 +264,6 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         break;
     }
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {

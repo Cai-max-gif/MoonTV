@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -1069,39 +1071,116 @@ class ApiService {
     }
   }
 
-  /// 获取短剧分类列表
+  // 短剧数据缓存
+  static List<dynamic>? _cachedShortDramaCategories;
+  static final Map<String, Map<String, dynamic>> _cachedShortDramaLists = {};
+  static DateTime? _shortDramaCategoryCacheTime;
+  static const Duration _shortDramaCacheDuration = Duration(minutes: 5);
+
+  /// 清除短剧缓存
+  static void clearShortDramaCache() {
+    _cachedShortDramaCategories = null;
+    _cachedShortDramaLists.clear();
+    _shortDramaCategoryCacheTime = null;
+  }
+
+  /// 获取短剧分类列表（带缓存）
   static Future<ApiResponse<List<dynamic>>> getShortDramaCategories(
       BuildContext context) async {
     try {
+      final now = DateTime.now();
+      if (_cachedShortDramaCategories != null &&
+          _shortDramaCategoryCacheTime != null &&
+          now.difference(_shortDramaCategoryCacheTime!) <
+              _shortDramaCacheDuration) {
+        return ApiResponse.success(_cachedShortDramaCategories!);
+      }
+
       final response = await get<List<dynamic>>(
         '/api/shortdrama/categories',
         context: context,
         fromJson: (data) => (data as List).toList(),
       );
 
+      if (response.success && response.data != null) {
+        _cachedShortDramaCategories = response.data;
+        _shortDramaCategoryCacheTime = now;
+      }
+
       return response;
     } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        if (_cachedShortDramaCategories != null) {
+          return ApiResponse.success(_cachedShortDramaCategories!);
+        }
+      }
       return ApiResponse.error('获取短剧分类失败: ${e.toString()}');
     }
   }
 
-  /// 获取短剧列表
+  /// 获取短剧列表（带缓存，15秒超时）
   static Future<ApiResponse<Map<String, dynamic>>> getShortDramaList(
       int categoryId, int page, int size, BuildContext context) async {
     try {
-      final response = await get<Map<String, dynamic>>(
-        '/api/shortdrama/list',
-        queryParameters: {
-          'categoryId': categoryId.toString(),
-          'page': page.toString(),
-          'size': size.toString(),
-        },
-        context: context,
-        fromJson: (data) => data as Map<String, dynamic>,
+      // 首页热门短剧使用缓存
+      if (categoryId == 1 && page == 1 && size == 25) {
+        const cacheKey = 'hot_short_drama';
+        final now = DateTime.now();
+        if (_cachedShortDramaLists.containsKey(cacheKey)) {
+          final cached = _cachedShortDramaLists[cacheKey]!;
+          final cacheTime =
+              DateTime.fromMillisecondsSinceEpoch(cached['_cacheTime'] as int);
+          if (now.difference(cacheTime) < _shortDramaCacheDuration) {
+            return ApiResponse.success(
+                Map<String, dynamic>.from(cached)..remove('_cacheTime'));
+          }
+        }
+      }
+
+      final url = await _buildUrl('/api/shortdrama/list');
+      final requestHeaders = await _buildHeaders();
+
+      final queryParams = {
+        'categoryId': categoryId.toString(),
+        'page': page.toString(),
+        'size': size.toString(),
+      };
+      final filteredParams = _filterQueryParameters(queryParams);
+      final uri = Uri.parse(url).replace(queryParameters: filteredParams);
+
+      final response = await http
+          .get(uri, headers: requestHeaders)
+          .timeout(const Duration(seconds: 15));
+
+      final result = await _handleResponse<Map<String, dynamic>>(
+        response,
+        (data) => data as Map<String, dynamic>,
+        // ignore: use_build_context_synchronously
+        context,
       );
 
-      return response;
+      // 缓存首页热门短剧数据
+      if (categoryId == 1 &&
+          page == 1 &&
+          size == 25 &&
+          result.success &&
+          result.data != null) {
+        final cacheData = Map<String, dynamic>.from(result.data!);
+        cacheData['_cacheTime'] = DateTime.now().millisecondsSinceEpoch;
+        _cachedShortDramaLists['hot_short_drama'] = cacheData;
+      }
+
+      return result;
     } catch (e) {
+      // 网络错误时尝试返回缓存
+      if (categoryId == 1 && page == 1 && size == 25) {
+        const cacheKey = 'hot_short_drama';
+        if (_cachedShortDramaLists.containsKey(cacheKey)) {
+          final cached = _cachedShortDramaLists[cacheKey]!;
+          return ApiResponse.success(
+              Map<String, dynamic>.from(cached)..remove('_cacheTime'));
+        }
+      }
       return ApiResponse.error('获取短剧列表失败: ${e.toString()}');
     }
   }
