@@ -435,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.6),
+                  fillColor: Colors.white.withValues(alpha: 0.6),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
@@ -529,7 +529,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.6),
+                  fillColor: Colors.white.withValues(alpha: 0.6),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
@@ -760,7 +760,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.6),
+                    fillColor: Colors.white.withValues(alpha: 0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
@@ -856,7 +856,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.6),
+                    fillColor: Colors.white.withValues(alpha: 0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
