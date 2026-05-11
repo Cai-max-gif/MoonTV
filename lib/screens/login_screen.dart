@@ -6,6 +6,7 @@ import '../services/user_data_service.dart';
 import '../services/telegram_auth_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
+import '../utils/input_validator_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
@@ -26,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isFormValid = false;
   bool _isTelegramLoading = false;
+  bool _isEmailInput = false;
   String? _telegramStatus;
 
   @override
@@ -106,7 +108,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _validateForm() {
     setState(() {
-      _isFormValid = _usernameController.text.isNotEmpty;
+      _isFormValid = _usernameController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+      _isEmailInput = InputValidatorUtils.isEmail(_usernameController.text);
     });
   }
 
@@ -154,160 +158,168 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
-    if (_formKey.currentState!.validate() &&
-        _isFormValid &&
-        _passwordController.text.isNotEmpty) {
-      // 检查账户是否被锁定
-      bool isLocked = await UserDataService.isAccountLocked();
-      if (isLocked) {
-        final remainingTime =
-            await UserDataService.getAccountLockRemainingTime();
-        if (remainingTime != null) {
-          final minutes = remainingTime.inMinutes;
-          _showToast('账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
-        } else {
-          _showToast('账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
-        }
-        return;
+    if (!_formKey.currentState!.validate() ||
+        !_isFormValid ||
+        _passwordController.text.isEmpty) {
+      _showToast('请填写完整的登录信息', const Color(0xFFe74c3c));
+      return;
+    }
+
+    bool isLocked = await UserDataService.isAccountLocked();
+    if (isLocked) {
+      final remainingTime = await UserDataService.getAccountLockRemainingTime();
+      if (remainingTime != null) {
+        final minutes = remainingTime.inMinutes;
+        _showToast('账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
+      } else {
+        _showToast('账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
       }
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 处理 URL
+      String baseUrl = await UserDataService.getServerUrlWithDefault();
+      // 确保使用HTTPS
+      String secureBaseUrl =
+          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
+      String loginUrl = '$secureBaseUrl/api/login';
+
+      // 判断是否为邮箱登录
+      bool isEmailLogin = InputValidatorUtils.isEmail(_usernameController.text);
+
+      // 发送登录请求
+      final response = await http.post(
+        Uri.parse(loginUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'username': _usernameController.text,
+          'password': _passwordController.text,
+          'isEmail': isEmailLogin,
+        }),
+      );
 
       setState(() {
-        _isLoading = true;
+        _isLoading = false;
       });
 
-      try {
-        // 处理 URL
-        String baseUrl = await UserDataService.getServerUrlWithDefault();
-        // 确保使用HTTPS
-        String secureBaseUrl =
-            baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
-        String loginUrl = '$secureBaseUrl/api/login';
+      // 根据状态码显示不同的消息
+      switch (response.statusCode) {
+        case 200:
+          try {
+            // 尝试解析响应获取令牌和真实用户名
+            final responseData = json.decode(response.body);
+            final token = responseData['token'] as String?;
 
-        // 发送登录请求
-        final response = await http.post(
-          Uri.parse(loginUrl),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: json.encode({
-            'username': _usernameController.text,
-            'password': _passwordController.text,
-          }),
-        );
+            // 使用后端返回的真实用户名，如果没有返回则使用用户输入的
+            final String realUsername = (responseData['username'] as String?) ??
+                _usernameController.text;
 
-        setState(() {
-          _isLoading = false;
-        });
+            // 解析 cookies
+            String cookies = _parseCookies(response);
 
-        // 根据状态码显示不同的消息
-        switch (response.statusCode) {
-          case 200:
-            try {
-              // 尝试解析响应获取令牌
-              final responseData = json.decode(response.body);
-              final token = responseData['token'] as String?;
+            // 保存用户数据，使用真实用户名
+            await UserDataService.saveUserData(
+              username: realUsername,
+              password: _passwordController.text,
+              token: token,
+              cookies: cookies,
+            );
+          } catch (e) {
+            // 如果解析失败，回退到传统的 cookies 方式
+            String cookies = _parseCookies(response);
 
-              // 解析 cookies
-              String cookies = _parseCookies(response);
+            // 保存用户数据，使用用户输入的用户名
+            await UserDataService.saveUserData(
+              username: _usernameController.text,
+              password: _passwordController.text,
+              cookies: cookies,
+            );
+          }
 
-              // 保存用户数据，优先使用令牌
-              await UserDataService.saveUserData(
-                username: _usernameController.text,
-                password: _passwordController.text, // 保留密码用于自动登录
-                token: token,
-                cookies: cookies,
-              );
-            } catch (e) {
-              // 如果解析失败，回退到传统的 cookies 方式
-              String cookies = _parseCookies(response);
-
-              // 保存用户数据
-              await UserDataService.saveUserData(
-                username: _usernameController.text,
-                password: _passwordController.text,
-                cookies: cookies,
-              );
-            }
-
-            // 跳转到首页，并清除所有路由栈（强制销毁所有旧页面）
-            if (mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (route) => false,
-              );
-            }
-            break;
-          case 401:
-            // 解析响应体，检查是否为账号封禁
-            String errorMessage = '用户名或密码错误';
-            bool isBanned = false;
-            try {
-              final responseData = json.decode(response.body);
-              if (responseData.containsKey('message')) {
-                errorMessage = responseData['message'] as String;
-                // 检查是否为账号封禁
-                if (errorMessage.contains('账号已被封禁') ||
-                    errorMessage.contains('封禁') ||
-                    errorMessage.contains('banned') ||
-                    errorMessage.contains('ban')) {
-                  isBanned = true;
-                }
-              } else if (responseData.containsKey('error')) {
-                errorMessage = responseData['error'] as String;
-                // 检查是否为账号封禁
-                if (errorMessage.contains('账号已被封禁') ||
-                    errorMessage.contains('封禁') ||
-                    errorMessage.contains('banned') ||
-                    errorMessage.contains('ban')) {
-                  isBanned = true;
-                }
+          // 跳转到首页，并清除所有路由栈（强制销毁所有旧页面）
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              (route) => false,
+            );
+          }
+          break;
+        case 401:
+          // 解析响应体，检查是否为账号封禁
+          String errorMessage = '用户名或密码错误';
+          bool isBanned = false;
+          try {
+            final responseData = json.decode(response.body);
+            if (responseData.containsKey('message')) {
+              errorMessage = responseData['message'] as String;
+              // 检查是否为账号封禁
+              if (errorMessage.contains('账号已被封禁') ||
+                  errorMessage.contains('封禁') ||
+                  errorMessage.contains('banned') ||
+                  errorMessage.contains('ban')) {
+                isBanned = true;
               }
-            } catch (e) {
-              // 解析失败，使用默认错误信息
-            }
-
-            // 记录登录失败（如果不是账号封禁）
-            if (!isBanned) {
-              await UserDataService.recordLoginFailure();
-            }
-
-            // 检查是否被锁定
-            isLocked = await UserDataService.isAccountLocked();
-            if (isBanned) {
-              // 账号被封禁，直接显示封禁提示
-              _showToast(errorMessage, const Color(0xFFe74c3c));
-            } else if (isLocked) {
-              final remainingTime =
-                  await UserDataService.getAccountLockRemainingTime();
-              if (remainingTime != null) {
-                final minutes = remainingTime.inMinutes;
-                _showToast('$errorMessage，账户已被锁定，请$minutes分钟后再试',
-                    const Color(0xFFe74c3c));
-              } else {
-                _showToast(
-                    '$errorMessage，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+            } else if (responseData.containsKey('error')) {
+              errorMessage = responseData['error'] as String;
+              // 检查是否为账号封禁
+              if (errorMessage.contains('账号已被封禁') ||
+                  errorMessage.contains('封禁') ||
+                  errorMessage.contains('banned') ||
+                  errorMessage.contains('ban')) {
+                isBanned = true;
               }
-            } else {
-              final attempts = await UserDataService.getLoginAttempts();
-              final remainingAttempts = 5 - attempts;
-              _showToast('$errorMessage，还有$remainingAttempts次尝试机会',
+            }
+          } catch (e) {
+            // 解析失败，使用默认错误信息
+          }
+
+          // 记录登录失败（如果不是账号封禁）
+          if (!isBanned) {
+            await UserDataService.recordLoginFailure();
+          }
+
+          // 检查是否被锁定
+          isLocked = await UserDataService.isAccountLocked();
+          if (isBanned) {
+            // 账号被封禁，直接显示封禁提示
+            _showToast(errorMessage, const Color(0xFFe74c3c));
+          } else if (isLocked) {
+            final remainingTime =
+                await UserDataService.getAccountLockRemainingTime();
+            if (remainingTime != null) {
+              final minutes = remainingTime.inMinutes;
+              _showToast('$errorMessage，账户已被锁定，请$minutes分钟后再试',
                   const Color(0xFFe74c3c));
+            } else {
+              _showToast('$errorMessage，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
             }
-            break;
-          case 500:
-            _showToast('服务器错误', const Color(0xFFe74c3c));
-            break;
-          default:
-            _showToast('网络异常', const Color(0xFFe74c3c));
-        }
-      } catch (e) {
-        setState(() {
-          _isLoading = false;
-        });
-        // 记录登录失败
-        await UserDataService.recordLoginFailure();
-        _showToast('网络异常', const Color(0xFFe74c3c));
+          } else {
+            final attempts = await UserDataService.getLoginAttempts();
+            final remainingAttempts = 5 - attempts;
+            _showToast('$errorMessage，还有$remainingAttempts次尝试机会',
+                const Color(0xFFe74c3c));
+          }
+          break;
+        case 500:
+          _showToast('服务器错误', const Color(0xFFe74c3c));
+          break;
+        default:
+          _showToast('网络异常', const Color(0xFFe74c3c));
       }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // 记录登录失败
+      await UserDataService.recordLoginFailure();
+      _showToast('网络异常', const Color(0xFFe74c3c));
     }
   }
 
@@ -395,19 +407,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: const Color(0xFF2c3e50),
                 ),
                 decoration: InputDecoration(
-                  labelText: '用户名',
+                  labelText: '用户名或邮箱',
                   labelStyle: FontUtils.poppins(
                     color: const Color(0xFF7f8c8d),
                     fontSize: 14,
                   ),
-                  hintText: '请输入用户名',
+                  hintText: '请输入用户名或邮箱',
                   hintStyle: FontUtils.poppins(
                     color: const Color(0xFFbdc3c7),
                     fontSize: 16,
                   ),
-                  prefixIcon: const Icon(
-                    Icons.person,
-                    color: Color(0xFF7f8c8d),
+                  prefixIcon: Icon(
+                    _isEmailInput ? Icons.email : Icons.person,
+                    color: const Color(0xFF7f8c8d),
                     size: 20,
                   ),
                   border: OutlineInputBorder(
@@ -423,15 +435,42 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.6),
+                  fillColor: Colors.white.withOpacity(0.6),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
                   ),
                 ),
+                onChanged: (value) {
+                  final isValidChar = RegExp(r'^[a-zA-Z0-9_.@\u4e00-\u9fa5]*$');
+                  if (!isValidChar.hasMatch(value)) {
+                    String filtered;
+                    if (InputValidatorUtils.isEmail(value)) {
+                      filtered = InputValidatorUtils.filterEmail(value);
+                    } else {
+                      filtered = InputValidatorUtils.filterLoginUsername(value);
+                    }
+                    if (filtered != value) {
+                      _usernameController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '请输入用户名';
+                    return '请输入用户名或邮箱';
+                  }
+                  if (InputValidatorUtils.isEmail(value)) {
+                    if (!InputValidatorUtils.isEmailValid(value)) {
+                      return '请输入有效的邮箱地址';
+                    }
+                  } else {
+                    if (!InputValidatorUtils.isLoginUsernameValid(value)) {
+                      return '用户名长度不能超过32个字符';
+                    }
                   }
                   return null;
                 },
@@ -490,15 +529,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.6),
+                  fillColor: Colors.white.withOpacity(0.6),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
                   ),
                 ),
+                onChanged: (value) {
+                  final filtered = InputValidatorUtils.filterPassword(value);
+                  if (filtered != value) {
+                    _passwordController.value = TextEditingValue(
+                      text: filtered,
+                      selection:
+                          TextSelection.collapsed(offset: filtered.length),
+                    );
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请输入密码';
+                  }
+                  if (!InputValidatorUtils.isPasswordValid(value)) {
+                    return '密码长度不能超过32个字符';
                   }
                   return null;
                 },
@@ -680,19 +732,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: const Color(0xFF2c3e50),
                   ),
                   decoration: InputDecoration(
-                    labelText: '用户名',
+                    labelText: '用户名或邮箱',
                     labelStyle: FontUtils.poppins(
                       color: const Color(0xFF7f8c8d),
                       fontSize: 14,
                     ),
-                    hintText: '请输入用户名',
+                    hintText: '请输入用户名或邮箱',
                     hintStyle: FontUtils.poppins(
                       color: const Color(0xFFbdc3c7),
                       fontSize: 16,
                     ),
-                    prefixIcon: const Icon(
-                      Icons.person,
-                      color: Color(0xFF7f8c8d),
+                    prefixIcon: Icon(
+                      _isEmailInput ? Icons.email : Icons.person,
+                      color: const Color(0xFF7f8c8d),
                       size: 20,
                     ),
                     border: OutlineInputBorder(
@@ -708,15 +760,44 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.6),
+                    fillColor: Colors.white.withOpacity(0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
                     ),
                   ),
+                  onChanged: (value) {
+                    final isValidChar =
+                        RegExp(r'^[a-zA-Z0-9_.@\u4e00-\u9fa5]*$');
+                    if (!isValidChar.hasMatch(value)) {
+                      String filtered;
+                      if (InputValidatorUtils.isEmail(value)) {
+                        filtered = InputValidatorUtils.filterEmail(value);
+                      } else {
+                        filtered =
+                            InputValidatorUtils.filterLoginUsername(value);
+                      }
+                      if (filtered != value) {
+                        _usernameController.value = TextEditingValue(
+                          text: filtered,
+                          selection:
+                              TextSelection.collapsed(offset: filtered.length),
+                        );
+                      }
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入用户名';
+                      return '请输入用户名或邮箱';
+                    }
+                    if (InputValidatorUtils.isEmail(value)) {
+                      if (!InputValidatorUtils.isEmailValid(value)) {
+                        return '请输入有效的邮箱地址';
+                      }
+                    } else {
+                      if (!InputValidatorUtils.isLoginUsernameValid(value)) {
+                        return '用户名长度不能超过32个字符';
+                      }
                     }
                     return null;
                   },
@@ -775,15 +856,28 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.6),
+                    fillColor: Colors.white.withOpacity(0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
                     ),
                   ),
+                  onChanged: (value) {
+                    final filtered = InputValidatorUtils.filterPassword(value);
+                    if (filtered != value) {
+                      _passwordController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入密码';
+                    }
+                    if (!InputValidatorUtils.isPasswordValid(value)) {
+                      return '密码长度不能超过32个字符';
                     }
                     return null;
                   },

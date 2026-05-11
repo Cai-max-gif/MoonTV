@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'dart:async';
 import '../services/user_data_service.dart';
 import '../utils/font_utils.dart';
+import '../utils/input_validator_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
@@ -163,6 +164,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _handleResetPassword() async {
     if (!_formKey.currentState!.validate() || !_isFormValid) {
+      _showToast('请填写完整的信息', const Color(0xFFe74c3c));
       return;
     }
 
@@ -180,8 +182,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
-    if (!RegExp(r'^\d{4,6}$').hasMatch(verificationCode)) {
-      _showToast('验证码格式错误，应为4-6位数字', const Color(0xFFe74c3c));
+    if (!RegExp(r'^\d{6}$').hasMatch(verificationCode)) {
+      _showToast('验证码格式错误，应为6位数字', const Color(0xFFe74c3c));
       return;
     }
 
@@ -292,7 +294,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         borderSide: BorderSide.none,
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.6),
+      fillColor: Colors.white.withOpacity(0.6),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 20,
         vertical: 18,
@@ -314,7 +316,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           color: const Color(0xFF7f8c8d),
           fontSize: 14,
         ),
-        hintText: '请输入验证码',
+        hintText: '请输入6位数字验证码',
         hintStyle: FontUtils.poppins(
           color: const Color(0xFFbdc3c7),
           fontSize: 16,
@@ -370,15 +372,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           borderSide: BorderSide.none,
         ),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.6),
+        fillColor: Colors.white.withOpacity(0.6),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
         ),
       ),
+      onChanged: (value) {
+        final filtered = InputValidatorUtils.filterVerificationCode(value);
+        if (filtered != value) {
+          _verificationCodeController.value = TextEditingValue(
+            text: filtered,
+            selection: TextSelection.collapsed(offset: filtered.length),
+          );
+        }
+      },
       validator: (value) {
         if (value == null || value.isEmpty) {
           return '请输入验证码';
+        }
+        if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+          return '验证码必须为6位数字';
         }
         return null;
       },
@@ -473,6 +487,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     hintText: '请输入邮箱地址',
                     prefixIcon: Icons.email,
                   ),
+                  onChanged: (value) {
+                    final isValidChar = RegExp(r'^[a-zA-Z0-9.@]*$');
+                    if (!isValidChar.hasMatch(value)) {
+                      final filtered = InputValidatorUtils.filterEmail(value);
+                      if (filtered != value) {
+                        _emailController.value = TextEditingValue(
+                          text: filtered,
+                          selection:
+                              TextSelection.collapsed(offset: filtered.length),
+                        );
+                      }
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入邮箱地址';
@@ -496,7 +523,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   decoration: _buildInputDecoration(
                     labelText: '新密码',
-                    hintText: '至少6位字符',
+                    hintText: '请输入密码',
                     prefixIcon: Icons.lock,
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -513,6 +540,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       },
                     ),
                   ),
+                  onChanged: (value) {
+                    final filtered = InputValidatorUtils.filterPassword(value);
+                    if (filtered != value) {
+                      _newPasswordController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入新密码';

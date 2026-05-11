@@ -6,6 +6,7 @@ import 'dart:async';
 import '../services/user_data_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
+import '../utils/input_validator_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'home_screen.dart';
 
@@ -189,6 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleRegister() async {
     if (!_formKey.currentState!.validate() || !_isFormValid) {
+      _showToast('请填写完整的注册信息', const Color(0xFFe74c3c));
       return;
     }
 
@@ -198,8 +200,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final confirmPassword = _confirmPasswordController.text;
     final verificationCode = _verificationCodeController.text.trim();
 
-    if (!RegExp(r'^[a-zA-Z0-9_]{3,20}$').hasMatch(username)) {
-      _showToast('用户名只能包含字母、数字和下划线，长度3-20位', const Color(0xFFe74c3c));
+    if (!InputValidatorUtils.isRegisterUsernameValid(username)) {
+      _showToast('用户名只能包含字母、数字和汉字', const Color(0xFFe74c3c));
       return;
     }
 
@@ -219,8 +221,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (!RegExp(r'^\d{4,6}$').hasMatch(verificationCode)) {
-      _showToast('验证码格式错误，应为4-6位数字', const Color(0xFFe74c3c));
+    if (!RegExp(r'^\d{6}$').hasMatch(verificationCode)) {
+      _showToast('验证码格式错误，应为6位数字', const Color(0xFFe74c3c));
       return;
     }
 
@@ -363,7 +365,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderSide: BorderSide.none,
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.6),
+      fillColor: Colors.white.withOpacity(0.6),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 20,
         vertical: 18,
@@ -385,7 +387,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           color: const Color(0xFF7f8c8d),
           fontSize: 14,
         ),
-        hintText: '请输入验证码',
+        hintText: '请输入6位数字验证码',
         hintStyle: FontUtils.poppins(
           color: const Color(0xFFbdc3c7),
           fontSize: 16,
@@ -441,15 +443,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
           borderSide: BorderSide.none,
         ),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.6),
+        fillColor: Colors.white.withOpacity(0.6),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
         ),
       ),
+      onChanged: (value) {
+        final filtered = InputValidatorUtils.filterVerificationCode(value);
+        if (filtered != value) {
+          _verificationCodeController.value = TextEditingValue(
+            text: filtered,
+            selection: TextSelection.collapsed(offset: filtered.length),
+          );
+        }
+      },
       validator: (value) {
         if (value == null || value.isEmpty) {
           return '请输入验证码';
+        }
+        if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+          return '验证码必须为6位数字';
         }
         return null;
       },
@@ -541,15 +555,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 decoration: _buildInputDecoration(
                   labelText: '用户名',
-                  hintText: '3-20位字母数字下划线',
+                  hintText: '请输入用户名',
                   prefixIcon: Icons.person,
                 ),
+                onChanged: (value) {
+                  final isValidChar = RegExp(r'^[a-zA-Z0-9\u4e00-\u9fa5]*$');
+                  if (!isValidChar.hasMatch(value)) {
+                    final filtered =
+                        InputValidatorUtils.filterRegisterUsername(value);
+                    if (filtered != value) {
+                      _usernameController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请输入用户名';
                   }
-                  if (!RegExp(r'^[a-zA-Z0-9_]{3,20}$').hasMatch(value)) {
-                    return '用户名只能包含字母、数字和下划线，长度3-20位';
+                  if (!InputValidatorUtils.isRegisterUsernameValid(value)) {
+                    return '用户名只能包含字母、数字和汉字';
                   }
                   return null;
                 },
@@ -567,12 +595,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   hintText: '请输入邮箱地址',
                   prefixIcon: Icons.email,
                 ),
+                onChanged: (value) {
+                  final isValidChar = RegExp(r'^[a-zA-Z0-9.@]*$');
+                  if (!isValidChar.hasMatch(value)) {
+                    final filtered = InputValidatorUtils.filterEmail(value);
+                    if (filtered != value) {
+                      _emailController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请输入邮箱地址';
                   }
                   if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value)) {
                     return '请输入有效的邮箱地址';
+                  }
+                  final allowedDomains = [
+                    'gmail.com',
+                    'qq.com',
+                    '163.com',
+                    '126.com',
+                    'outlook.com',
+                    'hotmail.com',
+                    'foxmail.com',
+                    'sina.com',
+                    'sohu.com',
+                    'yahoo.com',
+                    'aliyun.com',
+                    'icloud.com',
+                    'live.com',
+                    'msn.com',
+                    '139.com',
+                    'yeah.net'
+                  ];
+                  final domain = value.split('@').last.toLowerCase();
+                  if (!allowedDomains.contains(domain)) {
+                    return '不支持此邮箱';
                   }
                   return null;
                 },
@@ -589,7 +652,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 decoration: _buildInputDecoration(
                   labelText: '密码',
-                  hintText: '至少6位字符',
+                  hintText: '请输入密码',
                   prefixIcon: Icons.lock,
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -606,6 +669,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                 ),
+                onChanged: (value) {
+                  final filtered = InputValidatorUtils.filterPassword(value);
+                  if (filtered != value) {
+                    _passwordController.value = TextEditingValue(
+                      text: filtered,
+                      selection:
+                          TextSelection.collapsed(offset: filtered.length),
+                    );
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请输入密码';
@@ -643,6 +716,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                 ),
+                onChanged: (value) {
+                  final filtered = InputValidatorUtils.filterPassword(value);
+                  if (filtered != value) {
+                    _confirmPasswordController.value = TextEditingValue(
+                      text: filtered,
+                      selection:
+                          TextSelection.collapsed(offset: filtered.length),
+                    );
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return '请再次输入密码';
@@ -780,15 +863,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   decoration: _buildInputDecoration(
                     labelText: '用户名',
-                    hintText: '3-20位字母数字下划线',
+                    hintText: '请输入用户名',
                     prefixIcon: Icons.person,
                   ),
+                  onChanged: (value) {
+                    final isValidChar = RegExp(r'^[a-zA-Z0-9\u4e00-\u9fa5]*$');
+                    if (!isValidChar.hasMatch(value)) {
+                      final filtered =
+                          InputValidatorUtils.filterRegisterUsername(value);
+                      if (filtered != value) {
+                        _usernameController.value = TextEditingValue(
+                          text: filtered,
+                          selection:
+                              TextSelection.collapsed(offset: filtered.length),
+                        );
+                      }
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入用户名';
                     }
-                    if (!RegExp(r'^[a-zA-Z0-9_]{3,20}$').hasMatch(value)) {
-                      return '用户名只能包含字母、数字和下划线，长度3-20位';
+                    if (!InputValidatorUtils.isRegisterUsernameValid(value)) {
+                      return '用户名只能包含字母、数字和汉字';
                     }
                     return null;
                   },
@@ -806,6 +903,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     hintText: '请输入邮箱地址',
                     prefixIcon: Icons.email,
                   ),
+                  onChanged: (value) {
+                    final isValidChar = RegExp(r'^[a-zA-Z0-9.@]*$');
+                    if (!isValidChar.hasMatch(value)) {
+                      final filtered = InputValidatorUtils.filterEmail(value);
+                      if (filtered != value) {
+                        _emailController.value = TextEditingValue(
+                          text: filtered,
+                          selection:
+                              TextSelection.collapsed(offset: filtered.length),
+                        );
+                      }
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入邮箱地址';
@@ -813,6 +923,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
                         .hasMatch(value)) {
                       return '请输入有效的邮箱地址';
+                    }
+                    final allowedDomains = [
+                      'gmail.com',
+                      'qq.com',
+                      '163.com',
+                      '126.com',
+                      'outlook.com',
+                      'hotmail.com',
+                      'foxmail.com',
+                      'sina.com',
+                      'sohu.com',
+                      'yahoo.com',
+                      'aliyun.com',
+                      'icloud.com',
+                      'live.com',
+                      'msn.com',
+                      '139.com',
+                      'yeah.net'
+                    ];
+                    final domain = value.split('@').last.toLowerCase();
+                    if (!allowedDomains.contains(domain)) {
+                      return '不支持此邮箱';
                     }
                     return null;
                   },
@@ -827,7 +959,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   decoration: _buildInputDecoration(
                     labelText: '密码',
-                    hintText: '至少6位字符',
+                    hintText: '请输入密码',
                     prefixIcon: Icons.lock,
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -844,6 +976,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
+                  onChanged: (value) {
+                    final filtered = InputValidatorUtils.filterPassword(value);
+                    if (filtered != value) {
+                      _passwordController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入密码';
@@ -882,6 +1024,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
+                  onChanged: (value) {
+                    final filtered = InputValidatorUtils.filterPassword(value);
+                    if (filtered != value) {
+                      _confirmPasswordController.value = TextEditingValue(
+                        text: filtered,
+                        selection:
+                            TextSelection.collapsed(offset: filtered.length),
+                      );
+                    }
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请再次输入密码';
