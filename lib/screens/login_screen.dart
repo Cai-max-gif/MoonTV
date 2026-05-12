@@ -88,7 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (result.success) {
-      _showToast('登录成功', const Color(0xFF2ecc71));
+      if (result.isNewUser) {
+        _showToast('注册成功，请查看 Telegram 机器人发送的账号密码', const Color(0xFF2ecc71));
+      } else {
+        _showToast('登录成功', const Color(0xFF2ecc71));
+      }
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),

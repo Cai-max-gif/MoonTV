@@ -11,7 +11,6 @@ class TelegramAuthResult {
   final String? username;
   final String? token;
   final bool isNewUser;
-  final String? initialPassword;
   final String? error;
 
   TelegramAuthResult({
@@ -19,7 +18,6 @@ class TelegramAuthResult {
     this.username,
     this.token,
     this.isNewUser = false,
-    this.initialPassword,
     this.error,
   });
 }
@@ -103,7 +101,6 @@ class TelegramAuthService {
             if (pollData['status'] == 'verified') {
               final username = pollData['username'] as String;
               final isNewUser = pollData['isNewUser'] as bool? ?? false;
-              final initialPassword = pollData['initialPassword'] as String?;
               final cookieValue = pollData['token'] as String? ?? '';
 
               onStatusChanged?.call('登录成功，正在保存...');
@@ -125,7 +122,6 @@ class TelegramAuthService {
                 username: username,
                 token: null,
                 isNewUser: isNewUser,
-                initialPassword: initialPassword,
               );
             }
 
@@ -141,8 +137,7 @@ class TelegramAuthService {
               error: 'Token 已过期，请重试',
             );
           }
-        } catch (_) {
-        }
+        } catch (_) {}
       }
 
       return TelegramAuthResult(
