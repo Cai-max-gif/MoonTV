@@ -64,6 +64,19 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleTelegramLogin() async {
     if (_isTelegramLoading) return;
 
+    // 检查账户是否被锁定
+    bool isLocked = await UserDataService.isAccountLocked();
+    if (isLocked) {
+      final remainingTime = await UserDataService.getAccountLockRemainingTime();
+      if (remainingTime != null) {
+        final minutes = remainingTime.inMinutes;
+        _showToast('账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
+      } else {
+        _showToast('账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+      }
+      return;
+    }
+
     setState(() {
       _isTelegramLoading = true;
       _telegramStatus = '正在连接 Telegram...';
@@ -99,7 +112,24 @@ class _LoginScreenState extends State<LoginScreen> {
         (route) => false,
       );
     } else {
-      _showToast(result.error ?? 'Telegram 登录失败', const Color(0xFFe74c3c));
+      // 记录登录失败
+      await UserDataService.recordLoginFailure();
+      
+      // 检查是否被锁定
+      bool isLocked = await UserDataService.isAccountLocked();
+      if (isLocked) {
+        final remainingTime = await UserDataService.getAccountLockRemainingTime();
+        if (remainingTime != null) {
+          final minutes = remainingTime.inMinutes;
+          _showToast('${result.error ?? 'Telegram 登录失败'}，账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
+        } else {
+          _showToast('${result.error ?? 'Telegram 登录失败'}，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+        }
+      } else {
+        final attempts = await UserDataService.getLoginAttempts();
+        final remainingAttempts = 5 - attempts;
+        _showToast('${result.error ?? 'Telegram 登录失败'}，还有$remainingAttempts次尝试机会', const Color(0xFFe74c3c));
+      }
     }
   }
 
