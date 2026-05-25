@@ -164,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
 
-      final versionInfo = await VersionService.checkForUpdate();
+      final versionInfo = await VersionService.checkForUpdate(isManualCheck: true);
 
       if (!mounted) return;
 

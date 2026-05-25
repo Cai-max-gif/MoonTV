@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../services/announcement_service.dart';
+import '../models/announcement.dart';
 import '../utils/font_utils.dart';
 
 class AnnouncementDialog extends StatelessWidget {

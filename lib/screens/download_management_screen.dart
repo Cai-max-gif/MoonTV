@@ -9,8 +9,15 @@ import '../utils/font_utils.dart';
 import '../utils/device_utils.dart';
 import 'local_player_screen.dart';
 
+enum DownloadTab {
+  downloading,
+  completed,
+}
+
 class DownloadManagementScreen extends StatefulWidget {
-  const DownloadManagementScreen({super.key});
+  final DownloadTab initialTab;
+
+  const DownloadManagementScreen({super.key, this.initialTab = DownloadTab.downloading});
 
   @override
   State<DownloadManagementScreen> createState() =>
@@ -26,7 +33,11 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab == DownloadTab.completed ? 1 : 0,
+    );
     _downloadService.loadTasks();
   }
 
@@ -382,7 +393,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                   onPause: () => _downloadService.pauseTask(task.id),
                   onResume: () => _downloadService.resumeTask(task.id),
                   onDelete: () => enableDeleteMode
-                      ? _showDeleteConfirmation(context, task)
+                      ? _showDeleteGroupConfirmation(context, title, episodes)
                       : _downloadService.deleteTask(task.id),
                   onPlay: () => _playDownloadedVideo(task),
                   showDeleteButton: enableDeleteMode && _isDeleteMode,
@@ -481,64 +492,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, DownloadTask task) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1e1e1e)
-            : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(
-          '删除下载',
-          style: FontUtils.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF1f2937),
-          ),
-        ),
-        content: Text(
-          '确定要删除 "${task.displayName}" 吗？',
-          style: FontUtils.poppins(
-            fontSize: 14,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF9ca3af)
-                : const Color(0xFF6b7280),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              '取消',
-              style: FontUtils.poppins(
-                fontSize: 14,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _downloadService.deleteTask(task.id);
-            },
-            child: Text(
-              '删除',
-              style: FontUtils.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFef4444),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _playDownloadedVideo(DownloadTask task) {
     final filePath = task.localFilePath;

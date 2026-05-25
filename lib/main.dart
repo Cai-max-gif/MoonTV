@@ -7,9 +7,10 @@ import 'services/user_data_service.dart';
 import 'services/api_service.dart';
 import 'services/theme_service.dart';
 import 'services/douban_cache_service.dart';
-
+import 'services/notification_service.dart';
 import 'services/version_service.dart';
 import 'services/announcement_service.dart';
+import 'models/announcement.dart';
 import 'widgets/announcement_dialog.dart';
 import 'widgets/update_dialog.dart';
 import 'dart:io' show Platform;
@@ -18,10 +19,15 @@ import 'package:macos_window_utils/macos_window_utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   MediaKit.ensureInitialized();
+
+  await NotificationService.instance.initialize();
+  await NotificationService.instance.requestPermissions();
 
   // Gal 库不需要显式初始化，直接使用即可
 
@@ -71,6 +77,7 @@ class MoonTVApp extends StatelessWidget {
           return MaterialApp(
             title: 'MoonTV',
             debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey,
             theme: themeService.lightTheme,
             darkTheme: themeService.darkTheme,
             themeMode: themeService.themeMode,
@@ -124,7 +131,7 @@ class _AppWrapperState extends State<AppWrapper> {
     // 初始检查间隔为30秒
     Duration checkInterval = const Duration(seconds: 30);
 
-    _accountStatusTimer = Timer.periodic(checkInterval, (timer) async {
+    _accountStatusTimer = Timer.periodic(checkInterval, (timer) {
       _checkAccountStatus();
     });
   }
@@ -227,27 +234,35 @@ class _AppWrapperState extends State<AppWrapper> {
   }
 
   Future<void> _executeStartupFlow() async {
-    // 1. 检查版本更新
-    final versionInfo = await VersionService.checkForUpdate();
+    // 并发获取版本更新和公告
+    final results = await Future.wait([
+      VersionService.checkForUpdate(),
+      AnnouncementService.getAnnouncement(),
+    ]);
+
+    final versionInfo = results[0] as VersionInfo?;
+    final announcement = results[1] as Announcement?;
 
     if (mounted) {
+      // 先显示版本更新对话框
       if (versionInfo != null) {
+        // 保存版本信息，供通知点击时使用
+        VersionService.setStoredVersionInfo(versionInfo);
+        
         // 检查是否为强制更新
         if (versionInfo.updateType == UpdateType.force) {
           // 强制更新，必须完成更新后才能继续
           // 显示更新对话框并等待用户操作
           await UpdateDialog.show(context, versionInfo);
-          // 对于强制更新，用户无法关闭对话框，只能完成更新
-          // 但为了安全起见，我们仍然检查是否应该继续
-          // 实际应用中，强制更新后通常会重启应用
-          // 这里我们假设用户已经完成更新或取消
         } else {
-          // 非强制更新，继续执行公告显示逻辑
-          await _checkAndShowAnnouncement();
+          // 非强制更新，显示更新对话框但不阻塞
+          UpdateDialog.show(context, versionInfo);
+          // 显示公告
+          await _checkAndShowAnnouncement(announcement);
         }
       } else {
-        // 无版本更新，继续执行公告显示逻辑
-        await _checkAndShowAnnouncement();
+        // 无版本更新，显示公告
+        await _checkAndShowAnnouncement(announcement);
       }
 
       // 进入首页
@@ -259,11 +274,8 @@ class _AppWrapperState extends State<AppWrapper> {
     }
   }
 
-  Future<void> _checkAndShowAnnouncement() async {
+  Future<void> _checkAndShowAnnouncement(Announcement? announcement) async {
     try {
-      // 获取公告
-      final announcement = await AnnouncementService.getAnnouncement();
-
       if (mounted && announcement != null) {
         // 检查是否应该显示公告
         final shouldShow =

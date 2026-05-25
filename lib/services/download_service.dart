@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/download_task.dart';
 import '../utils/storage_utils.dart';
 import 'download_engine.dart';
+import 'notification_service.dart';
 
 class DownloadService extends ChangeNotifier {
   static const String _downloadTasksKey = 'download_tasks';
@@ -15,6 +16,8 @@ class DownloadService extends ChangeNotifier {
   static final DownloadService _instance = DownloadService._internal();
 
   factory DownloadService() => _instance;
+  
+  static DownloadService get instance => _instance;
 
   DownloadService._internal();
 
@@ -26,6 +29,8 @@ class DownloadService extends ChangeNotifier {
   final Map<String, DownloadEngine> _activeEngines = {};
   bool _queueProcessing = false;
   bool _restarting = false;
+
+  final NotificationService _notificationService = NotificationService.instance;
 
   List<DownloadTask> get tasks => List.unmodifiable(_tasks);
 
@@ -434,6 +439,8 @@ class DownloadService extends ChangeNotifier {
     final engine = DownloadEngine();
     _activeEngines[task.id] = engine;
 
+    int lastProgressPercent = 0;
+
     engine
         .download(
       m3u8Url: task.videoUrl,
@@ -447,6 +454,18 @@ class DownloadService extends ChangeNotifier {
         _tasks[idx].totalBytes = totalBytes;
         _tasks[idx].downloadedBytes = downloadedBytes;
 
+        final progressPercent = (progress * 100).round();
+        if (progressPercent - lastProgressPercent >= 5 || progressPercent == 100) {
+          lastProgressPercent = progressPercent;
+          _notificationService.showDownloadProgress(
+            taskId: task.id.hashCode,
+            title: task.title,
+            episodeTitle: task.episodeTitle,
+            progress: progressPercent,
+            maxProgress: 100,
+          );
+        }
+
         notifyListeners();
       },
     )
@@ -457,6 +476,13 @@ class DownloadService extends ChangeNotifier {
         _tasks[idx].progress = 1.0;
         _tasks[idx].retryCount = 0;
         _tasks[idx].completedAt = DateTime.now();
+        
+        _notificationService.showDownloadCompleted(
+          taskId: task.id.hashCode,
+          title: task.title,
+          episodeTitle: task.episodeTitle,
+        );
+        
         notifyListeners();
       }
       _saveTasks();
@@ -485,6 +511,13 @@ class DownloadService extends ChangeNotifier {
         });
       } else {
         _tasks[idx].status = DownloadStatus.failed;
+        
+        _notificationService.showDownloadFailed(
+          taskId: task.id.hashCode,
+          title: task.title,
+          episodeTitle: task.episodeTitle,
+        );
+        
         notifyListeners();
         _saveTasks();
         _processQueue();

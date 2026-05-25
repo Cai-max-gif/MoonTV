@@ -163,7 +163,7 @@ class _UserMenuState extends State<UserMenu> {
         );
       }
 
-      final versionInfo = await VersionService.checkForUpdate();
+      final versionInfo = await VersionService.checkForUpdate(isManualCheck: true);
 
       if (!mounted) return;
 

@@ -162,10 +162,12 @@ class DownloadEngine {
     await Future.wait(downloadFutures);
 
     if (_cancelled) {
+      await _cleanupTemp(tempDir);
       throw Exception('下载已取消');
     }
 
     if (hasFailed) {
+      await _cleanupTemp(tempDir);
       throw Exception('下载失败：部分片段下载出错');
     }
 
@@ -327,6 +329,9 @@ class DownloadEngine {
           return await _streamToFile(responseStream, savePath);
         }
       } catch (e) {
+        // 清理已创建的部分文件
+        await _cleanupPartialFile(savePath);
+        
         retryCount++;
         if (retryCount >= maxRetries) {
           rethrow;
@@ -336,18 +341,43 @@ class DownloadEngine {
     }
     return 0;
   }
+  
+  Future<void> _cleanupPartialFile(String savePath) async {
+    try {
+      final file = File(savePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      final tempPath = '$savePath._enc';
+      final tempFile = File(tempPath);
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+    } catch (_) {}
+  }
 
   Future<int> _streamToFile(Stream<List<int>> stream, String path) async {
     final file = File(path);
     final sink = file.openWrite();
     int totalBytes = 0;
+    bool hasError = false;
     try {
       await for (final chunk in stream) {
         sink.add(chunk);
         totalBytes += chunk.length;
       }
+    } catch (_) {
+      hasError = true;
     } finally {
       await sink.close();
+      // 如果发生错误或文件为空，删除部分文件
+      if (hasError || totalBytes == 0) {
+        try {
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (_) {}
+      }
     }
     return totalBytes;
   }
