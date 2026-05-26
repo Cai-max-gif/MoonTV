@@ -12,7 +12,7 @@ OutputBaseFilename=MoonTV-Setup
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
-SetupIconFile=d:\MoonTV\logo.ico
+SetupIconFile=d:\MoonTV\assets\images\logo\logo.ico
 
 [Languages]
 Name: "chinese"; MessagesFile: "compiler:Default.isl"

@@ -410,7 +410,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         // Logo 图标
         Image.asset(
-          'logo.png',
+          'assets/images/logo/logo.png',
           width: 100,
           height: 100,
         ),
@@ -735,7 +735,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // Logo 图标
           Image.asset(
-            'logo.png',
+            'assets/images/logo/logo.png',
             width: 100,
             height: 100,
           ),

@@ -1256,7 +1256,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                           child: Opacity(
                             opacity: enabled ? 1.0 : 0.4,
                             child: SvgPicture.asset(
-                              'danmu.svg',
+                              'assets/images/danmu.svg',
                               width: _isFullscreen ? 20 : 18,
                               height: _isFullscreen ? 20 : 18,
                               colorFilter: const ColorFilter.mode(

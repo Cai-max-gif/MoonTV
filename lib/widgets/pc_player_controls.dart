@@ -1053,7 +1053,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                   child: Opacity(
                                     opacity: enabled ? 1.0 : 0.4,
                                     child: SvgPicture.asset(
-                                      'danmu.svg',
+                                      'assets/images/danmu.svg',
                                       width: effectiveFullscreen ? 22 : 20,
                                       height: effectiveFullscreen ? 22 : 20,
                                       colorFilter: const ColorFilter.mode(
