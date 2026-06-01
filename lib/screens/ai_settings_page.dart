@@ -576,7 +576,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     } else {
       final selectedModel = models.firstWhere(
           (m) => m.id == _selectedModel,
-          orElse: () => models.isNotEmpty ? models[0] : _ModelInfo('', ''));
+          orElse: () => models.isNotEmpty ? models[0] : const _ModelInfo('', ''));
       selectedModelName = selectedModel.name.isNotEmpty ? selectedModel.name : '请选择模型';
     }
 

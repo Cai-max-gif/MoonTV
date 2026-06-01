@@ -17,7 +17,6 @@ class AIPage extends StatefulWidget {
 
 class _AIPageState extends State<AIPage> {
   final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
   AISettings? _settings;
@@ -32,7 +31,6 @@ class _AIPageState extends State<AIPage> {
   @override
   void dispose() {
     _messageController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -91,8 +89,6 @@ class _AIPageState extends State<AIPage> {
     });
 
     _messageController.clear();
-    _scrollToBottom();
-
     _saveChatHistory();
 
     final settings = _settings!;
@@ -114,7 +110,6 @@ class _AIPageState extends State<AIPage> {
           _isLoading = false;
         });
         _saveChatHistory();
-        _scrollToBottom();
       }
     } catch (e) {
       if (mounted) {
@@ -126,7 +121,6 @@ class _AIPageState extends State<AIPage> {
           });
           _isLoading = false;
         });
-        _scrollToBottom();
       }
     }
   }
@@ -142,18 +136,6 @@ class _AIPageState extends State<AIPage> {
       });
     }
     return history;
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
   }
 
   @override
@@ -235,16 +217,19 @@ class _AIPageState extends State<AIPage> {
               // 对话区域
               Expanded(
                 child: ListView.builder(
-                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
+                  reverse: true,
                   itemCount: _messages.length + (_isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index < _messages.length) {
-                      final message = _messages[index];
-                      return _buildMessageBubble(message, themeService);
-                    } else {
+                    if (_isLoading && index == 0) {
                       return _buildLoadingIndicator(themeService);
                     }
+                    final messageIndex = _isLoading ? index - 1 : index;
+                    if (messageIndex >= 0 && messageIndex < _messages.length) {
+                      final message = _messages[_messages.length - 1 - messageIndex];
+                      return _buildMessageBubble(message, themeService);
+                    }
+                    return null;
                   },
                 ),
               ),
