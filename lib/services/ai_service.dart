@@ -179,6 +179,43 @@ class AIService {
     }
   }
 
+  static Future<Map<String, dynamic>?> getBalance(AISettings settings) async {
+    if (!settings.isValid) {
+      return null;
+    }
+
+    try {
+      String url;
+      if (settings.provider == 'deepseek') {
+        url = 'https://api.deepseek.com/user/balance';
+      } else if (settings.provider == 'moonshot') {
+        url = '${settings.effectiveBaseUrl}/users/me/balance';
+      } else {
+        return null;
+      }
+
+      final uri = Uri.parse(url);
+
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer ${settings.apiKey}',
+            },
+          )
+          .timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<String> sendMessage({
     required AISettings settings,
     required String userMessage,

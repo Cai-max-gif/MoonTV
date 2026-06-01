@@ -22,8 +22,11 @@ class _AISettingsPageState extends State<AISettingsPage> {
   bool _obscureApiKey = true;
   bool _isTesting = false;
   bool _isSaving = false;
+  bool _isCheckingBalance = false;
   bool _isProviderExpanded = false;
   bool _isModelExpanded = false;
+  Map<String, dynamic>? _balanceInfo;
+  bool _balanceQueryFailed = false;
 
   static const List<_ProviderInfo> _providers = [
     _ProviderInfo(
@@ -79,6 +82,9 @@ class _AISettingsPageState extends State<AISettingsPage> {
   void initState() {
     super.initState();
     _loadSettings();
+    _apiKeyController.addListener(() {
+      _autoCheckBalance();
+    });
   }
 
   Future<void> _loadSettings() async {
@@ -108,6 +114,49 @@ class _AISettingsPageState extends State<AISettingsPage> {
       if (p.id == _selectedProvider) return p.models;
     }
     return _providers.last.models;
+  }
+
+  bool get _supportsBalance => _selectedProvider == 'deepseek' || _selectedProvider == 'moonshot';
+
+  Future<void> _autoCheckBalance() async {
+    if (!_supportsBalance) {
+      setState(() {
+        _balanceInfo = null;
+        _balanceQueryFailed = false;
+      });
+      return;
+    }
+
+    final apiKey = _apiKeyController.text.trim();
+    if (apiKey.isEmpty) {
+      setState(() {
+        _balanceInfo = null;
+        _balanceQueryFailed = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isCheckingBalance = true;
+      _balanceQueryFailed = false;
+    });
+
+    final settings = AISettings(
+      provider: _selectedProvider,
+      apiKey: apiKey,
+      model: _effectiveModel,
+      baseUrl: _baseUrlController.text.trim(),
+    );
+
+    final balance = await AIService.getBalance(settings);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isCheckingBalance = false;
+      _balanceInfo = balance;
+      _balanceQueryFailed = balance == null;
+    });
   }
 
   bool get _isCustomProvider => _selectedProvider == 'custom';
@@ -642,60 +691,166 @@ class _AISettingsPageState extends State<AISettingsPage> {
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildTextField(
-                    controller: _apiKeyController,
-                    hintText: 'sk-xxxxxxxxxxxxxxxx',
-                    obscureText: _obscureApiKey,
-                    isDark: isDark,
-                    textColor: textColor,
-                    subtitleColor: subtitleColor,
-                    inputBgColor: inputBgColor,
-                    suffixIcon: MouseRegion(
-                      cursor: DeviceUtils.isPC()
-                          ? SystemMouseCursors.click
-                          : MouseCursor.defer,
-                      child: GestureDetector(
-                        onTap: () =>
-                            setState(() => _obscureApiKey = !_obscureApiKey),
-                        behavior: HitTestBehavior.opaque,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(
-                            _obscureApiKey
-                                ? LucideIcons.eye
-                                : LucideIcons.eyeOff,
-                            size: 18,
-                            color: subtitleColor,
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _apiKeyController,
+                        hintText: 'sk-xxxxxxxxxxxxxxxx',
+                        obscureText: _obscureApiKey,
+                        isDark: isDark,
+                        textColor: textColor,
+                        subtitleColor: subtitleColor,
+                        inputBgColor: inputBgColor,
+                        suffixIcon: MouseRegion(
+                          cursor: DeviceUtils.isPC()
+                              ? SystemMouseCursors.click
+                              : MouseCursor.defer,
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _obscureApiKey = !_obscureApiKey),
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Icon(
+                                _obscureApiKey
+                                    ? LucideIcons.eye
+                                    : LucideIcons.eyeOff,
+                                size: 18,
+                                color: subtitleColor,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
+                    const SizedBox(width: 10),
+                    _buildMiniButton(
+                      onTap: _isTesting ? null : _testConnection,
+                      icon: LucideIcons.wifi,
+                      label: '测试',
+                      isLoading: _isTesting,
+                      isDark: isDark,
+                      isPrimary: false,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildMiniButton(
+                      onTap: _isSaving ? null : _saveSettings,
+                      icon: LucideIcons.save,
+                      label: '保存',
+                      isLoading: _isSaving,
+                      isDark: isDark,
+                      isPrimary: true,
+                    ),
+                  ],
+                ),
+                if (_supportsBalance)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: _buildBalanceInfo(isDark, textColor, subtitleColor),
                   ),
-                ),
-                const SizedBox(width: 10),
-                _buildMiniButton(
-                  onTap: _isTesting ? null : _testConnection,
-                  icon: LucideIcons.wifi,
-                  label: '测试',
-                  isLoading: _isTesting,
-                  isDark: isDark,
-                  isPrimary: false,
-                ),
-                const SizedBox(width: 8),
-                _buildMiniButton(
-                  onTap: _isSaving ? null : _saveSettings,
-                  icon: LucideIcons.save,
-                  label: '保存',
-                  isLoading: _isSaving,
-                  isDark: isDark,
-                  isPrimary: true,
-                ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBalanceInfo(bool isDark, Color textColor, Color subtitleColor) {
+    String formatBalance(dynamic value) {
+      if (value == null) return '-';
+      return value.toString();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2c2c2c) : const Color(0xFFf0f0f0),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.wallet, size: 16, color: Color(0xFF27ae60)),
+              const SizedBox(width: 6),
+              Text(
+                '账户余额',
+                style: FontUtils.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (_isCheckingBalance)
+            Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '查询中...',
+                  style: FontUtils.poppins(fontSize: 13, color: subtitleColor),
+                ),
+              ],
+            )
+          else if (_balanceQueryFailed)
+            Text(
+              '连接失败请检查密钥',
+              style: FontUtils.poppins(fontSize: 13, color: Colors.redAccent),
+            )
+          else if (_balanceInfo == null)
+            Text(
+              '请输入API密钥查询余额',
+              style: FontUtils.poppins(fontSize: 13, color: subtitleColor),
+            )
+          else if (_balanceInfo!['balance_infos'] != null)
+            ...(_balanceInfo!['balance_infos'] as List).map((info) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${info['currency'] ?? ''}: ${formatBalance(info['total_balance'])}',
+                  style: FontUtils.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
+                ),
+              );
+            })
+          else if (_balanceInfo!['is_available'] != null)
+            Text(
+              '可用余额: ${formatBalance(_balanceInfo!['available_balance'])}',
+              style: FontUtils.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            )
+          else
+            Text(
+              '余额信息: ${_balanceInfo.toString()}',
+              style: FontUtils.poppins(
+                fontSize: 13,
+                color: subtitleColor,
+              ),
+            ),
         ],
       ),
     );
