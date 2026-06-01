@@ -79,8 +79,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
         }
       }
-
-      final authCookie = cookieMap['auth'];
+      
+      final authCookie = cookieMap['user_auth'] ?? cookieMap['auth'];
       if (authCookie == null) {
         return 'user';
       }

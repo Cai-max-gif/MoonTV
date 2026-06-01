@@ -7,7 +7,7 @@ import '../services/theme_service.dart';
 import '../services/api_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
-import '../pages/ai_page.dart';
+import '../screens/ai_page.dart';
 import '../screens/netdisk_search_screen.dart';
 import 'dart:io' show Platform;
 import 'dart:async';

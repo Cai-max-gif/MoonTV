@@ -83,7 +83,7 @@ class _UserMenuState extends State<UserMenu> {
         }
       }
 
-      final authCookie = cookieMap['auth'];
+      final authCookie = cookieMap['user_auth'] ?? cookieMap['auth'];
       if (authCookie == null) {
         return 'user';
       }
