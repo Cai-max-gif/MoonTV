@@ -412,6 +412,10 @@ class _AISettingsPageState extends State<AISettingsPage> {
 
   Widget _buildProviderSection(bool isDark, Color cardColor, Color textColor,
       Color subtitleColor, Color inputBgColor, Color borderColor) {
+    final selectedProviderName = _providers
+        .firstWhere((p) => p.id == _selectedProvider, orElse: () => _providers[0])
+        .name;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -445,6 +449,14 @@ class _AISettingsPageState extends State<AISettingsPage> {
                           color: textColor),
                     ),
                     const Spacer(),
+                    Text(
+                      selectedProviderName,
+                      style: FontUtils.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: subtitleColor),
+                    ),
+                    const SizedBox(width: 8),
                     AnimatedRotation(
                       turns: _isProviderExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
@@ -555,6 +567,18 @@ class _AISettingsPageState extends State<AISettingsPage> {
   Widget _buildModelSection(bool isDark, Color cardColor, Color textColor,
       Color subtitleColor, Color inputBgColor, Color borderColor) {
     final models = _currentModels;
+    String selectedModelName = '';
+    if (_isCustomProvider) {
+      selectedModelName = _customModelController.text.trim();
+      if (selectedModelName.isEmpty) {
+        selectedModelName = '自定义模型';
+      }
+    } else {
+      final selectedModel = models.firstWhere(
+          (m) => m.id == _selectedModel,
+          orElse: () => models.isNotEmpty ? models[0] : _ModelInfo('', ''));
+      selectedModelName = selectedModel.name.isNotEmpty ? selectedModel.name : '请选择模型';
+    }
 
     return Container(
       width: double.infinity,
@@ -589,6 +613,14 @@ class _AISettingsPageState extends State<AISettingsPage> {
                           color: textColor),
                     ),
                     const Spacer(),
+                    Text(
+                      selectedModelName,
+                      style: FontUtils.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: subtitleColor),
+                    ),
+                    const SizedBox(width: 8),
                     AnimatedRotation(
                       turns: _isModelExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
