@@ -371,6 +371,42 @@ class _AISettingsPageState extends State<AISettingsPage> {
             fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
       ),
       centerTitle: true,
+      actions: [
+        MouseRegion(
+          cursor: DeviceUtils.isPC() ? SystemMouseCursors.click : MouseCursor.defer,
+          child: GestureDetector(
+            onTap: _isSaving ? null : _saveSettings,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 16, 8),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+                      ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.save, size: 16, color: Colors.black),
+                        const SizedBox(width: 4),
+                        Text(
+                          '保存',
+                          style: FontUtils.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -735,15 +771,6 @@ class _AISettingsPageState extends State<AISettingsPage> {
                       isLoading: _isTesting,
                       isDark: isDark,
                       isPrimary: false,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildMiniButton(
-                      onTap: _isSaving ? null : _saveSettings,
-                      icon: LucideIcons.save,
-                      label: '保存',
-                      isLoading: _isSaving,
-                      isDark: isDark,
-                      isPrimary: true,
                     ),
                   ],
                 ),
