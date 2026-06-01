@@ -43,8 +43,6 @@ class AISettings {
         return 'https://open.bigmodel.cn/api/paas/v4';
       case 'moonshot':
         return 'https://api.moonshot.cn/v1';
-      case 'anthropic':
-        return 'https://api.anthropic.com/v1';
       default:
         return 'https://api.openai.com/v1';
     }
