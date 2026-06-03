@@ -455,7 +455,7 @@ class DownloadService extends ChangeNotifier {
         _tasks[idx].downloadedBytes = downloadedBytes;
 
         final progressPercent = (progress * 100).round();
-        if (progressPercent - lastProgressPercent >= 5 || progressPercent == 100) {
+        if (progressPercent - lastProgressPercent >= 1 || progressPercent == 100) {
           lastProgressPercent = progressPercent;
           _notificationService.showDownloadProgress(
             taskId: task.id.hashCode,
