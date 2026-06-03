@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1549,8 +1550,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
           _buildMenuItem(
             context,
             themeService,
-            icon: Icons.favorite,
-            iconColor: const Color(0xFFE74C3C),
+            icon: LucideIcons.star,
+            iconColor: const Color(0xFFf1c40f), // 金色
             title: '取消收藏',
             onTap: () {
               widget.onClose();
@@ -1625,8 +1626,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         _buildMenuItem(
           context,
           themeService,
-          icon: widget.isFavorited ? Icons.favorite : Icons.favorite_border,
-          iconColor: const Color(0xFFE74C3C),
+          icon: LucideIcons.star,
+          iconColor: const Color(0xFFf1c40f), // 金色
           title: widget.isFavorited ? '取消收藏' : '收藏',
           onTap: () {
             widget.onClose();
@@ -1701,8 +1702,8 @@ class _VideoMenuBottomSheetState extends State<VideoMenuBottomSheet>
         _buildMenuItem(
           context,
           themeService,
-          icon: widget.isFavorited ? Icons.favorite : Icons.favorite_border,
-          iconColor: const Color(0xFFE74C3C),
+          icon: LucideIcons.star,
+          iconColor: const Color(0xFFf1c40f), // 金色
           title: widget.isFavorited ? '取消收藏' : '收藏',
           onTap: () {
             widget.onClose();

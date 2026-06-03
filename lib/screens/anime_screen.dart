@@ -629,21 +629,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 20, // 固定高度确保一致性
-            child: Text(
-              _selectedCategoryValue == '每日放送'
-                  ? '来自 Bangumi 的精选内容'
-                  : '来自豆瓣的精选内容',
-              style: FontUtils.poppins(
-                fontSize: 14,
-                color: Theme.of(context).textTheme.bodySmall?.color,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          
         ],
       ),
     );

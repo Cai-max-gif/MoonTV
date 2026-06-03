@@ -1132,15 +1132,24 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (currentSource.isEmpty || currentID.isEmpty) return;
 
     final cacheService = PageCacheService();
+    final wasFavorite = _isFavorite;
 
-    if (_isFavorite) {
+    // 立即更新UI状态，避免点击延迟
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+
+    if (wasFavorite) {
       // 取消收藏
       final result =
           await cacheService.removeFavorite(currentSource, currentID, context);
-      if (result.success) {
-        setState(() {
-          _isFavorite = false;
-        });
+      if (!result.success) {
+        // 操作失败，回滚状态
+        if (mounted) {
+          setState(() {
+            _isFavorite = true;
+          });
+        }
       }
     } else {
       // 添加收藏
@@ -1155,10 +1164,13 @@ class _PlayerScreenState extends State<PlayerScreen>
 
       final result = await cacheService.addFavorite(
           currentSource, currentID, favoriteData, context);
-      if (result.success) {
-        setState(() {
-          _isFavorite = true;
-        });
+      if (!result.success) {
+        // 操作失败，回滚状态
+        if (mounted) {
+          setState(() {
+            _isFavorite = false;
+          });
+        }
       }
     }
   }
@@ -1571,9 +1583,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                   GestureDetector(
                     onTap: _toggleFavorite,
                     child: Icon(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
+                      _isFavorite ? Icons.star : Icons.star_border,
                       color: _isFavorite
-                          ? const Color(0xFFe74c3c)
+                          ? Colors.yellow[600]
                           : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
                       size: 28,
                     ),

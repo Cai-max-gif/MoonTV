@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/favorite_item.dart';
 import '../widgets/video_card.dart';
 import '../models/play_record.dart';
@@ -403,7 +404,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(
-            Icons.favorite_border,
+            LucideIcons.star,
             size: 80,
             color: Color(0xFFbdc3c7),
           ),

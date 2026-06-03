@@ -46,6 +46,17 @@ class _VideoCardState extends State<VideoCard> {
   bool _isFavoriteButtonHovered = false;
   bool _isLinkButtonHovered = false;
   bool _isSourceCountBadgeHovered = false;
+  bool? _localIsFavorited;
+
+  bool get _isFavorited => _localIsFavorited ?? widget.isFavorited;
+
+  @override
+  void didUpdateWidget(covariant VideoCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isFavorited != widget.isFavorited) {
+      _localIsFavorited = widget.isFavorited;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -455,13 +466,11 @@ class _VideoCardState extends State<VideoCard> {
                                             const Duration(milliseconds: 200),
                                         curve: Curves.easeInOut,
                                         child: Icon(
-                                          widget.isFavorited
-                                              ? Icons.favorite
-                                              : LucideIcons.heart,
-                                          color: widget.isFavorited
-                                              ? Colors.red
+                                          _isFavorited ? Icons.star : Icons.star_border,
+                                          color: _isFavorited
+                                              ? const Color(0xFFf1c40f)
                                               : (_isFavoriteButtonHovered
-                                                  ? Colors.red
+                                                  ? const Color(0xFFf1c40f)
                                                   : Colors.white),
                                           size: 24,
                                         ),
@@ -494,13 +503,11 @@ class _VideoCardState extends State<VideoCard> {
                                     duration: const Duration(milliseconds: 200),
                                     curve: Curves.easeInOut,
                                     child: Icon(
-                                      widget.isFavorited
-                                          ? Icons.favorite
-                                          : LucideIcons.heart,
-                                      color: widget.isFavorited
-                                          ? Colors.red
+                                      _isFavorited ? Icons.star : Icons.star_border,
+                                      color: _isFavorited
+                                          ? const Color(0xFFf1c40f)
                                           : (_isFavoriteButtonHovered
-                                              ? Colors.red
+                                              ? const Color(0xFFf1c40f)
                                               : Colors.white),
                                       size: 24,
                                     ),
@@ -755,6 +762,9 @@ class _VideoCardState extends State<VideoCard> {
   /// 处理收藏按钮点击
   void _handleFavoriteButtonTap() {
     if (widget.onGlobalMenuAction != null) {
+      setState(() {
+        _localIsFavorited = !_isFavorited;
+      });
       if (widget.isFavorited) {
         widget.onGlobalMenuAction!(VideoMenuAction.unfavorite);
       } else {
