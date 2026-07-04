@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/danmu_item.dart';
+import '../constants/app_config.dart';
 
 class DanmuCache {
   static const _cachePrefix = 'danmu_cache_';
-  static const _cacheDuration = Duration(minutes: 30);
+  static const _cacheDuration = AppConfig.danmuCacheDuration;
 
   static String _buildCacheKey(
       {String? title, String? doubanId, String? episode, String? episodeId}) {

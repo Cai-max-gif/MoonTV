@@ -10,6 +10,10 @@ import '../widgets/pulsing_dots_indicator.dart';
 import '../widgets/hot_short_drama_section.dart';
 import 'player_screen.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
+import '../constants/app_dimensions.dart';
 
 class ShortDramaScreen extends StatefulWidget {
   final List<Map<String, dynamic>>? initialData;
@@ -31,7 +35,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _shortDramas = [];
   int _page = 1;
-  final int _pageLimit = 20;
+  final int _pageLimit = AppConfig.shortDramaPageLimit;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -53,7 +57,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   void initState() {
     super.initState();
     _categories = _defaultCategories;
-    
+
     final hotDramas = HotShortDramaSection.getCurrentShortDramas();
     if (hotDramas != null && hotDramas.isNotEmpty) {
       _shortDramas.addAll(hotDramas);
@@ -64,7 +68,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     } else {
       _isLoading = true;
     }
-    
+
     _syncCategoriesAndLoad();
     _scrollController.addListener(_handleScroll);
   }
@@ -87,7 +91,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         });
       }
     }
-    
+
     if (mounted) {
       _fetchShortDramas(isRefresh: true);
     }
@@ -111,7 +115,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       return;
     }
 
-    const double threshold = 50.0;
+    const double threshold = AppDimens.scrollLoadMoreThreshold;
     if (position.pixels >= position.maxScrollExtent - threshold) {
       _loadMoreShortDramas();
     }
@@ -159,7 +163,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         _hasMore = list.length >= _pageLimit;
       } else {
         if (_shortDramas.isEmpty) {
-          _errorMessage = result.message ?? '加载失败';
+          _errorMessage = result.message ?? AppStrings.loadFailed;
         }
       }
       _isLoading = false;
@@ -211,7 +215,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       MaterialPageRoute(
         builder: (context) => PlayerScreen(
           title: shortDrama['name'] ?? '',
-          stype: 'shortdrama',
+          stype: AppConfig.stypeShortDrama,
           id: shortDrama['id'].toString(),
         ),
       ),
@@ -246,14 +250,14 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   Widget build(BuildContext context) {
     return StyledRefreshIndicator(
       onRefresh: _refreshShortDramasData,
-      refreshText: '刷新短剧数据...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshShortDrama,
+      primaryColor: AppColors.accent,
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(child: _buildHeader()),
           SliverToBoxAdapter(child: _buildFilterSection()),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          SliverToBoxAdapter(child: Gap.h16),
           ShortDramaGrid(
             shortDramas: _shortDramas,
             isLoading: _isLoading && _shortDramas.isEmpty,
@@ -284,9 +288,9 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '短剧',
+            AppStrings.navShortDrama,
             style: FontUtils.poppins(
-              fontSize: 28,
+              fontSize: AppDimens.fontSizeHeadline,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
@@ -301,16 +305,16 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.all(AppDimens.spacingLg),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? Colors.white.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: _buildFilterRow(
-        '类型',
+        AppStrings.filterCategory,
         _categories
             .map((c) => SelectorOption(
                   label: c['type_name'] as String,
@@ -335,12 +339,12 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         Text(
           title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -373,28 +377,28 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
                   : Colors.grey.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(1),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '已经到底啦~',
+            AppStrings.noMoreData,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.grey[600],
+                  : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '共 ${_shortDramas.length} 部短剧',
+            AppStrings.countShortDrama.replaceAll('%d', '${_shortDramas.length}'),
             style: FontUtils.poppins(
-              fontSize: 12,
+              fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.grey[500],
+                  : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
           ),

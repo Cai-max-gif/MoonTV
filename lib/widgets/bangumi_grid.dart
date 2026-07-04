@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 import '../models/bangumi.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
@@ -7,6 +8,8 @@ import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
 import '../models/video_info.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_dimensions.dart';
 
 class BangumiGrid extends StatelessWidget {
   final List<BangumiItem>? bangumiItems;
@@ -89,15 +92,15 @@ class BangumiGrid extends StatelessWidget {
         ShimmerEffect(
           width: width,
           height: height,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        const SizedBox(height: 4),
+        Gap.h4,
         // 标题骨架
         Center(
           child: ShimmerEffect(
             width: width * 0.8,
             height: 12,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
       ],
@@ -112,23 +115,23 @@ class BangumiGrid extends StatelessWidget {
           const Icon(
             Icons.error_outline,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '加载失败',
+            AppStrings.loadFailed,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             errorMessage ?? '未知错误',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
             textAlign: TextAlign.center,
           ),
@@ -148,23 +151,23 @@ class BangumiGrid extends StatelessWidget {
           Icon(
             isAnime ? Icons.tv_outlined : Icons.movie_filter_outlined,
             size: 80,
-            color: const Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
             '暂无$contentName',
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             '今日暂无新番放送',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
           ),
         ],
@@ -175,17 +178,28 @@ class BangumiGrid extends StatelessWidget {
   Widget _buildBangumiGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final params = _computeGridParams(constraints.maxWidth);
+        // 平板模式根据宽度动态展示6～9列，手机模式3列
+        final int crossAxisCount = DeviceUtils.getTabletColumnCount(context);
+        final isTablet = DeviceUtils.isTablet(context);
+        
+        final double screenWidth = constraints.maxWidth;
+        const double padding = 16.0;
+        const double spacing = 12.0;
+        final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
+        const double minItemWidth = 80.0;
+        final double calculatedItemWidth = availableWidth / crossAxisCount;
+        final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
+        final double itemHeight = itemWidth * 2.0;
         
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: params.crossAxisCount,
-            childAspectRatio: params.itemWidth / params.itemHeight,
-            crossAxisSpacing: params.spacing,
-            mainAxisSpacing: params.isTablet ? 0 : 6,
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: itemWidth / itemHeight,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: isTablet ? 0 : 6,
           ),
           itemCount: bangumiItems!.length,
           itemBuilder: (context, index) {
@@ -196,7 +210,7 @@ class BangumiGrid extends StatelessWidget {
               videoInfo: videoInfo,
               onTap: () => onVideoTap(videoInfo),
               from: 'bangumi',
-              cardWidth: params.itemWidth,
+              cardWidth: itemWidth,
               onGlobalMenuAction: onGlobalMenuAction != null ? (action) => onGlobalMenuAction!(videoInfo, action) : null,
               isFavorited: false, 
             );
@@ -205,102 +219,4 @@ class BangumiGrid extends StatelessWidget {
       },
     );
   }
-
-  Widget buildSliver() {
-    if (isLoading && (bangumiItems == null || bangumiItems!.isEmpty)) {
-      return _buildLoadingSliver();
-    }
-
-    if (errorMessage != null) {
-      return SliverToBoxAdapter(child: _buildErrorState());
-    }
-
-    if (bangumiItems == null || bangumiItems!.isEmpty) {
-      return SliverToBoxAdapter(child: _buildEmptyState());
-    }
-
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      sliver: SliverLayoutBuilder(
-        builder: (context, constraints) {
-          final params = _computeGridParams(constraints.crossAxisExtent);
-          
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: params.crossAxisCount,
-              childAspectRatio: params.itemWidth / params.itemHeight,
-              crossAxisSpacing: params.spacing,
-              mainAxisSpacing: params.isTablet ? 0 : 6,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final bangumiItem = bangumiItems![index];
-                final videoInfo = bangumiItem.toVideoInfo();
-                return VideoCard(
-                  videoInfo: videoInfo,
-                  onTap: () => onVideoTap(videoInfo),
-                  from: 'bangumi',
-                  cardWidth: params.itemWidth,
-                  onGlobalMenuAction: onGlobalMenuAction != null ? (action) => onGlobalMenuAction!(videoInfo, action) : null,
-                  isFavorited: false,
-                );
-              },
-              childCount: bangumiItems!.length,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  static _GridParams _computeGridParams(double screenWidth) {
-    const double padding = 16.0;
-    const double spacing = 12.0;
-    final int crossAxisCount = DeviceUtils.getTabletColumnCountFromWidth(screenWidth);
-    final bool isTablet = screenWidth >= 600;
-    final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-    const double minItemWidth = 80.0;
-    final double calculatedItemWidth = availableWidth / crossAxisCount;
-    final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
-    final double itemHeight = itemWidth * 2.0;
-    return _GridParams(crossAxisCount: crossAxisCount, spacing: spacing, itemWidth: itemWidth, itemHeight: itemHeight, isTablet: isTablet);
-  }
-
-  Widget _buildLoadingSliver() {
-    return SliverToBoxAdapter(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final params = _computeGridParams(constraints.maxWidth);
-          final int skeletonCount = params.isTablet ? params.crossAxisCount * 2 : 6;
-          return SizedBox(
-            height: (params.itemHeight + params.spacing) * (skeletonCount / params.crossAxisCount).ceil(),
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: params.crossAxisCount,
-                childAspectRatio: params.itemWidth / params.itemHeight,
-                crossAxisSpacing: params.spacing,
-                mainAxisSpacing: params.isTablet ? 0 : 6,
-              ),
-              itemCount: skeletonCount,
-              itemBuilder: (context, index) {
-                return _buildSkeletonCard(params.itemWidth);
-              },
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _GridParams {
-  final int crossAxisCount;
-  final double spacing;
-  final double itemWidth;
-  final double itemHeight;
-  final bool isTablet;
-  const _GridParams({required this.crossAxisCount, required this.spacing, required this.itemWidth, required this.itemHeight, required this.isTablet});
 }

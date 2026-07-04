@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 import '../models/announcement.dart';
 import 'api_service.dart';
 
 class AnnouncementService {
-  static const String announcementApiUrl = '/api/announcement';
+  static String get announcementApiUrl => AppConfig.announcementEndpoint;
   static const String _cacheKey = 'announcement_cache';
   static const String _cacheTimeKey = 'announcement_cache_time';
-  static const int _cacheDurationMinutes = 1;
+  static Duration get _cacheDuration => AppConfig.announcementCacheDuration;
 
   static Announcement? _cachedAnnouncement;
   static DateTime? _lastFetchTime;
@@ -18,7 +20,7 @@ class AnnouncementService {
       if (_cachedAnnouncement != null && _lastFetchTime != null) {
         final now = DateTime.now();
         final difference = now.difference(_lastFetchTime!);
-        if (difference.inMinutes < _cacheDurationMinutes) {
+        if (difference < _cacheDuration) {
           return _cachedAnnouncement;
         }
       }
@@ -53,7 +55,7 @@ class AnnouncementService {
             if (announcementContent.trim().isNotEmpty) {
               announcement = Announcement(
                 id: DateTime.now().toString(), // 使用时间戳作为临时ID
-                title: '系统公告', // 默认标题
+                title: AppStrings.announcementDefaultTitle,
                 content: announcementContent,
                 createdAt: DateTime.now(),
                 isActive: true,
@@ -130,7 +132,7 @@ class AnnouncementService {
       final now = DateTime.now();
       final difference = now.difference(cacheDateTime);
 
-      return difference.inMinutes < _cacheDurationMinutes;
+      return difference < _cacheDuration;
     } catch (e) {
       return false;
     }

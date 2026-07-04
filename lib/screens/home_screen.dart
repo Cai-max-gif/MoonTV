@@ -1,13 +1,18 @@
 import 'dart:async';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../widgets/continue_watching_section.dart';
+import '../widgets/upcoming_releases_section.dart';
 import '../widgets/hot_movies_section.dart';
 import '../widgets/hot_tv_section.dart';
 import '../widgets/hot_show_section.dart';
 import '../widgets/hot_short_drama_section.dart';
-import '../widgets/upcoming_releases_section.dart';
 
 import '../widgets/bangumi_section.dart';
 import '../widgets/main_layout.dart';
@@ -87,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentTopNavIndex = 0;
   int _lastTopNavIndex = 0; // 用于记忆最后点击的顶部导航栏标签
   int _currentPageIndex = 0; // 用于跟踪当前页面索引，控制滑动行为
-  String _selectedTopTab = '首页';
+  String _selectedTopTab = AppStrings.navHome;
   late PageController _pageController;
   late PageController _bottomNavPageController;
   Timer? _versionCheckTimer;
@@ -109,13 +114,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 启动定时检测
   void _startVersionCheckTimer() {
-    _versionCheckTimer = Timer.periodic(const Duration(hours: 1), (timer) {
+    _versionCheckTimer = Timer.periodic(AppDurations.versionCheckInterval, (timer) {
       _checkForUpdates();
     });
   }
 
   /// 检查应用更新
-  Future<void> _checkForUpdates() async {
+  void _checkForUpdates() async {
     try {
       final versionInfo = await VersionService.checkForUpdate();
 
@@ -178,38 +183,30 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         // 刷新继续观看组件
         await ContinueWatchingSection.refreshPlayRecords();
-        if (!mounted) return;
 
         // 刷新播放历史组件
         await HistoryGrid.refreshHistory();
-        if (!mounted) return;
 
         // 刷新收藏夹组件
         await FavoritesGrid.refreshFavorites();
-        if (!mounted) return;
-
-        // 刷新即将上映组件
-        UpcomingReleasesSection.refreshUpcomingReleases();
 
         // 刷新热门电影组件
         await HotMoviesSection.refreshHotMovies();
-        if (!mounted) return;
 
         // 刷新热门剧集组件
         await HotTvSection.refreshHotTvShows();
-        if (!mounted) return;
 
         // 刷新新番放送组件
         await BangumiSection.refreshBangumiCalendar();
-        if (!mounted) return;
 
         // 刷新热门综艺组件
         await HotShowSection.refreshHotShows();
-        if (!mounted) return;
 
         // 刷新热门短剧组件
         await HotShortDramaSection.refreshHotShortDramas();
-        if (!mounted) return;
+
+        // 刷新即将上映组件
+        UpcomingReleasesSection.refreshUpcomingReleases();
 
         // 强制重建页面
         setState(() {});
@@ -228,12 +225,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHomeTabContent() {
     return StyledRefreshIndicator(
       onRefresh: _refreshHomeData,
-      refreshText: '刷新中...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshDot,
+      primaryColor: AppColors.accent,
       child: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 8),
+            Gap.h8,
             // 继续观看组件
             ContinueWatchingSection(
               onVideoTap: _onVideoTap,
@@ -283,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _navigateToPlayer(
                     PlayerScreen(
                       title: videoInfo.title,
-                      stype: 'movie',
+                    stype: AppConfig.stypeMovie,
                       year: videoInfo.year,
                     ),
                   );
@@ -389,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             // 添加40的空白内容，避免导航栏遮挡内容
-            const SizedBox(height: 40),
+            Gap.h40,
           ],
         ),
       ),
@@ -400,12 +397,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHistoryTabContent() {
     return StyledRefreshIndicator(
       onRefresh: _refreshHomeData,
-      refreshText: '刷新中...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshDot,
+      primaryColor: AppColors.accent,
       child: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 4),
+            Gap.h4,
             HistoryGrid(
               onVideoTap: _onVideoTap,
               onGlobalMenuAction: _onGlobalMenuAction,
@@ -420,16 +417,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFavoritesTabContent() {
     return StyledRefreshIndicator(
       onRefresh: _refreshHomeData,
-      refreshText: '刷新中...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshDot,
+      primaryColor: AppColors.accent,
       child: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 4),
+            Gap.h4,
             FavoritesGrid(
               onVideoTap: _onVideoTap,
               onGlobalMenuAction:
                   (VideoInfo videoInfo, VideoMenuAction action) {
+                // 将VideoInfo转换为PlayRecord用于统一处理
                 final playRecord = PlayRecord(
                   id: videoInfo.id,
                   source: videoInfo.source,
@@ -496,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       // 如果当前在播放历史、收藏夹或个人中心页面，显示相应的内容
       return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: AppDurations.slow,
         transitionBuilder: (Widget child, Animation<double> animation) {
           return FadeTransition(
             opacity: animation,
@@ -556,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     // 延迟执行跳转，确保状态更新后页面已重建
-    Future.delayed(const Duration(milliseconds: 10), () {
+    Future.delayed(AppDurations.fastest, () {
       // 跳转到顶部导航栏的对应页面
       if (pageIndex < 7) {
         _bottomNavPageController.jumpToPage(pageIndex);
@@ -578,13 +576,13 @@ class _HomeScreenState extends State<HomeScreen> {
     // 同步 PageView 的页面切换
     int pageIndex;
     switch (tab) {
-      case '首页':
+      case AppStrings.navHome:
         pageIndex = 0;
         break;
-      case '播放历史':
+      case AppStrings.navHistory:
         pageIndex = 1;
         break;
-      case '收藏夹':
+      case AppStrings.navFavorites:
         pageIndex = 2;
         break;
       default:
@@ -594,7 +592,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 使用动画切换到对应页面
     _pageController.animateToPage(
       pageIndex,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -632,7 +630,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 使用动画切换到首页
     _bottomNavPageController.animateToPage(
       0,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
 
@@ -642,13 +640,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _currentTopNavIndex = 0;
       _currentPageIndex = 0;
       // 切换到首页标签
-      _selectedTopTab = '首页';
+      _selectedTopTab = AppStrings.navHome;
     });
 
     // 同时切换顶部标签到首页
     _pageController.animateToPage(
       0,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -738,15 +736,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在打开豆瓣详情: ${playRecord.title}',
-              style: FontUtils.poppins(color: Colors.white),
+              '${AppStrings.openingDoubanDetail}${playRecord.title}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFF3498DB),
+            backgroundColor: AppColors.info,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(AppDimens.spacingLg),
           ),
         );
         break;
@@ -755,15 +753,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在打开 Bangumi 详情: ${playRecord.title}',
-              style: FontUtils.poppins(color: Colors.white),
+              '${AppStrings.openingBangumiDetail}${playRecord.title}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFF3498DB),
+            backgroundColor: AppColors.info,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(AppDimens.spacingLg),
           ),
         );
         break;
@@ -793,7 +791,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (!result.success) {
-        throw Exception(result.errorMessage ?? '删除失败');
+        throw Exception(result.errorMessage ?? AppStrings.favDeleteFailed);
       }
     } catch (e) {
       // 删除失败时显示错误提示
@@ -801,15 +799,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '删除失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+                '${AppStrings.favDeleteFailed}: ${e.toString()}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFe74c3c),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            margin: const EdgeInsets.all(16),
+            margin: AppDimens.contentMargin,
           ),
         );
       }
@@ -884,15 +882,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                result.errorMessage ?? '收藏失败',
-                style: FontUtils.poppins(color: Colors.white),
+                result.errorMessage ?? AppStrings.favFailed,
+                style: FontUtils.poppins(color: AppColors.white),
               ),
-              backgroundColor: const Color(0xFFe74c3c),
+              backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
-              margin: const EdgeInsets.all(16),
+              margin: AppDimens.contentMargin,
             ),
           );
         }
@@ -905,14 +903,14 @@ class _HomeScreenState extends State<HomeScreen> {
           SnackBar(
             content: Text(
               '收藏失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFe74c3c),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            margin: const EdgeInsets.all(16),
+            margin: AppDimens.contentMargin,
           ),
         );
       }
@@ -942,15 +940,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                result.errorMessage ?? '取消收藏失败',
-                style: FontUtils.poppins(color: Colors.white),
+                result.errorMessage ?? AppStrings.favUnfavoriteFailed,
+                style: FontUtils.poppins(color: AppColors.white),
               ),
-              backgroundColor: const Color(0xFFe74c3c),
+              backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
-              margin: const EdgeInsets.all(16),
+              margin: AppDimens.contentMargin,
             ),
           );
         }
@@ -963,15 +961,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '取消收藏失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+               '${AppStrings.favUnfavoriteFailed}: ${e.toString()}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFe74c3c),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            margin: const EdgeInsets.all(16),
+            margin: AppDimens.contentMargin,
           ),
         );
       }

@@ -1,5 +1,6 @@
 import 'search_result.dart';
 import 'video_info.dart';
+import '../constants/app_config.dart';
 
 /// 聚合搜索结果数据模型
 class AggregatedSearchResult {
@@ -29,7 +30,7 @@ class AggregatedSearchResult {
 
   /// 从搜索结果创建聚合结果
   factory AggregatedSearchResult.fromSearchResult(SearchResult result) {
-    final type = result.episodes.length > 1 ? 'tv' : 'movie';
+    final type = result.episodes.length > 1 ? AppConfig.stypeTv : AppConfig.stypeMovie;
     final key = '${result.title}_${result.year}_$type';
     
     Map<String, int> episodeCounts = {};
@@ -149,7 +150,7 @@ class AggregatedSearchResult {
 
   /// 生成聚合键
   static String generateKey(String title, String year, int episodeCount) {
-    final type = episodeCount > 1 ? 'tv' : 'movie';
+    final type = episodeCount > 1 ? AppConfig.stypeTv : AppConfig.stypeMovie;
     return '${title}_${year}_$type';
   }
 }

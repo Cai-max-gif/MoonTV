@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/search_result.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 class SourceSpeed {
   String quality = '';
@@ -53,7 +57,7 @@ class _PlayerSourcesPanelState extends State<PlayerSourcesPanel>
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: AppDurations.oneSecond,
       vsync: this,
     );
     _scrollController = ScrollController();
@@ -100,7 +104,7 @@ class _PlayerSourcesPanelState extends State<PlayerSourcesPanel>
     // 滚动到目标位置
     _scrollController.animateTo(
       targetOffset,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -129,7 +133,7 @@ class _PlayerSourcesPanelState extends State<PlayerSourcesPanel>
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1c1c1e) : Colors.white,
+        color: isDarkMode ? AppColors.darkCard : AppColors.white,
       ),
       child: Column(
         children: [
@@ -156,10 +160,10 @@ class _PlayerSourcesPanelState extends State<PlayerSourcesPanel>
                           child: Icon(
                             Icons.refresh,
                             color: _isRefreshing
-                                ? Colors.green
+                                ? AppColors.green
                                 : (isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600]),
+                                    ? AppColors.gray400
+                                    : AppColors.gray600),
                           ),
                         ),
                         onPressed: _isRefreshing ? null : _handleRefresh,
@@ -177,7 +181,7 @@ class _PlayerSourcesPanelState extends State<PlayerSourcesPanel>
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: AppDimens.contentPadding,
               itemCount: widget.sources.length,
               itemBuilder: (context, index) {
                 final source = widget.sources[index];
@@ -251,21 +255,21 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: widget.isCurrent
-                ? (widget.isDarkMode ? Colors.grey[850] : Colors.grey[200])
+                ? (widget.isDarkMode ? AppColors.gray850 : AppColors.gray200)
                 : (_isHovering && DeviceUtils.isPC()
                     ? (widget.isDarkMode
-                        ? const Color(0xFF1A3D2E) // 深色模式下的浅绿色
-                        : const Color(0xFFE8F5E9)) // 浅色模式下的浅绿色
+                        ? AppColors.darkGreen // 深色模式下的浅绿色
+                        : AppColors.greenBg) // 浅色模式下的浅绿色
                     : (widget.isDarkMode
-                        ? Colors.grey[850]
-                        : Colors.grey[200])),
-            borderRadius: BorderRadius.circular(12),
+                        ? AppColors.gray850
+                        : AppColors.gray200)),
+            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
             border: widget.isCurrent
-                ? Border.all(color: Colors.green, width: 2)
+                ? Border.all(color: AppColors.green, width: 2)
                 : null,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: AppDimens.smallPadding,
             child: SizedBox(
               height: 100,
               child: Stack(
@@ -274,7 +278,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                     children: [
                       // Left side: Cover
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                         child: AspectRatio(
                           aspectRatio: 2 / 3,
                           child: CachedNetworkImage(
@@ -283,28 +287,28 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                             placeholder: (context, url) => Container(
                               decoration: BoxDecoration(
                                 color: widget.isDarkMode
-                                    ? const Color(0xFF333333)
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8),
+                                    ? AppColors.borderDark
+                                    : AppColors.gray300,
+                                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
                               decoration: BoxDecoration(
                                 color: widget.isDarkMode
-                                    ? const Color(0xFF333333)
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8),
+                                    ? AppColors.borderDark
+                                    : AppColors.gray300,
+                                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               ),
                               child: Icon(
                                 Icons.movie,
                                 color: widget.isDarkMode
-                                    ? const Color(0xFF666666)
-                                    : Colors.grey,
+                                    ? AppColors.textDarkHint
+                                    : AppColors.gray500,
                                 size: 40,
                               ),
                             ),
-                            fadeInDuration: const Duration(milliseconds: 200),
-                            fadeOutDuration: const Duration(milliseconds: 100),
+                            fadeInDuration: AppDurations.normal,
+                            fadeOutDuration: AppDurations.fastest,
                           ),
                         ),
                       ),
@@ -323,7 +327,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            Gap.h8,
                             // Source Name
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -331,9 +335,9 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                               decoration: BoxDecoration(
                                 border: Border.all(
                                     color: widget.isDarkMode
-                                        ? Colors.grey[600]!
-                                        : Colors.grey[400]!),
-                                borderRadius: BorderRadius.circular(4),
+                                        ? AppColors.gray600
+                                        : AppColors.gray400),
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                               child: Text(
                                 widget.source.sourceName,
@@ -352,7 +356,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                     Text(
                                       widget.speedInfo!.loadSpeed,
                                       style: widget.theme.textTheme.bodyMedium
-                                          ?.copyWith(color: Colors.green),
+                                          ?.copyWith(color: AppColors.green),
                                     ),
                                   if (widget.speedInfo!.loadSpeed.isNotEmpty &&
                                       !widget.speedInfo!.loadSpeed
@@ -370,7 +374,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                     Text(
                                       widget.speedInfo!.pingTime,
                                       style: widget.theme.textTheme.bodyMedium
-                                          ?.copyWith(color: Colors.orange),
+                                          ?.copyWith(color: AppColors.orange),
                                     ),
                                 ],
                                 const Spacer(),
@@ -389,7 +393,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                   // Resolution tag in top right
                   if (widget.speedInfo != null &&
                       widget.speedInfo!.quality.isNotEmpty &&
-                      widget.speedInfo!.quality.toLowerCase() != '未知')
+                      widget.speedInfo!.quality.toLowerCase() != AppStrings.m3u8ResolutionUnknown.toLowerCase())
                     Positioned(
                       top: 0,
                       right: 0,
@@ -397,8 +401,8 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                         widget.speedInfo!.quality,
                         style: widget.theme.textTheme.bodyMedium?.copyWith(
                           color: widget.isDarkMode
-                              ? Colors.grey[400]
-                              : Colors.grey[600],
+                              ? AppColors.gray400
+                              : AppColors.gray600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

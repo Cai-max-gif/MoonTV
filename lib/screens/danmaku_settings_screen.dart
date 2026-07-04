@@ -1,42 +1,11 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/user_data_service.dart';
 import '../utils/font_utils.dart';
-
-class HollowRoundSliderThumbShape extends SliderComponentShape {
-  final double thumbRadius;
-
-  const HollowRoundSliderThumbShape({this.thumbRadius = 10});
-
-  @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size.fromRadius(thumbRadius);
-  }
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    required bool isDiscrete,
-    required TextPainter labelPainter,
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required TextDirection textDirection,
-    required double value,
-    required double textScaleFactor,
-    required Size sizeWithOverflow,
-  }) {
-    final Canvas canvas = context.canvas;
-    final Paint paint = Paint()
-      ..color = sliderTheme.thumbColor ?? Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    canvas.drawCircle(center, thumbRadius, paint);
-  }
-}
+import '../widgets/hollow_slider_thumb.dart';
 
 class DanmakuSettingsScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -98,14 +67,14 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
     return Scaffold(
       backgroundColor:
-          isDarkMode ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
+          isDarkMode ? AppColors.black : AppColors.grayBg,
       appBar: AppBar(
-        backgroundColor: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        elevation: 0,
+        backgroundColor: isDarkMode ? AppColors.cardDark : Colors.white,
+        elevation: AppDimens.elevationNone,
         leading: IconButton(
           icon: Icon(
             LucideIcons.arrowLeft,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? Colors.white : AppColors.textDarkGray,
           ),
           onPressed: () {
             if (widget.onBack != null) {
@@ -116,19 +85,19 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
           },
         ),
         title: Text(
-          '弹幕设置',
+          AppStrings.danmakuSettings,
           style: FontUtils.poppins(
-            fontSize: 18,
+            fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? Colors.white : AppColors.textDarkGray,
           ),
         ),
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppDimens.spacingMd),
         itemCount: 5 * 2 - 1, // 5个设置卡片 + 4个间隔
         itemBuilder: (context, index) {
-          if (index.isOdd) return const SizedBox(height: 12);
+          if (index.isOdd) return Gap.h12;
           final itemIndex = index ~/ 2;
           switch (itemIndex) {
             case 0: return _buildDanmakuEnabledCard(isDarkMode);
@@ -145,14 +114,14 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
   Widget _buildDanmakuEnabledCard(bool isDarkMode) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.098),
-            blurRadius: 8,
+            blurRadius: AppDimens.shadowBlurSm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -164,16 +133,16 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
             children: [
               const Icon(
                 LucideIcons.messageSquare,
-                size: 24,
-                color: Color(0xFFec4899),
+                size: AppDimens.iconLg,
+                color: AppColors.pinkAccent,
               ),
-              const SizedBox(width: 12),
+              Gap.w12,
               Text(
-                '弹幕开关',
+                AppStrings.danmakuEnable,
                 style: FontUtils.poppins(
-                  fontSize: 16,
+                  fontSize: AppDimens.fontSizeXl,
                   fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                  color: isDarkMode ? Colors.white : AppColors.textDarkGray,
                 ),
               ),
             ],
@@ -183,9 +152,9 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
             onChanged: (value) {
               UserDataService.saveDanmakuEnabled(value);
             },
-            activeThumbColor: const Color(0xFFec4899),
+            activeThumbColor: AppColors.pinkAccent,
             inactiveTrackColor:
-                isDarkMode ? const Color(0xFF374151) : const Color(0xFFe5e7eb),
+                isDarkMode ? AppColors.borderDarkGray : AppColors.borderLightGray,
           ),
         ],
       ),
@@ -194,20 +163,20 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
   Widget _buildDanmakuSpeedCard(bool isDarkMode) {
     const speedValues = [0.5, 0.75, 1.0, 1.5, 2.0];
-    final speedLabels = ['极慢', '较慢', '适中', '较快', '极快'];
+    final speedLabels = AppStrings.danmakuSpeedLabels;
     final currentIndex =
         speedValues.indexWhere((v) => (v - _danmakuSpeed).abs() < 0.01);
-    final currentLabel = currentIndex >= 0 ? speedLabels[currentIndex] : '适中';
+    final currentLabel = currentIndex >= 0 ? speedLabels[currentIndex] : AppStrings.danmakuSpeedLabels[2];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.098),
-            blurRadius: 8,
+            blurRadius: AppDimens.shadowBlurSm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -221,41 +190,41 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
               children: [
                 const Icon(
                   LucideIcons.forward,
-                  size: 24,
-                  color: Color(0xFF3B82F6),
+                  size: AppDimens.iconLg,
+                  color: AppColors.blue,
                 ),
-                const SizedBox(width: 12),
+                Gap.w12,
                 Text(
-                  '弹幕速度',
+                  AppStrings.danmakuSpeed,
                   style: FontUtils.poppins(
-                    fontSize: 16,
+                    fontSize: AppDimens.fontSizeXl,
                     fontWeight: FontWeight.w600,
-                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                    color: isDarkMode ? Colors.white : AppColors.textDarkGray,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '$currentLabel (${_danmakuSpeed.toStringAsFixed(1)}x)',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            Gap.h12,
             Row(
               children: [
                 Text(
                   '0.5x',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
                 Expanded(
@@ -265,11 +234,11 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                       thumbShape:
                           const HollowRoundSliderThumbShape(thumbRadius: 10),
                       overlayShape: SliderComponentShape.noOverlay,
-                      thumbColor: const Color(0xFF3B82F6),
-                      activeTrackColor: const Color(0xFF3B82F6),
+                      thumbColor: AppColors.blue,
+                      activeTrackColor: AppColors.blue,
                       inactiveTrackColor: isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     child: Slider(
                       value: _danmakuSpeed,
@@ -295,10 +264,10 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                 Text(
                   '2.0x',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
@@ -311,14 +280,14 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
   Widget _buildDanmakuOpacityCard(bool isDarkMode) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.098),
-            blurRadius: 8,
+            blurRadius: AppDimens.shadowBlurSm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -332,41 +301,41 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
               children: [
                 const Icon(
                   LucideIcons.eye,
-                  size: 24,
-                  color: Color(0xFF8B5CF6),
+                  size: AppDimens.iconLg,
+                  color: AppColors.violet,
                 ),
-                const SizedBox(width: 12),
+                Gap.w12,
                 Text(
-                  '弹幕透明度',
+                  AppStrings.danmakuOpacity,
                   style: FontUtils.poppins(
-                    fontSize: 16,
+                    fontSize: AppDimens.fontSizeXl,
                     fontWeight: FontWeight.w600,
-                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                    color: isDarkMode ? Colors.white : AppColors.textDarkGray,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '${_danmakuOpacity.round()}%',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            Gap.h12,
             Row(
               children: [
                 Text(
                   '0%',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
                 Expanded(
@@ -376,11 +345,11 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                       thumbShape:
                           const HollowRoundSliderThumbShape(thumbRadius: 10),
                       overlayShape: SliderComponentShape.noOverlay,
-                      thumbColor: const Color(0xFF8B5CF6),
-                      activeTrackColor: const Color(0xFF8B5CF6),
+                      thumbColor: AppColors.violet,
+                      activeTrackColor: AppColors.violet,
                       inactiveTrackColor: isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     child: Slider(
                       value: _danmakuOpacity,
@@ -402,10 +371,10 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                 Text(
                   '100%',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
@@ -418,14 +387,14 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
 
   Widget _buildDanmakuFontSizeCard(bool isDarkMode) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.098),
-            blurRadius: 8,
+            blurRadius: AppDimens.shadowBlurSm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -439,41 +408,41 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
               children: [
                 const Icon(
                   LucideIcons.type,
-                  size: 24,
-                  color: Color(0xFFF59E0B),
+                  size: AppDimens.iconLg,
+                  color: AppColors.amber,
                 ),
-                const SizedBox(width: 12),
+                Gap.w12,
                 Text(
-                  '弹幕字体大小',
+                  AppStrings.danmakuFontSize,
                   style: FontUtils.poppins(
-                    fontSize: 16,
+                    fontSize: AppDimens.fontSizeXl,
                     fontWeight: FontWeight.w600,
-                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                    color: isDarkMode ? Colors.white : AppColors.textDarkGray,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '${_danmakuFontSize.toStringAsFixed(1)}x (${(_danmakuFontSize * 24).round()}px)',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            Gap.h12,
             Row(
               children: [
                 Text(
                   '0.5x',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
                 Expanded(
@@ -483,11 +452,11 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                       thumbShape:
                           const HollowRoundSliderThumbShape(thumbRadius: 10),
                       overlayShape: SliderComponentShape.noOverlay,
-                      thumbColor: const Color(0xFFF59E0B),
-                      activeTrackColor: const Color(0xFFF59E0B),
+                      thumbColor: AppColors.amber,
+                      activeTrackColor: AppColors.amber,
                       inactiveTrackColor: isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     child: Slider(
                       value: _danmakuFontSize,
@@ -509,10 +478,10 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                 Text(
                   '2.0x',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
@@ -524,21 +493,21 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
   }
 
   Widget _buildDanmakuDisplayAreaCard(bool isDarkMode) {
-    const areaLabels = ['1/4', '半屏', '3/4', '满屏'];
+    const areaLabels = AppStrings.danmakuAreaLabels;
     const areaValues = [0.25, 0.5, 0.75, 1.0];
     final currentIndex =
         areaValues.indexWhere((v) => (v - _danmakuDisplayArea).abs() < 0.01);
-    final currentLabel = currentIndex >= 0 ? areaLabels[currentIndex] : '满屏';
+    final currentLabel = currentIndex >= 0 ? areaLabels[currentIndex] : AppStrings.danmakuAreaLabels[3];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.098),
-            blurRadius: 8,
+            blurRadius: AppDimens.shadowBlurSm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -552,41 +521,41 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
               children: [
                 const Icon(
                   LucideIcons.maximize,
-                  size: 24,
-                  color: Color(0xFFEF4444),
+                  size: AppDimens.iconLg,
+                  color: AppColors.red,
                 ),
-                const SizedBox(width: 12),
+                Gap.w12,
                 Text(
-                  '弹幕显示区域',
+                  AppStrings.danmakuDisplayArea,
                   style: FontUtils.poppins(
-                    fontSize: 16,
+                    fontSize: AppDimens.fontSizeXl,
                     fontWeight: FontWeight.w600,
-                    color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                    color: isDarkMode ? Colors.white : AppColors.textDarkGray,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   currentLabel,
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            Gap.h12,
             Row(
               children: [
                 Text(
-                  '1/4',
+                  AppStrings.danmakuAreaLabels[0],
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
                 Expanded(
@@ -596,11 +565,11 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                       thumbShape:
                           const HollowRoundSliderThumbShape(thumbRadius: 10),
                       overlayShape: SliderComponentShape.noOverlay,
-                      thumbColor: const Color(0xFFEF4444),
-                      activeTrackColor: const Color(0xFFEF4444),
+                      thumbColor: AppColors.red,
+                      activeTrackColor: AppColors.red,
                       inactiveTrackColor: isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     child: Slider(
                       value: _danmakuDisplayArea,
@@ -620,12 +589,12 @@ class _DanmakuSettingsScreenState extends State<DanmakuSettingsScreen> {
                   ),
                 ),
                 Text(
-                  '满屏',
+                  AppStrings.danmakuAreaLabels[3],
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                   ),
                 ),
               ],

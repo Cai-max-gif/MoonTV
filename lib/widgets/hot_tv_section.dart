@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_strings.dart';
 import '../models/douban_movie.dart';
 import '../models/play_record.dart';
 import '../models/video_info.dart';
@@ -92,8 +93,8 @@ class _HotTvSectionState extends State<HotTvSection> {
   @override
   Widget build(BuildContext context) {
     return RecommendationSection(
-      title: '追剧狂潮',
-      moreText: '查看更多 >',
+      title: AppStrings.homeHotTv,
+      moreText: AppStrings.homeViewMore,
       onMoreTap: widget.onMoreTap,
       videoInfos: _convertToVideoInfos(),
       onItemTap: (videoInfo) {

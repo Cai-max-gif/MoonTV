@@ -248,8 +248,31 @@ build_windows() {
     # 确保 Windows 构建目录存在
     mkdir -p build/windows
     
-    # 构建 Windows 版本
-    flutter build windows --release
+    # 构建 Windows 版本（使用 AOT 编译模式）
+    # --release 模式默认使用 AOT 编译，生成 app.so 文件
+    # --obfuscate 启用代码混淆，减小安装包体积
+    # --split-debug-info 分离调试信息到单独的符号文件
+    flutter build windows --release \
+        --obfuscate \
+        --split-debug-info=build/windows/symbols
+    
+    # 验证 AOT 编译是否成功（检查 app.so 是否存在）
+    AOT_LIBRARY="build/windows/x64/runner/Release/data/app.so"
+    if [ -f "$AOT_LIBRARY" ]; then
+        log_success "AOT 编译成功，app.so 文件已生成"
+    else
+        log_error "AOT 编译失败，未找到 app.so 文件"
+        return 1
+    fi
+    
+    # 检查 kernel_blob.bin 是否存在（不应在纯 AOT 模式下生成）
+    KERNEL_BLOB="build/windows/x64/runner/Release/data/flutter_assets/kernel_blob.bin"
+    if [ -f "$KERNEL_BLOB" ]; then
+        log_warning "发现 kernel_blob.bin 文件，这通常不应在纯 AOT 模式下出现"
+        log_warning "删除 kernel_blob.bin 以减小安装包体积..."
+        rm -f "$KERNEL_BLOB"
+        log_success "已删除 kernel_blob.bin（节省约 111MB）"
+    fi
     
     # 生成 Windows 安装程序
     log_info "生成 Windows 安装程序..."
@@ -269,14 +292,14 @@ build_windows() {
     
     # 打包便携式文件
     log_info "打包 Windows 便携式文件..."
-    if [ -d "build/windows/x64/Release" ]; then
+    if [ -d "build/windows/x64/runner/Release" ]; then
         mkdir -p build/windows/portable
-        cp -r "build/windows/x64/Release" "build/windows/portable/"
+        cp -r "build/windows/x64/runner/Release" "build/windows/portable/"
         # 创建便携式版本的压缩包
         if command -v zip &> /dev/null; then
-            cd build/windows/portable
+            pushd build/windows/portable > /dev/null
             zip -r "MoonTV-${APP_VERSION}-portable.zip" Release/
-            cd ../../..
+            popd > /dev/null
             log_success "Windows 便携式文件已打包为 zip 文件"
         else
             log_warning "zip 命令未找到，跳过便携式文件打包"

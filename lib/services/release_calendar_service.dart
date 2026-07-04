@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/release_calendar_item.dart';
 import 'api_service.dart';
+import '../constants/app_config.dart';
 
 /// 即将上映服务
 class ReleaseCalendarService {
   // 缓存数据
   static List<ReleaseCalendarItem>? _cachedItems;
   static DateTime? _cacheTime;
-  static const Duration _cacheDuration = Duration(hours: 1);
+  static const Duration _cacheDuration = AppConfig.releaseCalendarCache;
+
+  /// 检查缓存是否有效
+  static bool hasValidCache() {
+    return _cachedItems != null &&
+        _cacheTime != null &&
+        DateTime.now().difference(_cacheTime!) < _cacheDuration;
+  }
 
   /// 清除缓存
   static void clearCache() {
@@ -47,7 +55,7 @@ class ReleaseCalendarService {
       if (limit != null) {
         queryParams['limit'] = limit.toString();
       }
-
+      
       final response = await ApiService.get<Map<String, dynamic>>(
         '/api/release-calendar',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
@@ -62,8 +70,8 @@ class ReleaseCalendarService {
                 ReleaseCalendarItem.fromJson(item as Map<String, dynamic>))
             .toList();
 
-        // 更新缓存（仅在获取完整数据时）
-        if (type == null && limit == null) {
+        // 更新缓存（无分类过滤时缓存完整数据）
+        if (type == null) {
           _cachedItems = items;
           _cacheTime = DateTime.now();
         }

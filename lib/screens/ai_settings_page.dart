@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import '../models/wechat_types.dart';
-import '../services/wechat_auth_service.dart';
-import '../services/wechat_bot_service.dart';
 import '../services/theme_service.dart';
 import '../services/ai_service.dart';
+import '../constants/app_strings.dart';
 import '../utils/font_utils.dart';
 import '../utils/device_utils.dart';
 
@@ -29,48 +30,35 @@ class _AISettingsPageState extends State<AISettingsPage> {
   bool _isCheckingBalance = false;
   bool _isProviderExpanded = false;
   bool _isModelExpanded = false;
-  bool _isWeChatExpanded = false;
   Map<String, dynamic>? _balanceInfo;
   bool _balanceQueryFailed = false;
-
-  // 微信机器人相关状态
-  final WeChatBotService _botService = WeChatBotService();
-  bool _weChatIsLoggingIn = false;
-  LoginCredentials? _weChatCredentials;
-  String? _weChatLoginError;
-  QRCodeResponse? _weChatQrCode;
-  QRStatus? _weChatQrStatus;
-  String? _weChatQrStatusText;
 
   static const List<_ProviderInfo> _providers = [
     _ProviderInfo(
       id: 'openai',
       name: 'OpenAI',
       models: [
+        _ModelInfo('gpt-5.5-pro', 'GPT-5.5 Pro'),
         _ModelInfo('gpt-5.5', 'GPT-5.5'),
         _ModelInfo('gpt-5.4', 'GPT-5.4'),
-        _ModelInfo('gpt-5.4-mini', 'GPT-5.4 Mini'),
+        _ModelInfo('gpt-5.3-codex', 'GPT-5.3 Codex'),
       ],
     ),
     _ProviderInfo(
       id: 'deepseek',
       name: 'DeepSeek',
       models: [
-        _ModelInfo('deepseek-v4-pro', 'V4-Pro'),
-        _ModelInfo('deepseek-v4-flash', 'V4-Flash'),
-        _ModelInfo('deepseek-chat', 'DeepSeek Chat'),
-        _ModelInfo('deepseek-reasoner', 'DeepSeek Reasoner'),
+        _ModelInfo('deepseek-v4-pro', 'DeepSeek-V4-Pro'),
+        _ModelInfo('deepseek-v4-flash', 'DeepSeek-V4-Flash'),
       ],
     ),
     _ProviderInfo(
       id: 'zhipu',
       name: '智谱 AI (GLM)',
       models: [
+        _ModelInfo('glm-5.2', 'GLM-5.2'),
         _ModelInfo('glm-5.1', 'GLM-5.1'),
-        _ModelInfo('glm-5', 'GLM-5'),
-        _ModelInfo('glm-5-turbo', 'GLM-5 Turbo'),
         _ModelInfo('glm-4.7', 'GLM-4.7'),
-        _ModelInfo('glm-4.6', 'GLM-4.6'),
         _ModelInfo('glm-4.5', 'GLM-4.5'),
       ],
     ),
@@ -78,11 +66,17 @@ class _AISettingsPageState extends State<AISettingsPage> {
       id: 'moonshot',
       name: 'Moonshot (Kimi)',
       models: [
+        _ModelInfo('kimi-k2.7-code', 'Kimi K2.7 Code'),
         _ModelInfo('kimi-k2.6', 'Kimi K2.6'),
         _ModelInfo('kimi-k2.5', 'Kimi K2.5'),
-        _ModelInfo('moonshot-v1-8k', 'Moonshot v1 (8K)'),
-        _ModelInfo('moonshot-v1-32k', 'Moonshot v1 (32K)'),
-        _ModelInfo('moonshot-v1-128k', 'Moonshot v1 (128K)'),
+      ],
+    ),
+    _ProviderInfo(
+      id: 'mimo',
+      name: 'MiMo',
+      models: [
+        _ModelInfo('mimo-v2.5-pro', 'MiMo V2.5 Pro'),
+        _ModelInfo('mimo-v2.5', 'MiMo V2.5'),
       ],
     ),
     _ProviderInfo(
@@ -99,7 +93,6 @@ class _AISettingsPageState extends State<AISettingsPage> {
     _apiKeyController.addListener(() {
       _autoCheckBalance();
     });
-    _checkWeChatCredentials();
   }
 
   @override
@@ -107,154 +100,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     _apiKeyController.dispose();
     _baseUrlController.dispose();
     _customModelController.dispose();
-    _botService.stop();
     super.dispose();
-  }
-
-  Future<void> _checkWeChatCredentials() async {
-    final creds = await WeChatAuthService.loadCredentials();
-    if (creds != null && mounted) {
-      setState(() {
-        _weChatCredentials = creds;
-      });
-      _startWeChatBot();
-    }
-  }
-
-  Future<void> _startWeChatBot() async {
-    if (_weChatCredentials == null) return;
-
-    final settings = await AIService.loadSettings();
-    if (!settings.isValid) return;
-
-    _botService.configure(
-      credentials: _weChatCredentials!,
-      aiSettings: settings,
-    );
-    await _botService.start();
-  }
-
-  Future<void> _startWeChatLogin() async {
-    setState(() {
-      _weChatIsLoggingIn = true;
-      _weChatLoginError = null;
-      _weChatQrCode = null;
-      _weChatQrStatus = null;
-    });
-
-    try {
-      final creds = await WeChatAuthService.login(
-        onQRCodeReady: (qr) {
-          if (mounted) {
-            setState(() {
-              _weChatQrCode = qr;
-              _weChatQrStatus = QRStatus.wait;
-              _weChatQrStatusText = '请使用微信扫描二维码';
-            });
-          }
-        },
-        onStatusChanged: (status) {
-          if (mounted) {
-            setState(() {
-              _weChatQrStatus = status;
-              switch (status) {
-                case QRStatus.wait:
-                  _weChatQrStatusText = '等待扫码...';
-                  break;
-                case QRStatus.scaned:
-                  _weChatQrStatusText = '已扫码，请在手机上确认...';
-                  break;
-                case QRStatus.confirmed:
-                  _weChatQrStatusText = '登录成功!';
-                  break;
-                case QRStatus.expired:
-                  _weChatQrStatusText = '二维码已过期，正在刷新...';
-                  break;
-              }
-            });
-          }
-        },
-      );
-
-      if (mounted) {
-        setState(() {
-          _weChatCredentials = creds;
-          _weChatIsLoggingIn = false;
-          _weChatQrCode = null;
-          _weChatQrStatus = null;
-        });
-      }
-      _startWeChatBot();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _weChatIsLoggingIn = false;
-          _weChatLoginError = e.toString();
-        });
-      }
-    }
-  }
-
-  Future<void> _weChatLogout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1e1e1e) : Colors.white,
-          title: Text(
-            '退出登录',
-            style: FontUtils.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF2c3e50),
-            ),
-          ),
-          content: Text(
-            '确定要退出微信登录吗？需要重新扫码才能使用机器人。',
-            style: FontUtils.poppins(
-              fontSize: 14,
-              color: isDark ? const Color(0xFFb0b0b0) : const Color(0xFF7f8c8d),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                '取消',
-                style: FontUtils.poppins(
-                  fontSize: 14,
-                  color: isDark
-                      ? const Color(0xFFb0b0b0)
-                      : const Color(0xFF7f8c8d),
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text(
-                '确定',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      _botService.stop();
-      await WeChatAuthService.clearCredentials();
-      if (mounted) {
-        setState(() {
-          _weChatCredentials = null;
-        });
-      }
-    }
   }
 
   Future<void> _loadSettings() async {
@@ -337,42 +183,42 @@ class _AISettingsPageState extends State<AISettingsPage> {
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1e1e1e) : Colors.white,
+          backgroundColor: isDark ? AppColors.cardDark : AppColors.white,
           title: Text(
             '清空聊天记录',
             style: FontUtils.poppins(
-              fontSize: 16,
+              fontSize: AppDimens.fontSizeXl,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF2c3e50),
+              color: isDark ? AppColors.white : AppColors.primary,
             ),
           ),
           content: Text(
             '确定要清空所有聊天记录吗？此操作不可恢复。',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: isDark ? const Color(0xFFb0b0b0) : const Color(0xFF7f8c8d),
+              fontSize: AppDimens.fontSizeMd,
+              color: isDark ? AppColors.textDarkSecondary : AppColors.textSecondary,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(
-                '取消',
+                AppStrings.cancel,
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: isDark
-                      ? const Color(0xFFb0b0b0)
-                      : const Color(0xFF7f8c8d),
+                      ? AppColors.textDarkSecondary
+                      : AppColors.textSecondary,
                 ),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text(
-                '确定',
+              child: Text(
+                AppStrings.confirm,
                 style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF27ae60),
+                  fontSize: AppDimens.fontSizeMd,
+                  color: AppColors.accent,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -393,7 +239,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
   Future<void> _saveSettings() async {
     final model = _effectiveModel;
     if (model.isEmpty) {
-      _showSnack('请输入模型名称', false);
+      _showSnack(AppStrings.aiEnterModelName, false);
       return;
     }
 
@@ -416,12 +262,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
       SnackBar(
         content: Text(
           '设置已保存',
-          style: FontUtils.poppins(fontSize: 14, color: Colors.white),
+          style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd, color: AppColors.white),
         ),
-        backgroundColor: const Color(0xFF27ae60),
+        backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+        duration: AppDurations.twoSeconds,
       ),
     );
   }
@@ -429,7 +275,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
   Future<void> _testConnection() async {
     final apiKey = _apiKeyController.text.trim();
     if (apiKey.isEmpty) {
-      _showSnack('请先输入API密钥', false);
+      _showSnack(AppStrings.aiEnterApiKeyFirst, false);
       return;
     }
 
@@ -449,7 +295,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     setState(() => _isTesting = false);
 
     _showSnack(
-      success ? '连接成功' : '连接失败，请检查密钥和网络',
+      success ? AppStrings.aiConnectionSuccess : AppStrings.aiConnectionFailed,
       success,
     );
   }
@@ -459,12 +305,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
       SnackBar(
         content: Text(
           message,
-          style: FontUtils.poppins(fontSize: 14, color: Colors.white),
+          style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd, color: AppColors.white),
         ),
-        backgroundColor: success ? const Color(0xFF27ae60) : Colors.redAccent,
+        backgroundColor: success ? AppColors.accent : AppColors.redAccent,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+        duration: AppDurations.twoSeconds,
       ),
     );
   }
@@ -475,38 +321,35 @@ class _AISettingsPageState extends State<AISettingsPage> {
       builder: (context, themeService, child) {
         final isDark = themeService.isDarkMode;
         final textColor =
-            isDark ? const Color(0xFFffffff) : const Color(0xFF2c3e50);
+            isDark ? AppColors.white : AppColors.primary;
         final subtitleColor =
-            isDark ? const Color(0xFFb0b0b0) : const Color(0xFF7f8c8d);
-        final cardColor = isDark ? const Color(0xFF1e1e1e) : Colors.white;
+            isDark ? AppColors.textDarkSecondary : AppColors.textSecondary;
+        final cardColor = isDark ? AppColors.cardDark : AppColors.white;
         final inputBgColor =
-            isDark ? const Color(0xFF2c2c2c) : const Color(0xFFf0f0f0);
+            isDark ? AppColors.inputBgDark : AppColors.inputBgLight;
         final borderColor =
-            isDark ? const Color(0xFF333333) : const Color(0xFFe0e0e0);
+            isDark ? AppColors.darkDivider : AppColors.grayBorder;
 
         return Scaffold(
           backgroundColor:
-              isDark ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
+              isDark ? AppColors.black : AppColors.grayBg,
           appBar: _buildAppBar(isDark, textColor),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppDimens.spacingLg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildWeChatSection(isDark, cardColor, textColor,
-                    subtitleColor, inputBgColor, borderColor),
-                const SizedBox(height: 16),
                 _buildProviderSection(isDark, cardColor, textColor,
                     subtitleColor, inputBgColor, borderColor),
-                const SizedBox(height: 16),
+                Gap.h16,
                 _buildModelSection(isDark, cardColor, textColor, subtitleColor,
                     inputBgColor, borderColor),
-                const SizedBox(height: 16),
+                Gap.h16,
                 _buildApiKeySection(isDark, cardColor, textColor, subtitleColor,
                     inputBgColor, borderColor),
-                const SizedBox(height: 16),
+                Gap.h16,
                 _buildDeleteButton(isDark, cardColor, textColor, subtitleColor, borderColor),
-                const SizedBox(height: 16),
+                Gap.h16,
               ],
             ),
           ),
@@ -517,8 +360,8 @@ class _AISettingsPageState extends State<AISettingsPage> {
 
   PreferredSizeWidget _buildAppBar(bool isDark, Color textColor) {
     return AppBar(
-      backgroundColor: isDark ? const Color(0xFF1e1e1e) : Colors.white,
-      elevation: 0,
+      backgroundColor: isDark ? AppColors.cardDark : AppColors.white,
+      elevation: AppDimens.elevationNone,
       leading: MouseRegion(
         cursor:
             DeviceUtils.isPC() ? SystemMouseCursors.click : MouseCursor.defer,
@@ -526,15 +369,15 @@ class _AISettingsPageState extends State<AISettingsPage> {
           onTap: () => Navigator.pop(context),
           behavior: HitTestBehavior.opaque,
           child: Container(
-            padding: const EdgeInsets.all(12),
-            child: Icon(LucideIcons.arrowLeft, color: textColor, size: 24),
+            padding: const EdgeInsets.all(AppDimens.spacingMd),
+            child: Icon(LucideIcons.arrowLeft, color: textColor, size: AppDimens.iconLg),
           ),
         ),
       ),
       title: Text(
-        'AI 设置',
+        AppStrings.aiSettings,
         style: FontUtils.poppins(
-            fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
+            fontSize: AppDimens.fontSizeXxl, fontWeight: FontWeight.w600, color: textColor),
       ),
       centerTitle: true,
       actions: [
@@ -551,20 +394,20 @@ class _AISettingsPageState extends State<AISettingsPage> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
                       ),
                     )
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(LucideIcons.save, size: 16, color: Colors.black),
-                        const SizedBox(width: 4),
+                        Icon(LucideIcons.save, size: AppDimens.iconSm, color: textColor),
+                        Gap.w4,
                         Text(
-                          '保存',
+                          AppStrings.save,
                           style: FontUtils.poppins(
-                            fontSize: 14,
+                            fontSize: AppDimens.fontSizeMd,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black,
+                            color: textColor,
                           ),
                         ),
                       ],
@@ -573,281 +416,6 @@ class _AISettingsPageState extends State<AISettingsPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildWeChatSection(bool isDark, Color cardColor, Color textColor,
-      Color subtitleColor, Color inputBgColor, Color borderColor) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          MouseRegion(
-            cursor: DeviceUtils.isPC()
-                ? SystemMouseCursors.click
-                : MouseCursor.defer,
-            child: GestureDetector(
-              onTap: () =>
-                  setState(() => _isWeChatExpanded = !_isWeChatExpanded),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
-                child: Row(
-                  children: [
-                    const Icon(LucideIcons.messageCircle,
-                        size: 18, color: Color(0xFF27ae60)),
-                    const SizedBox(width: 8),
-                    Text(
-                      '微信接入',
-                      style: FontUtils.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: textColor),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _weChatCredentials != null ? '已连接' : '连接微信',
-                      style: FontUtils.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: _weChatCredentials != null ? const Color(0xFF27ae60) : subtitleColor),
-                    ),
-                    const SizedBox(width: 8),
-                    AnimatedRotation(
-                      turns: _isWeChatExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(LucideIcons.chevronDown,
-                          size: 18, color: subtitleColor),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            alignment: Alignment.topCenter,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: _isWeChatExpanded
-                  ? _weChatCredentials == null
-                      ? [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 登录中显示二维码或加载状态
-                                if (_weChatIsLoggingIn && _weChatQrCode != null) ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(24),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(color: borderColor),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        QrImageView(
-                                          data: _weChatQrCode!.qrcodeImgContent,
-                                          version: QrVersions.auto,
-                                          size: 200,
-                                          backgroundColor: Colors.white,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            if (_weChatQrStatus == QRStatus.scaned)
-                                              const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                                      Color(0xFF27ae60)),
-                                                ),
-                                              ),
-                                            if (_weChatQrStatus == QRStatus.scaned)
-                                              const SizedBox(width: 8),
-                                            Text(
-                                              _weChatQrStatusText ?? '等待扫码...',
-                                              style: FontUtils.poppins(
-                                                fontSize: 14,
-                                                color: _weChatQrStatus == QRStatus.scaned
-                                                    ? const Color(0xFF27ae60)
-                                                    : subtitleColor,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                ] else if (_weChatIsLoggingIn) ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(40),
-                                    decoration: BoxDecoration(
-                                      color: cardColor,
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(color: borderColor),
-                                    ),
-                                    child: const Column(
-                                      children: [
-                                        SizedBox(
-                                          width: 48,
-                                          height: 48,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 3,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
-                                          ),
-                                        ),
-                                        SizedBox(height: 16),
-                                        Text(
-                                          '正在获取二维码...',
-                                          style: TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-
-                                // 登录错误
-                                if (_weChatLoginError != null)
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.redAccent.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.error_outline,
-                                            size: 18, color: Colors.redAccent),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            _weChatLoginError!,
-                                            style: FontUtils.poppins(
-                                                fontSize: 13, color: Colors.redAccent),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                const SizedBox(height: 16),
-
-                                // 登录按钮
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: _weChatIsLoggingIn ? null : _startWeChatLogin,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF27ae60),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12)),
-                                      elevation: 0,
-                                    ),
-                                    child: Text(
-                                      _weChatIsLoggingIn ? '登录中...' : '扫码登录微信',
-                                      style: FontUtils.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '使用微信扫描二维码即可登录',
-                                  style: FontUtils.poppins(
-                                      fontSize: 12, color: subtitleColor),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ]
-                      : [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF2c2c2c) : const Color(0xFFf0f0f0),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(0xFF27ae60),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        '微信机器人已连接',
-                                        style: FontUtils.poppins(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: textColor,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildInfoRow('Account ID', _weChatCredentials!.accountId, subtitleColor),
-                                      if (_weChatCredentials!.userId != null)
-                                        _buildInfoRow(
-                                            'User ID', _weChatCredentials!.userId!, subtitleColor),
-                                      const SizedBox(height: 12),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: OutlinedButton.icon(
-                                          onPressed: _weChatLogout,
-                                          icon: const Icon(LucideIcons.logOut, size: 16),
-                                          label: Text(
-                                            '退出登录',
-                                            style: FontUtils.poppins(
-                                                fontSize: 14, color: Colors.redAccent),
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.redAccent,
-                                            side: const BorderSide(color: Colors.redAccent),
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(10)),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ]
-                  : [const SizedBox(height: 0)],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -861,7 +429,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
         border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
@@ -880,12 +448,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
                 child: Row(
                   children: [
                     const Icon(LucideIcons.building2,
-                        size: 18, color: Color(0xFF27ae60)),
-                    const SizedBox(width: 8),
+                        size: AppDimens.iconMd, color: AppColors.accent),
+                    Gap.w8,
                     Text(
-                      '选择提供商',
+                      AppStrings.aiSelectProvider,
                       style: FontUtils.poppins(
-                          fontSize: 15,
+                          fontSize: AppDimens.fontSizeLg,
                           fontWeight: FontWeight.w600,
                           color: textColor),
                     ),
@@ -893,16 +461,16 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     Text(
                       selectedProviderName,
                       style: FontUtils.poppins(
-                          fontSize: 14,
+                          fontSize: AppDimens.fontSizeMd,
                           fontWeight: FontWeight.w500,
                           color: subtitleColor),
                     ),
-                    const SizedBox(width: 8),
+                    Gap.w8,
                     AnimatedRotation(
                       turns: _isProviderExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppDurations.normal,
                       child: Icon(LucideIcons.chevronDown,
-                          size: 18, color: subtitleColor),
+                          size: AppDimens.iconMd, color: subtitleColor),
                     ),
                   ],
                 ),
@@ -910,7 +478,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             ),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 200),
+            duration: AppDurations.normal,
             alignment: Alignment.topCenter,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -925,7 +493,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                               const EdgeInsets.fromLTRB(12, 8, 12, 16),
                           child: _buildTextField(
                             controller: _baseUrlController,
-                            hintText: 'https://api.openai.com',
+                            hintText: AppConfig.aiOpenaiBaseUrl,
                             isDark: isDark,
                             textColor: textColor,
                             subtitleColor: subtitleColor,
@@ -933,7 +501,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                           ),
                         )
                       else
-                        const SizedBox(height: 12),
+                        Gap.h12,
                     ]
                   : [const SizedBox(height: 0)],
             ),
@@ -967,12 +535,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF27ae60)
+                ? AppColors.accent
                     .withValues(alpha: isDark ? 0.15 : 0.08)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+                : AppColors.transparent,
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             border: Border.all(
-              color: isSelected ? const Color(0xFF27ae60) : Colors.transparent,
+              color: isSelected ? AppColors.accent : AppColors.transparent,
               width: isSelected ? 1.5 : 0,
             ),
           ),
@@ -981,7 +549,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
               Text(
                 info.name,
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: textColor,
                 ),
@@ -992,11 +560,11 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF27ae60),
+                    color: AppColors.accent,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: const Icon(LucideIcons.check,
-                      size: 14, color: Colors.white),
+                      size: 14, color: AppColors.white),
                 ),
             ],
           ),
@@ -1018,14 +586,14 @@ class _AISettingsPageState extends State<AISettingsPage> {
       final selectedModel = models.firstWhere(
           (m) => m.id == _selectedModel,
           orElse: () => models.isNotEmpty ? models[0] : const _ModelInfo('', ''));
-      selectedModelName = selectedModel.name.isNotEmpty ? selectedModel.name : '请选择模型';
+      selectedModelName = selectedModel.name.isNotEmpty ? selectedModel.name : AppStrings.aiSelectModelHint;
     }
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
         border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
@@ -1044,12 +612,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
                 child: Row(
                   children: [
                     const Icon(LucideIcons.brain,
-                        size: 18, color: Color(0xFF27ae60)),
-                    const SizedBox(width: 8),
+                        size: AppDimens.iconMd, color: AppColors.accent),
+                    Gap.w8,
                     Text(
-                      '选择模型',
+                      AppStrings.aiSelectModel,
                       style: FontUtils.poppins(
-                          fontSize: 15,
+                          fontSize: AppDimens.fontSizeLg,
                           fontWeight: FontWeight.w600,
                           color: textColor),
                     ),
@@ -1057,16 +625,16 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     Text(
                       selectedModelName,
                       style: FontUtils.poppins(
-                          fontSize: 14,
+                          fontSize: AppDimens.fontSizeMd,
                           fontWeight: FontWeight.w500,
                           color: subtitleColor),
                     ),
-                    const SizedBox(width: 8),
+                    Gap.w8,
                     AnimatedRotation(
                       turns: _isModelExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppDurations.normal,
                       child: Icon(LucideIcons.chevronDown,
-                          size: 18, color: subtitleColor),
+                          size: AppDimens.iconMd, color: subtitleColor),
                     ),
                   ],
                 ),
@@ -1074,7 +642,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             ),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 200),
+            duration: AppDurations.normal,
             alignment: Alignment.topCenter,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1097,7 +665,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                       else ...[
                           ...models.map((m) => _buildModelTile(
                               m, isDark, textColor, subtitleColor, borderColor)),
-                          const SizedBox(height: 12),
+                          Gap.h12,
                         ],
                     ]
                   : [const SizedBox(height: 0)],
@@ -1124,12 +692,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF27ae60)
+                ? AppColors.accent
                     .withValues(alpha: isDark ? 0.15 : 0.08)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+                : AppColors.transparent,
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             border: Border.all(
-              color: isSelected ? const Color(0xFF27ae60) : Colors.transparent,
+              color: isSelected ? AppColors.accent : AppColors.transparent,
               width: isSelected ? 1.5 : 0,
             ),
           ),
@@ -1138,7 +706,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
               Text(
                 info.name,
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: textColor,
                 ),
@@ -1149,11 +717,11 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF27ae60),
+                    color: AppColors.accent,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: const Icon(LucideIcons.check,
-                      size: 14, color: Colors.white),
+                      size: 14, color: AppColors.white),
                 ),
             ],
           ),
@@ -1168,22 +736,22 @@ class _AISettingsPageState extends State<AISettingsPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
         border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
             child: Row(
               children: [
-                const Icon(LucideIcons.key, size: 18, color: Color(0xFF27ae60)),
-                const SizedBox(width: 8),
+                const Icon(LucideIcons.key, size: AppDimens.iconMd, color: AppColors.accent),
+                Gap.w8,
                 Text(
-                  'API 密钥',
+                  AppStrings.aiApiKey,
                   style: FontUtils.poppins(
-                      fontSize: 15,
+                      fontSize: AppDimens.fontSizeLg,
                       fontWeight: FontWeight.w600,
                       color: textColor),
                 ),
@@ -1194,10 +762,10 @@ class _AISettingsPageState extends State<AISettingsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               '密钥将安全地加密存储在本机',
-              style: FontUtils.poppins(fontSize: 12, color: subtitleColor),
+              style: FontUtils.poppins(fontSize: AppDimens.fontSizeXs, color: subtitleColor),
             ),
           ),
-          const SizedBox(height: 10),
+          Gap.h10,
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
             child: Column(
@@ -1223,12 +791,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
                                 setState(() => _obscureApiKey = !_obscureApiKey),
                             behavior: HitTestBehavior.opaque,
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(AppDimens.spacingMd),
                               child: Icon(
                                 _obscureApiKey
                                     ? LucideIcons.eye
                                     : LucideIcons.eyeOff,
-                                size: 18,
+                                size: AppDimens.iconMd,
                                 color: subtitleColor,
                               ),
                             ),
@@ -1236,11 +804,11 @@ class _AISettingsPageState extends State<AISettingsPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    Gap.w10,
                     _buildMiniButton(
                       onTap: _isTesting ? null : _testConnection,
                       icon: LucideIcons.wifi,
-                      label: '测试',
+                      label: AppStrings.aiTestConnection,
                       isLoading: _isTesting,
                       isDark: isDark,
                       isPrimary: false,
@@ -1270,27 +838,27 @@ class _AISettingsPageState extends State<AISettingsPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2c2c2c) : const Color(0xFFf0f0f0),
-        borderRadius: BorderRadius.circular(10),
+        color: isDark ? AppColors.inputBgDark : AppColors.inputBgLight,
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(LucideIcons.wallet, size: 16, color: Color(0xFF27ae60)),
-              const SizedBox(width: 6),
+              const Icon(LucideIcons.wallet, size: AppDimens.iconSm, color: AppColors.accent),
+              Gap.w6,
               Text(
                 '账户余额',
                 style: FontUtils.poppins(
-                  fontSize: 13,
+                  fontSize: AppDimens.fontSizeSm,
                   fontWeight: FontWeight.w600,
                   color: textColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          Gap.h8,
           if (_isCheckingBalance)
             Row(
               children: [
@@ -1300,25 +868,25 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+                        AlwaysStoppedAnimation<Color>(AppColors.accent),
                   ),
                 ),
-                const SizedBox(width: 8),
+                Gap.w8,
                 Text(
                   '查询中...',
-                  style: FontUtils.poppins(fontSize: 13, color: subtitleColor),
+                  style: FontUtils.poppins(fontSize: AppDimens.fontSizeSm, color: subtitleColor),
                 ),
               ],
             )
           else if (_balanceQueryFailed)
             Text(
-              '连接失败请检查密钥',
-              style: FontUtils.poppins(fontSize: 13, color: Colors.redAccent),
+              AppStrings.aiBalanceQueryFailed,
+              style: FontUtils.poppins(fontSize: AppDimens.fontSizeSm, color: AppColors.redAccent),
             )
           else if (_balanceInfo == null)
             Text(
-              '请输入API密钥查询余额',
-              style: FontUtils.poppins(fontSize: 13, color: subtitleColor),
+              AppStrings.aiBalanceHint,
+              style: FontUtils.poppins(fontSize: AppDimens.fontSizeSm, color: subtitleColor),
             )
           else if (_balanceInfo!['balance_infos'] != null)
             ...(_balanceInfo!['balance_infos'] as List).map((info) {
@@ -1327,7 +895,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                 child: Text(
                   '${info['currency'] ?? ''}: ${formatBalance(info['total_balance'])}',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
                     color: textColor,
                   ),
@@ -1338,7 +906,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             Text(
               '可用余额: ${formatBalance(_balanceInfo!['available_balance'])}',
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: FontWeight.w500,
                 color: textColor,
               ),
@@ -1347,7 +915,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             Text(
               '余额信息: ${_balanceInfo.toString()}',
               style: FontUtils.poppins(
-                fontSize: 13,
+                fontSize: AppDimens.fontSizeSm,
                 color: subtitleColor,
               ),
             ),
@@ -1368,20 +936,20 @@ class _AISettingsPageState extends State<AISettingsPage> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
             border: Border.all(color: borderColor, width: 1),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(LucideIcons.trash2, size: 18, color: Colors.redAccent),
-              const SizedBox(width: 8),
+              const Icon(LucideIcons.trash2, size: AppDimens.iconMd, color: AppColors.redAccent),
+              Gap.w8,
               Text(
                 '删除对话',
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   fontWeight: FontWeight.w600,
-                  color: Colors.redAccent,
+                  color: AppColors.redAccent,
                 ),
               ),
             ],
@@ -1404,14 +972,14 @@ class _AISettingsPageState extends State<AISettingsPage> {
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      style: FontUtils.poppins(fontSize: 14, color: textColor),
+      style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd, color: textColor),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: FontUtils.poppins(fontSize: 14, color: subtitleColor),
+        hintStyle: FontUtils.poppins(fontSize: AppDimens.fontSizeMd, color: subtitleColor),
         filled: true,
         fillColor: inputBgColor,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDimens.radiusLg),
           borderSide: BorderSide.none,
         ),
         contentPadding:
@@ -1435,19 +1003,19 @@ class _AISettingsPageState extends State<AISettingsPage> {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppDurations.normal,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             color: isPrimary
-                ? const Color(0xFF27ae60)
-                : (isDark ? const Color(0xFF1e1e1e) : Colors.white),
-            borderRadius: BorderRadius.circular(10),
+                ? AppColors.accent
+                : (isDark ? AppColors.cardDark : AppColors.white),
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             border: Border.all(
               color: isPrimary
-                  ? const Color(0xFF27ae60)
+                  ? AppColors.accent
                   : (isDark
-                      ? const Color(0xFF333333)
-                      : const Color(0xFFe0e0e0)),
+                      ? AppColors.darkDivider
+                      : AppColors.grayBorder),
               width: 1,
             ),
           ),
@@ -1459,7 +1027,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isPrimary ? Colors.white : const Color(0xFF27ae60),
+                        isPrimary ? AppColors.white : AppColors.accent,
                       ),
                     ),
                   )
@@ -1467,19 +1035,19 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(icon,
-                          size: 16,
+                          size: AppDimens.iconSm,
                           color: isPrimary
-                              ? Colors.white
-                              : const Color(0xFF27ae60)),
-                      const SizedBox(width: 4),
+                              ? AppColors.white
+                              : AppColors.accent),
+                      Gap.w4,
                       Text(
                         label,
                         style: FontUtils.poppins(
-                          fontSize: 13,
+                          fontSize: AppDimens.fontSizeSm,
                           fontWeight: FontWeight.w600,
                           color: isPrimary
-                              ? Colors.white
-                              : const Color(0xFF27ae60),
+                              ? AppColors.white
+                              : AppColors.accent,
                         ),
                       ),
                     ],
@@ -1493,40 +1061,16 @@ class _AISettingsPageState extends State<AISettingsPage> {
   Widget buildFeatureRow(String title, String desc, Color subtitleColor) {
     return Row(
       children: [
-        const Icon(Icons.check_circle, size: 16, color: Color(0xFF27ae60)),
-        const SizedBox(width: 8),
+        const Icon(Icons.check_circle, size: AppDimens.iconSm, color: AppColors.accent),
+        Gap.w8,
         Text(
           '$title - $desc',
-          style: FontUtils.poppins(fontSize: 13, color: subtitleColor),
+          style: FontUtils.poppins(fontSize: AppDimens.fontSizeSm, color: subtitleColor),
         ),
       ],
     );
   }
 
-  Widget _buildInfoRow(String label, String value, Color subtitleColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Text(
-            '$label: ',
-            style: FontUtils.poppins(fontSize: 13, color: subtitleColor),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: FontUtils.poppins(
-                fontSize: 13,
-                color: subtitleColor,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _ProviderInfo {

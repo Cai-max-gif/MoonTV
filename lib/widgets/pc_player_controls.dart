@@ -14,6 +14,11 @@ import '../utils/device_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/user_data_service.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
 
 // 带 hover 效果的按钮组件
 class HoverButton extends StatefulWidget {
@@ -25,7 +30,7 @@ class HoverButton extends StatefulWidget {
     super.key,
     required this.child,
     required this.onTap,
-    this.padding = const EdgeInsets.all(8),
+    this.padding = AppDimens.smallPadding,
   });
 
   @override
@@ -49,7 +54,7 @@ class _HoverButtonState extends State<HoverButton> {
           decoration: _isHovering
               ? BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey.withValues(alpha: 0.5),
+                  color: AppColors.gray500.withValues(alpha: 0.5),
                 )
               : null,
           child: widget.child,
@@ -232,7 +237,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       return;
     }
     if (widget.player.state.playing) {
-      _hideTimer = Timer(const Duration(seconds: 3), () {
+      _hideTimer = Timer(AppDurations.toastDuration, () {
         if (mounted) {
           setState(() {
             _controlsVisible = false;
@@ -244,7 +249,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
   void _forceStartHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 3), () {
+    _hideTimer = Timer(AppDurations.toastDuration, () {
       if (mounted) {
         setState(() {
           _controlsVisible = false;
@@ -307,13 +312,13 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         context: context,
         barrierDismissible: true,
         barrierLabel: '',
-        barrierColor: Colors.transparent,
+        barrierColor: AppColors.transparent,
         transitionDuration: Duration.zero,
         pageBuilder: (context, animation, secondaryAnimation) {
           return Align(
             alignment: alignment,
             child: Material(
-              color: Colors.transparent,
+              color: AppColors.transparent,
               child: SizedBox(
                 width: panelWidth,
                 height: panelHeight,
@@ -352,8 +357,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
+      barrierColor: AppColors.transparent,
       enableDrag: false,
       builder: (context) {
         return SizedBox(
@@ -479,10 +484,13 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     }
     // 真正的窗口全屏切换
     if (Platform.isWindows) {
-      if (_isWebFullscreen) {
-        appWindow.maximize();
-      } else {
-        appWindow.restore();
+      try {
+        if (_isWebFullscreen) {
+          appWindow.maximize();
+        } else {
+          appWindow.restore();
+        }
+      } catch (e) {
       }
     }
     _onUserInteraction();
@@ -500,7 +508,10 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       widget.onExitFullScreen?.call();
       // 恢复窗口状态
       if (Platform.isWindows) {
-        appWindow.restore();
+        try {
+          appWindow.restore();
+        } catch (e) {
+        }
       }
       _onUserInteraction();
     }
@@ -575,7 +586,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       // 左方向键快退 10 秒
       else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
         final currentPosition = widget.player.state.position;
-        final newPosition = currentPosition - const Duration(seconds: 10);
+        final newPosition = currentPosition - AppDurations.seekStep;
         final clampedPosition = Duration(
           milliseconds: newPosition.inMilliseconds
               .clamp(0, widget.player.state.duration.inMilliseconds),
@@ -589,7 +600,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
         final currentPosition = widget.player.state.position;
         final duration = widget.player.state.duration;
-        final newPosition = currentPosition + const Duration(seconds: 10);
+        final newPosition = currentPosition + AppDurations.seekStep;
         final clampedPosition = Duration(
           milliseconds:
               newPosition.inMilliseconds.clamp(0, duration.inMilliseconds),
@@ -628,21 +639,21 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     // 如果正在加载视频，只显示加载界面
     if (widget.isLoadingVideo) {
       return Container(
-        color: Colors.black.withValues(alpha: 0.7),
+        color: AppColors.overlayHeavy,
         child: const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(
-                color: Colors.white,
+                color: AppColors.white,
                 strokeWidth: 3,
               ),
-              SizedBox(height: 16),
+              Gap.h16,
               Text(
-                '加载中...',
+                AppStrings.loading,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
+                  color: AppColors.white,
+                  fontSize: AppDimens.fontSizeMd,
                 ),
               ),
             ],
@@ -706,7 +717,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                 onDoubleTap: _onBlankAreaDoubleTap,
                 behavior: HitTestBehavior.opaque,
                 child: Container(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                 ),
               ),
             ),
@@ -717,7 +728,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
               right: 0,
               child: AnimatedOpacity(
                 opacity: _controlsVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
+                duration: AppDurations.normal,
                 child: IgnorePointer(
                   child: Container(
                     height: effectiveFullscreen ? 120 : 80,
@@ -726,8 +737,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.6),
-                          Colors.transparent,
+                          AppColors.overlayMedium,
+                          AppColors.transparent,
                         ],
                       ),
                     ),
@@ -742,7 +753,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
               right: 0,
               child: AnimatedOpacity(
                 opacity: _controlsVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
+                duration: AppDurations.normal,
                 child: IgnorePointer(
                   child: Container(
                     height: effectiveFullscreen ? 140 : 100,
@@ -751,8 +762,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.6),
-                          Colors.transparent,
+                          AppColors.overlayMedium,
+                          AppColors.transparent,
                         ],
                       ),
                     ),
@@ -766,7 +777,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
               left: effectiveFullscreen ? 16.0 : 8.0,
               child: AnimatedOpacity(
                 opacity: _controlsVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
+                duration: AppDurations.normal,
                 child: IgnorePointer(
                   ignoring: !_controlsVisible,
                   child: HoverButton(
@@ -780,7 +791,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                     },
                     child: Icon(
                       Icons.arrow_back,
-                      color: Colors.white,
+                      color: AppColors.white,
                       size: effectiveFullscreen ? 24 : 20,
                     ),
                   ),
@@ -794,7 +805,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                 right: effectiveFullscreen ? 60.0 : 52.0,
                 child: AnimatedOpacity(
                   opacity: _controlsVisible ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AppDurations.normal,
                   child: IgnorePointer(
                     ignoring: !_controlsVisible,
                     child: HoverButton(
@@ -804,7 +815,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                       },
                       child: Icon(
                         Icons.cloud,
-                        color: Colors.white,
+                        color: AppColors.white,
                         size: effectiveFullscreen ? 24 : 20,
                       ),
                     ),
@@ -818,7 +829,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                 right: effectiveFullscreen ? 16.0 : 8.0,
                 child: AnimatedOpacity(
                   opacity: _controlsVisible ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AppDurations.normal,
                   child: IgnorePointer(
                     ignoring: !_controlsVisible,
                     child: HoverButton(
@@ -828,7 +839,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                       },
                       child: Icon(
                         Icons.cast,
-                        color: Colors.white,
+                        color: AppColors.white,
                         size: effectiveFullscreen ? 24 : 20,
                       ),
                     ),
@@ -842,7 +853,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                   opacity: (!widget.player.state.playing || _controlsVisible)
                       ? 1.0
                       : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AppDurations.normal,
                   child: IgnorePointer(
                     ignoring: widget.player.state.playing && !_controlsVisible,
                     child: _CenterPlayButton(
@@ -869,7 +880,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
               right: 0,
               child: AnimatedOpacity(
                 opacity: _controlsVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
+                duration: AppDurations.normal,
                 child: IgnorePointer(
                   ignoring: !_controlsVisible,
                   child: Container(
@@ -907,7 +918,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
               right: 0,
               child: AnimatedOpacity(
                 opacity: _controlsVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
+                duration: AppDurations.normal,
                 child: IgnorePointer(
                   ignoring: !_controlsVisible,
                   child: GestureDetector(
@@ -936,7 +947,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               widget.player.state.playing
                                   ? Icons.pause
                                   : Icons.play_arrow,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: effectiveFullscreen ? 28 : 24,
                             ),
                           ),
@@ -950,7 +961,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 },
                                 child: Icon(
                                   Icons.skip_next,
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   size: effectiveFullscreen ? 28 : 24,
                                 ),
                               ),
@@ -1001,17 +1012,17 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                   setState(() {});
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.all(8),
+                                  padding: AppDimens.smallPadding,
                                   decoration: _isHoveringVolumeButton
                                       ? BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.grey
+                                          color: AppColors.gray500
                                               .withValues(alpha: 0.5),
                                         )
                                       : null,
                                   child: Icon(
                                     _getVolumeIcon(widget.player.state.volume),
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     size: effectiveFullscreen ? 22 : 20,
                                   ),
                                 ),
@@ -1031,7 +1042,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               },
                               child: Icon(
                                 Icons.download,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 size: effectiveFullscreen ? 22 : 20,
                               ),
                             ),
@@ -1049,7 +1060,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                       width: effectiveFullscreen ? 22 : 20,
                                       height: effectiveFullscreen ? 22 : 20,
                                       colorFilter: const ColorFilter.mode(
-                                          Colors.white, BlendMode.srcIn),
+                                          AppColors.white, BlendMode.srcIn),
                                     ),
                                   ),
                                 );
@@ -1064,7 +1075,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               },
                               child: Icon(
                                 Icons.camera_alt,
-                                color: Colors.white,
+                                color: AppColors.white,
                                 size: effectiveFullscreen ? 22 : 20,
                               ),
                             ),
@@ -1103,12 +1114,12 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                     ? BoxDecoration(
                                         shape: BoxShape.circle,
                                         color:
-                                            Colors.grey.withValues(alpha: 0.5),
+                                            AppColors.gray500.withValues(alpha: 0.5),
                                       )
                                     : null,
                                 child: Icon(
                                   Icons.speed,
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   size: effectiveFullscreen ? 22 : 20,
                                 ),
                               ),
@@ -1123,7 +1134,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                               _isWebFullscreen
                                   ? Icons.fullscreen_exit
                                   : Icons.fullscreen,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: effectiveFullscreen ? 28 : 24,
                             ),
                           ),
@@ -1205,14 +1216,14 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
           });
         },
         child: Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: Container(
             width: menuWidth,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.85),
+              color: AppColors.black85,
               borderRadius: BorderRadius.circular(effectiveFullscreen ? 8 : 6),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: AppColors.white10,
                 width: 1,
               ),
             ),
@@ -1292,15 +1303,15 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
           });
         },
         child: Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: Container(
             width: menuWidth,
             height: menuHeight,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.85),
+              color: AppColors.black85,
               borderRadius: BorderRadius.circular(effectiveFullscreen ? 8 : 6),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: AppColors.white10,
                 width: 1,
               ),
             ),
@@ -1315,7 +1326,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                     child: Text(
                       '${currentVolume.round()}',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.white,
                         fontSize: effectiveFullscreen ? 14 : 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1363,7 +1374,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(
                                         effectiveFullscreen ? 2.5 : 2),
-                                    color: Colors.white.withValues(alpha: 0.3),
+                                    color: AppColors.white30,
                                   ),
                                 ),
                                 // 音量指示器
@@ -1376,22 +1387,22 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(
                                             effectiveFullscreen ? 2.5 : 2),
-                                        color: Colors.red,
+                                        color: AppColors.red,
                                       ),
                                     ),
-                                  ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
+                              ),
+                            ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ),
       ),
     );
@@ -1406,8 +1417,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       child: Text(
         '${_formatDuration(position)} / ${_formatDuration(duration)}',
         style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
+          color: AppColors.white,
+          fontSize: AppDimens.fontSizeXs,
         ),
       ),
     );
@@ -1434,10 +1445,10 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       if (screenshot != null && screenshot.isNotEmpty) {
         await _saveScreenshot(screenshot);
       } else {
-        _showScreenshotToastMessage('截图失败');
+        _showScreenshotToastMessage(AppStrings.screenshotFailed);
       }
     } catch (e) {
-      _showScreenshotToastMessage('截图失败: $e');
+      _showScreenshotToastMessage('${AppStrings.screenshotFailed}: $e');
     }
   }
 
@@ -1452,7 +1463,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         await _saveToScreenshotsFolder(imageData);
       }
     } catch (e) {
-      _showScreenshotToastMessage('保存失败: $e');
+      _showScreenshotToastMessage('${AppStrings.saveFailed}: $e');
     }
   }
 
@@ -1463,16 +1474,16 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       if (Platform.isAndroid || Platform.isIOS) {
         final status = await Permission.photos.request();
         if (!status.isGranted) {
-          _showScreenshotToastMessage('需要相册权限才能保存截图');
+          _showScreenshotToastMessage(AppStrings.galleryPermissionRequired);
           return;
         }
       }
 
       // 保存到相册
       await Gal.putImageBytes(imageData);
-      _showScreenshotToastMessage('截图已保存');
+      _showScreenshotToastMessage(AppStrings.screenshotSaved);
     } catch (e) {
-      _showScreenshotToastMessage('保存到相册失败: $e');
+      _showScreenshotToastMessage('${AppStrings.saveToGalleryFailed}: $e');
     }
   }
 
@@ -1484,7 +1495,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
       if (Platform.isWindows) {
         // Windows平台：C:\Users\用户名\Pictures\Screenshots
-        final userProfile = Platform.environment['USERPROFILE'];
+        final userProfile = Platform.environment[AppConfig.envUserProfile];
         if (userProfile != null) {
           // 使用path包构建路径，避免反斜杠问题
           final picturesDir = path.join(userProfile, 'Pictures');
@@ -1497,7 +1508,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         }
       } else if (Platform.isMacOS) {
         // macOS平台：~/Pictures/Screenshots
-        final homeDir = Platform.environment['HOME'];
+        final homeDir = Platform.environment[AppConfig.envHome];
         if (homeDir != null) {
           screenshotsDir =
               Directory(path.join(homeDir, 'Pictures', 'Screenshots'));
@@ -1528,9 +1539,9 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
       // 验证文件是否存在
       if (await file.exists()) {
-        _showScreenshotToastMessage('截图已保存');
+        _showScreenshotToastMessage(AppStrings.screenshotSaved);
       } else {
-        _showScreenshotToastMessage('保存截图失败：文件未创建');
+        _showScreenshotToastMessage(AppStrings.screenshotSaveFailed);
       }
     } catch (e) {
       // 尝试使用应用支持目录作为fallback
@@ -1546,12 +1557,12 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         final file = File(path.join(fallbackDir.path, fileName));
         await file.writeAsBytes(imageData);
         if (await file.exists()) {
-          _showScreenshotToastMessage('截图已保存');
+          _showScreenshotToastMessage(AppStrings.screenshotSaved);
         } else {
-          _showScreenshotToastMessage('保存截图失败：文件未创建');
+          _showScreenshotToastMessage(AppStrings.screenshotSaveFailed);
         }
       } catch (fallbackError) {
-        _showScreenshotToastMessage('保存到文件夹失败: $e');
+        _showScreenshotToastMessage('${AppStrings.saveToFolderFailed}: $e');
       }
     }
   }
@@ -1583,16 +1594,16 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     return Positioned.fill(
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: AppDimens.buttonMdPadding,
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.7),
+            color: AppColors.overlayHeavy,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             _screenshotToastMessage,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
+              color: AppColors.white,
+              fontSize: AppDimens.fontSizeXl,
             ),
           ),
         ),
@@ -1633,13 +1644,13 @@ class _SpeedMenuItemState extends State<_SpeedMenuItem> {
         child: Container(
           height: widget.isFullscreen ? 48.0 : 36.0,
           color: _isHovering
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.transparent,
+              ? AppColors.white10
+              : AppColors.transparent,
           alignment: Alignment.center,
           child: Text(
             '${widget.speed}x',
             style: TextStyle(
-              color: widget.isSelected ? Colors.red : Colors.white,
+              color: widget.isSelected ? AppColors.red : AppColors.white,
               fontSize: widget.isFullscreen ? 14 : 12,
               fontWeight:
                   widget.isSelected ? FontWeight.bold : FontWeight.normal,
@@ -1793,7 +1804,7 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
               },
         child: Container(
           height: 24,
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: Center(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -1814,7 +1825,7 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                         height: 6,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(3),
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: AppColors.white30,
                         ),
                       ),
                     ),
@@ -1827,7 +1838,7 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                         height: 6,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(3),
-                          color: Colors.red,
+                          color: AppColors.red,
                         ),
                       ),
                     ),
@@ -1850,10 +1861,10 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                             height: 16,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.red,
+                              color: AppColors.red,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
+                                  color: AppColors.black30,
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1928,12 +1939,12 @@ class _CenterPlayButtonState extends State<_CenterPlayButton> {
             // 背景圆形 - 使用 AnimatedOpacity 实现淡入淡出
             AnimatedOpacity(
               opacity: showBackground ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
+              duration: AppDurations.normal,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: AppDimens.contentPadding,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey.withValues(alpha: 0.7),
+                  color: AppColors.gray500,
                 ),
                 child: SizedBox(
                   width: widget.isFullscreen ? 64 : 48,
@@ -1943,10 +1954,10 @@ class _CenterPlayButtonState extends State<_CenterPlayButton> {
             ),
             // 图标
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: AppDimens.contentPadding,
               child: Icon(
                 widget.isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
+                color: AppColors.white,
                 size: widget.isFullscreen ? 64 : 48,
               ),
             ),

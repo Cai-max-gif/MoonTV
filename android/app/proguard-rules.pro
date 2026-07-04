@@ -17,7 +17,7 @@
 # =========================
 # Project Specific
 # =========================
--keep class org.Moon.TV.MainActivity { *; }
+-keep class org.moon.tv.MainActivity { *; }
 
 # =========================
 # 关键属性 (用于调试)

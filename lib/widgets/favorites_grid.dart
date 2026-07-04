@@ -10,6 +10,9 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
 
 class FavoritesGrid extends StatefulWidget {
   final Function(PlayRecord) onVideoTap;
@@ -200,10 +203,10 @@ class _FavoritesGridState extends State<FavoritesGrid>
           _favorites = result.data!;
         });
       } else {
-        throw Exception(result.errorMessage ?? '获取收藏夹失败');
+        throw Exception(result.errorMessage ?? AppStrings.getFavoritesFailed);
       }
     } catch (e) {
-      throw Exception('获取收藏夹失败: $e');
+      throw Exception('${AppStrings.getFavoritesFailed}: $e');
     }
   }
 
@@ -217,10 +220,10 @@ class _FavoritesGridState extends State<FavoritesGrid>
           _playRecords = result.data!;
         });
       } else {
-        throw Exception(result.errorMessage ?? '获取播放记录失败');
+        throw Exception(result.errorMessage ?? AppStrings.getPlayRecordsFailed);
       }
     } catch (e) {
-      throw Exception('获取播放记录失败: $e');
+      throw Exception('${AppStrings.getPlayRecordsFailed}: $e');
     }
   }
 
@@ -272,7 +275,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
   Widget _buildLoadingState() {
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: const Color(0xFF27ae60),
+      color: AppColors.accent,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 平板模式根据宽度动态展示6～9列，手机模式3列
@@ -293,7 +296,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
           final double itemHeight = itemWidth * 2.0; // 增加高度比例，确保有足够空间避免溢出
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: AppDimens.contentPadding,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -323,24 +326,24 @@ class _FavoritesGridState extends State<FavoritesGrid>
         ShimmerEffect(
           width: width,
           height: height,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        const SizedBox(height: 4),
+        Gap.h4,
         // 标题骨架
         Center(
           child: ShimmerEffect(
             width: width * 0.8,
             height: 12,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
-        const SizedBox(height: 2),
+        Gap.h2,
         // 源名称骨架
         Center(
           child: ShimmerEffect(
             width: width * 0.6,
             height: 8,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
       ],
@@ -355,40 +358,40 @@ class _FavoritesGridState extends State<FavoritesGrid>
           const Icon(
             Icons.error_outline,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '加载失败',
+            AppStrings.loadFailed,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             _errorMessage ?? '未知错误',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           ElevatedButton(
             onPressed: _loadFavorites,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF27ae60),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.accent,
+              foregroundColor: AppColors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
             ),
             child: Text(
-              '重试',
+              AppStrings.retry,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -406,23 +409,23 @@ class _FavoritesGridState extends State<FavoritesGrid>
           const Icon(
             LucideIcons.star,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '暂无收藏内容',
+            AppStrings.noContent,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             '您收藏的视频将显示在这里',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
           ),
         ],
@@ -433,7 +436,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
   Widget _buildFavoritesGrid() {
     return RefreshIndicator(
       onRefresh: _loadFavorites,
-      color: const Color(0xFF27ae60),
+      color: AppColors.accent,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 平板模式根据宽度动态展示6～9列，手机模式3列
@@ -454,7 +457,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
           final double itemHeight = itemWidth * 2.0; // 增加高度比例，确保有足够空间避免溢出
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: AppDimens.contentPadding,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -471,13 +474,13 @@ class _FavoritesGridState extends State<FavoritesGrid>
               return VideoCard(
                 videoInfo: VideoInfo.fromPlayRecord(playRecord),
                 onTap: () => widget.onVideoTap(playRecord),
-                from: 'favorite',
-                cardWidth: itemWidth,
+                from: 'favorite', // 统一设置为收藏场景
+                cardWidth: itemWidth, // 传递计算出的宽度
                 onGlobalMenuAction: widget.onGlobalMenuAction != null
                     ? (action) => widget.onGlobalMenuAction!(
                         VideoInfo.fromPlayRecord(playRecord), action)
                     : null,
-                isFavorited: true,
+                isFavorited: true, // 收藏页面默认已收藏
               );
             },
           );
@@ -485,81 +488,4 @@ class _FavoritesGridState extends State<FavoritesGrid>
       ),
     );
   }
-
-  Widget buildSliver() {
-    if (_isLoading) {
-      return SliverToBoxAdapter(
-        child: SizedBox(
-          height: 400,
-          child: _buildLoadingState(),
-        ),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return SliverToBoxAdapter(child: _buildErrorState());
-    }
-
-    if (_favorites.isEmpty) {
-      return SliverToBoxAdapter(child: _buildEmptyState());
-    }
-
-    return SliverPadding(
-      padding: const EdgeInsets.all(16),
-      sliver: SliverLayoutBuilder(
-        builder: (context, constraints) {
-          final params = _computeGridParams(constraints.crossAxisExtent);
-
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: params.crossAxisCount,
-              childAspectRatio: params.itemWidth / params.itemHeight,
-              crossAxisSpacing: params.spacing,
-              mainAxisSpacing: params.isTablet ? 0 : 16,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final favorite = _favorites[index];
-                final playRecord = _favoriteToPlayRecord(favorite);
-                return VideoCard(
-                  videoInfo: VideoInfo.fromPlayRecord(playRecord),
-                  onTap: () => widget.onVideoTap(playRecord),
-                  from: 'favorite',
-                  cardWidth: params.itemWidth,
-                  onGlobalMenuAction: widget.onGlobalMenuAction != null
-                      ? (action) => widget.onGlobalMenuAction!(
-                          VideoInfo.fromPlayRecord(playRecord), action)
-                      : null,
-                  isFavorited: true,
-                );
-              },
-              childCount: _favorites.length,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  static _GridParams _computeGridParams(double screenWidth) {
-    const double padding = 16.0;
-    const double spacing = 12.0;
-    final int crossAxisCount = DeviceUtils.getTabletColumnCountFromWidth(screenWidth);
-    final bool isTablet = screenWidth >= 600;
-    final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-    const double minItemWidth = 80.0;
-    final double calculatedItemWidth = availableWidth / crossAxisCount;
-    final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
-    final double itemHeight = itemWidth * 2.0;
-    return _GridParams(crossAxisCount: crossAxisCount, spacing: spacing, itemWidth: itemWidth, itemHeight: itemHeight, isTablet: isTablet);
-  }
-}
-
-class _GridParams {
-  final int crossAxisCount;
-  final double spacing;
-  final double itemWidth;
-  final double itemHeight;
-  final bool isTablet;
-  const _GridParams({required this.crossAxisCount, required this.spacing, required this.itemWidth, required this.itemHeight, required this.isTablet});
 }

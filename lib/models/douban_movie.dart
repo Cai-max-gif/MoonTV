@@ -1,4 +1,6 @@
 import 'video_info.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 /// 豆瓣推荐项目数据模型
 class DoubanRecommendItem {
@@ -38,9 +40,9 @@ class DoubanRecommendItem {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: id,
-      source: 'douban',
+      source: AppConfig.sourceIdDouban,
       title: title,
-      sourceName: '豆瓣',
+      sourceName: AppStrings.doubanSourceName,
       year: '', // 推荐项目没有年份信息
       cover: poster,
       index: 1,
@@ -343,9 +345,9 @@ class DoubanMovie {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: id,
-      source: 'douban',
+      source: AppConfig.sourceIdDouban,
       title: title,
-      sourceName: '豆瓣',
+      sourceName: AppStrings.doubanSourceName,
       year: year,
       cover: poster,
       index: 1,

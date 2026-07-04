@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
 import '../utils/device_utils.dart';
 import 'filter_pill_hover.dart';
 
@@ -25,16 +27,16 @@ void showFilterOptionsSelector({
       builder: (context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           ),
           child: Container(
             width: 480,
             constraints: const BoxConstraints(maxHeight: 450),
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF2A2A2A)
+                  ? AppColors.darkBg2
                   : Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -64,7 +66,7 @@ void showFilterOptionsSelector({
                 Flexible(
                   child: SingleChildScrollView(
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppDimens.spacingMd),
                       child: GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -104,7 +106,7 @@ void showFilterOptionsSelector({
     // 移动端显示底部弹出
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       isScrollControlled: true,
       builder: (context) {
         return Container(
@@ -119,7 +121,7 @@ void showFilterOptionsSelector({
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppDimens.spacingLg),
                 child:
                     Text(title, style: Theme.of(context).textTheme.titleLarge),
               ),
@@ -150,7 +152,7 @@ void showFilterOptionsSelector({
                   },
                 ),
               ),
-              const SizedBox(height: 16), // 底部间距
+              Gap.h16, // 底部间距
             ],
           ),
         );

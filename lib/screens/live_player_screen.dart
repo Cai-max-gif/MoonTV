@@ -1,4 +1,8 @@
 import 'dart:io' show Platform;
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/video_player_surface.dart';
@@ -40,7 +44,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   bool _isLoadingEpg = false;
   List<LiveChannel> _allChannels = [];
   List<LiveSource> _allSources = [];
-  String _selectedGroup = '全部';
+  String _selectedGroup = AppStrings.all;
 
   // 缓存设备类型
   late bool _isTablet;
@@ -72,7 +76,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
   // 加载状态
   bool _isLoading = true;
-  String _loadingMessage = '正在加载直播频道...';
+  String _loadingMessage = AppStrings.liveChannelLoading;
   late AnimationController _loadingAnimationController;
 
   @override
@@ -83,7 +87,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
     // 初始化动画控制器
     _loadingAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: AppDurations.oneSecond,
       vsync: this,
     )..repeat();
   }
@@ -101,7 +105,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       final theme = Theme.of(context);
       final isDarkMode = theme.brightness == Brightness.dark;
       _originalStyle = SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
+        statusBarColor: AppColors.transparent,
         statusBarIconBrightness:
             isDarkMode ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
@@ -132,7 +136,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           _allSources = [];
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('加载直播源失败')),
+          const SnackBar(content: Text(AppStrings.liveLoadSourcesFailed)),
         );
       }
     }
@@ -155,7 +159,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           _allChannels = [];
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('加载频道列表失败')),
+          const SnackBar(content: Text(AppStrings.liveLoadChannelsFailed)),
         );
       }
     }
@@ -165,7 +169,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     setState(() {
       _currentChannel = channel;
       _isLoading = true;
-      _loadingMessage = '切换频道...';
+      _loadingMessage = AppStrings.liveSwitchChannel;
     });
 
     // 重新加载 EPG
@@ -234,7 +238,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           _isLoadingEpg = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('加载节目单失败')),
+          const SnackBar(content: Text(AppStrings.liveLoadScheduleFailed)),
         );
       }
     }
@@ -274,7 +278,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     }
 
     // 延迟执行，确保列表已经渲染
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(AppDurations.slow, () {
       if (!_programScrollController.hasClients) {
         return;
       }
@@ -415,16 +419,16 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-        statusBarColor: Colors.black,
+        statusBarColor: AppColors.black,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
         systemNavigationBarColor:
-            isDarkMode ? Colors.black : theme.scaffoldBackgroundColor,
+            isDarkMode ? AppColors.black : theme.scaffoldBackgroundColor,
         systemNavigationBarIconBrightness:
             isDarkMode ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         body: Container(
           decoration: BoxDecoration(
             gradient: isDarkMode
@@ -433,12 +437,12 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFFe6f3fb),
-                      Color(0xFFeaf3f7),
-                      Color(0xFFf7f7f3),
-                      Color(0xFFe9ecef),
-                      Color(0xFFdbe3ea),
-                      Color(0xFFd3dde6),
+                      AppColors.lightBlueBg,
+                      AppColors.lightBlueBg,
+                      AppColors.gradMid2,
+                      AppColors.gradMid3,
+                      AppColors.gradMid4,
+                      AppColors.gradEnd,
                     ],
                     stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
                   ),
@@ -451,7 +455,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                   // Windows 自定义标题栏
                   if (Platform.isWindows)
                     const WindowsTitleBar(
-                      customBackgroundColor: Color(0xFF000000),
+                      customBackgroundColor: AppColors.black,
                     ),
                   // 主要内容
                   Expanded(
@@ -480,7 +484,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                   right: 0,
                   height: MediaQuery.of(context).padding.top,
                   child: Container(
-                    color: Colors.black,
+                    color: AppColors.black,
                   ),
                 ),
             ],
@@ -508,7 +512,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             // 顶部安全区域
             Container(
               height: topOffset,
-              color: Colors.black,
+              color: AppColors.black,
             ),
             // 播放器
             Expanded(
@@ -516,7 +520,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 children: [
                   Container(
                     key: _playerKey,
-                    color: Colors.black,
+                    color: AppColors.black,
                     child: _buildPlayerWidget(),
                   ),
                   // 加载蒙版
@@ -544,7 +548,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             children: [
               Container(
                 key: _playerKey,
-                color: Colors.black,
+                color: AppColors.black,
                 child: _buildPlayerWidget(),
               ),
               // 加载蒙版
@@ -566,7 +570,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             children: [
               Container(
                 key: _playerKey,
-                color: Colors.black,
+                color: AppColors.black,
                 child: _buildPlayerWidget(),
               ),
               // 加载蒙版
@@ -588,7 +592,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             children: [
               Container(
                 key: _playerKey,
-                color: Colors.black,
+                color: AppColors.black,
                 child: _buildPlayerWidget(),
               ),
               // 加载蒙版
@@ -636,7 +640,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             _isLoading = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('播放器加载失败: $error')),
+            SnackBar(content: Text('${AppStrings.livePlayerLoadFailed}$error')),
           );
         }
       },
@@ -656,7 +660,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         // macOS/状态栏黑色背景
         Container(
           height: statusBarHeight + macOSPadding,
-          color: Colors.black,
+          color: AppColors.black,
         ),
         // 播放器占位
         SizedBox(height: playerHeight),
@@ -688,7 +692,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         // macOS/状态栏黑色背景
         Container(
           height: statusBarHeight + macOSPadding,
-          color: Colors.black,
+          color: AppColors.black,
         ),
         Expanded(
           child: Row(
@@ -717,20 +721,20 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
               // 右侧：播放源和频道列表
               Expanded(
                 child: Container(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: Column(
                     children: [
                       // 顶部栏
                       Container(
                         padding: const EdgeInsets.only(top: 16),
                         child: Text(
-                          '频道列表',
+                          AppStrings.liveChannelList,
                           style: FontUtils.poppins(
-                            fontSize: 18,
+                            fontSize: AppDimens.fontSizeXxl,
                             fontWeight: FontWeight.w600,
                             color: themeService.isDarkMode
                                 ? Colors.white
-                                : const Color(0xFF2c3e50),
+                                : AppColors.primary,
                           ),
                         ),
                       ),
@@ -771,7 +775,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         // macOS/状态栏黑色背景
         Container(
           height: statusBarHeight + macOSPadding,
-          color: Colors.black,
+          color: AppColors.black,
         ),
         // 播放器占位
         SizedBox(height: playerHeight),
@@ -794,7 +798,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: const BoxDecoration(
-        color: Colors.transparent,
+        color: AppColors.transparent,
       ),
       child: Row(
         children: [
@@ -805,15 +809,15 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
               child: AspectRatio(
                 aspectRatio: 2.0,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppDimens.spacingXs),
                   decoration: BoxDecoration(
                     color: themeService.isDarkMode
-                        ? const Color(0xFF2a2a2a)
-                        : const Color(0xFFc0c0c0),
-                    borderRadius: BorderRadius.circular(8),
+                        ? AppColors.darkBg2
+                        : AppColors.gray350,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                     child: Image.network(
                       _currentChannel.logo,
                       fit: BoxFit.contain,
@@ -827,7 +831,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             )
           else
             _buildDefaultLogo(themeService),
-          const SizedBox(width: 16),
+          Gap.w16,
           // 频道信息
           Expanded(
             child: Column(
@@ -839,11 +843,11 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                       child: Text(
                         _currentChannel.name,
                         style: FontUtils.poppins(
-                          fontSize: 18,
+                          fontSize: AppDimens.fontSizeXxl,
                           fontWeight: FontWeight.w600,
                           color: themeService.isDarkMode
                               ? Colors.white
-                              : const Color(0xFF2c3e50),
+                              : AppColors.primary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -851,14 +855,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                Gap.h4,
                 Text(
                   '${_currentSource.name} > ${_currentChannel.group}',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: themeService.isDarkMode
-                        ? const Color(0xFF999999)
-                        : const Color(0xFF7f8c8d),
+                        ? AppColors.textHint
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -877,14 +881,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         child: Container(
           decoration: BoxDecoration(
             color: themeService.isDarkMode
-                ? const Color(0xFF2a2a2a)
-                : const Color(0xFFc0c0c0),
-            borderRadius: BorderRadius.circular(8),
+                ? AppColors.darkBg2
+                : AppColors.gray350,
+            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           ),
           child: const Icon(
             Icons.tv,
-            size: 24,
-            color: Color(0xFF95a5b0),
+            size: AppDimens.iconLg,
+            color: AppColors.gray475,
           ),
         ),
       ),
@@ -894,8 +898,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   Widget _buildDefaultLogoIcon() {
     return const Icon(
       Icons.tv,
-      size: 24,
-      color: Color(0xFF95a5b0),
+      size: AppDimens.iconLg,
+      color: AppColors.gray475,
     );
   }
 
@@ -906,14 +910,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (filteredChannels.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppDimens.spacingXl),
           child: Text(
-            '暂无频道',
+            AppStrings.liveNoChannel,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
-                  ? const Color(0xFF999999)
-                  : const Color(0xFF7f8c8d),
+                  ? AppColors.textHint
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -937,7 +941,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           child: ListTile(
             key: itemKey,
             selected: isSelected,
-            selectedTileColor: const Color(0xFF27ae60).withValues(alpha: 0.1),
+            selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
             visualDensity: const VisualDensity(vertical: -1),
             leading: channel.logo.isNotEmpty
                 ? AspectRatio(
@@ -946,20 +950,20 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         color: themeService.isDarkMode
-                            ? const Color(0xFF2a2a2a)
-                            : const Color(0xFFc0c0c0),
+                            ? AppColors.darkBg2
+                            : AppColors.gray350,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                         child: Image.network(
                           channel.logo,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(
                               Icons.tv,
-                              size: 16,
-                              color: Color(0xFF95a5b0),
+                              size: AppDimens.iconSm,
+                              color: AppColors.gray475,
                             );
                           },
                         ),
@@ -971,27 +975,27 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     child: Container(
                       decoration: BoxDecoration(
                         color: themeService.isDarkMode
-                            ? const Color(0xFF2a2a2a)
-                            : const Color(0xFFc0c0c0),
+                            ? AppColors.darkBg2
+                            : AppColors.gray350,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Icon(
                         Icons.tv,
-                        size: 16,
-                        color: Color(0xFF95a5b0),
+                        size: AppDimens.iconSm,
+                        color: AppColors.gray475,
                       ),
                     ),
                   ),
             title: Text(
               channel.name,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
-                    ? const Color(0xFF27ae60)
+                    ? AppColors.accent
                     : themeService.isDarkMode
                         ? Colors.white
-                        : const Color(0xFF2c3e50),
+                        : AppColors.primary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -999,10 +1003,10 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             subtitle: Text(
               channel.group,
               style: FontUtils.poppins(
-                fontSize: 12,
+                fontSize: AppDimens.fontSizeXs,
                 color: themeService.isDarkMode
-                    ? const Color(0xFF999999)
-                    : const Color(0xFF7f8c8d),
+                    ? AppColors.textHint
+                    : AppColors.textSecondary,
               ),
             ),
             onTap: () => _switchChannel(channel),
@@ -1015,7 +1019,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   /// 构建播放源和分组选择器
   Widget _buildSourceSelector(ThemeData theme, ThemeService themeService) {
     // 获取所有分组，保持原始顺序
-    final allGroups = ['全部'];
+    final allGroups = [AppStrings.all];
     final seenGroups = <String>{};
     for (var channel in _allChannels) {
       if (channel.group.isNotEmpty && !seenGroups.contains(channel.group)) {
@@ -1042,8 +1046,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         border: Border(
           bottom: BorderSide(
             color: themeService.isDarkMode
-                ? const Color(0xFF333333)
-                : const Color(0xFFe0e0e0),
+                ? AppColors.darkDivider
+                : AppColors.grayBorder,
           ),
         ),
       ),
@@ -1052,16 +1056,16 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           // 直播源筛选（只有多个源时显示）
           if (showSourceFilter) ...[
             _buildFilterPill(
-              '直播源',
+              AppStrings.liveSource,
               sourceOptions,
               _currentSource.key,
               (value) async {
                 final source = _allSources.firstWhere((s) => s.key == value);
                 setState(() {
                   _currentSource = source;
-                  _selectedGroup = '全部';
+                  _selectedGroup = AppStrings.all;
                   _isLoading = true;
-                  _loadingMessage = '切换直播源...';
+                  _loadingMessage = AppStrings.liveSwitchSource;
                 });
                 await _loadAllChannels();
                 if (mounted && _allChannels.isNotEmpty) {
@@ -1070,11 +1074,11 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
               },
               themeService,
             ),
-            const SizedBox(width: 8),
+            Gap.w8,
           ],
           // 分组筛选
           _buildFilterPill(
-            '分组',
+            AppStrings.liveGroup,
             groupOptions,
             _selectedGroup,
             (value) {
@@ -1136,7 +1140,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       (e) => e.value == selectedValue,
       orElse: () => options.first,
     );
-    final isDefault = selectedValue == '全部' || selectedValue.isEmpty;
+    final isDefault = selectedValue == AppStrings.all || selectedValue.isEmpty;
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -1163,13 +1167,13 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         options: options,
         selectedValue: selectedValue,
         onSelected: onSelected,
-        useCompactLayout: title == '分组', // 只有标题筛选使用紧凑布局
+        useCompactLayout: title == AppStrings.liveGroup, // 只有标题筛选使用紧凑布局
       );
     } else {
       // 移动端显示底部弹出
       showModalBottomSheet(
         context: context,
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         isScrollControlled: true,
         builder: (context) {
           final screenWidth = MediaQuery.of(context).size.width;
@@ -1196,7 +1200,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
               crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppDimens.spacingLg),
                   child: Center(
                     child: Text(
                       title,
@@ -1226,18 +1230,18 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                                 onSelected(option.value);
                                 Navigator.pop(context);
                               },
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 alignment: Alignment.centerLeft, // 内容左对齐
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? const Color(0xFF27AE60)
+                                      ? AppColors.accent
                                       : Theme.of(context)
                                           .chipTheme
                                           .backgroundColor,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                                 ),
                                 child: Text(
                                   option.label,
@@ -1254,7 +1258,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
               ],
             ),
           );
@@ -1265,7 +1269,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
   /// 获取筛选后的频道列表
   List<LiveChannel> _getFilteredChannels() {
-    if (_selectedGroup == '全部') {
+    if (_selectedGroup == AppStrings.all) {
       return _allChannels;
     } else {
       return _allChannels.where((c) => c.group == _selectedGroup).toList();
@@ -1287,7 +1291,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: AppDimens.listTilePadding,
       child: Row(
         children: [
           // 正在播放标签和节目名称
@@ -1295,24 +1299,24 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             child: Row(
               children: [
                 Text(
-                  '正在播放: ',
+                  '${AppStrings.liveNowPlaying}',
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: themeService.isDarkMode
-                        ? const Color(0xFF999999)
-                        : const Color(0xFF7f8c8d),
+                        ? AppColors.textHint
+                        : AppColors.textSecondary,
                   ),
                 ),
                 Expanded(
                   child: _isLoadingEpg
                       ? Text(
-                          '加载中...',
+                          AppStrings.loading,
                           style: FontUtils.poppins(
-                            fontSize: 14,
+                            fontSize: AppDimens.fontSizeMd,
                             fontWeight: FontWeight.w500,
                             color: themeService.isDarkMode
                                 ? Colors.white
-                                : const Color(0xFF2c3e50),
+                                : AppColors.primary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1321,23 +1325,23 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                           ? Text(
                               currentProgram.title,
                               style: FontUtils.poppins(
-                                fontSize: 14,
+                                fontSize: AppDimens.fontSizeMd,
                                 fontWeight: FontWeight.w500,
                                 color: themeService.isDarkMode
                                     ? Colors.white
-                                    : const Color(0xFF2c3e50),
+                                    : AppColors.primary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             )
                           : Text(
-                              '暂无节目信息',
+                              AppStrings.liveNoProgramInfo,
                               style: FontUtils.poppins(
-                                fontSize: 14,
+                                fontSize: AppDimens.fontSizeMd,
                                 fontWeight: FontWeight.w500,
                                 color: themeService.isDarkMode
-                                    ? const Color(0xFF666666)
-                                    : const Color(0xFF95a5a6),
+                                    ? AppColors.textDarkHint
+                                    : AppColors.textHint,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1346,7 +1350,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
               ],
             ),
           ),
-          const SizedBox(width: 20),
+          Gap.w20,
           // 查看节目单按钮
           _HoverButton(
             onTap: () => _showProgramListDropdown(theme, themeService),
@@ -1356,7 +1360,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 Transform.translate(
                   offset: const Offset(0, -1.2),
                   child: Text(
-                    '查看节目单',
+                    AppStrings.liveViewSchedule,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: themeService.isDarkMode
                           ? Colors.grey[400]
@@ -1365,7 +1369,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                Gap.w4,
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 14,
@@ -1392,8 +1396,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black26,
+      backgroundColor: AppColors.transparent,
+      barrierColor: AppColors.black30,
       builder: (context) {
         return Container(
           height: panelHeight,
@@ -1405,26 +1409,26 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             children: [
               // 标题栏
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppDimens.spacingLg),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
                       color: themeService.isDarkMode
-                          ? const Color(0xFF333333)
-                          : const Color(0xFFe0e0e0),
+                          ? AppColors.darkDivider
+                          : AppColors.grayBorder,
                     ),
                   ),
                 ),
                 child: Row(
                   children: [
                     Text(
-                      '节目单',
+                      AppStrings.liveSchedule,
                       style: FontUtils.poppins(
-                        fontSize: 18,
+                        fontSize: AppDimens.fontSizeXxl,
                         fontWeight: FontWeight.w600,
                         color: themeService.isDarkMode
                             ? Colors.white
-                            : const Color(0xFF2c3e50),
+                            : AppColors.primary,
                       ),
                     ),
                     const Spacer(),
@@ -1433,7 +1437,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                         Icons.close,
                         color: themeService.isDarkMode
                             ? Colors.white
-                            : const Color(0xFF2c3e50),
+                            : AppColors.primary,
                       ),
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -1464,14 +1468,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              Gap.h16,
               Text(
-                '加载节目单中...',
+                AppStrings.liveLoadingSchedule,
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: themeService.isDarkMode
-                      ? const Color(0xFF999999)
-                      : const Color(0xFF7f8c8d),
+                      ? AppColors.textHint
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -1491,17 +1495,17 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 Icons.calendar_today_outlined,
                 size: 64,
                 color: themeService.isDarkMode
-                    ? const Color(0xFF666666)
-                    : const Color(0xFF95a5a6),
+                    ? AppColors.textDarkHint
+                    : AppColors.textHint,
               ),
-              const SizedBox(height: 16),
+              Gap.h16,
               Text(
-                '暂无节目单信息',
+                AppStrings.liveNoScheduleInfo,
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: themeService.isDarkMode
-                      ? const Color(0xFF999999)
-                      : const Color(0xFF7f8c8d),
+                      ? AppColors.textHint
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -1540,27 +1544,27 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (isLive) {
       // 正在播放 - 绿色
       textColor = themeService.isDarkMode
-          ? const Color(0xFF4ade80)
-          : const Color(0xFF16a34a);
+          ? AppColors.green400
+          : AppColors.green700;
       timeColor = themeService.isDarkMode
-          ? const Color(0xFF4ade80)
-          : const Color(0xFF16a34a);
+          ? AppColors.green400
+          : AppColors.green700;
     } else if (isPast) {
       // 过去的节目 - 灰色
       textColor = themeService.isDarkMode
-          ? const Color(0xFF9ca3af)
-          : const Color(0xFF6b7280);
+          ? AppColors.gray400
+          : AppColors.gray500;
       timeColor = themeService.isDarkMode
-          ? const Color(0xFF9ca3af)
-          : const Color(0xFF6b7280);
+          ? AppColors.gray400
+          : AppColors.gray500;
     } else {
       // 未开始的节目 - 蓝色
       textColor = themeService.isDarkMode
-          ? const Color(0xFF60a5fa)
-          : const Color(0xFF2563eb);
+          ? AppColors.blue400
+          : AppColors.blue600;
       timeColor = themeService.isDarkMode
-          ? const Color(0xFF60a5fa)
-          : const Color(0xFF2563eb);
+          ? AppColors.blue400
+          : AppColors.blue600;
     }
 
     return Container(
@@ -1573,18 +1577,18 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           Text(
             program.timeRange,
             style: FontUtils.sourceCodePro(
-              fontSize: 13,
+              fontSize: AppDimens.fontSizeSm,
               color: timeColor,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 16),
+          Gap.w16,
           // 节目标题
           Expanded(
             child: Text(
               program.title,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: isLive ? FontWeight.w600 : FontWeight.w400,
                 color: textColor,
               ),
@@ -1602,7 +1606,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       ThemeData theme, ThemeService themeService) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.transparent,
+        color: AppColors.transparent,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1613,13 +1617,13 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             child: Row(
               children: [
                 Text(
-                  '节目单',
+                  AppStrings.liveSchedule,
                   style: FontUtils.poppins(
-                    fontSize: 16,
+                    fontSize: AppDimens.fontSizeXl,
                     fontWeight: FontWeight.w600,
                     color: themeService.isDarkMode
                         ? Colors.white
-                        : const Color(0xFF2c3e50),
+                        : AppColors.primary,
                   ),
                 ),
                 const Spacer(),
@@ -1672,12 +1676,12 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Text(
-            '加载节目单中...',
+            AppStrings.liveLoadingSchedule,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
-                  ? const Color(0xFF999999)
-                  : const Color(0xFF7f8c8d),
+                  ? AppColors.textHint
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -1695,17 +1699,17 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 Icons.calendar_today_outlined,
                 size: 48,
                 color: themeService.isDarkMode
-                    ? const Color(0xFF666666)
-                    : const Color(0xFF95a5a6),
+                    ? AppColors.textDarkHint
+                    : AppColors.textHint,
               ),
-              const SizedBox(height: 12),
+              Gap.h12,
               Text(
-                '暂无节目单信息',
+                AppStrings.liveNoScheduleInfo,
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: themeService.isDarkMode
-                      ? const Color(0xFF999999)
-                      : const Color(0xFF7f8c8d),
+                      ? AppColors.textHint
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -1719,7 +1723,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       child: ListView.builder(
         controller: _programScrollController,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: AppDimens.horizontalSmVerticalMdPadding,
         itemCount: _programs!.length,
         itemBuilder: (context, index) {
           final program = _programs![index];
@@ -1751,41 +1755,41 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (isLive) {
       // 正在播放 - 绿色背景 + 绿色边框
       backgroundColor = themeService.isDarkMode
-          ? const Color(0xFF27ae60).withValues(alpha: 0.2)
-          : const Color(0xFF27ae60).withValues(alpha: 0.1);
-      borderColor = const Color(0xFF27ae60).withValues(alpha: 0.3);
+          ? AppColors.accent.withValues(alpha: 0.2)
+          : AppColors.accent.withValues(alpha: 0.1);
+      borderColor = AppColors.accent.withValues(alpha: 0.3);
       textColor = themeService.isDarkMode
-          ? const Color(0xFF4ade80)
-          : const Color(0xFF16a34a);
+          ? AppColors.green400
+          : AppColors.green700;
       timeColor = themeService.isDarkMode
-          ? const Color(0xFF4ade80)
-          : const Color(0xFF16a34a);
+          ? AppColors.green400
+          : AppColors.green700;
     } else if (isPast) {
       // 过去的节目 - 灰色背景 + 灰色边框
       backgroundColor = themeService.isDarkMode
-          ? const Color(0xFF374151).withValues(alpha: 0.5)
-          : const Color(0xFFd1d5db).withValues(alpha: 0.5);
+          ? AppColors.borderDarkGray.withValues(alpha: 0.5)
+          : AppColors.gray300.withValues(alpha: 0.5);
       borderColor = themeService.isDarkMode
-          ? const Color(0xFF4b5563)
-          : const Color(0xFFd1d5db);
+          ? AppColors.gray600
+          : AppColors.gray300;
       textColor = themeService.isDarkMode
-          ? const Color(0xFF9ca3af)
-          : const Color(0xFF6b7280);
+          ? AppColors.gray400
+          : AppColors.gray500;
       timeColor = themeService.isDarkMode
-          ? const Color(0xFF9ca3af)
-          : const Color(0xFF6b7280);
+          ? AppColors.gray400
+          : AppColors.gray500;
     } else {
       // 未开始的节目 - 蓝色背景 + 蓝色边框
       backgroundColor = themeService.isDarkMode
-          ? const Color(0xFF3498db).withValues(alpha: 0.2)
-          : const Color(0xFF3498db).withValues(alpha: 0.1);
-      borderColor = const Color(0xFF3498db).withValues(alpha: 0.3);
+          ? AppColors.info.withValues(alpha: 0.2)
+          : AppColors.info.withValues(alpha: 0.1);
+      borderColor = AppColors.info.withValues(alpha: 0.3);
       textColor = themeService.isDarkMode
-          ? const Color(0xFF60a5fa)
-          : const Color(0xFF2563eb);
+          ? AppColors.blue400
+          : AppColors.blue600;
       timeColor = themeService.isDarkMode
-          ? const Color(0xFF60a5fa)
-          : const Color(0xFF2563eb);
+          ? AppColors.blue400
+          : AppColors.blue600;
     }
 
     return Container(
@@ -1793,7 +1797,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       width: 120,
       height: 72,
       margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(AppDimens.spacingSm),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(6),
@@ -1811,7 +1815,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
               Text(
                 program.timeRange,
                 style: FontUtils.poppins(
-                  fontSize: 9,
+                  fontSize: AppDimens.fontSizeMinSm,
                   color: timeColor,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1824,15 +1828,15 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                       width: 4,
                       height: 4,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF27ae60),
+                        color: AppColors.accent,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      '直播',
+                      AppStrings.navLive,
                       style: FontUtils.poppins(
-                        fontSize: 8,
+                        fontSize: AppDimens.fontSizeMin,
                         color: timeColor,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1844,7 +1848,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           Text(
             program.title,
             style: FontUtils.poppins(
-              fontSize: 11,
+              fontSize: AppDimens.fontSize3xs,
               fontWeight: FontWeight.w600,
               color: textColor,
             ),
@@ -1898,7 +1902,7 @@ class _HoverButtonState extends State<_HoverButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppDurations.normal,
           child: ColorFiltered(
             colorFilter: (isPC && _isHovered)
                 ? const ColorFilter.mode(

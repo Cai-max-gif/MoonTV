@@ -1,31 +1,16 @@
-class InputValidatorUtils {
-  static const int maxLength = 32;
+import '../constants/app_regex.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 
-  static const List<String> allowedEmailDomains = [
-    'gmail.com',
-    'qq.com',
-    '163.com',
-    '126.com',
-    'outlook.com',
-    'hotmail.com',
-    'foxmail.com',
-    'sina.com',
-    'sohu.com',
-    'yahoo.com',
-    'aliyun.com',
-    'icloud.com',
-    'live.com',
-    'msn.com',
-    '139.com',
-    'yeah.net'
-  ];
+class InputValidatorUtils {
+  static const int maxLength = AppConfig.maxUsernameLength;
 
   static bool isEmail(String input) {
     if (!input.contains('@')) {
       return false;
     }
     final domain = input.split('@').last.toLowerCase();
-    return allowedEmailDomains.contains(domain);
+    return AppStrings.allowedEmailDomains.contains(domain);
   }
 
   static String filterLoginUsername(String input) {
@@ -33,28 +18,27 @@ class InputValidatorUtils {
       input = input.substring(0, maxLength);
     }
     if (isEmail(input)) {
-      return input.replaceAll(RegExp(r'[^a-zA-Z0-9.@]'), '');
+      return input.replaceAll(RegExp(AppRegex.emailInputChars), '');
     }
-    return input.replaceAll(RegExp(r'[^a-zA-Z0-9_.@\u4e00-\u9fa5]'), '');
+    return input.replaceAll(RegExp(AppRegex.loginUsernameFilterChars), '');
   }
 
   static String filterRegisterUsername(String input) {
     if (input.length > maxLength) {
       input = input.substring(0, maxLength);
     }
-    return input.replaceAll(RegExp(r'[^a-zA-Z0-9\u4e00-\u9fa5]'), '');
+    return input.replaceAll(RegExp(AppRegex.registerUsernameFilterChars), '');
   }
 
   static String filterEmail(String input) {
     if (input.length > maxLength) {
       input = input.substring(0, maxLength);
     }
-    return input.replaceAll(RegExp(r'[^a-zA-Z0-9.@]'), '');
+    return input.replaceAll(RegExp(AppRegex.emailInputChars), '');
   }
 
   static String filterPassword(String input) {
-    input = input.replaceAll(
-        RegExp(r'[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]'), '');
+    input = input.replaceAll(RegExp(AppRegex.chineseChars), '');
     if (input.length > maxLength) {
       input = input.substring(0, maxLength);
     }
@@ -62,35 +46,35 @@ class InputValidatorUtils {
   }
 
   static String filterVerificationCode(String input) {
-    String filtered = input.replaceAll(RegExp(r'[^0-9]'), '');
-    if (filtered.length > 6) {
-      filtered = filtered.substring(0, 6);
+    String filtered = input.replaceAll(RegExp(AppRegex.nonDigits), '');
+    if (filtered.length > AppConfig.verificationCodeLength) {
+      filtered = filtered.substring(0, AppConfig.verificationCodeLength);
     }
     return filtered;
   }
 
   static bool containsInvalidLoginUsernameChars(String input) {
-    return RegExp(r'[^a-zA-Z0-9_.@\u4e00-\u9fa5]').hasMatch(input);
+    return !RegExp(AppRegex.usernameLogin).hasMatch(input);
   }
 
   static bool containsInvalidRegisterUsernameChars(String input) {
-    return RegExp(r'[^a-zA-Z0-9\u4e00-\u9fa5]').hasMatch(input);
+    return !RegExp(AppRegex.usernameRegister).hasMatch(input);
   }
 
   static bool containsInvalidEmailChars(String input) {
-    return RegExp(r'[^a-zA-Z0-9.@]').hasMatch(input);
+    return !RegExp(AppRegex.emailInput).hasMatch(input);
   }
 
   static bool isVerificationCodeValid(String input) {
-    return RegExp(r'^\d{6}$').hasMatch(input);
+    return RegExp(AppRegex.verificationCode).hasMatch(input);
   }
 
   static bool isEmailValid(String input) {
-    return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(input);
+    return RegExp(AppRegex.email).hasMatch(input);
   }
 
   static bool isPasswordValid(String input) {
-    return input.length >= 6 && input.length <= maxLength;
+    return input.length >= AppConfig.minPasswordLength && input.length <= maxLength;
   }
 
   static bool isLoginUsernameValid(String input) {
@@ -100,7 +84,7 @@ class InputValidatorUtils {
   }
 
   static bool isRegisterUsernameValid(String input) {
-    return input.length >= 3 &&
+    return input.length >= AppConfig.minRegisterUsernameLength &&
         input.length <= maxLength &&
         !containsInvalidRegisterUsernameChars(input);
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_strings.dart';
 import '../models/play_record.dart';
 import '../models/video_info.dart';
 import '../services/api_service.dart';
@@ -43,12 +44,14 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
   @override
   void initState() {
     super.initState();
+    // 更新静态实例引用
     HotShortDramaSection._currentInstance = this;
     _loadHotShortDramas();
   }
 
   @override
   void dispose() {
+    // 清除当前实例引用
     if (HotShortDramaSection._currentInstance == this) {
       HotShortDramaSection._currentInstance = null;
     }
@@ -59,6 +62,7 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
     await _loadHotShortDramas(forceRefresh: true);
   }
 
+  /// 加载热门短剧
   Future<void> _loadHotShortDramas({bool forceRefresh = false}) async {
     try {
       setState(() {
@@ -115,7 +119,7 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
       id: shortDrama['id'].toString(),
       title: shortDrama['name'] ?? '',
       year: shortDrama['update_time']?.toString().substring(0, 4) ?? '',
-      cover: shortDrama['cover'] ?? shortDrama['backdrop'] ?? '',
+      cover: shortDrama['cover'] ?? '',
       source: 'shortdrama',
       sourceName: '短剧',
       index: 1,
@@ -125,15 +129,14 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
       totalTime: 0,
       saveTime: DateTime.now().millisecondsSinceEpoch,
       searchTitle: shortDrama['name'] ?? '',
-      rate: shortDrama['score']?.toString() ?? shortDrama['vote_average']?.toString() ?? '',
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return RecommendationSection(
-      title: '刷屏短剧',
-      moreText: '查看更多 >',
+      title: AppStrings.homeHotShortDrama,
+      moreText: AppStrings.homeViewMore,
       onMoreTap: widget.onMoreTap,
       videoInfos: _convertToVideoInfos(),
       onItemTap: (videoInfo) {

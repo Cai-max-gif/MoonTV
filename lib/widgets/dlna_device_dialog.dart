@@ -1,6 +1,10 @@
 import 'dart:async';
+import '../constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:dlna_dart/dlna.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 class DLNADeviceDialog extends StatefulWidget {
   final String currentUrl;
@@ -32,7 +36,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
   DLNAManager? _dlnaManager;
   Map<String, DLNADevice> _devices = {};
   bool _isScanning = false;
-  String _scanStatus = '准备扫描设备...';
+  String _scanStatus = AppStrings.dlnaPreparingScan;
   Timer? _scanTimer;
   StreamSubscription? _devicesSubscription;
 
@@ -52,7 +56,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
     try {
       setState(() {
         _isScanning = true;
-        _scanStatus = '正在扫描DLNA设备...';
+        _scanStatus = AppStrings.dlnaScanningDevices;
       });
 
       _dlnaManager = DLNAManager();
@@ -63,17 +67,17 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
         if (mounted) {
           setState(() {
             _devices = deviceList;
-            _scanStatus = '发现 ${_devices.length} 个设备';
+            _scanStatus = AppStrings.dlnaDeviceCountTemplate.replaceAll('%d', '${_devices.length}');
           });
         }
       });
 
       // 设置扫描超时
-      _scanTimer = Timer(const Duration(seconds: 10), () {
+      _scanTimer = Timer(AppDurations.shortTimeout, () {
         if (mounted) {
           setState(() {
             _isScanning = false;
-            _scanStatus = '扫描完成，发现 ${_devices.length} 个设备';
+            _scanStatus = '${AppStrings.dlnaDeviceCountTemplate.replaceAll('%d', '${_devices.length}')}';
           });
         }
       });
@@ -111,14 +115,14 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
         : screenWidth * 0.9; // 手机：90%
     
     return Dialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
         child: Container(
         width: dialogWidth,
         height: MediaQuery.of(context).size.height * 0.7,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +134,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                 Text(
                   '选择投屏设备',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: AppDimens.fontSizeTitle,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
@@ -141,14 +145,14 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            Gap.h16,
             
             // 扫描状态
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppDimens.spacingMd),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
               child: Row(
                 children: [
@@ -161,28 +165,28 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                   else
                     Icon(
                       Icons.wifi_find,
-                      size: 16,
+                      size: AppDimens.iconSm,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                  const SizedBox(width: 8),
+                  Gap.w8,
                   Expanded(
                     child: Text(
                       _scanStatus,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 14,
+                        fontSize: AppDimens.fontSizeMd,
                       ),
                     ),
                   ),
                   if (!_isScanning)
                     TextButton(
                       onPressed: _refreshScanning,
-                      child: const Text('重新扫描'),
+                      child: const Text(AppStrings.dlnaRescan),
                     ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            Gap.h16,
             
             // 设备列表
             Expanded(
@@ -196,20 +200,20 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                             size: 64,
                             color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                           ),
-                          const SizedBox(height: 16),
+                          Gap.h16,
                           Text(
-                            _isScanning ? '正在搜索设备...' : '未发现DLNA设备',
+                            _isScanning ? AppStrings.dlnaSearchingDevices : AppStrings.dlnaNoDeviceFound,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: AppDimens.fontSizeXl,
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           if (!_isScanning) ...[
-                            const SizedBox(height: 8),
+                            Gap.h8,
                             Text(
-                              '请确保设备与手机在同一网络下',
+                              AppStrings.dlnaEnsureSameNetwork,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: AppDimens.fontSizeXs,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                               ),
                             ),
@@ -231,7 +235,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                             color: isCurrentDevice 
                                 ? Theme.of(context).colorScheme.primaryContainer
                                 : Theme.of(context).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             border: isCurrentDevice 
                                 ? Border.all(
                                     color: Theme.of(context).colorScheme.primary,
@@ -262,13 +266,13 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: Theme.of(context).colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                                     ),
                                     child: Text(
-                                      '当前设备',
+                                      AppStrings.dlnaCurrentDevice,
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.onPrimary,
-                                        fontSize: 12,
+                                        fontSize: AppDimens.fontSizeXs,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -331,12 +335,12 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('投屏'),
-        content: Text('正在投屏到 ${device.info.friendlyName}...'),
+        title: const Text(AppStrings.dlnaTitle),
+        content: Text('${AppStrings.dlnaScanning} ${device.info.friendlyName}...'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(AppStrings.cancel),
           ),
         ],
       ),
@@ -378,8 +382,8 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
         // 显示投屏失败提示
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('投屏失败: $e'),
-            backgroundColor: Colors.red,
+            content: Text('${AppStrings.dlnaFailed}: $e'),
+            backgroundColor: AppColors.red,
             duration: const Duration(seconds: 3),
           ),
         );

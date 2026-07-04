@@ -4,6 +4,8 @@ import 'dart:convert';
 import '../models/douban_movie.dart';
 import 'api_service.dart';
 import 'douban_cache_service.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
 
 /// 豆瓣推荐数据请求参数
 class DoubanRecommendsParams {
@@ -127,13 +129,12 @@ class DoubanService {
     }
     // 直接使用默认的豆瓣数据源
     String apiUrl =
-        'https://m.douban.com/rexxar/api/v2/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
+        '${AppConfig.doubanApiBase}/subject/recent_hot/$kind?start=${page * pageLimit}&limit=$pageLimit&category=$category&type=$type';
 
     try {
       final headers = {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Referer': 'https://movie.douban.com/',
+        'User-Agent': AppConfig.doubanUserAgent,
+        'Referer': AppConfig.doubanReferer,
         'Accept': 'application/json, text/plain, */*',
       };
 
@@ -142,7 +143,7 @@ class DoubanService {
             Uri.parse(apiUrl),
             headers: headers,
           )
-          .timeout(const Duration(seconds: 30));
+          .timeout(AppDurations.networkTimeout);
 
       if (response.statusCode == 200) {
         try {
@@ -154,7 +155,7 @@ class DoubanService {
             await _cacheService.set(
               cacheKey,
               doubanResponse.items.map((e) => e.toJson()).toList(),
-              const Duration(hours: 6),
+              AppConfig.doubanListCache,
             );
           } catch (cacheError) {
             // 缓存失败，静默处理
@@ -314,7 +315,7 @@ class DoubanService {
 
     // 直接使用默认的豆瓣数据源
     String baseUrl =
-        'https://m.douban.com/rexxar/api/v2/${params.kind}/recommend';
+        '${AppConfig.doubanApiBase}/${params.kind}/recommend';
 
     // 构建查询参数
     final queryParams = <String, String>{
@@ -336,9 +337,8 @@ class DoubanService {
 
     try {
       final headers = {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Referer': 'https://movie.douban.com/',
+        'User-Agent': AppConfig.doubanUserAgent,
+        'Referer': AppConfig.doubanReferer,
         'Accept': 'application/json, text/plain, */*',
       };
 
@@ -347,7 +347,7 @@ class DoubanService {
             Uri.parse(target),
             headers: headers,
           )
-          .timeout(const Duration(seconds: 30));
+          .timeout(AppDurations.networkTimeout);
 
       if (response.statusCode == 200) {
         try {
@@ -365,7 +365,7 @@ class DoubanService {
             await _cacheService.set(
               cacheKey,
               filteredItems.map((e) => e.toJson()).toList(),
-              const Duration(hours: 6),
+              AppConfig.doubanRecommendCache,
             );
           } catch (cacheError) {
             // 缓存失败，静默处理
@@ -467,13 +467,12 @@ class DoubanService {
     }
 
     // 使用豆瓣 JSON API
-    String apiUrl = 'https://m.douban.com/rexxar/api/v2/subject/$doubanId';
+    String apiUrl = '${AppConfig.doubanApiBase}/subject/$doubanId';
 
     try {
       final headers = {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Referer': 'https://movie.douban.com/',
+        'User-Agent': AppConfig.doubanUserAgent,
+        'Referer': AppConfig.doubanReferer,
         'Accept': 'application/json, text/plain, */*',
       };
 
@@ -482,7 +481,7 @@ class DoubanService {
             Uri.parse(apiUrl),
             headers: headers,
           )
-          .timeout(const Duration(seconds: 30));
+          .timeout(AppDurations.networkTimeout);
 
       if (response.statusCode == 200) {
         try {
@@ -497,12 +496,12 @@ class DoubanService {
             return ApiResponse.error('豆瓣详情数据解析为空');
           }
 
-          // 缓存成功的结果，缓存时间为3天
+          // 缓存成功的结果，缓存时间为1天
           try {
             await _cacheService.set(
               cacheKey,
               details.toJson(),
-              const Duration(days: 3),
+              AppConfig.doubanDetailCache,
             );
           } catch (cacheError) {
             // 缓存失败，静默处理

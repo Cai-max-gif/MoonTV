@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import '../services/theme_service.dart';
 import '../services/ai_service.dart';
+import '../constants/app_strings.dart';
 import '../utils/font_utils.dart';
 import '../utils/device_utils.dart';
 import 'ai_settings_page.dart';
@@ -66,14 +70,14 @@ class _AIPageState extends State<AIPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '请先在设置中配置AI API密钥',
-              style: FontUtils.poppins(fontSize: 14, color: Colors.white),
+              AppStrings.aiConfigApiKeyFirst,
+              style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd, color: AppColors.white),
             ),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppColors.redAccent,
             behavior: SnackBarBehavior.floating,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            duration: const Duration(seconds: 2),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+            duration: AppDurations.twoSeconds,
           ),
         );
       }
@@ -115,7 +119,7 @@ class _AIPageState extends State<AIPage> {
       if (mounted) {
         setState(() {
           _messages.add({
-            'text': '错误：${e.toString()}',
+            'text': '${AppStrings.errorException}${e.toString()}',
             'isUser': false,
             'isError': true,
           });
@@ -144,13 +148,13 @@ class _AIPageState extends State<AIPage> {
       builder: (context, themeService, child) {
         return Scaffold(
           backgroundColor: themeService.isDarkMode
-              ? const Color(0xFF000000)
-              : const Color(0xFFf5f5f5),
+              ? AppColors.black
+              : AppColors.grayBg,
           appBar: AppBar(
             backgroundColor: themeService.isDarkMode
-                ? const Color(0xFF1e1e1e)
-                : Colors.white,
-            elevation: 0,
+                ? AppColors.cardDark
+                : AppColors.white,
+            elevation: AppDimens.elevationNone,
             leading: MouseRegion(
               cursor: DeviceUtils.isPC()
                   ? SystemMouseCursors.click
@@ -161,25 +165,25 @@ class _AIPageState extends State<AIPage> {
                 },
                 behavior: HitTestBehavior.opaque,
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppDimens.spacingMd),
                   child: Icon(
                     LucideIcons.arrowLeft,
                     color: themeService.isDarkMode
-                        ? const Color(0xFFffffff)
-                        : const Color(0xFF2c3e50),
-                    size: 24,
+                        ? AppColors.white
+                        : AppColors.primary,
+                    size: AppDimens.iconLg,
                   ),
                 ),
               ),
             ),
             title: Text(
-              'AI 助手',
+              AppStrings.aiTitle,
               style: FontUtils.poppins(
-                fontSize: 18,
+                fontSize: AppDimens.fontSizeXxl,
                 fontWeight: FontWeight.w600,
                 color: themeService.isDarkMode
-                    ? const Color(0xFFffffff)
-                    : const Color(0xFF2c3e50),
+                    ? AppColors.white
+                    : AppColors.primary,
               ),
             ),
             centerTitle: true,
@@ -200,13 +204,13 @@ class _AIPageState extends State<AIPage> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppDimens.spacingMd),
                     child: Icon(
                       LucideIcons.settings,
                       color: themeService.isDarkMode
-                          ? const Color(0xFFffffff)
-                          : const Color(0xFF2c3e50),
-                      size: 24,
+                          ? AppColors.white
+                          : AppColors.primary,
+                      size: AppDimens.iconLg,
                     ),
                   ),
                 ),
@@ -218,7 +222,7 @@ class _AIPageState extends State<AIPage> {
               // 对话区域
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppDimens.spacingLg),
                   reverse: true,
                   itemCount: _messages.length + (_isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
@@ -248,25 +252,25 @@ class _AIPageState extends State<AIPage> {
     final isUser = message['isUser'] as bool;
     final isError = message['isError'] as bool? ?? false;
     final bgColor = isUser
-        ? const Color(0xFF27ae60)
+        ? AppColors.accent
         : isError
-            ? Colors.redAccent.withValues(alpha: 0.15)
+            ? AppColors.redAccent.withValues(alpha: 0.15)
             : themeService.isDarkMode
-                ? const Color(0xFF1e1e1e)
-                : const Color(0xFFe0e0e0);
+                ? AppColors.cardDark
+                : AppColors.grayBorder;
     final textColor = isUser
-        ? Colors.white
+        ? AppColors.white
         : isError
-            ? Colors.redAccent
+            ? AppColors.redAccent
             : themeService.isDarkMode
-                ? const Color(0xFFffffff)
-                : const Color(0xFF2c3e50);
+                ? AppColors.white
+                : AppColors.primary;
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: AppDimens.listTilePadding,
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
@@ -285,14 +289,14 @@ class _AIPageState extends State<AIPage> {
             ? Text(
                 message['text'].toString(),
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: textColor,
                 ),
               )
             : GptMarkdown(
                 message['text'].toString(),
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: textColor,
                 ),
               ),
@@ -305,11 +309,11 @@ class _AIPageState extends State<AIPage> {
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: AppDimens.listTilePadding,
         decoration: BoxDecoration(
           color: themeService.isDarkMode
-              ? const Color(0xFF1e1e1e)
-              : const Color(0xFFe0e0e0),
+              ? AppColors.cardDark
+              : AppColors.grayBorder,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
@@ -325,17 +329,17 @@ class _AIPageState extends State<AIPage> {
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
               ),
             ),
-            const SizedBox(width: 8),
+            Gap.w8,
             Text(
-              'AI 正在思考...',
+              AppStrings.aiThinking,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 color: themeService.isDarkMode
-                    ? const Color(0xFFffffff)
-                    : const Color(0xFF2c3e50),
+                    ? AppColors.white
+                    : AppColors.primary,
               ),
             ),
           ],
@@ -346,14 +350,14 @@ class _AIPageState extends State<AIPage> {
 
   Widget _buildInputArea(ThemeService themeService) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.spacingLg),
       decoration: BoxDecoration(
-        color: themeService.isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
+        color: themeService.isDarkMode ? AppColors.cardDark : AppColors.white,
         border: Border(
           top: BorderSide(
             color: themeService.isDarkMode
-                ? const Color(0xFF333333)
-                : const Color(0xFFe0e0e0),
+                ? AppColors.darkDivider
+                : AppColors.grayBorder,
             width: 1,
           ),
         ),
@@ -364,18 +368,18 @@ class _AIPageState extends State<AIPage> {
             child: Container(
               decoration: BoxDecoration(
                 color: themeService.isDarkMode
-                    ? const Color(0xFF2c2c2c)
-                    : const Color(0xFFf0f0f0),
-                borderRadius: BorderRadius.circular(24),
+                    ? AppColors.inputBgDark
+                    : AppColors.inputBgLight,
+                borderRadius: BorderRadius.circular(AppDimens.radiusPill),
               ),
               child: TextField(
                 controller: _messageController,
                 decoration: InputDecoration(
                   hintStyle: FontUtils.poppins(
                     color: themeService.isDarkMode
-                        ? const Color(0xFF666666)
-                        : const Color(0xFF95a5a6),
-                    fontSize: 14,
+                        ? AppColors.textDarkHint
+                        : AppColors.textHint,
+                    fontSize: AppDimens.fontSizeMd,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -384,16 +388,16 @@ class _AIPageState extends State<AIPage> {
                   ),
                 ),
                 style: FontUtils.poppins(
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                   color: themeService.isDarkMode
-                      ? const Color(0xFFffffff)
-                      : const Color(0xFF2c3e50),
+                      ? AppColors.white
+                      : AppColors.primary,
                 ),
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          Gap.w12,
           MouseRegion(
             cursor: DeviceUtils.isPC()
                 ? SystemMouseCursors.click
@@ -405,13 +409,13 @@ class _AIPageState extends State<AIPage> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF27ae60),
-                  borderRadius: BorderRadius.circular(24),
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(AppDimens.radiusPill),
                 ),
                 child: const Center(
                   child: Icon(
                     LucideIcons.send,
-                    color: Colors.white,
+                    color: AppColors.white,
                     size: 20,
                   ),
                 ),

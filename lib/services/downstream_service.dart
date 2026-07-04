@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:gbk_codec/gbk_codec.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
 import '../models/search_resource.dart';
 import '../models/search_result.dart';
 import 'content_filter_service.dart';
@@ -41,7 +43,7 @@ class DownstreamService {
       final results = firstPageResult.results;
       final pageCountFromFirst = firstPageResult.pageCount;
 
-      const maxSearchPages = 5;
+      const maxSearchPages = AppConfig.maxSearchPages;
 
       final pageCount = pageCountFromFirst;
 
@@ -51,7 +53,7 @@ class DownstreamService {
 
       if (pagesToFetch > 0) {
         // 限制并发请求数量，避免过多网络请求
-        const maxConcurrentRequests = 2;
+        const maxConcurrentRequests = AppConfig.maxConcurrentSearchRequests;
         final additionalPageFutures = <Future<List<SearchResult>>>[];
 
         for (int page = 2; page <= pagesToFetch + 1; page++) {
@@ -158,11 +160,10 @@ class DownstreamService {
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'User-Agent': AppConfig.defaultUserAgent,
           'Accept': 'application/json',
         },
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(AppDurations.shortTimeout);
 
       // 检查 403 状态码，缓存 forbidden
       if (response.statusCode == 403) {

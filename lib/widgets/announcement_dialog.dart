@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/announcement.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 class AnnouncementDialog extends StatelessWidget {
   final Announcement announcement;
@@ -17,29 +20,30 @@ class AnnouncementDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    final routeAnimation = ModalRoute.of(context)?.animation;
     return Dialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       child: ScaleTransition(
         scale: CurvedAnimation(
-          parent: ModalRoute.of(context)!.animation!,
+          parent: routeAnimation ?? const AlwaysStoppedAnimation(1.0),
           curve: Curves.easeOut,
         ),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           decoration: BoxDecoration(
-            color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            color: isDarkMode ? AppColors.cardDark : AppColors.white,
+            borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
+                color: AppColors.black30,
+                blurRadius: AppDimens.shadowBlurLg,
                 offset: const Offset(0, 8),
               ),
             ],
             border: Border.all(
               color: isDarkMode
-                  ? const Color(0xFF374151)
-                  : const Color(0xFFe5e7eb),
+                  ? AppColors.borderDarkGray
+                  : AppColors.borderLightGray,
               width: 0.5,
             ),
           ),
@@ -54,8 +58,8 @@ class AnnouncementDialog extends StatelessWidget {
                   border: Border(
                     bottom: BorderSide(
                       color: isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                       width: 1,
                     ),
                   ),
@@ -70,23 +74,23 @@ class AnnouncementDialog extends StatelessWidget {
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: isDarkMode
-                                ? const Color(0xFF10b981).withValues(alpha: 0.2)
-                                : const Color(0xFF10b981).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
+                                ? AppColors.emerald.withValues(alpha: 0.2)
+                                : AppColors.emerald.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                           ),
                           child: const Icon(
                             LucideIcons.messageCircle,
-                            size: 18,
-                            color: Color(0xFF10b981),
+                            size: AppDimens.iconMd,
+                            color: AppColors.emerald,
                           ),
                         ),
                         Text(
-                          '公告',
+                          AppStrings.profileAnnouncement,
                           style: FontUtils.poppins(
-                            fontSize: 16,
+                            fontSize: AppDimens.fontSizeXl,
                             color: isDarkMode
-                                ? const Color(0xFFffffff)
-                                : const Color(0xFF1f2937),
+                                ? AppColors.white
+                                : AppColors.textDarkGray,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -95,16 +99,16 @@ class AnnouncementDialog extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         LucideIcons.x,
-                        size: 18,
+                        size: AppDimens.iconMd,
                         color: isDarkMode
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
+                            ? AppColors.gray400
+                            : AppColors.gray500,
                       ),
                       onPressed: onClose,
                       padding: const EdgeInsets.all(6),
                       hoverColor: isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFf3f4f6),
+                          ? AppColors.borderDarkGray
+                          : AppColors.gray100,
                     ),
                   ],
                 ),
@@ -116,10 +120,10 @@ class AnnouncementDialog extends StatelessWidget {
                 child: Text(
                   announcement.content,
                   style: FontUtils.poppins(
-                    fontSize: 14,
+                    fontSize: AppDimens.fontSizeMd,
                     color: isDarkMode
-                        ? const Color(0xFFd1d5db)
-                        : const Color(0xFF4b5563),
+                        ? AppColors.gray300
+                        : AppColors.gray600,
                     fontWeight: FontWeight.w400,
                     height: 1.5,
                   ),
@@ -140,7 +144,7 @@ class AnnouncementDialog extends StatelessWidget {
     await showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      barrierColor: AppColors.overlayMedium,
       builder: (BuildContext context) {
         return AnnouncementDialog(
           announcement: announcement,

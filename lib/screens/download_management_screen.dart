@@ -1,4 +1,6 @@
 import 'dart:io';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +9,7 @@ import '../models/download_task.dart';
 import '../widgets/download_item_widget.dart';
 import '../utils/font_utils.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_strings.dart';
 import 'local_player_screen.dart';
 
 enum DownloadTab {
@@ -54,7 +57,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
 
     return Scaffold(
       backgroundColor:
-          isDarkMode ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
+          isDarkMode ? AppColors.black : AppColors.grayBg,
       appBar: _buildAppBar(context, isDarkMode, isTablet),
       body: _buildBody(context, isDarkMode),
     );
@@ -63,40 +66,40 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
   PreferredSizeWidget _buildAppBar(
       BuildContext context, bool isDarkMode, bool isTablet) {
     return AppBar(
-      backgroundColor: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-      elevation: 0,
+      backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.white,
+      elevation: AppDimens.elevationNone,
       leading: IconButton(
         icon: Icon(
           LucideIcons.arrowLeft,
-          color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+          color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
         ),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
         '下载管理',
         style: FontUtils.poppins(
-          fontSize: 18,
+          fontSize: AppDimens.fontSizeXxl,
           fontWeight: FontWeight.w600,
-          color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+          color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
         ),
       ),
       bottom: TabBar(
         controller: _tabController,
-        labelColor: const Color(0xFF27AE60),
+        labelColor: AppColors.accent,
         unselectedLabelColor:
-            isDarkMode ? const Color(0xFF9ca3af) : const Color(0xFF6b7280),
-        indicatorColor: const Color(0xFF27AE60),
+            isDarkMode ? AppColors.gray400 : AppColors.gray500,
+        indicatorColor: AppColors.accent,
         labelStyle: FontUtils.poppins(
-          fontSize: 14,
+          fontSize: AppDimens.fontSizeMd,
           fontWeight: FontWeight.w600,
         ),
         unselectedLabelStyle: FontUtils.poppins(
-          fontSize: 14,
+          fontSize: AppDimens.fontSizeMd,
           fontWeight: FontWeight.w400,
         ),
         tabs: const [
-          Tab(text: '下载中'),
-          Tab(text: '已完成'),
+          Tab(text: AppStrings.downloadDownloading),
+          Tab(text: AppStrings.downloadCompleted),
         ],
       ),
     );
@@ -167,19 +170,19 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                 },
                 icon: Icon(
                   isPausedMode ? LucideIcons.play : LucideIcons.pause,
-                  size: 18,
+                  size: AppDimens.iconMd,
                 ),
                 label: Text(isPausedMode ? '全部继续' : '全部暂停'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: isPausedMode
-                      ? const Color(0xFF27AE60)
-                      : (isDarkMode ? Colors.white : const Color(0xFF1f2937)),
+                      ? AppColors.accent
+                      : (isDarkMode ? AppColors.white : AppColors.textDarkGray),
                   side: BorderSide(
                     color: isPausedMode
-                        ? const Color(0xFF27AE60)
+                        ? AppColors.accent
                         : (isDarkMode
-                            ? const Color(0xFF374151)
-                            : const Color(0xFFe5e7eb)),
+                            ? AppColors.borderDarkGray
+                            : AppColors.borderLightGray),
                   ),
                 ),
               ),
@@ -220,13 +223,13 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                 });
               },
               child: Text(
-                '取消',
+                AppStrings.cancel,
                 style: FontUtils.poppins(
-                  color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                  color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            Gap.w8,
           ],
           OutlinedButton.icon(
             onPressed: () {
@@ -238,11 +241,11 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                 });
               }
             },
-            icon: const Icon(LucideIcons.trash2, size: 18),
+            icon: const Icon(LucideIcons.trash2, size: AppDimens.iconMd),
             label: Text(_isDeleteMode ? '删除全部' : '批量删除'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFef4444),
-              side: const BorderSide(color: Color(0xFFef4444)),
+              foregroundColor: AppColors.red,
+              side: const BorderSide(color: AppColors.red),
             ),
           ),
         ],
@@ -255,38 +258,38 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1e1e1e)
-            : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ? AppColors.cardDark
+            : AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusXl)),
         title: Text(
           '批量删除',
           style: FontUtils.poppins(
-            fontSize: 18,
+            fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF1f2937),
+                ? AppColors.white
+                : AppColors.textDarkGray,
           ),
         ),
         content: Text(
           '确定要删除所有已完成的下载任务吗？',
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF9ca3af)
-                : const Color(0xFF6b7280),
+                ? AppColors.gray400
+                : AppColors.gray500,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              AppStrings.cancel,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
+                    ? AppColors.gray400
+                    : AppColors.gray500,
               ),
             ),
           ),
@@ -296,11 +299,11 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
               _downloadService.deleteAllCompleted();
             },
             child: Text(
-              '删除',
+              AppStrings.delete,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFef4444),
+                color: AppColors.red,
               ),
             ),
           ),
@@ -353,17 +356,17 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: AppDimens.horizontalSmVerticalMdPadding,
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       title,
                       style: FontUtils.poppins(
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                            isDarkMode ? AppColors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ),
@@ -372,15 +375,15 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                       onTap: () => _showDeleteGroupConfirmation(
                           context, title, episodes),
                       child: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppDimens.spacingXs),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFef4444).withValues(alpha: 0.098),
+                          color: AppColors.red.withValues(alpha: 0.098),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           LucideIcons.trash2,
-                          color: Color(0xFFef4444),
-                          size: 18,
+                          color: AppColors.red,
+                          size: AppDimens.iconMd,
                         ),
                       ),
                     ),
@@ -410,38 +413,38 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1e1e1e)
-            : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ? AppColors.cardDark
+            : AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusXl)),
         title: Text(
           '删除分组',
           style: FontUtils.poppins(
-            fontSize: 18,
+            fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF1f2937),
+                ? AppColors.white
+                : AppColors.textDarkGray,
           ),
         ),
         content: Text(
           '确定要删除"$title"的${episodes.length}个任务吗？',
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF9ca3af)
-                : const Color(0xFF6b7280),
+                ? AppColors.gray400
+                : AppColors.gray500,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              AppStrings.cancel,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF9ca3af)
-                    : const Color(0xFF6b7280),
+                    ? AppColors.gray400
+                    : AppColors.gray500,
               ),
             ),
           ),
@@ -453,11 +456,11 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
               }
             },
             child: Text(
-              '删除',
+              AppStrings.delete,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFef4444),
+                color: AppColors.red,
               ),
             ),
           ),
@@ -475,16 +478,16 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
             LucideIcons.download,
             size: 64,
             color:
-                isDarkMode ? const Color(0xFF666666) : const Color(0xFFd1d5db),
+                isDarkMode ? AppColors.textDarkHint : AppColors.gray300,
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           Text(
-            '暂无下载内容',
+            AppStrings.downloadNoContent,
             style: FontUtils.poppins(
-              fontSize: 16,
+              fontSize: AppDimens.fontSizeXl,
               color: isDarkMode
-                  ? const Color(0xFF9ca3af)
-                  : const Color(0xFF6b7280),
+                  ? AppColors.gray400
+                  : AppColors.gray500,
             ),
           ),
         ],
@@ -502,13 +505,13 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '文件不存在: ${task.displayName}',
-            style: FontUtils.poppins(color: Colors.white),
+            '${AppStrings.downloadFileNotFound}${task.displayName}',
+            style: FontUtils.poppins(color: AppColors.white),
           ),
-          backgroundColor: const Color(0xFFef4444),
+          backgroundColor: AppColors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+          margin: const EdgeInsets.all(AppDimens.spacingLg),
         ),
       );
       return;

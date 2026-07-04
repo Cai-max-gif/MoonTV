@@ -1,6 +1,9 @@
 [Setup]
 AppName=MoonTV
-AppVersion=1.6.0
+AppVersion=1.5.1
+AppId={{4B2E1A3C-8D6F-4E9A-BA1C-3F7E5D2C8A1B}}
+VersionInfoVersion=1.5.1.0
+VersionInfoCompany=MoonTV Team
 AppPublisher=MoonTV Team
 AppPublisherURL=https://moontv.cc.cd
 AppSupportURL=https://moontv.cc.cd

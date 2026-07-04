@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 
 /// M3U8 解析和测速服务
 class M3U8Service {
@@ -8,12 +11,12 @@ class M3U8Service {
 
   M3U8Service() {
     // 配置 Dio
-    _dio.options.connectTimeout = const Duration(seconds: 10);
-    _dio.options.receiveTimeout = const Duration(seconds: 30);
+    _dio.options.connectTimeout = AppDurations.shortTimeout;
+    _dio.options.receiveTimeout = AppDurations.networkTimeout;
     _dio.options.headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'User-Agent': AppConfig.defaultUserAgent,
       'Accept': '*/*',
-      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Accept-Language': AppConfig.headerAcceptLanguage,
     };
   }
 
@@ -30,7 +33,7 @@ class M3U8Service {
           'downloadSpeed': 0.0,
           'latency': 0,
           'success': false,
-          'error': '未找到视频片段',
+          'error': AppStrings.m3u8NoVideoSegment,
         };
       }
       
@@ -117,8 +120,8 @@ class M3U8Service {
   Future<int> _measureLatency(String url) async {
     final tempDio = Dio();
     try {
-      tempDio.options.connectTimeout = const Duration(seconds: 5);
-      tempDio.options.receiveTimeout = const Duration(seconds: 5);
+      tempDio.options.connectTimeout = AppDurations.healthCheckTimeout;
+      tempDio.options.receiveTimeout = AppDurations.healthCheckTimeout;
       tempDio.options.headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': '*/*',
@@ -208,7 +211,7 @@ class M3U8Service {
             segmentUrl,
             options: Options(
               responseType: ResponseType.bytes,
-              receiveTimeout: const Duration(seconds: 5),
+              receiveTimeout: AppDurations.healthCheckTimeout,
             ),
           );
           
@@ -243,7 +246,7 @@ class M3U8Service {
       return {
         'bestSource': null,
         'allSourcesSpeed': <String, Map<String, dynamic>>{},
-        'error': '没有可用的源',
+        'error': AppStrings.m3u8NoAvailableSource,
       };
     }
     
@@ -281,7 +284,7 @@ class M3U8Service {
       
       try {
         final streamInfo = await getStreamInfo(episodeUrl).timeout(
-          const Duration(seconds: 5),
+          AppDurations.healthCheckTimeout,
           onTimeout: () {
             return {
               'resolution': {'width': 0, 'height': 0},
@@ -333,9 +336,9 @@ class M3U8Service {
     }
     
     // 计算基准值
-    final maxSpeed = validSpeeds.isNotEmpty ? validSpeeds.reduce((a, b) => a > b ? a : b) : 1024.0; // 默认1MB/s作为基准
-    final minPing = validPings.isNotEmpty ? validPings.reduce((a, b) => a < b ? a : b) : 50;
-    final maxPing = validPings.isNotEmpty ? validPings.reduce((a, b) => a > b ? a : b) : 1000;
+    final maxSpeed = validSpeeds.isNotEmpty ? validSpeeds.reduce((a, b) => a > b ? a : b) : AppConfig.m3u8DefaultMaxSpeed; // 默认1MB/s作为基准
+    final minPing = validPings.isNotEmpty ? validPings.reduce((a, b) => a < b ? a : b) : AppConfig.m3u8DefaultMinPing;
+    final maxPing = validPings.isNotEmpty ? validPings.reduce((a, b) => a > b ? a : b) : AppConfig.m3u8DefaultMaxPing;
     
     // 计算每个源的评分并排序
     final sourceScores = <MapEntry<dynamic, double>>[];
@@ -496,7 +499,7 @@ class M3U8Service {
   Future<void> testSourcesWithCallback(
     List<dynamic> allSources,
     Function(String sourceId, Map<String, dynamic> speedData) onSourceCompleted, {
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = AppDurations.healthCheckTimeout,
   }) async {
     if (allSources.isEmpty) return;
     

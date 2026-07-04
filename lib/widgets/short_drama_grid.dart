@@ -1,11 +1,14 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 import '../utils/device_utils.dart';
 import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
 import '../models/video_info.dart';
 import '../utils/font_utils.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
 
 class ShortDramaGrid extends StatelessWidget {
   final List<Map<String, dynamic>>? shortDramas;
@@ -43,59 +46,45 @@ class ShortDramaGrid extends StatelessWidget {
   Widget _buildLoadingState() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 平板模式根据宽度动态展示6～9列，手机模式3列
-        final int crossAxisCount = DeviceUtils.getTabletColumnCount(context);
-        final isTablet = DeviceUtils.isTablet(context);
-
-        final double screenWidth = constraints.maxWidth;
-        const double padding = 16.0;
-        const double spacing = 12.0;
-        final double availableWidth =
-            screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-        const double minItemWidth = 80.0;
-        final double calculatedItemWidth = availableWidth / crossAxisCount;
-        final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
-        final double itemHeight = itemWidth * 2.0;
+        final params = _computeGridParams(context, constraints.maxWidth);
+        final int skeletonCount = params.isTablet ? params.crossAxisCount * 2 : 6;
 
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: itemWidth / itemHeight,
-            crossAxisSpacing: spacing,
-            mainAxisSpacing: isTablet ? 0 : 6,
+            crossAxisCount: params.crossAxisCount,
+            childAspectRatio: params.itemWidth / params.itemHeight,
+            crossAxisSpacing: params.spacing,
+            mainAxisSpacing: params.isTablet ? 0 : 6,
           ),
-          itemCount: isTablet ? crossAxisCount * 2 : 6, // 平板显示2行，手机显示6个骨架卡片
+          itemCount: skeletonCount,
           itemBuilder: (context, index) {
-            return _buildSkeletonCard(itemWidth);
+            return _buildSkeletonCard(params.itemWidth);
           },
         );
       },
     );
   }
 
-  /// 构建骨架卡片
   Widget _buildSkeletonCard(double width) {
     final double height = width * 1.5;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // 封面骨架
         ShimmerEffect(
           width: width,
           height: height,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        const SizedBox(height: 4),
-        // 标题骨架
+        Gap.h4,
         Center(
           child: ShimmerEffect(
             width: width * 0.8,
             height: 12,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
       ],
@@ -110,23 +99,23 @@ class ShortDramaGrid extends StatelessWidget {
           const Icon(
             Icons.error_outline,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '加载失败',
+            AppStrings.loadFailed,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            errorMessage ?? '未知错误',
+            errorMessage ?? AppStrings.unknownError,
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
             textAlign: TextAlign.center,
           ),
@@ -143,23 +132,23 @@ class ShortDramaGrid extends StatelessWidget {
           const Icon(
             Icons.tv_outlined,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '暂无短剧',
+            AppStrings.noContentWithName(AppStrings.navShortDrama),
             style: FontUtils.poppins(
-              fontSize: 18,
-              color: const Color(0xFF2c3e50),
+              fontSize: AppDimens.fontSizeXxl,
+              color: AppColors.primary,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             '敬请期待更多精彩内容',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF7f8c8d),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -170,7 +159,7 @@ class ShortDramaGrid extends StatelessWidget {
   Widget _buildShortDramasGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final params = _computeGridParams(constraints.maxWidth);
+        final params = _computeGridParams(context, constraints.maxWidth);
 
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -220,8 +209,9 @@ class ShortDramaGrid extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       sliver: SliverLayoutBuilder(
         builder: (context, constraints) {
-          final params = _computeGridParams(constraints.crossAxisExtent);
-          
+          // SliverPadding 已减去 padding，此处加回以匹配 _computeGridParams 的 padding 计算
+          final params = _computeGridParams(context, constraints.crossAxisExtent + 32.0);
+
           return SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: params.crossAxisCount,
@@ -252,10 +242,12 @@ class ShortDramaGrid extends StatelessWidget {
     );
   }
 
-  static _GridParams _computeGridParams(double screenWidth) {
+  static _GridParams _computeGridParams(BuildContext context, double screenWidth) {
     const double padding = 16.0;
     const double spacing = 12.0;
-    final int crossAxisCount = DeviceUtils.getTabletColumnCountFromWidth(screenWidth);
+    // 使用 DeviceUtils.getTabletColumnCount(context) 与电影页面保持一致，
+    // 基于 MediaQuery.of(context).size.width 判断列数
+    final int crossAxisCount = DeviceUtils.getTabletColumnCount(context);
     final bool isTablet = screenWidth >= 600;
     final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
     const double minItemWidth = 80.0;
@@ -269,10 +261,11 @@ class ShortDramaGrid extends StatelessWidget {
     return SliverToBoxAdapter(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final params = _computeGridParams(constraints.maxWidth);
+          // SliverToBoxAdapter 不裁切 padding，constraints 即完整宽度
+          final params = _computeGridParams(context, constraints.maxWidth);
           final int skeletonCount = params.isTablet ? params.crossAxisCount * 2 : 6;
           return SizedBox(
-            height: (params.itemHeight + params.spacing) * (skeletonCount / params.crossAxisCount).ceil(),
+            height: (params.itemHeight + 6) * (skeletonCount / params.crossAxisCount).ceil(),
             child: GridView.builder(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               shrinkWrap: true,
@@ -294,7 +287,6 @@ class ShortDramaGrid extends StatelessWidget {
     );
   }
 
-  /// 将短剧数据转换为VideoInfo对象
   VideoInfo _convertToVideoInfo(Map<String, dynamic> shortDrama) {
     return VideoInfo(
       id: shortDrama['id'].toString(),
@@ -302,7 +294,7 @@ class ShortDramaGrid extends StatelessWidget {
       year: shortDrama['update_time']?.toString().substring(0, 4) ?? '',
       cover: shortDrama['cover'] ?? shortDrama['backdrop'] ?? '',
       source: 'shortdrama',
-      sourceName: '短剧',
+      sourceName: AppStrings.sourceShortDrama,
       index: 1,
       totalEpisodes:
           int.tryParse(shortDrama['episode_count']?.toString() ?? '0') ?? 0,

@@ -15,11 +15,13 @@ class Announcement {
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      content: json['content'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      isActive: json['is_active'] as bool,
+      id: (json['id'] as String?) ?? '',
+      title: (json['title'] as String?) ?? '',
+      content: (json['content'] as String?) ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      isActive: (json['is_active'] as bool?) ?? false,
     );
   }
 

@@ -13,8 +13,12 @@ import '../widgets/pulsing_dots_indicator.dart';
 import 'player_screen.dart';
 import '../widgets/filter_pill_hover.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_config.dart';
 import '../utils/font_utils.dart';
 import '../widgets/filter_options_selector.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_dimensions.dart';
 
 class MovieScreen extends StatefulWidget {
   const MovieScreen({super.key});
@@ -26,76 +30,76 @@ class MovieScreen extends StatefulWidget {
 class _MovieScreenState extends State<MovieScreen> {
   // 电影的一级选择器选项
   final List<SelectorOption> _moviePrimaryOptions = const [
-    SelectorOption(label: '全部', value: '全部'),
-    SelectorOption(label: '热门电影', value: '热门'),
-    SelectorOption(label: '最新电影', value: '最新'),
-    SelectorOption(label: '豆瓣高分', value: '豆瓣高分'),
-    SelectorOption(label: '冷门佳片', value: '冷门佳片'),
+    SelectorOption(label: AppStrings.catAll, value: '全部'),
+    SelectorOption(label: AppStrings.catHotMovie, value: '热门'),
+    SelectorOption(label: AppStrings.catLatestMovie, value: '最新'),
+    SelectorOption(label: AppStrings.catDoubanHighRating, value: '豆瓣高分'),
+    SelectorOption(label: AppStrings.catUnpopularGood, value: '冷门佳片'),
   ];
 
   // 电影的二级选择器选项 (旧版)
   final List<SelectorOption> _movieSecondaryOptions = const [
-    SelectorOption(label: '全部', value: '全部'),
-    SelectorOption(label: '华语', value: '华语'),
-    SelectorOption(label: '欧美', value: '欧美'),
-    SelectorOption(label: '韩国', value: '韩国'),
-    SelectorOption(label: '日本', value: '日本'),
+    SelectorOption(label: AppStrings.catAll, value: '全部'),
+    SelectorOption(label: AppStrings.regionChinese, value: '华语'),
+    SelectorOption(label: AppStrings.regionWestern, value: '欧美'),
+    SelectorOption(label: AppStrings.regionKorean, value: '韩国'),
+    SelectorOption(label: AppStrings.regionJapanese, value: '日本'),
   ];
 
   // 新的筛选选项
   final List<SelectorOption> _movieTypeOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '喜剧', value: 'comedy'),
-    SelectorOption(label: '爱情', value: 'romance'),
-    SelectorOption(label: '动作', value: 'action'),
-    SelectorOption(label: '科幻', value: 'sci-fi'),
-    SelectorOption(label: '悬疑', value: 'suspense'),
-    SelectorOption(label: '犯罪', value: 'crime'),
-    SelectorOption(label: '惊悚', value: 'thriller'),
-    SelectorOption(label: '冒险', value: 'adventure'),
-    SelectorOption(label: '音乐', value: 'music'),
-    SelectorOption(label: '历史', value: 'history'),
-    SelectorOption(label: '奇幻', value: 'fantasy'),
-    SelectorOption(label: '恐怖', value: 'horror'),
-    SelectorOption(label: '战争', value: 'war'),
-    SelectorOption(label: '传记', value: 'biography'),
-    SelectorOption(label: '歌舞', value: 'musical'),
-    SelectorOption(label: '武侠', value: 'wuxia'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.typeComedy, value: 'comedy'),
+    SelectorOption(label: AppStrings.typeRomance, value: 'romance'),
+    SelectorOption(label: AppStrings.typeAction, value: 'action'),
+    SelectorOption(label: AppStrings.typeSciFi, value: 'sci-fi'),
+    SelectorOption(label: AppStrings.typeSuspense, value: 'suspense'),
+    SelectorOption(label: AppStrings.typeCrime, value: 'crime'),
+    SelectorOption(label: AppStrings.typeThriller, value: 'thriller'),
+    SelectorOption(label: AppStrings.typeAdventure, value: 'adventure'),
+    SelectorOption(label: AppStrings.typeMusic, value: 'music'),
+    SelectorOption(label: AppStrings.typeHistory, value: 'history'),
+    SelectorOption(label: AppStrings.typeFantasy, value: 'fantasy'),
+    SelectorOption(label: AppStrings.typeHorror, value: 'horror'),
+    SelectorOption(label: AppStrings.typeWar, value: 'war'),
+    SelectorOption(label: AppStrings.typeBiography, value: 'biography'),
+    SelectorOption(label: AppStrings.typeMusical, value: 'musical'),
+    SelectorOption(label: AppStrings.typeWuxia, value: 'wuxia'),
     SelectorOption(label: '情色', value: 'erotic'),
-    SelectorOption(label: '灾难', value: 'disaster'),
+    SelectorOption(label: AppStrings.typeDisaster, value: 'disaster'),
     SelectorOption(label: '西部', value: 'western'),
-    SelectorOption(label: '纪录片', value: 'documentary'),
+    SelectorOption(label: AppStrings.typeDocumentary, value: 'documentary'),
     SelectorOption(label: '短片', value: 'short'),
   ];
 
   final List<SelectorOption> _movieRegionOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '华语', value: 'chinese'),
-    SelectorOption(label: '欧美', value: 'western'),
-    SelectorOption(label: '韩国', value: 'korean'),
-    SelectorOption(label: '日本', value: 'japanese'),
-    SelectorOption(label: '中国大陆', value: 'mainland_china'),
-    SelectorOption(label: '美国', value: 'usa'),
-    SelectorOption(label: '中国香港', value: 'hong_kong'),
-    SelectorOption(label: '中国台湾', value: 'taiwan'),
-    SelectorOption(label: '英国', value: 'uk'),
-    SelectorOption(label: '法国', value: 'france'),
-    SelectorOption(label: '德国', value: 'germany'),
-    SelectorOption(label: '意大利', value: 'italy'),
-    SelectorOption(label: '西班牙', value: 'spain'),
-    SelectorOption(label: '印度', value: 'india'),
-    SelectorOption(label: '泰国', value: 'thailand'),
-    SelectorOption(label: '俄罗斯', value: 'russia'),
-    SelectorOption(label: '加拿大', value: 'canada'),
-    SelectorOption(label: '澳大利亚', value: 'australia'),
-    SelectorOption(label: '爱尔兰', value: 'ireland'),
-    SelectorOption(label: '瑞典', value: 'sweden'),
-    SelectorOption(label: '巴西', value: 'brazil'),
-    SelectorOption(label: '丹麦', value: 'denmark'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
+    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
+    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
+    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
+    SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
+    SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
+    SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
+    SelectorOption(label: AppStrings.regionTaiwan, value: 'taiwan'),
+    SelectorOption(label: AppStrings.regionUK, value: 'uk'),
+    SelectorOption(label: AppStrings.regionFrance, value: 'france'),
+    SelectorOption(label: AppStrings.regionGermany, value: 'germany'),
+    SelectorOption(label: AppStrings.regionItaly, value: 'italy'),
+    SelectorOption(label: AppStrings.regionSpain, value: 'spain'),
+    SelectorOption(label: AppStrings.regionIndia, value: 'india'),
+    SelectorOption(label: AppStrings.regionThailand, value: 'thailand'),
+    SelectorOption(label: AppStrings.regionRussia, value: 'russia'),
+    SelectorOption(label: AppStrings.regionCanada, value: 'canada'),
+    SelectorOption(label: AppStrings.regionAustralia, value: 'australia'),
+    SelectorOption(label: AppStrings.regionIreland, value: 'ireland'),
+    SelectorOption(label: AppStrings.regionSweden, value: 'sweden'),
+    SelectorOption(label: AppStrings.regionBrazil, value: 'brazil'),
+    SelectorOption(label: AppStrings.regionDenmark, value: 'denmark'),
   ];
 
   final List<SelectorOption> _movieYearOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
+    SelectorOption(label: AppStrings.catAll, value: 'all'),
     SelectorOption(label: '2020年代', value: '2020s'),
     SelectorOption(label: '2025', value: '2025'),
     SelectorOption(label: '2024', value: '2024'),
@@ -114,10 +118,10 @@ class _MovieScreenState extends State<MovieScreen> {
   ];
 
   final List<SelectorOption> _movieSortOptions = const [
-    SelectorOption(label: '综合排序', value: 'T'),
-    SelectorOption(label: '近期热度', value: 'U'),
-    SelectorOption(label: '首映时间', value: 'R'),
-    SelectorOption(label: '高分优先', value: 'S'),
+    SelectorOption(label: AppStrings.sortComprehensive, value: 'T'),
+    SelectorOption(label: AppStrings.sortRecent, value: 'U'),
+    SelectorOption(label: AppStrings.sortAiringTime, value: 'R'),
+    SelectorOption(label: AppStrings.sortRating, value: 'S'),
   ];
 
   String _selectedCategoryValue = '热门';
@@ -132,7 +136,7 @@ class _MovieScreenState extends State<MovieScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<DoubanMovie> _movies = [];
   int _page = 0;
-  final int _pageLimit = 25;
+  final int _pageLimit = AppConfig.defaultPageLimit;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -173,7 +177,7 @@ class _MovieScreenState extends State<MovieScreen> {
       }
 
       // 正常滚动情况：当滚动到距离底部50像素内时触发加载
-      const double threshold = 50.0;
+      const double threshold = AppDimens.scrollLoadMoreThreshold;
       if (position.pixels >= position.maxScrollExtent - threshold) {
         _loadMoreMovies();
       }
@@ -265,7 +269,7 @@ class _MovieScreenState extends State<MovieScreen> {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -288,9 +292,7 @@ class _MovieScreenState extends State<MovieScreen> {
       );
 
       if (mounted) {
-        // 检查当前筛选状态是否仍然与发起请求时一致
         if (requestFilterState != _getCurrentFilterState()) {
-          // 筛选状态已改变，忽略这个过期的响应
           return;
         }
 
@@ -298,17 +300,15 @@ class _MovieScreenState extends State<MovieScreen> {
           if (result.success && result.data != null) {
             _movies.addAll(result.data!);
             _page++;
-            // 只有当返回的数据为空时才停止分页
             if (result.data!.isEmpty) {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
 
-        // 如果是刷新且内容不足一屏，尝试自动加载更多
         if (isRefresh && result.success && result.data != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _checkAndLoadMoreIfNeeded();
@@ -431,7 +431,7 @@ class _MovieScreenState extends State<MovieScreen> {
       MaterialPageRoute(
         builder: (context) => PlayerScreen(
           title: videoInfo.title,
-          stype: 'movie',
+          stype: AppConfig.stypeMovie,
           year: videoInfo.year,
         ),
       ),
@@ -444,7 +444,7 @@ class _MovieScreenState extends State<MovieScreen> {
         _onVideoTap(videoInfo);
         break;
       case VideoMenuAction.doubanDetail:
-        _launchURL('https://movie.douban.com/subject/${videoInfo.id}/');
+        _launchURL('${AppConfig.doubanSubjectUrl}/${videoInfo.id}/');
         break;
       default:
         break;
@@ -468,50 +468,52 @@ class _MovieScreenState extends State<MovieScreen> {
   Widget build(BuildContext context) {
     return StyledRefreshIndicator(
       onRefresh: _refreshMoviesData,
-      refreshText: '刷新电影数据...',
-      primaryColor: const Color(0xFF27AE60),
-      child: CustomScrollView(
+      refreshText: AppStrings.refreshMovie,
+      primaryColor: AppColors.accent,
+      child: SingleChildScrollView(
         controller: _scrollController,
-        slivers: [
-          SliverToBoxAdapter(child: _buildHeader()),
-          SliverToBoxAdapter(child: _buildFilterSection()),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          DoubanMoviesGrid(
-            movies: _movies,
-            isLoading: _isLoading && _movies.isEmpty,
-            errorMessage: _errorMessage,
-            onVideoTap: _onVideoTap,
-            onGlobalMenuAction: (videoInfo, action) {
-              _handleMenuAction(videoInfo, action);
-            },
-            contentType: 'movie',
-          ).buildSliver(),
-          if (_isLoadingMore)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            _buildFilterSection(),
+            Gap.h16,
+            DoubanMoviesGrid(
+              movies: _movies,
+              isLoading: _isLoading && _movies.isEmpty,
+              errorMessage: _errorMessage,
+              onVideoTap: _onVideoTap,
+              onGlobalMenuAction: (videoInfo, action) {
+                _handleMenuAction(videoInfo, action);
+              },
+              contentType: 'movie',
+            ),
+            // 底部指示器 - 加载更多或到底提示
+            if (_isLoadingMore)
+              const Padding(
+                padding: AppDimens.contentPadding,
                 child: PulsingDotsIndicator(),
-              ),
-            )
-          else if (!_hasMore && _movies.isNotEmpty && !_isLoading)
-            SliverToBoxAdapter(child: _buildEndOfListIndicator())
-          else
-            const SliverToBoxAdapter(child: SizedBox(height: 50)),
-        ],
+              )
+            else if (!_hasMore && _movies.isNotEmpty && !_isLoading)
+              _buildEndOfListIndicator()
+            else
+              Gap.h50, // 占位符保持间距
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      padding: AppDimens.pageHeaderPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '电影',
+            AppStrings.navMovie,
             style: FontUtils.poppins(
-              fontSize: 28,
+              fontSize: AppDimens.fontSizeHeadline,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
@@ -526,19 +528,19 @@ class _MovieScreenState extends State<MovieScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity, // 设置为100%宽度
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.all(AppDimens.spacingLg),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? Colors.white.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilterRow(
-            '分类',
+            AppStrings.filterCategory,
             _moviePrimaryOptions,
             _selectedCategoryValue,
             (newValue) {
@@ -554,7 +556,7 @@ class _MovieScreenState extends State<MovieScreen> {
               _fetchMovies(isRefresh: true);
             },
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 使用固定高度的容器来避免高度跳跃
           SizedBox(
             height: 66, // 增加高度以避免Column底部溢出
@@ -572,20 +574,20 @@ class _MovieScreenState extends State<MovieScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '筛选',
+          AppStrings.filterMore,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6),
+        Gap.h6,
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterPill('类型', _movieTypeOptions, _selectedMovieType,
+                _buildFilterPill(AppStrings.filterType, _movieTypeOptions, _selectedMovieType,
                     (v) {
                   setState(() => _selectedMovieType = v);
                   _fetchMovies(isRefresh: true);
@@ -595,12 +597,12 @@ class _MovieScreenState extends State<MovieScreen> {
                   setState(() => _selectedMovieRegion = v);
                   _fetchMovies(isRefresh: true);
                 }),
-                _buildFilterPill('年代', _movieYearOptions, _selectedMovieYear,
+                _buildFilterPill(AppStrings.filterYear, _movieYearOptions, _selectedMovieYear,
                     (v) {
                   setState(() => _selectedMovieYear = v);
                   _fetchMovies(isRefresh: true);
                 }),
-                _buildFilterPill('排序', _movieSortOptions, _selectedMovieSort,
+                _buildFilterPill(AppStrings.filterSort, _movieSortOptions, _selectedMovieSort,
                     (v) {
                   setState(() => _selectedMovieSort = v);
                   _fetchMovies(isRefresh: true);
@@ -618,14 +620,14 @@ class _MovieScreenState extends State<MovieScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '地区',
+          AppStrings.filterRegion,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6), // 减少间距，与高级筛选保持一致
+        Gap.h6, // 减少间距，与高级筛选保持一致
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -693,12 +695,12 @@ class _MovieScreenState extends State<MovieScreen> {
         Text(
           title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -731,28 +733,28 @@ class _MovieScreenState extends State<MovieScreen> {
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
                   : Colors.grey.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(1),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '已经到底啦~',
+            AppStrings.noMoreData,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.grey[600],
+                  : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '共 ${_movies.length} 部电影',
+            AppStrings.countMovie.replaceAll('%d', '${_movies.length}'),
             style: FontUtils.poppins(
-              fontSize: 12,
+              fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.grey[500],
+                  : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
           ),

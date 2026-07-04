@@ -7,6 +7,7 @@ import '../models/download_task.dart';
 import '../utils/storage_utils.dart';
 import 'download_engine.dart';
 import 'notification_service.dart';
+import '../constants/app_durations.dart';
 
 class DownloadService extends ChangeNotifier {
   static const String _downloadTasksKey = 'download_tasks';
@@ -289,7 +290,7 @@ class DownloadService extends ChangeNotifier {
       notifyListeners();
       await _saveTasks();
 
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(AppDurations.oneSecond);
 
       _queueProcessing = false;
       _processQueue();
@@ -496,7 +497,7 @@ class DownloadService extends ChangeNotifier {
         notifyListeners();
         _saveTasks();
 
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(AppDurations.twoSeconds, () {
           final idx2 = _tasks.indexWhere((t) => t.id == task.id);
           if (idx2 >= 0 && _tasks[idx2].status == DownloadStatus.retrying) {
             _tasks[idx2].status = DownloadStatus.queued;

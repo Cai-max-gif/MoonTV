@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../models/danmu_item.dart';
+import '../constants/app_colors.dart';
 
 class _RunningDanmu {
   final DanmuItem item;
@@ -200,7 +201,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       }
 
       final fontSize = _baseFontSize * widget.fontSize;
-      final color = item.color ?? Colors.white;
+      final color = item.color ?? AppColors.white;
 
       final textPainter = TextPainter(
         textDirection: TextDirection.ltr,
@@ -221,7 +222,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
           text: item.text,
           style: TextStyle(
             fontSize: fontSize,
-            color: Colors.black.withValues(alpha: 0.5),
+            color: AppColors.overlayMedium,
           ),
         ),
       );
@@ -264,7 +265,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       displayDuration: 0,
       text: item.text,
       textWidth: textWidth,
-      color: item.color ?? Colors.white,
+      color: item.color ?? AppColors.white,
       trackIndex: chosenTrack,
       cachedTextPainter: textPainter,
       cachedShadowPainter: shadowPainter,
@@ -299,7 +300,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
       displayDuration: 3.0,
       text: item.text,
       textWidth: textWidth,
-      color: item.color ?? Colors.white,
+      color: item.color ?? AppColors.white,
       trackIndex: chosenTrack,
       cachedTextPainter: textPainter,
       cachedShadowPainter: shadowPainter,
@@ -395,7 +396,7 @@ class _DanmuPainter extends CustomPainter {
 
       if (danmu.cachedShadowPainter != null) {
         final shadowPainter = danmu.cachedShadowPainter!;
-        final shadowColor = Colors.black.withValues(alpha: alpha * 0.5);
+        final shadowColor = AppColors.black.withValues(alpha: alpha * 0.5);
         shadowPainter.text = TextSpan(
           text: danmu.text,
           style: (shadowPainter.text as TextSpan?)
@@ -406,6 +407,7 @@ class _DanmuPainter extends CustomPainter {
                 color: shadowColor,
               ),
         );
+        shadowPainter.layout();
         shadowPainter.paint(canvas, Offset(danmu.x + 1, danmu.y + 1));
         shadowPainter.paint(canvas, Offset(danmu.x - 1, danmu.y - 1));
         shadowPainter.paint(canvas, Offset(danmu.x, danmu.y - 1));
@@ -424,6 +426,7 @@ class _DanmuPainter extends CustomPainter {
                 color: textColor,
               ),
         );
+        textPainter.layout();
         textPainter.paint(canvas, Offset(danmu.x, danmu.y));
       }
     }

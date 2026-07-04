@@ -1,8 +1,11 @@
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
+
 /// 即将上映数据模型
 class ReleaseCalendarItem {
-  final String id; // 唯一标识符
-  final String title; // 影视名称
-  final String type; // 类型：movie 或 tv
+  final String id;
+  final String title;
+  final String type;
   final String director; // 导演
   final String actors; // 主演
   final String region; // 地区
@@ -45,7 +48,7 @@ class ReleaseCalendarItem {
       cover: json['cover'] as String?,
       description: json['description'] as String?,
       episodes: json['episodes'] as int?,
-      source: json['source'] as String? ?? 'manmankan',
+      source: json['source'] as String? ?? AppConfig.sourceIdManmankan,
       createdAt: json['createdAt'] as int? ?? 0,
       updatedAt: json['updatedAt'] as int? ?? 0,
     );
@@ -92,11 +95,11 @@ class ReleaseCalendarItem {
   String getReleaseStatusText() {
     final days = getDaysUntilRelease();
     if (days < 0) {
-      return '已上映${-days}天';
+      return '${AppStrings.releaseAlready}${-days}天';
     } else if (days == 0) {
-      return '今日上映';
+      return AppStrings.releaseToday;
     } else {
-      return '$days天后上映';
+      return '$days${AppStrings.releaseDaysLater}';
     }
   }
 

@@ -1,45 +1,14 @@
 import 'dart:io';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/download_service.dart';
 import '../utils/font_utils.dart';
-
-class HollowRoundSliderThumbShape extends SliderComponentShape {
-  final double thumbRadius;
-
-  const HollowRoundSliderThumbShape({this.thumbRadius = 10});
-
-  @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size.fromRadius(thumbRadius);
-  }
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    required bool isDiscrete,
-    required TextPainter labelPainter,
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required TextDirection textDirection,
-    required double value,
-    required double textScaleFactor,
-    required Size sizeWithOverflow,
-  }) {
-    final Canvas canvas = context.canvas;
-    final Paint paint = Paint()
-      ..color = sliderTheme.thumbColor ?? Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    canvas.drawCircle(center, thumbRadius, paint);
-  }
-}
+import '../widgets/hollow_slider_thumb.dart';
 
 class DownloadSettingsScreen extends StatefulWidget {
   const DownloadSettingsScreen({super.key});
@@ -79,13 +48,13 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
           SnackBar(
             content: Text(
               '有正在下载的任务，无法修改保存路径',
-              style: FontUtils.poppins(color: Colors.white),
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            margin: const EdgeInsets.all(16),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+            margin: const EdgeInsets.all(AppDimens.spacingLg),
           ),
         );
       }
@@ -113,14 +82,14 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '保存路径已更新',
-                style: FontUtils.poppins(color: Colors.white),
+                AppStrings.downloadPathUpdated,
+                style: FontUtils.poppins(color: AppColors.white),
               ),
-              backgroundColor: const Color(0xFF27AE60),
+              backgroundColor: AppColors.accent,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              margin: const EdgeInsets.all(16),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+              margin: const EdgeInsets.all(AppDimens.spacingLg),
             ),
           );
         }
@@ -130,14 +99,14 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '选择路径失败: $e',
-              style: FontUtils.poppins(color: Colors.white),
+              '${AppStrings.downloadSelectPathFailed}$e',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            margin: const EdgeInsets.all(16),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+            margin: const EdgeInsets.all(AppDimens.spacingLg),
           ),
         );
       }
@@ -150,23 +119,23 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
 
     return Scaffold(
       backgroundColor:
-          isDarkMode ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
+          isDarkMode ? AppColors.black : AppColors.grayBg,
       appBar: AppBar(
-        backgroundColor: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        elevation: 0,
+        backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.white,
+        elevation: AppDimens.elevationNone,
         leading: IconButton(
           icon: Icon(
             LucideIcons.arrowLeft,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
           ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '下载设置',
           style: FontUtils.poppins(
-            fontSize: 18,
+            fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
           ),
         ),
       ),
@@ -175,18 +144,18 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
         child: Consumer<DownloadService>(
           builder: (context, downloadService, child) {
             return ListView(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppDimens.spacingMd),
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      AppDimens.listTilePadding,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    color: isDarkMode ? AppColors.cardDark : AppColors.white,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.098),
-                        blurRadius: 8,
+                        blurRadius: AppDimens.shadowBlurSm,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -198,32 +167,32 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                         children: [
                           const Icon(
                             LucideIcons.download,
-                            size: 24,
-                            color: Color(0xFF10b981),
+                            size: AppDimens.iconLg,
+                            color: AppColors.emerald,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
                             '同时下载任务数',
                             style: FontUtils.poppins(
-                              fontSize: 16,
+                              fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
                               color: isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1f2937),
+                                  ? AppColors.white
+                                  : AppColors.textDarkGray,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      Gap.h12,
                       Row(
                         children: [
                           Text(
                             '1',
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280),
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                             ),
                           ),
                           Expanded(
@@ -233,11 +202,11 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                                 thumbShape: const HollowRoundSliderThumbShape(
                                     thumbRadius: 10),
                                 overlayShape: SliderComponentShape.noOverlay,
-                                thumbColor: const Color(0xFF10b981),
-                                activeTrackColor: const Color(0xFF10b981),
+                                thumbColor: AppColors.emerald,
+                                activeTrackColor: AppColors.emerald,
                                 inactiveTrackColor: isDarkMode
-                                    ? const Color(0xFF374151)
-                                    : const Color(0xFFe5e7eb),
+                                    ? AppColors.borderDarkGray
+                                    : AppColors.borderLightGray,
                               ),
                               child: Slider(
                                 value: _maxConcurrentDownloads,
@@ -258,10 +227,10 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                           Text(
                             '3',
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280),
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                             ),
                           ),
                         ],
@@ -269,17 +238,17 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      AppDimens.listTilePadding,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    color: isDarkMode ? AppColors.cardDark : AppColors.white,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.098),
-                        blurRadius: 8,
+                        blurRadius: AppDimens.shadowBlurSm,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -291,32 +260,32 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                         children: [
                           const Icon(
                             LucideIcons.zap,
-                            size: 24,
-                            color: Color(0xFF8b5cf6),
+                            size: AppDimens.iconLg,
+                            color: AppColors.violet,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
                             '并发线程数',
                             style: FontUtils.poppins(
-                              fontSize: 16,
+                              fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
                               color: isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1f2937),
+                                  ? AppColors.white
+                                  : AppColors.textDarkGray,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      Gap.h12,
                       Row(
                         children: [
                           Text(
                             '1',
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280),
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                             ),
                           ),
                           Expanded(
@@ -326,11 +295,11 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                                 thumbShape: const HollowRoundSliderThumbShape(
                                     thumbRadius: 10),
                                 overlayShape: SliderComponentShape.noOverlay,
-                                thumbColor: const Color(0xFF8b5cf6),
-                                activeTrackColor: const Color(0xFF8b5cf6),
+                                thumbColor: AppColors.violet,
+                                activeTrackColor: AppColors.violet,
                                 inactiveTrackColor: isDarkMode
-                                    ? const Color(0xFF374151)
-                                    : const Color(0xFFe5e7eb),
+                                    ? AppColors.borderDarkGray
+                                    : AppColors.borderLightGray,
                               ),
                               child: Slider(
                                 value: _concurrentThreads,
@@ -351,10 +320,10 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                           Text(
                             '16',
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280),
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                             ),
                           ),
                         ],
@@ -362,17 +331,17 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      AppDimens.listTilePadding,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    color: isDarkMode ? AppColors.cardDark : AppColors.white,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.098),
-                        blurRadius: 8,
+                        blurRadius: AppDimens.shadowBlurSm,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -384,52 +353,52 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                         children: [
                           const Icon(
                             LucideIcons.folder,
-                            size: 24,
-                            color: Color(0xFF3b82f6),
+                            size: AppDimens.iconLg,
+                            color: AppColors.blue,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
-                            '保存路径',
+                            AppStrings.downloadSavePath,
                             style: FontUtils.poppins(
-                              fontSize: 16,
+                              fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
                               color: isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1f2937),
+                                  ? AppColors.white
+                                  : AppColors.textDarkGray,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      Gap.h16,
                       SizedBox(
                         width: double.infinity,
                         child: Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(AppDimens.spacingMd),
                           decoration: BoxDecoration(
                             color: isDarkMode
-                                ? const Color(0xFF2c2c2c)
-                                : const Color(0xFFf5f5f5),
-                            borderRadius: BorderRadius.circular(8),
+                                ? AppColors.inputBgDark
+                                : AppColors.grayBg,
+                            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             border: Border.all(
                               color: isDarkMode
-                                  ? const Color(0xFF374151)
-                                  : const Color(0xFFe5e7eb),
+                                  ? AppColors.borderDarkGray
+                                  : AppColors.borderLightGray,
                             ),
                           ),
                           child: Text(
-                            _savePath.isEmpty ? '未设置保存路径' : _savePath,
+                            _savePath.isEmpty ? AppStrings.downloadNoPath : _savePath,
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280),
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      Gap.h10,
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -440,24 +409,24 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                             LucideIcons.folderOpen,
                             size: 20,
                             color: downloadService.downloadingTasks.isNotEmpty
-                                ? const Color(0xFF9ca3af)
-                                : Colors.white,
+                                ? AppColors.gray400
+                                : AppColors.white,
                           ),
                           label: Text(
                             '选择路径',
                             style: FontUtils.poppins(
-                              fontSize: 16,
+                              fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
                               color: downloadService.downloadingTasks.isNotEmpty
-                                  ? const Color(0xFF9ca3af)
-                                  : Colors.white,
+                                  ? AppColors.gray400
+                                  : AppColors.white,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3b82f6),
+                            backgroundColor: AppColors.blue,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
                           ),
                         ),
@@ -465,15 +434,15 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      AppDimens.listTilePadding,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFf59e0b).withValues(alpha: 0.098),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.amber.withValues(alpha: 0.098),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     border: Border.all(
-                      color: const Color(0xFFf59e0b).withValues(alpha: 0.298),
+                      color: AppColors.amber.withValues(alpha: 0.298),
                     ),
                   ),
                   child: Row(
@@ -482,17 +451,17 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                       const Icon(
                         LucideIcons.info,
                         size: 20,
-                        color: Color(0xFFf59e0b),
+                        color: AppColors.amber,
                       ),
-                      const SizedBox(width: 12),
+                      Gap.w12,
                       Expanded(
                         child: Text(
-                          '提示：增加同时下载任务数和并发线程数可以加快下载速度，但也会消耗更多系统资源。请根据您的设备性能进行调整。',
+                          AppStrings.downloadSettingsTip,
                           style: FontUtils.poppins(
-                            fontSize: 14,
+                            fontSize: AppDimens.fontSizeMd,
                             color: isDarkMode
-                                ? const Color(0xFFf59e0b)
-                                : const Color(0xFF92400e),
+                                ? AppColors.amber
+                                : AppColors.amber800,
                           ),
                         ),
                       ),

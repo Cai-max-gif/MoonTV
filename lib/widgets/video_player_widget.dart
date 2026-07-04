@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 import 'package:pip/pip.dart';
 import '../services/user_data_service.dart';
 import 'mobile_player_controls.dart';
@@ -216,13 +218,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     try {
       _player = Player(
         configuration: PlayerConfiguration(
-          vo: Platform.isWindows ? 'libmpv' : 'gpu',
           title: 'MoonTV',
         ),
       );
-      if (Platform.isWindows) {
-        await _player!.setProperty('hwdec', 'no');
-      }
       _videoController = VideoController(_player!);
       _setupPlayerListeners();
       if (_currentUrl != null) {
@@ -292,7 +290,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
           // 跳过片头
           if (!_hasSkippedOpening &&
               _skipOpeningDuration > 0 &&
-              position <= const Duration(seconds: 1)) {
+              position <= AppDurations.oneSecond) {
             _hasSkippedOpening = true;
             _player!.seek(Duration(seconds: _skipOpeningDuration));
           }
@@ -355,7 +353,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
           // 只有当播放位置在视频最后 5 秒内，或者 duration 为 0 时才认为是真正的播放完成
           if (duration == Duration.zero ||
-              position >= duration - const Duration(seconds: 5)) {
+              position >= duration - AppDurations.healthCheckTimeout) {
             _hasCompleted = true;
             widget.onVideoCompleted?.call();
           } else {
@@ -604,7 +602,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      color: AppColors.black,
       child: _isInitialized
           ? _videoController != null && _player != null
               ? Video(
@@ -697,12 +695,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                 )
               : const Center(
                   child: CircularProgressIndicator(
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 )
           : const Center(
               child: CircularProgressIndicator(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
     );

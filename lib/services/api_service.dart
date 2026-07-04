@@ -17,6 +17,10 @@ import '../models/epg_program.dart';
 import '../models/search_suggestion.dart';
 import '../models/danmu_item.dart';
 import '../models/netdisk_item.dart';
+import '../constants/app_regex.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 /// API响应结果类
 class ApiResponse<T> {
@@ -51,14 +55,14 @@ class ApiResponse<T> {
 
 /// 通用API请求服务
 class ApiService {
-  static const Duration _timeout = Duration(seconds: 30);
-  static const int _maxRetries = 3;
-  static const Duration _retryDelay = Duration(seconds: 1);
+  static const Duration _timeout = AppDurations.networkTimeout;
+  static const int _maxRetries = AppConfig.maxRetries;
+  static const Duration _retryDelay = AppConfig.retryDelay;
 
   // 账号状态缓存
   static DateTime? _lastAccountStatusCheck;
   static bool? _cachedAccountStatus;
-  static const Duration _accountStatusCacheDuration = Duration(minutes: 1);
+  static const Duration _accountStatusCacheDuration = AppDurations.accountStatusCache;
 
   // 内存级 cookie（绕过 SecureStorage 延迟，Telegram 登录专用）
   static String? _inMemoryCookies;
@@ -113,7 +117,7 @@ class ApiService {
     final baseUrl = await _getBaseUrl();
 
     // 确保使用HTTPS
-    String secureBaseUrl = baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
+    String secureBaseUrl = baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
 
     // 确保baseUrl不以/结尾，endpoint以/开头
     String cleanBaseUrl = secureBaseUrl.endsWith('/')
@@ -135,7 +139,7 @@ class ApiService {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest', // 防止CSRF攻击
+      'X-Requested-With': AppConfig.headerXmlHttpRequest, // 防止CSRF攻击
     };
 
     if (_csrfToken != null && _csrfToken!.isNotEmpty) {
@@ -188,7 +192,7 @@ class ApiService {
 
     try {
       final baseUrl = await _getBaseUrl();
-      final url = '$baseUrl/api/csrf-token';
+      final url = '$baseUrl${AppConfig.csrfTokenEndpoint}';
 
       // CSRF token 端点需要认证，构建认证请求头
       final fetchHeaders = <String, String>{};
@@ -205,7 +209,7 @@ class ApiService {
         fetchHeaders['X-User-Auth'] = _inMemoryUserAuth!;
       }
 
-      final response = await http.get(Uri.parse(url), headers: fetchHeaders).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(url), headers: fetchHeaders).timeout(AppDurations.shortTimeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -253,7 +257,7 @@ class ApiService {
     // 处理401未授权
     if (response.statusCode == 401) {
       // 尝试解析响应体中的错误信息
-      String errorMessage = '登录已过期，请重新登录';
+      String errorMessage = AppStrings.authLoginFailed;
       try {
         final errorData = json.decode(response.body);
         if (errorData.containsKey('message')) {
@@ -288,14 +292,14 @@ class ApiService {
     if (response.statusCode == 403) {
       clearCsrfCache();
       return ApiResponse.error(
-        '权限不足，无法访问该资源',
+        AppStrings.serverError,
         statusCode: 403,
       );
     }
 
     // 处理其他错误状态码
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      String errorMessage = '请求失败';
+      String errorMessage = AppStrings.errorRequestFailed;
       try {
         final errorData = json.decode(response.body);
         errorMessage =
@@ -304,19 +308,19 @@ class ApiService {
         // 如果解析失败，使用默认错误信息
         switch (response.statusCode) {
           case 400:
-            errorMessage = '请求参数错误';
+            errorMessage = AppStrings.errorRequestFailed;
             break;
           case 403:
-            errorMessage = '没有权限访问';
+            errorMessage = AppStrings.serverError;
             break;
           case 404:
-            errorMessage = '请求的资源不存在';
+            errorMessage = AppStrings.errorRequestFailed;
             break;
           case 500:
-            errorMessage = '服务器内部错误';
+            errorMessage = AppStrings.serverError;
             break;
           default:
-            errorMessage = '网络请求失败 (${response.statusCode})';
+            errorMessage = '${AppStrings.networkError} (${response.statusCode})';
         }
       }
 
@@ -339,7 +343,7 @@ class ApiService {
       }
     } catch (e) {
       return ApiResponse.error(
-        '响应数据解析失败: ${e.toString()}',
+        '${AppStrings.errorException}${e.toString()}',
         statusCode: response.statusCode,
       );
     }
@@ -362,7 +366,7 @@ class ApiService {
         await Future.delayed(_retryDelay * retryCount);
       }
     }
-    throw Exception('网络请求异常: 重试次数过多');
+    throw Exception(AppStrings.networkRetryLater);
   }
 
   /// GET请求
@@ -405,7 +409,7 @@ class ApiService {
       // 生产环境中应使用专业的日志库
       // print('GET请求错误: ${e.toString()}');
       // 向用户返回通用错误信息
-      return ApiResponse.error('网络请求异常，请稍后重试');
+      return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
   }
 
@@ -475,7 +479,7 @@ class ApiService {
 
       return result;
     } catch (e) {
-      return ApiResponse.error('网络请求异常，请稍后重试');
+      return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
   }
 
@@ -569,7 +573,7 @@ class ApiService {
 
       return result;
     } catch (e) {
-      return ApiResponse.error('网络请求异常，请稍后重试');
+      return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
   }
 
@@ -608,7 +612,7 @@ class ApiService {
 
       return result;
     } catch (e) {
-      return ApiResponse.error('网络请求异常，请稍后重试');
+      return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
   }
 
@@ -660,14 +664,14 @@ class ApiService {
           // 生产环境中应使用专业的日志库
           // print('文件上传错误: ${e.toString()}');
           // 向用户返回通用错误信息
-          return ApiResponse.error('文件上传异常，请稍后重试');
+          return ApiResponse.error(AppStrings.errorNetworkRequest);
         }
         // 等待一段时间后重试
         await Future.delayed(_retryDelay * retryCount);
       }
     }
     // 向用户返回通用错误信息
-    return ApiResponse.error('文件上传异常，请稍后重试');
+    return ApiResponse.error(AppStrings.errorNetworkRequest);
   }
 
   /// 获取收藏夹列表
@@ -678,11 +682,11 @@ class ApiService {
 
       final cookies = await _getCookies();
       if (cookies == null) {
-        return ApiResponse.error('用户未登录');
+        return ApiResponse.error(AppStrings.authLoginFailed);
       }
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/favorites'),
+        Uri.parse('$baseUrl${AppConfig.favoritesEndpoint}'),
         headers: {
           'Accept': 'application/json',
           'Cookie': cookies,
@@ -709,14 +713,14 @@ class ApiService {
             MaterialPageRoute(builder: (context) => const LoginScreen()),
           );
         }
-        return ApiResponse.error('登录已过期，请重新登录',
+        return ApiResponse.error(AppStrings.authLoginFailed,
             statusCode: response.statusCode);
       } else {
-        return ApiResponse.error('获取收藏夹失败: ${response.statusCode}',
+        return ApiResponse.error('${AppStrings.errorGetFailed}: ${response.statusCode}',
             statusCode: response.statusCode);
       }
     } catch (e) {
-      return ApiResponse.error('获取收藏夹异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -725,7 +729,7 @@ class ApiService {
       BuildContext context) async {
     try {
       final response = await get<List<String>>(
-        '/api/searchhistory',
+        AppConfig.searchHistoryEndpoint,
         context: context,
         fromJson: (data) => (data as List).cast<String>(),
       );
@@ -734,10 +738,10 @@ class ApiService {
         return ApiResponse.success(response.data!,
             statusCode: response.statusCode);
       } else {
-        return ApiResponse.error(response.message ?? '获取搜索历史失败');
+        return ApiResponse.error(response.message ?? AppStrings.errorGetFailed);
       }
     } catch (e) {
-      return ApiResponse.error('获取搜索历史异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -746,14 +750,14 @@ class ApiService {
       String query, BuildContext context) async {
     try {
       final response = await post<void>(
-        '/api/searchhistory',
+        AppConfig.searchHistoryEndpoint,
         context: context,
         body: {'keyword': query},
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('添加搜索历史异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorAddFailed}: ${e.toString()}');
     }
   }
 
@@ -762,13 +766,13 @@ class ApiService {
       BuildContext context) async {
     try {
       final response = await delete<void>(
-        '/api/searchhistory',
+        AppConfig.searchHistoryEndpoint,
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('清空搜索历史异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
     }
   }
 
@@ -778,13 +782,13 @@ class ApiService {
     try {
       final encodedQuery = Uri.encodeComponent(query);
       final response = await delete<void>(
-        '/api/searchhistory?keyword=$encodedQuery',
+        '${AppConfig.searchHistoryEndpoint}?keyword=$encodedQuery',
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('删除搜索历史异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
     }
   }
 
@@ -800,14 +804,14 @@ class ApiService {
       };
 
       final response = await post<void>(
-        '/api/playrecords',
+        AppConfig.playRecordsEndpoint,
         body: body,
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('保存播放记录异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
     }
   }
 
@@ -818,13 +822,13 @@ class ApiService {
       final key = '$source+$id';
       final encodedKey = Uri.encodeComponent(key);
       final response = await delete<void>(
-        '/api/playrecords?key=$encodedKey',
+        '${AppConfig.playRecordsEndpoint}?key=$encodedKey',
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('删除播放记录异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
     }
   }
 
@@ -832,13 +836,13 @@ class ApiService {
   static Future<ApiResponse<void>> clearPlayRecord(BuildContext context) async {
     try {
       final response = await delete<void>(
-        '/api/playrecords',
+        AppConfig.playRecordsEndpoint,
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('清空播放记录异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
     }
   }
 
@@ -853,14 +857,14 @@ class ApiService {
       };
 
       final response = await post<void>(
-        '/api/favorites',
+        AppConfig.favoritesEndpoint,
         body: body,
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('收藏异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.favFailed}: ${e.toString()}');
     }
   }
 
@@ -871,13 +875,13 @@ class ApiService {
       final key = '$source+$id';
       final encodedKey = Uri.encodeComponent(key);
       final response = await delete<void>(
-        '/api/favorites?key=$encodedKey',
+        '${AppConfig.favoritesEndpoint}?key=$encodedKey',
         context: context,
       );
 
       return response;
     } catch (e) {
-      return ApiResponse.error('取消收藏异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.favUnfavoriteFailed}: ${e.toString()}');
     }
   }
 
@@ -887,9 +891,9 @@ class ApiService {
       final baseUrl = await _getBaseUrl();
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/health'),
+        Uri.parse('$baseUrl${AppConfig.healthEndpoint}'),
         headers: {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(AppDurations.healthCheckTimeout);
 
       return response.statusCode == 200;
     } catch (e) {
@@ -916,11 +920,11 @@ class ApiService {
 
       // 使用较短的超时时间，避免长时间阻塞
       final response = await Future.value(get<bool>(
-        '/api/user/status',
+        AppConfig.userStatusEndpoint,
         context: context,
-        fromJson: (data) => data['status'] == 'active',
-      )).timeout(const Duration(seconds: 5), onTimeout: () {
-        return ApiResponse<bool>.error('检查账号状态超时');
+        fromJson: (data) => data['status'] == AppConfig.accountStatusActive,
+      )).timeout(AppDurations.healthCheckTimeout, onTimeout: () {
+        return ApiResponse<bool>.error(AppStrings.networkError);
       });
 
       // 更新缓存
@@ -931,7 +935,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('检查账号状态异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
     }
   }
 
@@ -946,7 +950,7 @@ class ApiService {
     try {
       // 检查账户是否被锁定
       if (await UserDataService.isAccountLocked()) {
-        return ApiResponse.error('账户已被锁定，请稍后再试');
+        return ApiResponse.error(AppStrings.authAccountLockedLater);
       }
 
       // 获取用户数据
@@ -955,19 +959,19 @@ class ApiService {
       final cookies = await UserDataService.getCookies();
 
       if (username == null) {
-        return ApiResponse.error('缺少登录信息');
+        return ApiResponse.error(AppStrings.authLoginEmpty);
       }
 
       // 如果已有令牌或cookies，直接返回成功
       if ((token != null && token.isNotEmpty) ||
           (cookies != null && cookies.isNotEmpty)) {
-        return ApiResponse.success('自动登录成功');
+        return ApiResponse.success(AppStrings.authLoginSuccess);
       }
 
       // 没有令牌或cookies，返回需要重新登录
-      return ApiResponse.error('需要重新登录');
+      return ApiResponse.error(AppStrings.authLoginFailed);
     } catch (e) {
-      return ApiResponse.error('自动登录异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.authLoginFailed}: ${e.toString()}');
     }
   }
 
@@ -976,7 +980,7 @@ class ApiService {
       String source, String id) async {
     try {
       final response = await get<SearchResult>(
-        '/api/detail',
+        AppConfig.detailEndpoint,
         queryParameters: {
           'source': source,
           'id': id,
@@ -1000,7 +1004,7 @@ class ApiService {
   static Future<List<SearchResult>> fetchSourcesData(String query) async {
     try {
       final response = await get<Map<String, dynamic>>(
-        '/api/search',
+        AppConfig.searchEndpoint,
         queryParameters: {
           'q': query.trim(),
         },
@@ -1034,7 +1038,7 @@ class ApiService {
   static Future<List<SearchResource>> getSearchResources() async {
     try {
       final response = await get<List<SearchResource>>(
-        '/api/search/resources',
+        AppConfig.searchResourcesEndpoint,
         fromJson: (data) {
           final list = data as List<dynamic>;
           return list
@@ -1060,7 +1064,7 @@ class ApiService {
   static Future<List<LiveSource>> getLiveSources() async {
     try {
       final response = await get<List<LiveSource>>(
-        '/api/live/sources',
+        AppConfig.liveSourcesEndpoint,
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
           final list = responseData['data'] as List<dynamic>;
@@ -1086,7 +1090,7 @@ class ApiService {
   static Future<List<LiveChannel>> getLiveChannels(String source) async {
     try {
       final response = await get<List<LiveChannel>>(
-        '/api/live/channels',
+        AppConfig.liveChannelsEndpoint,
         queryParameters: {'source': source},
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
@@ -1113,7 +1117,7 @@ class ApiService {
   static Future<EpgData?> getLiveEpg(String tvgId, String source) async {
     try {
       final response = await get<EpgData>(
-        '/api/live/epg',
+        AppConfig.epgEndpoint,
         queryParameters: {
           'tvgId': tvgId,
           'source': source,
@@ -1141,7 +1145,7 @@ class ApiService {
   static Future<List<String>> getSearchSuggestions(String query) async {
     try {
       final response = await get<List<SearchSuggestion>>(
-        '/api/search/suggestions',
+        AppConfig.searchSuggestionsEndpoint,
         queryParameters: {'q': query.trim()},
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
@@ -1167,9 +1171,9 @@ class ApiService {
   }
 
   // 短剧数据缓存配置
-  static const Duration _shortDramaCategoryCacheDuration = Duration(hours: 24);
-  static const Duration _shortDramaListCacheDuration = Duration(hours: 6);
-  static const Duration _shortDramaRecommendCacheDuration = Duration(hours: 3);
+  static const Duration _shortDramaCategoryCacheDuration = AppConfig.shortDramaCategoryCache;
+  static const Duration _shortDramaListCacheDuration = AppConfig.shortDramaListCache;
+  static const Duration _shortDramaRecommendCacheDuration = AppConfig.shortDramaRecommendCache;
   
 
   // 缓存数据
@@ -1214,7 +1218,7 @@ class ApiService {
       }
 
       // 请求去重
-      const cacheKey = 'shortdrama-categories';
+      const cacheKey = AppConfig.cacheKeyShortDramaCategories;
       if (_pendingShortDramaRequests.containsKey(cacheKey)) {
         return _pendingShortDramaRequests[cacheKey] as Future<ApiResponse<List<dynamic>>>;
       }
@@ -1236,14 +1240,14 @@ class ApiService {
       if ((e is SocketException || e is TimeoutException) && _cachedShortDramaCategories != null) {
         return ApiResponse.success(_cachedShortDramaCategories!);
       }
-      return ApiResponse.error('获取短剧分类失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
   static Future<ApiResponse<List<dynamic>>> _fetchShortDramaCategories(
       BuildContext context) async {
     final response = await get<List<dynamic>>(
-      '/api/shortdrama/categories',
+      AppConfig.shortDramaCategoriesEndpoint,
       context: context,
       fromJson: (data) => (data as List).toList(),
     );
@@ -1310,7 +1314,7 @@ class ApiService {
         final cached = _cachedShortDramaLists[cacheKey]!;
         return ApiResponse.success(Map<String, dynamic>.from(cached)..remove('_cacheTime'));
       }
-      return ApiResponse.error('获取短剧列表失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1339,7 +1343,7 @@ class ApiService {
 
   static Future<ApiResponse<Map<String, dynamic>>> _fetchShortDramaList(
       int categoryId, int page, int size, BuildContext context) async {
-    final url = await _buildUrl('/api/shortdrama/list');
+    final url = await _buildUrl(AppConfig.shortDramaListEndpoint);
     final requestHeaders = await _buildHeaders();
 
     final queryParams = {
@@ -1352,7 +1356,7 @@ class ApiService {
 
     final response = await http
         .get(uri, headers: requestHeaders)
-        .timeout(const Duration(seconds: 15));
+        .timeout(AppConfig.authRequestTimeout);
 
     if (!context.mounted) {
       return _handleResponse<Map<String, dynamic>>(
@@ -1382,7 +1386,7 @@ class ApiService {
       }
 
       final response = await get<Map<String, dynamic>>(
-        '/api/shortdrama/detail',
+        AppConfig.shortDramaDetailEndpoint,
         queryParameters: queryParameters,
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
@@ -1390,7 +1394,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('获取短剧详情失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1408,7 +1412,7 @@ class ApiService {
       }
 
       final response = await get<Map<String, dynamic>>(
-        '/api/shortdrama/parse',
+        AppConfig.shortDramaParseEndpoint,
         queryParameters: queryParameters,
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
@@ -1416,7 +1420,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('解析短剧视频地址失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1431,7 +1435,7 @@ class ApiService {
       };
 
       final response = await get<List<dynamic>>(
-        '/api/shortdrama/parse',
+        AppConfig.shortDramaParseEndpoint,
         queryParameters: queryParameters,
         context: context,
         fromJson: (data) {
@@ -1444,7 +1448,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('批量解析短剧失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1459,7 +1463,7 @@ class ApiService {
       };
 
       final response = await get<Map<String, dynamic>>(
-        '/api/shortdrama/search',
+        AppConfig.shortDramaSearchEndpoint,
         queryParameters: queryParameters,
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
@@ -1467,7 +1471,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('搜索短剧失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1496,7 +1500,7 @@ class ApiService {
       queryParameters['size'] = size.toString();
 
       final response = await get<List<dynamic>>(
-        '/api/shortdrama/recommend',
+        AppConfig.shortDramaRecommendEndpoint,
         queryParameters: queryParameters,
         context: context,
         fromJson: (data) => (data as List).toList(),
@@ -1521,7 +1525,7 @@ class ApiService {
         final cached = _cachedShortDramaRecommends![cacheKey]!;
         return ApiResponse.success(cached['data'] as List<dynamic>);
       }
-      return ApiResponse.error('获取推荐短剧失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1530,7 +1534,7 @@ class ApiService {
       int id, BuildContext context) async {
     try {
       final response = await get<Map<String, dynamic>>(
-        '/api/shortdrama/episode-count',
+        AppConfig.shortDramaEpisodeCountEndpoint,
         queryParameters: {'id': id.toString()},
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
@@ -1538,7 +1542,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('获取短剧集数信息失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1560,7 +1564,7 @@ class ApiService {
       if (episodeId != null) params['episode_id'] = episodeId;
 
       final response = await get<List<DanmuItem>>(
-        '/api/danmu-external',
+        AppConfig.danmuExternalEndpoint,
         queryParameters: params.isNotEmpty ? params : null,
         context: context,
         fromJson: (data) {
@@ -1583,7 +1587,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('获取弹幕数据失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1594,7 +1598,7 @@ class ApiService {
   }) async {
     try {
       final response = await get<Map<String, dynamic>>(
-        '/api/danmu-external/search',
+        AppConfig.danmuExternalSearchEndpoint,
         queryParameters: {'keyword': keyword.trim()},
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
@@ -1602,7 +1606,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('搜索弹幕库失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 
@@ -1613,7 +1617,7 @@ class ApiService {
   }) async {
     try {
       final response = await get<NetDiskSearchResult>(
-        '/api/netdisk/search',
+        AppConfig.netdiskSearchEndpoint,
         queryParameters: {'q': query.trim()},
         context: context,
         fromJson: (data) =>
@@ -1622,7 +1626,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('搜索网盘资源失败: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
   }
 }

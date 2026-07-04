@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 class FavoriteItem {
   final String id;
   final String source; // 来源标识
@@ -23,7 +25,7 @@ class FavoriteItem {
 
   factory FavoriteItem.fromJson(String key, Map<String, dynamic> json) {
     // 从key中分离source和id，格式为 "source+id"
-    final parts = key.split('+');
+    final parts = key.split(AppConfig.searchKeySeparator);
     final source = parts.length > 1 ? parts[0] : '';
     final id = parts.length > 1 ? parts[1] : key;
     

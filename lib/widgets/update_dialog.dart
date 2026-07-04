@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:provider/provider.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'dart:io';
@@ -7,6 +8,8 @@ import '../services/version_service.dart';
 import '../services/theme_service.dart';
 import '../services/notification_service.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 class UpdateDialog extends StatefulWidget {
   final VersionInfo versionInfo;
@@ -100,7 +103,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
               _isDownloading = false;
             });
             VersionService.clearForegroundDownload();
-            _showErrorSnackBar('需要安装权限才能安装应用');
+            _showErrorSnackBar(AppStrings.updateNeedPermission);
           }
           return;
         }
@@ -155,7 +158,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
           _notificationService.showUpdateFailed(
             version: widget.versionInfo.latestVersion,
           );
-          _showErrorSnackBar('下载失败');
+          _showErrorSnackBar(AppStrings.downloadFailed);
         }
         return;
       }
@@ -181,7 +184,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
             _isInstalling = false;
             _isDownloading = false;
           });
-          _showErrorSnackBar('安装失败');
+          _showErrorSnackBar(AppStrings.updateInstallFailed);
         }
       } else if (Platform.isWindows) {
         setState(() {
@@ -194,7 +197,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
             _isInstalling = false;
             _isDownloading = false;
           });
-          _showErrorSnackBar('打开安装文件失败');
+          _showErrorSnackBar(AppStrings.updateOpenFailed);
         }
       }
     } catch (e) {
@@ -216,7 +219,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
         _notificationService.showUpdateFailed(
           version: widget.versionInfo.latestVersion,
         );
-        _showErrorSnackBar('发生错误');
+        _showErrorSnackBar(AppStrings.updateError);
       }
     }
   }
@@ -229,7 +232,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
     _cancelToken?.cancel();
     VersionService.cancelForegroundDownload();
     VersionService.clearForegroundDownload();
-    _showErrorSnackBar('下载已取消');
+    _showErrorSnackBar(AppStrings.updateCancelled);
   }
 
   Future<void> _startInstall() async {
@@ -246,7 +249,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
           _isInstalling = false;
           _isDownloading = false;
         });
-        _showErrorSnackBar('安装失败');
+        _showErrorSnackBar(AppStrings.updateInstallFailed);
       }
     } else if (Platform.isWindows) {
       final success = await VersionService.openFile(_downloadedFilePath!);
@@ -255,7 +258,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
           _isInstalling = false;
           _isDownloading = false;
         });
-        _showErrorSnackBar('打开安装文件失败');
+        _showErrorSnackBar(AppStrings.updateOpenFailed);
       }
     }
   }
@@ -265,10 +268,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: const Color(0xFFE74C3C),
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+          margin: const EdgeInsets.all(AppDimens.spacingLg),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -293,21 +296,21 @@ class _UpdateDialogState extends State<UpdateDialog> {
           },
           child: Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
             ),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
+            elevation: AppDimens.elevationNone,
+            backgroundColor: AppColors.transparent,
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
               decoration: BoxDecoration(
                 color: themeService.isDarkMode
-                    ? const Color(0xFF2C2C2C)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                    ? AppColors.inputBgDark
+                    : AppColors.white,
+                borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
+                    color: AppColors.black30,
+                    blurRadius: AppDimens.shadowBlurMd,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -320,8 +323,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: themeService.isDarkMode
-                          ? const Color(0xFF333333)
-                          : const Color(0xFFF5F5F5),
+                          ? AppColors.darkDivider
+                          : AppColors.grayBg,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
@@ -330,11 +333,11 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(AppDimens.spacingMd),
                           decoration: BoxDecoration(
                             color: widget.versionInfo.updateType == UpdateType.force
-                                ? const Color(0xFFE74C3C).withValues(alpha: 0.1)
-                                : const Color(0xFF27AE60).withValues(alpha: 0.1),
+                                ? AppColors.error.withValues(alpha: 0.1)
+                                : AppColors.accent.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -343,30 +346,30 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                 : Icons.rocket_launch_rounded,
                             size: 40,
                             color: widget.versionInfo.updateType == UpdateType.force
-                                ? const Color(0xFFE74C3C)
-                                : const Color(0xFF27AE60),
+                                ? AppColors.error
+                                : AppColors.accent,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        Gap.h12,
                         Text(
                           widget.versionInfo.updateType == UpdateType.force
-                              ? '重要更新'
-                              : '发现新版本',
+                              ? AppStrings.updateImportant
+                              : AppStrings.updateNewVersion,
                           style: FontUtils.poppins(
-                            fontSize: 20,
+                            fontSize: AppDimens.fontSizeTitle,
                             fontWeight: FontWeight.bold,
                             color: themeService.isDarkMode
-                                ? const Color(0xFFFFFFFF)
-                                : const Color(0xFF2C2C2C),
+                                ? AppColors.white
+                                : AppColors.inputBgDark,
                           ),
                         ),
                         if (widget.versionInfo.updateType == UpdateType.force) ...[
-                          const SizedBox(height: 8),
+                          Gap.h8,
                           Text(
-                            '此更新为强制更新，请立即更新以继续使用',
+                            AppStrings.updateForceMsg,
                             style: FontUtils.poppins(
-                              fontSize: 14,
-                              color: const Color(0xFFE74C3C),
+                              fontSize: AppDimens.fontSizeMd,
+                              color: AppColors.error,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -380,12 +383,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppDimens.spacingLg),
                           decoration: BoxDecoration(
                             color: themeService.isDarkMode
-                                ? const Color(0xFF333333)
-                                : const Color(0xFFF5F5F5),
-                            borderRadius: BorderRadius.circular(12),
+                                ? AppColors.darkDivider
+                                : AppColors.grayBg,
+                            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -393,78 +396,78 @@ class _UpdateDialogState extends State<UpdateDialog> {
                               _buildVersionChip(
                                 context,
                                 themeService,
-                                '当前版本',
+                                AppStrings.updateCurrentVersion,
                                 widget.versionInfo.currentVersion,
                                 Icons.info_outline_rounded,
                                 themeService.isDarkMode
-                                    ? const Color(0xFF999999)
-                                    : const Color(0xFF666666),
+                                    ? AppColors.textHint
+                                    : AppColors.textDarkHint,
                               ),
                               Container(
                                 width: 1,
                                 height: 40,
                                 color: themeService.isDarkMode
-                                    ? const Color(0xFF444444)
-                                    : const Color(0xFFDDDDDD),
+                                    ? AppColors.grayDark
+                                    : AppColors.gray275,
                               ),
                               _buildVersionChip(
                                 context,
                                 themeService,
-                                '最新版本',
+                                AppStrings.updateLatestVersion,
                                 widget.versionInfo.latestVersion,
                                 Icons.new_releases_rounded,
                                 widget.versionInfo.updateType == UpdateType.force
-                                    ? const Color(0xFFE74C3C)
-                                    : const Color(0xFF27AE60),
+                                    ? AppColors.error
+                                    : AppColors.accent,
                               ),
                             ],
                           ),
                         ),
                         if (widget.versionInfo.releaseNotes.isNotEmpty) ...[
-                          const SizedBox(height: 16),
+                          Gap.h16,
                           Row(
                             children: [
                               Icon(
                                 Icons.article_outlined,
-                                size: 18,
+                                size: AppDimens.iconMd,
                                 color: widget.versionInfo.updateType == UpdateType.force
-                                    ? const Color(0xFFE74C3C)
-                                    : const Color(0xFF27AE60),
+                                    ? AppColors.error
+                                    : AppColors.accent,
                               ),
-                              const SizedBox(width: 6),
+                              Gap.w6,
                               Text(
-                                '更新内容',
+                                AppStrings.updateContent,
                                 style: FontUtils.poppins(
-                                  fontSize: 16,
+                                  fontSize: AppDimens.fontSizeXl,
                                   fontWeight: FontWeight.w600,
                                   color: themeService.isDarkMode
-                                      ? const Color(0xFFFFFFFF)
-                                      : const Color(0xFF2C2C2C),
+                                      ? AppColors.white
+                                      : AppColors.inputBgDark,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          Gap.h10,
                           Container(
                             width: double.infinity,
                             constraints: const BoxConstraints(maxHeight: 200),
                             decoration: BoxDecoration(
                               color: themeService.isDarkMode
-                                  ? const Color(0xFF333333)
-                                  : const Color(0xFFF5F5F5),
-                              borderRadius: BorderRadius.circular(8),
+                                  ? AppColors.darkDivider
+                                  : AppColors.grayBg,
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
                             child: SingleChildScrollView(
                               child: Padding(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(AppDimens.spacingMd),
                                 child: GptMarkdown(
                                   widget.versionInfo.releaseNotes,
                                   style: FontUtils.poppins(
-                                    fontSize: 14,
+                                    fontSize: AppDimens.fontSizeMd,
                                     height: 1.6,
                                     color: themeService.isDarkMode
-                                        ? const Color(0xFFCCCCCC)
-                                        : const Color(0xFF666666),
+                                        ? AppColors.gray325
+                                        : AppColors.textDarkHint,
                                   ),
                                 ),
                               ),
@@ -472,7 +475,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           ),
                         ],
                         if (_isDownloading) ...[
-                          const SizedBox(height: 16),
+                          Gap.h16,
                           Row(
                             children: [
                               Expanded(
@@ -480,33 +483,33 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                 child: LinearProgressIndicator(
                                   value: _downloadProgress,
                                   backgroundColor: themeService.isDarkMode
-                                      ? const Color(0xFF444444)
-                                      : const Color(0xFFDDDDDD),
+                                      ? AppColors.grayDark
+                                      : AppColors.gray275,
                                   valueColor: AlwaysStoppedAnimation<Color>(
                                     widget.versionInfo.updateType == UpdateType.force
-                                        ? const Color(0xFFE74C3C)
-                                        : const Color(0xFF27AE60),
+                                        ? AppColors.error
+                                        : AppColors.accent,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              Gap.w8,
                               if (!_isInstalling) ...[
                                 Text(
                                   '${(_downloadProgress * 100).toStringAsFixed(0)}%',
                                   style: FontUtils.poppins(
-                                    fontSize: 14,
+                                    fontSize: AppDimens.fontSizeMd,
                                     fontWeight: FontWeight.w600,
                                     color: widget.versionInfo.updateType == UpdateType.force
-                                        ? const Color(0xFFE74C3C)
-                                        : const Color(0xFF27AE60),
+                                        ? AppColors.error
+                                        : AppColors.accent,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
+                                Gap.w4,
                                 IconButton(
                                   icon: const Icon(
                                     Icons.cancel,
-                                    size: 18,
-                                    color: Color(0xFFE74C3C),
+                                    size: AppDimens.iconMd,
+                                    color: AppColors.error,
                                   ),
                                   onPressed: _cancelDownload,
                                   padding: EdgeInsets.zero,
@@ -519,11 +522,11 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                 Text(
                                   '${(_downloadProgress * 100).toStringAsFixed(0)}%',
                                   style: FontUtils.poppins(
-                                    fontSize: 14,
+                                    fontSize: AppDimens.fontSizeMd,
                                     fontWeight: FontWeight.w600,
                                     color: widget.versionInfo.updateType == UpdateType.force
-                                        ? const Color(0xFFE74C3C)
-                                        : const Color(0xFF27AE60),
+                                        ? AppColors.error
+                                        : AppColors.accent,
                                   ),
                                 ),
                               ],
@@ -543,28 +546,28 @@ class _UpdateDialogState extends State<UpdateDialog> {
                             height: 44,
                             child: ElevatedButton.icon(
                               onPressed: _hasDownloadedFile ? _startInstall : _startDownload,
-                              icon: Icon(_hasDownloadedFile ? Icons.install_desktop_rounded : Icons.download_rounded, size: 18),
+                              icon: Icon(_hasDownloadedFile ? Icons.install_desktop_rounded : Icons.download_rounded, size: AppDimens.iconMd),
                               label: Text(
-                                _hasDownloadedFile ? '立即安装' : '立即更新',
+                                _hasDownloadedFile ? AppStrings.updateInstallNow : AppStrings.updateNow,
                                 style: FontUtils.poppins(
-                                  fontSize: 15,
+                                  fontSize: AppDimens.fontSizeLg,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: widget.versionInfo.updateType == UpdateType.force
-                                    ? const Color(0xFFE74C3C)
-                                    : const Color(0xFF27AE60),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
+                                    ? AppColors.error
+                                    : AppColors.accent,
+                                foregroundColor: AppColors.white,
+                                elevation: AppDimens.elevationNone,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                                 ),
                               ),
                             ),
                           ),
                         if (!_isDownloading && !_isInstalling)
-                          const SizedBox(height: 8),
+                          Gap.h8,
                         if (widget.versionInfo.updateType != UpdateType.force)
                           Row(
                             children: [
@@ -580,12 +583,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                   },
                                   style: TextButton.styleFrom(
                                     foregroundColor: themeService.isDarkMode
-                                        ? const Color(0xFF999999)
-                                        : const Color(0xFF666666),
+                                        ? AppColors.textHint
+                                        : AppColors.textDarkHint,
                                   ),
                                   child: Text(
-                                    '忽略',
-                                    style: FontUtils.poppins(fontSize: 14),
+                                    AppStrings.updateIgnore,
+                                    style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd),
                                   ),
                                 ),
                               ),
@@ -598,12 +601,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                         },
                                   style: TextButton.styleFrom(
                                     foregroundColor: widget.versionInfo.updateType == UpdateType.force
-                                        ? const Color(0xFFE74C3C)
-                                        : const Color(0xFF27AE60),
+                                        ? AppColors.error
+                                        : AppColors.accent,
                                   ),
                                   child: Text(
-                                    _isDownloading ? '请稍候' : '稍后',
-                                    style: FontUtils.poppins(fontSize: 14),
+                                    _isDownloading ? AppStrings.updatePleaseWait : AppStrings.updateLater,
+                                    style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd),
                                   ),
                                 ),
                               ),
@@ -631,22 +634,22 @@ class _UpdateDialogState extends State<UpdateDialog> {
   ) {
     return Column(
       children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(height: 4),
+        Icon(icon, size: AppDimens.iconMd, color: color),
+        Gap.h4,
         Text(
           label,
           style: FontUtils.poppins(
-            fontSize: 12,
+            fontSize: AppDimens.fontSizeXs,
             color: themeService.isDarkMode
-                ? const Color(0xFF999999)
-                : const Color(0xFF666666),
+                ? AppColors.textHint
+                : AppColors.textDarkHint,
           ),
         ),
-        const SizedBox(height: 2),
+        Gap.h2,
         Text(
           version,
           style: FontUtils.poppins(
-            fontSize: 15,
+            fontSize: AppDimens.fontSizeLg,
             fontWeight: FontWeight.bold,
             color: color,
           ),

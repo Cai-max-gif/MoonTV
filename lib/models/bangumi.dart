@@ -1,4 +1,6 @@
 import 'video_info.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 /// HTML 实体解码工具函数
 String _decodeHtmlEntities(String text) {
@@ -270,9 +272,9 @@ class BangumiItem {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: id.toString(),
-      source: 'bangumi',
+      source: AppConfig.sourceIdBangumi,
       title: nameCn?.isNotEmpty == true ? nameCn! : name,
-      sourceName: 'Bangumi',
+      sourceName: AppStrings.bangumiSourceName,
       year: airDate.split('-').first,
       cover: images.bestImageUrl,
       index: 1,

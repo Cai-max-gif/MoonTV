@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../models/douban_movie.dart';
 import '../models/play_record.dart';
 import '../models/favorite_item.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 import 'api_service.dart';
 import 'douban_service.dart';
 import 'data_operation_interface.dart';
-
 /// 页面缓存服务 - 单例模式
 class PageCacheService
     implements
@@ -74,7 +75,7 @@ class PageCacheService
 
     try {
       final response = await ApiService.get<Map<String, dynamic>>(
-        '/api/playrecords',
+        AppConfig.playRecordsEndpoint,
         context: context,
       );
 
@@ -97,10 +98,10 @@ class PageCacheService
         return DataOperationResult.success(records);
       }
     } catch (e) {
-      return DataOperationResult.error('获取播放记录失败: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
 
-    return DataOperationResult.error('获取播放记录失败');
+    return DataOperationResult.error(AppStrings.errorGetFailed);
   }
 
   @override
@@ -114,7 +115,7 @@ class PageCacheService
 
     try {
       final response = await ApiService.get<Map<String, dynamic>>(
-        '/api/playrecords',
+        AppConfig.playRecordsEndpoint,
         context: context,
       );
 
@@ -156,10 +157,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '保存播放记录失败');
+        return DataOperationResult.error(response.message ?? AppStrings.msgOperationFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('保存播放记录异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.msgOperationFailed}: ${e.toString()}');
     }
   }
 
@@ -179,10 +180,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '删除播放记录失败');
+        return DataOperationResult.error(response.message ?? AppStrings.errorDeleteFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('删除播放记录异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
     }
   }
 
@@ -202,10 +203,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '清空播放记录失败');
+        return DataOperationResult.error(response.message ?? AppStrings.msgOperationFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('清空播放记录异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.msgOperationFailed}: ${e.toString()}');
     }
   }
 
@@ -297,10 +298,10 @@ class PageCacheService
         return DataOperationResult.success(filteredData);
       }
     } catch (e) {
-      return DataOperationResult.error('获取收藏夹失败: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
 
-    return DataOperationResult.error('获取收藏夹失败');
+    return DataOperationResult.error(AppStrings.errorGetFailed);
   }
 
   @override
@@ -344,10 +345,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '添加收藏失败');
+        return DataOperationResult.error(response.message ?? AppStrings.errorAddFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('添加收藏异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorAddFailed}: ${e.toString()}');
     }
   }
 
@@ -367,10 +368,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '取消收藏失败');
+        return DataOperationResult.error(response.message ?? AppStrings.favUnfavoriteFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('取消收藏异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.favUnfavoriteFailed}: ${e.toString()}');
     }
   }
 
@@ -473,10 +474,10 @@ class PageCacheService
         return DataOperationResult.success(response.data!);
       }
     } catch (e) {
-      return DataOperationResult.error('获取搜索历史失败: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
 
-    return DataOperationResult.error('获取搜索历史失败');
+    return DataOperationResult.error(AppStrings.errorGetFailed);
   }
 
   @override
@@ -529,10 +530,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '添加搜索历史失败');
+        return DataOperationResult.error(response.message ?? AppStrings.errorAddFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('添加搜索历史异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorAddFailed}: ${e.toString()}');
     }
   }
 
@@ -554,10 +555,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '删除搜索历史失败');
+        return DataOperationResult.error(response.message ?? AppStrings.errorDeleteFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('删除搜索历史异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
     }
   }
 
@@ -572,10 +573,10 @@ class PageCacheService
       if (response.success) {
         return DataOperationResult.success(null);
       } else {
-        return DataOperationResult.error(response.message ?? '清空搜索历史失败');
+        return DataOperationResult.error(response.message ?? AppStrings.msgOperationFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('清空搜索历史异常: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.msgOperationFailed}: ${e.toString()}');
     }
   }
 

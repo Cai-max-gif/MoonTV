@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:provider/provider.dart';
 import '../utils/font_utils.dart';
 import '../services/theme_service.dart';
+import '../constants/app_colors.dart';
 
 /// 自定义下拉刷新指示器
 class CustomRefreshIndicator extends StatelessWidget {
@@ -22,10 +24,10 @@ class CustomRefreshIndicator extends StatelessWidget {
       builder: (context, themeService, child) {
         return RefreshIndicator(
           onRefresh: onRefresh,
-          color: const Color(0xFF27AE60), // 绿色主题
+          color: AppColors.accent, // 绿色主题
           backgroundColor: themeService.isDarkMode 
-              ? const Color(0xFF1e1e1e) 
-              : Colors.white,
+              ? AppColors.cardDark 
+              : AppColors.white,
           strokeWidth: 2.5,
           displacement: 40,
           child: this.child,
@@ -52,17 +54,17 @@ class CustomRefreshIndicatorContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
-        final indicatorColor = color ?? const Color(0xFF27AE60); // 绿色主题
+        final indicatorColor = color ?? AppColors.accent; // 绿色主题
         
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             color: indicatorColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppDimens.radiusRound),
             boxShadow: [
               BoxShadow(
                 color: indicatorColor.withValues(alpha: 0.3),
-                blurRadius: 8,
+                blurRadius: AppDimens.shadowBlurSm,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -73,16 +75,16 @@ class CustomRefreshIndicatorContent extends StatelessWidget {
               if (icon != null) ...[
                 Icon(
                   icon,
-                  color: Colors.white,
+                  color: AppColors.white,
                   size: 20,
                 ),
-                const SizedBox(width: 8),
+                Gap.w8,
               ],
               Text(
                 text ?? '下拉刷新',
                 style: FontUtils.poppins(
-                  color: Colors.white,
-                  fontSize: 14,
+                  color: AppColors.white,
+                  fontSize: AppDimens.fontSizeMd,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -117,10 +119,10 @@ class StyledRefreshIndicator extends StatelessWidget {
       builder: (context, themeService, child) {
         return RefreshIndicator(
           onRefresh: onRefresh,
-          color: primaryColor ?? const Color(0xFF27AE60), // 默认绿色主题
+          color: primaryColor ?? AppColors.accent, // 默认绿色主题
           backgroundColor: backgroundColor ?? (themeService.isDarkMode 
-              ? const Color(0xFF1e1e1e) 
-              : Colors.white),
+              ? AppColors.cardDark 
+               : AppColors.white),
           strokeWidth: 2.5,
           displacement: 40,
           child: this.child,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
 
 class SimpleTabSwitcher extends StatelessWidget {
   final List<String> tabs;
@@ -74,15 +76,15 @@ class _SimpleTabHoverState extends State<_SimpleTabHover> {
     Color color;
     if (widget.isSelected) {
       // 选中状态：绿色
-      color = const Color(0xFF27AE60);
+      color = AppColors.accent;
     } else if (widget.isPC && _isHovered) {
       // PC上未选中且hover：绿色
-      color = const Color(0xFF27AE60);
+      color = AppColors.accent;
     } else {
       // 未选中且未hover：默认颜色
       color = widget.themeService.isDarkMode
-          ? const Color(0xFFb0b0b0)
-          : const Color(0xFF7f8c8d);
+          ? AppColors.textDarkSecondary
+          : AppColors.textSecondary;
     }
 
     return MouseRegion(
@@ -101,7 +103,7 @@ class _SimpleTabHoverState extends State<_SimpleTabHover> {
           child: Text(
             widget.label,
             style: FontUtils.poppins(
-              fontSize: 13,
+              fontSize: AppDimens.fontSizeSm,
               fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w400,
               color: color,
             ),

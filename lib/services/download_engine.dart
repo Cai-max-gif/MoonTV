@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:pointycastle/export.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class M3U8Segment {
   final String url;
@@ -34,13 +36,12 @@ class DownloadEngine {
   DownloadEngine({Dio? dio, String? referer, String? origin})
       : _dio = dio ??
             Dio(BaseOptions(
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 60),
+              connectTimeout: AppConfig.downloadConnectTimeout,
+              receiveTimeout: AppConfig.downloadReceiveTimeout,
               headers: {
-                'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'User-Agent': AppConfig.defaultUserAgent,
                 'Accept': '*/*',
-                'Accept-Language': 'zh-CN,zh;q=0.9',
+                'Accept-Language': AppConfig.headerAcceptLanguage,
                 if (referer != null) 'Referer': referer,
                 if (origin != null) 'Origin': origin,
               },
@@ -70,7 +71,7 @@ class DownloadEngine {
 
     final parseResult = await _parseM3U8(m3u8Url, headers: headers);
 
-    if (_cancelled) throw Exception('下载已取消');
+    if (_cancelled) throw Exception(AppStrings.updateCancelled);
 
     if (parseResult.segments.isEmpty) {
       throw Exception('未解析到任何视频片段，可能不是有效的 M3U8 地址');
@@ -108,7 +109,7 @@ class DownloadEngine {
       }
       if (_cancelled) {
         await _cleanupTemp(tempDir);
-        throw Exception('下载已取消');
+        throw Exception(AppStrings.updateCancelled);
       }
     } else {
       keyBytes = parseResult.keyBytes;
@@ -175,12 +176,12 @@ class DownloadEngine {
 
     if (_cancelled) {
       await _cleanupTemp(tempDir);
-      throw Exception('下载已取消');
+      throw Exception(AppStrings.updateCancelled);
     }
 
     if (hasFailed) {
       await _cleanupTemp(tempDir);
-      throw Exception('下载失败：部分片段下载出错');
+      throw Exception(AppStrings.downloadSegmentFailed);
     }
 
     final allSegmentPaths = <String>[];
@@ -374,7 +375,7 @@ class DownloadEngine {
     Map<String, String>? headers,
   }) async {
     int retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = AppConfig.maxRetries;
 
     while (retryCount < maxRetries) {
       try {
@@ -544,7 +545,7 @@ class DownloadEngine {
       throw Exception('没有有效的视频片段可合并');
     }
 
-    if (totalSize < 100) {
+    if (totalSize < AppConfig.m3u8MinFileSize) {
       throw Exception('合并后的文件大小异常，可能下载失败');
     }
 

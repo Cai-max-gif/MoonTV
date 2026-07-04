@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../constants/app_config.dart';
+import '../constants/app_dimensions.dart';
 
 /// 设备类型工具类
 class DeviceUtils {
   // 平板的最小宽度阈值（dp）
-  static const double tabletMinWidth = 600.0;
+  static const double tabletMinWidth = AppDimens.tabletMinWidth;
 
   /// 判断当前设备是否是平板
   ///
@@ -31,7 +33,7 @@ class DeviceUtils {
 
     final Size size = MediaQuery.of(context).size;
     final double aspectRatio = size.width / size.height;
-    return aspectRatio <= 1.2;
+    return aspectRatio <= AppConfig.tabletPortraitAspectRatio;
   }
 
   /// 判断当前平台是否是 Windows
@@ -62,17 +64,17 @@ class DeviceUtils {
   /// - >= 1200: 8列
   static int getTabletColumnCount(BuildContext context) {
     if (!isTablet(context)) {
-      return 3; // 手机模式固定3列
+      return AppConfig.mobileColumns; // 手机模式固定3列
     }
 
     final double width = MediaQuery.of(context).size.width;
 
-    if (width < 1000) {
-      return 6;
-    } else if (width < 1200) {
-      return 7;
+    if (width < AppDimens.tabletMediumWidth) {
+      return AppConfig.tabletColumnsSmall;
+    } else if (width < AppDimens.tabletLargeWidth) {
+      return AppConfig.tabletColumnsMedium;
     } else {
-      return 8;
+      return AppConfig.tabletColumnsLarge;
     }
   }
 
@@ -90,41 +92,41 @@ class DeviceUtils {
 
     final double width = MediaQuery.of(context).size.width;
 
-    if (width < 1000) {
-      return 5.75;
-    } else if (width < 1200) {
-      return 6.75;
+    if (width < AppDimens.tabletMediumWidth) {
+      return AppConfig.tabletHorizontalVisibleCardsSmall;
+    } else if (width < AppDimens.tabletLargeWidth) {
+      return AppConfig.tabletHorizontalVisibleCardsMedium;
     } else {
-      return 7.75;
+      return AppConfig.tabletHorizontalVisibleCardsLarge;
     }
   }
 
   static int getTabletColumnCountFromWidth(double width) {
     if (width < tabletMinWidth) {
-      return 3;
+      return AppConfig.mobileColumns;
     }
-    if (width < 1000) {
-      return 6;
-    } else if (width < 1200) {
-      return 7;
+    if (width < AppDimens.tabletMediumWidth) {
+      return AppConfig.tabletColumnsSmall;
+    } else if (width < AppDimens.tabletLargeWidth) {
+      return AppConfig.tabletColumnsMedium;
     } else {
-      return 8;
+      return AppConfig.tabletColumnsLarge;
     }
   }
 
   /// 根据屏幕宽度动态计算直播频道列表的列数
   static int getLiveChannelColumnCount(BuildContext context) {
     if (!isTablet(context)) {
-      return 2; // 手机模式固定2列
+      return AppConfig.liveMobileColumns;
     }
     final double width = MediaQuery.of(context).size.width;
 
-    if (width < 1000) {
-      return 3;
-    } else if (width < 1200) {
-      return 4;
+    if (width < AppDimens.tabletMediumWidth) {
+      return AppConfig.liveTabletColumnsSmall;
+    } else if (width < AppDimens.tabletLargeWidth) {
+      return AppConfig.liveTabletColumnsMedium;
     } else {
-      return 5;
+      return AppConfig.liveTabletColumnsLarge;
     }
   }
 }

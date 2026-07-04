@@ -1,4 +1,8 @@
 import 'dart:async';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -85,7 +89,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
               _error = _result!.error;
             }
           } else {
-            _error = response.message ?? '搜索失败';
+            _error = response.message ?? AppStrings.netdiskSearchFailed;
           }
         });
 
@@ -104,7 +108,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = '搜索失败: ${e.toString()}';
+          _error = '${AppStrings.netdiskSearchError}${e.toString()}';
         });
       }
     }
@@ -128,14 +132,14 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法打开链接')),
+            const SnackBar(content: Text(AppStrings.liveCannotOpenLink)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('打开链接失败: ${e.toString()}')),
+          SnackBar(content: Text('${AppStrings.netdiskOpenUrlFailed}${e.toString()}')),
         );
       }
     }
@@ -158,13 +162,13 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
       await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$description已复制')),
+          SnackBar(content: Text('${AppStrings.netdiskCopied}')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('复制失败: ${e.toString()}')),
+          SnackBar(content: Text('${AppStrings.netdiskCopyFailed}${e.toString()}')),
         );
       }
     }
@@ -174,16 +178,16 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('网盘资源搜索'),
+        title: Text(AppStrings.netdiskSearchTitle),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: AppDimens.horizontalSmVerticalMdPadding,
             child: TextField(
               controller: _searchController,
               focusNode: _searchFocusNode,
               decoration: InputDecoration(
-                hintText: '输入关键词搜索网盘资源',
+                hintText: AppStrings.netdiskSearchHint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -198,7 +202,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
                       )
                     : null,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 ),
                 filled: true,
                 fillColor:
@@ -222,8 +226,8 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('正在搜索网盘资源...'),
+            Gap.h16,
+            Text(AppStrings.netdiskSearching),
           ],
         ),
       );
@@ -233,7 +237,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     if (_error != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppDimens.spacingXxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -244,12 +248,12 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
                 size: 48,
                 color: _error!.contains('未启用') ? Colors.blue : Colors.red,
               ),
-              const SizedBox(height: 16),
+              Gap.h16,
               Text(
                 _error!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: _error!.contains('未启用') ? Colors.blue : Colors.red,
+                  color: _error!.contains('未启用') ? AppColors.blue : AppColors.red,
                 ),
               ),
             ],
@@ -265,8 +269,8 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.cloud, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('输入关键词开始搜索', style: TextStyle(color: Colors.grey)),
+            Gap.h16,
+            Text(AppStrings.netdiskSearchStartHint, style: TextStyle(color: AppColors.gray400)),
           ],
         ),
       );
@@ -279,10 +283,10 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.search_off, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('未找到相关资源'),
-            SizedBox(height: 8),
-            Text('尝试使用其他关键词搜索', style: TextStyle(color: Colors.grey)),
+            Gap.h16,
+            Text(AppStrings.netdiskNoResults),
+            Gap.h8,
+            Text(AppStrings.netdiskTryOtherKeywords, style: TextStyle(color: AppColors.gray400)),
           ],
         ),
       );
@@ -310,7 +314,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
   Widget _buildFilterBar() {
     return Container(
       color: Theme.of(context).colorScheme.surface,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppDimens.spacingMd),
       child: Wrap(
         spacing: 6,
         runSpacing: 6,
@@ -319,19 +323,19 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
           final isSelected = _selectedType == entry.key;
 
           return ActionChip(
-            avatar: Text(type.icon, style: const TextStyle(fontSize: 14)),
+            avatar: Text(type.icon, style: const TextStyle(fontSize: AppDimens.fontSizeMd)),
             label: Text(
               '${type.name} ${entry.value.length}',
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: AppDimens.fontSizeXs,
               ),
             ),
             backgroundColor: isSelected ? type.color : type.lightColor,
             side: BorderSide(
-              color: isSelected ? type.color : Colors.grey.shade300,
+              color: isSelected ? type.color : AppColors.gray300,
             ),
             labelStyle: TextStyle(
-              color: isSelected ? Colors.white : null,
+              color: isSelected ? AppColors.white : null,
             ),
             onPressed: () {
               setState(() {
@@ -347,11 +351,11 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
   Widget _buildStatsBar() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.all(AppDimens.spacingMd),
+      padding: const EdgeInsets.all(AppDimens.spacingMd),
       decoration: BoxDecoration(
         color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         border: Border.all(color: Colors.blue.shade200),
       ),
       child: Text.rich(
@@ -391,26 +395,26 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Text(type.icon, style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: 8),
+                Text(type.icon, style: const TextStyle(fontSize: AppDimens.fontSizeXxl)),
+                Gap.w8,
                 Text(
                   type.name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 8),
+                Gap.w8,
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusLg),
                   ),
                   child: Text(
                     '${links.length} 个链接',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                    style: const TextStyle(color: AppColors.white, fontSize: AppDimens.fontSize3xs),
                   ),
                 ),
               ],
@@ -442,7 +446,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     return InkWell(
       onTap: () => _launchUrl(link.url),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppDimens.spacingMd),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -457,7 +461,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
                     overflow: isTitleExpanded ? null : TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      fontSize: AppDimens.fontSizeMd,
                     ),
                   ),
                 ),
@@ -471,38 +475,38 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    isTitleExpanded ? '收起' : '展开',
+                    isTitleExpanded ? AppStrings.netdiskCollapse : AppStrings.netdiskExpand,
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
-                      fontSize: 12,
+                      fontSize: AppDimens.fontSizeXs,
                     ),
                   ),
                 ),
               ),
 
-            const SizedBox(height: 8),
+            Gap.h8,
 
             // 链接行
             Row(
               children: [
-                const Icon(Icons.link, size: 16, color: Colors.grey),
-                const SizedBox(width: 4),
+                const Icon(Icons.link, size: AppDimens.iconSm, color: Colors.grey),
+                Gap.w4,
                 Expanded(
                   child: Text(
                     link.url,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: AppDimens.fontSizeXs,
                       color: Colors.grey.shade600,
                       fontFamily: 'monospace',
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.copy, size: 18),
+                  icon: const Icon(Icons.copy, size: AppDimens.iconMd),
                   onPressed: () => _copyToClipboard(link.url, '链接'),
-                  tooltip: '复制链接',
+                  tooltip: AppStrings.netdiskCopyLink,
                   constraints:
                       const BoxConstraints(minWidth: 32, minHeight: 32),
                   padding: EdgeInsets.zero,
@@ -512,16 +516,16 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
 
             // 密码行（仅当有密码时显示）
             if (link.hasPassword) ...[
-              const SizedBox(height: 6),
+              Gap.h6,
               Row(
                 children: [
-                  const Icon(Icons.lock, size: 16, color: Colors.grey),
-                  const SizedBox(width: 4),
+                  const Icon(Icons.lock, size: AppDimens.iconSm, color: Colors.grey),
+                  Gap.w4,
                   Expanded(
                     child: Text(
                       isPasswordVisible ? link.password : '****',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: AppDimens.fontSizeXs,
                         color: Colors.grey.shade600,
                         fontFamily: 'monospace',
                       ),
@@ -532,18 +536,18 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
                       isPasswordVisible
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      size: 18,
+                      size: AppDimens.iconMd,
                     ),
                     onPressed: () => _togglePasswordVisibility(linkKey),
-                    tooltip: isPasswordVisible ? '隐藏密码' : '显示密码',
+                    tooltip: isPasswordVisible ? AppStrings.netdiskHidePassword : AppStrings.netdiskShowPassword,
                     constraints:
                         const BoxConstraints(minWidth: 32, minHeight: 32),
                     padding: EdgeInsets.zero,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy, size: 18),
+                    icon: const Icon(Icons.copy, size: AppDimens.iconMd),
                     onPressed: () => _copyToClipboard(link.password, '密码'),
-                    tooltip: '复制密码',
+                    tooltip: AppStrings.netdiskCopyPassword,
                     constraints:
                         const BoxConstraints(minWidth: 32, minHeight: 32),
                     padding: EdgeInsets.zero,
@@ -552,20 +556,20 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
               ),
             ],
 
-            const SizedBox(height: 8),
+            Gap.h8,
 
             // 元信息行
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    '来源: ${link.source}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                    '${AppStrings.netdiskSource}${link.source}',
+                    style: TextStyle(fontSize: AppDimens.fontSize3xs, color: Colors.grey.shade500),
                   ),
                 ),
                 TextButton.icon(
                   icon: const Icon(Icons.open_in_new, size: 14),
-                  label: const Text('访问链接', style: TextStyle(fontSize: 12)),
+                  label: Text(AppStrings.netdiskAccessLink, style: const TextStyle(fontSize: AppDimens.fontSizeXs)),
                   onPressed: () => _launchUrl(link.url),
                   style: TextButton.styleFrom(
                     padding:

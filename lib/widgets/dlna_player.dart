@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 import 'package:dlna_dart/dlna.dart';
 import 'package:dlna_dart/xmlParser.dart';
 import 'dlna_player_controls.dart';
@@ -90,7 +92,7 @@ class _DLNAPlayerState extends State<DLNAPlayer> {
   }
 
   void _startStatusPolling() {
-    _statusTimer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
+    _statusTimer = Timer.periodic(AppDurations.slow, (timer) {
       _updateStatus();
     });
   }
@@ -217,7 +219,7 @@ class _DLNAPlayerState extends State<DLNAPlayer> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      color: AppColors.black,
       child: DLNAPlayerControls(
         device: widget.device,
         position: _position,

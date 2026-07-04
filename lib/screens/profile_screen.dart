@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -19,6 +20,10 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/update_dialog.dart';
 import '../widgets/announcement_dialog.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -143,17 +148,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在检查更新...',
+              AppStrings.profileCheckingUpdate,
               style: FontUtils.poppins(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
+                    ? AppColors.white
                     : Colors.black,
               ),
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
                 ? Colors.black
-                : Colors.white,
-            duration: const Duration(seconds: 2),
+                : AppColors.white,
+            duration: AppDurations.twoSeconds,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -170,12 +175,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '当前已是最新版本',
+              AppStrings.profileAlreadyLatest,
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFF27AE60),
+            backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -186,12 +191,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '检查更新失败: ${e.toString()}',
+              '${AppStrings.profileCheckUpdateFailed}${e.toString()}',
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -218,17 +223,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在获取公告...',
+              AppStrings.profileFetchingAnnouncement,
               style: FontUtils.poppins(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
+                    ? AppColors.white
                     : Colors.black,
               ),
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
                 ? Colors.black
-                : Colors.white,
-            duration: const Duration(seconds: 2),
+                : AppColors.white,
+            duration: AppDurations.twoSeconds,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -245,12 +250,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '暂无公告',
+              AppStrings.profileNoAnnouncement,
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFF27AE60),
+            backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -261,12 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '获取公告失败: ${e.toString()}',
+              '${AppStrings.profileFetchAnnouncementFailed}${e.toString()}',
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -287,17 +292,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     switch (_role) {
       case 'admin':
-        label = '管理员';
-        color = const Color(0xFFf59e0b);
+        label = AppStrings.profileRoleAdmin;
+        color = AppColors.amber;
         break;
       case 'owner':
-        label = '站长';
-        color = const Color(0xFF8b5cf6);
+        label = AppStrings.profileRoleOwner;
+        color = AppColors.violet;
         break;
       case 'user':
       default:
-        label = '用户';
-        color = const Color(0xFF10b981);
+        label = AppStrings.profileRoleUser;
+        color = AppColors.emerald;
         break;
     }
 
@@ -305,13 +310,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Text(
         label,
         style: FontUtils.poppins(
-          fontSize: 10,
-          color: Colors.white,
+          fontSize: AppDimens.fontSize2xs,
+          color: AppColors.white,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -321,10 +326,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildDivider() {
     return Container(
       height: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLg),
       color: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF374151)
-          : const Color(0xFFe5e7eb),
+          ? AppColors.borderDarkGray
+          : AppColors.borderLightGray,
     );
   }
 
@@ -336,7 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     VoidCallback? onTap,
   }) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -351,14 +356,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 size: 20,
                 color: iconColor,
               ),
-              const SizedBox(width: 12),
+              Gap.w12,
               Text(
                 label,
                 style: FontUtils.poppins(
-                  fontSize: 16,
+                  fontSize: AppDimens.fontSizeXl,
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFFffffff)
-                      : const Color(0xFF1f2937),
+                      ? AppColors.white
+                      : AppColors.textDarkGray,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -367,8 +372,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 LucideIcons.chevronRight,
                 size: 20,
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF666666)
-                    : const Color(0xFF9ca3af),
+                    ? AppColors.textDarkHint
+                    : AppColors.gray400,
               ),
             ],
           ),
@@ -384,8 +389,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF000000)
-            : const Color(0xFFf5f5f5),
+            ? AppColors.black
+            : AppColors.grayBg,
       ),
       child: ListView(
         children: [
@@ -399,13 +404,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1e1e1e)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+                  ? AppColors.cardDark
+                  : AppColors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -413,31 +418,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 Text(
-                  '当前用户',
+                  AppStrings.profileCurrentUser,
                   textAlign: TextAlign.center,
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: AppDimens.fontSizeXs,
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(height: 8),
+                Gap.h8,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _username ?? '未知用户',
+                      _username ?? AppStrings.profileUnknownUser,
                       style: FontUtils.poppins(
-                        fontSize: 18,
+                        fontSize: AppDimens.fontSizeXxl,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF1f2937),
+                            ? AppColors.white
+                            : AppColors.textDarkGray,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    Gap.w8,
                     _buildRoleTag(),
                   ],
                 ),
@@ -445,16 +450,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLg),
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1e1e1e)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+                  ? AppColors.cardDark
+                  : AppColors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -463,8 +468,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildSettingsItem(
                   icon: LucideIcons.folderOutput,
-                  iconColor: const Color(0xFF10b981),
-                  label: '下载管理',
+                  iconColor: AppColors.emerald,
+                  label: AppStrings.profileDownloadManage,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -477,8 +482,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildDivider(),
                 _buildSettingsItem(
                   icon: LucideIcons.settings2,
-                  iconColor: const Color(0xFF8b5cf6),
-                  label: '下载设置',
+                  iconColor: AppColors.violet,
+                  label: AppStrings.profileDownloadSettings,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -491,8 +496,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildDivider(),
                 _buildSettingsItem(
                   icon: LucideIcons.clapperboard,
-                  iconColor: const Color(0xFFf59e0b),
-                  label: '播放设置',
+                  iconColor: AppColors.amber,
+                  label: AppStrings.profilePlaybackSettings,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -505,8 +510,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildDivider(),
                 _buildSettingsItem(
                   icon: LucideIcons.messageSquare,
-                  iconColor: const Color(0xFFec4899),
-                  label: '弹幕设置',
+                  iconColor: AppColors.pinkAccent,
+                  label: AppStrings.profileDanmakuSettings,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -519,25 +524,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildDivider(),
                 _buildSettingsItem(
                   icon: LucideIcons.palette,
-                  iconColor: const Color(0xFF3b82f6),
-                  label: '主题设置',
+                  iconColor: AppColors.blue,
+                  label: AppStrings.profileThemeSettings,
                   trailing: Row(
                     children: [
                       Icon(
                         themeService.isDarkMode ? LucideIcons.moon : LucideIcons.sun,
-                        size: 16,
+                        size: AppDimens.iconSm,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                       ),
-                      const SizedBox(width: 6),
+                      Gap.w6,
                       Text(
-                        themeService.isDarkMode ? '深色' : '浅色',
+                        themeService.isDarkMode ? AppStrings.profileThemeDark : AppStrings.profileThemeLight,
                         style: FontUtils.poppins(
-                          fontSize: 14,
+                          fontSize: AppDimens.fontSizeMd,
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF9ca3af)
-                              : const Color(0xFF6b7280),
+                              ? AppColors.gray400
+                              : AppColors.gray500,
                         ),
                       ),
                     ],
@@ -549,13 +554,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildDivider(),
                 _buildSettingsItem(
                   icon: LucideIcons.bell,
-                  iconColor: const Color(0xFFf59e0b),
-                  label: '公告',
+                  iconColor: AppColors.amber,
+                  label: AppStrings.profileAnnouncement,
                   onTap: _handleViewAnnouncement,
                 ),
                 _buildDivider(),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: InkWell(
                     onTap: _handleCheckUpdate,
                     child: Container(
@@ -568,16 +573,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const Icon(
                             LucideIcons.download,
                             size: 20,
-                            color: Color(0xFF3b82f6),
+                            color: AppColors.blue,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
-                            '检查更新',
+                            AppStrings.profileCheckUpdate,
                             style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? const Color(0xFFffffff)
-                                  : const Color(0xFF1f2937),
+                              fontSize: AppDimens.fontSizeXl,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.white
+                                : AppColors.textDarkGray,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -589,7 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: GestureDetector(
                               onTap: () async {
                                 final url = Uri.parse(
-                                  'https://github.com/Cai-max-gif/MoonTV',
+                                  AppConfig.githubRepoUrl,
                                 );
                                 if (await canLaunchUrl(url)) {
                                   await launchUrl(
@@ -599,12 +604,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               },
                               child: Text(
-                                _version.isEmpty ? '1.4.3' : _version,
+                                _version.isEmpty ? AppConfig.defaultVersion : _version,
                                 style: FontUtils.poppins(
-                                  fontSize: 14,
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? const Color(0xFF9ca3af)
-                                      : const Color(0xFF6b7280),
+                                  fontSize: AppDimens.fontSizeMd,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -617,7 +622,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 _buildDivider(),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: InkWell(
                     onTap: _handleLogout,
                     child: Container(
@@ -630,14 +635,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const Icon(
                             LucideIcons.logOut,
                             size: 20,
-                            color: Color(0xFFef4444),
+                            color: AppColors.red,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
-                            '登出',
+                            AppStrings.authLogout,
                             style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: const Color(0xFFef4444),
+                              fontSize: AppDimens.fontSizeXl,
+                              color: AppColors.red,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

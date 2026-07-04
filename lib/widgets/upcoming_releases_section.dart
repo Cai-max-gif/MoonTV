@@ -10,6 +10,9 @@ import '../utils/font_utils.dart';
 import 'recommendation_section.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
 
 /// 用于通知所有 UpcomingReleasesSection 实例刷新数据的 StreamController
 final _refreshStreamController = StreamController<void>.broadcast();
@@ -80,6 +83,23 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
   Future<void> _loadUpcomingReleases() async {
     try {
       if (!mounted) return;
+
+      // 如果有有效缓存，直接使用缓存数据，不显示loading
+      if (ReleaseCalendarService.hasValidCache()) {
+        final result = await ReleaseCalendarService.getReleaseCalendar(
+          context,
+          limit: 100,
+        );
+        if (!mounted) return;
+        if (result.success && result.data != null) {
+          setState(() {
+            _items = result.data!;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
       setState(() {
         _isLoading = true;
         _hasError = false;
@@ -111,13 +131,16 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
     }
   }
 
-  /// 获取过滤后的数据，并按上映时间排序
+  /// 获取过滤后的数据，并按上映时间排序（仅显示未上映的）
   List<ReleaseCalendarItem> get _filteredItems {
+    // 先过滤出未上映的（距离上映天数 > 0）
+    final upcomingItems = _items.where((item) => item.getDaysUntilRelease() > 0).toList();
+
     List<ReleaseCalendarItem> items;
     if (_selectedFilter == 'all') {
-      items = _items;
+      items = upcomingItems;
     } else {
-      items = _items.where((item) => item.type == _selectedFilter).toList();
+      items = upcomingItems.where((item) => item.type == _selectedFilter).toList();
     }
 
     // 按上映时间排序：先上映的排前面
@@ -177,13 +200,13 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
                     return Row(
                       children: [
                         Text(
-                          '即将上映',
+                          AppStrings.homeUpcoming,
                           style: FontUtils.poppins(
-                            fontSize: 18,
+                            fontSize: AppDimens.fontSizeXxl,
                             fontWeight: FontWeight.w600,
                             color: themeService.isDarkMode
-                                ? const Color(0xFFffffff)
-                                : const Color(0xFF2c3e50),
+                                ? AppColors.white
+                                : AppColors.primary,
                           ),
                         ),
                       ],
@@ -197,13 +220,13 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      overlayColor: Colors.transparent,
+                      overlayColor: AppColors.transparent,
                     ),
                     child: Text(
-                      '查看更多 >',
+                      AppStrings.homeViewMore,
                       style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF7f8c8d),
+                        fontSize: AppDimens.fontSizeMd,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -223,12 +246,12 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
             RecommendationSection(
               title: '', // 空标题，因为上面已经显示了
               videoInfos: _convertToVideoInfos(),
-              onItemTap: widget.onItemTap,
+              onItemTap: null, // 即将上映没有视频源，点击不跳转
               onGlobalMenuAction: widget.onGlobalMenuAction,
               isLoading: false,
               hasError: false,
               cardCount: 2.75,
-              from: 'douban',
+              from: 'upcoming',
             ),
         ],
       );
@@ -236,8 +259,10 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
 
   /// 构建筛选标签
   Widget _buildFilterTabs() {
-    final movieCount = _items.where((item) => item.type == 'movie').length;
-    final tvCount = _items.where((item) => item.type == 'tv').length;
+    // 仅统计未上映的项目数量
+    final upcomingItems = _items.where((item) => item.getDaysUntilRelease() > 0).toList();
+    final movieCount = upcomingItems.where((item) => item.type == 'movie').length;
+    final tvCount = upcomingItems.where((item) => item.type == 'tv').length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -245,11 +270,11 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
         builder: (context, themeService, child) {
           return Row(
             children: [
-              _buildFilterChip('全部', 'all', _items.length, themeService),
+              _buildFilterChip(AppStrings.all, 'all', upcomingItems.length, themeService),
               const SizedBox(width: 8),
-              _buildFilterChip('电影', 'movie', movieCount, themeService),
+              _buildFilterChip(AppStrings.movie, 'movie', movieCount, themeService),
               const SizedBox(width: 8),
-              _buildFilterChip('电视剧', 'tv', tvCount, themeService),
+              _buildFilterChip(AppStrings.navTv, 'tv', tvCount, themeService),
             ],
           );
         },
@@ -271,17 +296,17 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFf39c12)
+              ? AppColors.orange
               : (themeService.isDarkMode
-                  ? const Color(0xFF2d3748)
-                  : const Color(0xFFf7fafc)),
-          borderRadius: BorderRadius.circular(8),
+                  ? AppColors.gray750
+                  : AppColors.gray50),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFf39c12)
+                ? AppColors.orange
                 : (themeService.isDarkMode
-                    ? const Color(0xFF4a5568)
-                    : const Color(0xFFe2e8f0)),
+                    ? AppColors.gray600
+                    : AppColors.slate200),
             width: 1,
           ),
         ),
@@ -291,13 +316,13 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
             Text(
               label,
               style: FontUtils.poppins(
-                fontSize: 13,
+                fontSize: AppDimens.fontSizeSm,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 color: isSelected
-                    ? Colors.white
+                    ? AppColors.white
                     : (themeService.isDarkMode
-                        ? const Color(0xFFa0aec0)
-                        : const Color(0xFF4a5568)),
+                        ? AppColors.gray650
+                        : AppColors.gray600),
               ),
             ),
             if (count > 0) ...[
@@ -305,9 +330,9 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
               Text(
                 '($count)',
                 style: FontUtils.poppins(
-                  fontSize: 11,
+                  fontSize: AppDimens.fontSize3xs,
                   color: isSelected
-                      ? Colors.white70
+                      ? AppColors.white70
                       : (themeService.isDarkMode
                           ? const Color(0xFF718096)
                           : const Color(0xFF718096)),
@@ -370,14 +395,14 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
             ShimmerEffect(
               width: width,
               height: height,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
             const SizedBox(height: 6),
             Center(
               child: ShimmerEffect(
                 width: width * 0.8,
                 height: 14,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               ),
             ),
           ],
@@ -397,25 +422,25 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
           children: [
             Icon(
               Icons.error_outline,
-              color: Colors.grey[400],
+              color: AppColors.gray400,
               size: 32,
             ),
             const SizedBox(height: 8),
             Text(
-              '加载失败',
+              AppStrings.loadFailed,
               style: FontUtils.poppins(
-                fontSize: 14,
-                color: Colors.grey[600],
+                fontSize: AppDimens.fontSizeMd,
+                color: AppColors.gray600,
               ),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _loadUpcomingReleases,
               child: Text(
-                '重试',
+                AppStrings.retry,
                 style: FontUtils.poppins(
-                  fontSize: 12,
-                  color: const Color(0xFF2c3e50),
+                  fontSize: AppDimens.fontSizeXs,
+                  color: AppColors.primary,
                 ),
               ),
             ),

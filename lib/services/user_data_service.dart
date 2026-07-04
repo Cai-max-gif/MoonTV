@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import '../constants/app_config.dart';
 
 class UserDataService {
   static const String _usernameKey = 'username';
@@ -30,18 +31,18 @@ class UserDataService {
   static const String _accountLockedUntilKey = 'account_locked_until';
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  static const int _maxLoginAttempts = 5;
-  static const Duration _lockDuration = Duration(minutes: 15);
+  static int get _maxLoginAttempts => AppConfig.maxLoginAttempts;
+  static Duration get _lockDuration => AppConfig.loginLockDuration;
 
   static final ValueNotifier<bool> danmakuEnabledNotifier =
       ValueNotifier<bool>(false);
-  static final ValueNotifier<int> danmakuSpeedNotifier = ValueNotifier<int>(2);
+  static final ValueNotifier<int> danmakuSpeedNotifier = ValueNotifier<int>(AppConfig.danmakuDefaultSpeed);
   static final ValueNotifier<int> danmakuOpacityNotifier =
-      ValueNotifier<int>(100);
+      ValueNotifier<int>(AppConfig.danmakuDefaultOpacity);
   static final ValueNotifier<double> danmakuFontSizeNotifier =
-      ValueNotifier<double>(1.0);
+      ValueNotifier<double>(AppConfig.danmakuDefaultFontSize);
   static final ValueNotifier<double> danmakuDisplayAreaNotifier =
-      ValueNotifier<double>(1.0);
+      ValueNotifier<double>(AppConfig.danmakuDefaultDisplayArea);
   static final ValueNotifier<bool> danmakuAntiBlockNotifier =
       ValueNotifier<bool>(true);
   static final ValueNotifier<bool> danmakuSyncSpeedNotifier =
@@ -77,7 +78,7 @@ class UserDataService {
 
   // 获取默认服务器地址
   static String getDefaultServerUrl() {
-    return 'https://moontv.cc.cd';
+    return AppConfig.serverBaseUrl;
   }
 
   // 获取服务器地址（固定返回默认值）
@@ -359,7 +360,7 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuOpacity(int opacity) async {
-    final clamped = opacity.clamp(0, 100);
+    final clamped = opacity.clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax);
     danmakuOpacityNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_danmakuOpacityKey, clamped);
@@ -367,8 +368,8 @@ class UserDataService {
 
   static Future<int> getDanmakuOpacity() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_danmakuOpacityKey)?.clamp(0, 100) ??
-        (prefs.getDouble(_danmakuOpacityKey) ?? 100).toInt().clamp(0, 100);
+    return prefs.getInt(_danmakuOpacityKey)?.clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax) ??
+        (prefs.getDouble(_danmakuOpacityKey) ?? AppConfig.danmakuDefaultOpacity).toInt().clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax);
   }
 
   static Future<void> saveDanmakuFontSize(double fontSize) async {

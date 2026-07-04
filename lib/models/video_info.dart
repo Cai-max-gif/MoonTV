@@ -1,4 +1,5 @@
 import 'play_record.dart';
+import '../constants/app_config.dart';
 
 /// 视频信息数据模型，用于VideoCard展示
 class VideoInfo {
@@ -72,7 +73,7 @@ class VideoInfo {
   /// 从JSON创建VideoInfo
   factory VideoInfo.fromJson(String key, Map<String, dynamic> json) {
     // 从key中分离source和id，格式为 "source+id"
-    final parts = key.split('+');
+    final parts = key.split(AppConfig.searchKeySeparator);
     final source = parts.length > 1 ? parts[0] : '';
     final id = parts.length > 1 ? parts[1] : key;
 
@@ -126,9 +127,9 @@ class VideoInfo {
 
   /// 格式化播放时间
   String get formattedPlayTime {
-    final hours = playTime ~/ 3600;
-    final minutes = (playTime % 3600) ~/ 60;
-    final seconds = playTime % 60;
+    final hours = playTime ~/ AppConfig.secondsPerHour;
+    final minutes = (playTime % AppConfig.secondsPerHour) ~/ AppConfig.secondsPerMinute;
+    final seconds = playTime % AppConfig.secondsPerMinute;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -137,11 +138,10 @@ class VideoInfo {
     }
   }
 
-  /// 格式化总时间
-  String get formattedTotalTime {
-    final hours = totalTime ~/ 3600;
-    final minutes = (totalTime % 3600) ~/ 60;
-    final seconds = totalTime % 60;
+  static String formatTotalTime(int totalTime) {
+    final hours = totalTime ~/ AppConfig.secondsPerHour;
+    final minutes = (totalTime % AppConfig.secondsPerHour) ~/ AppConfig.secondsPerMinute;
+    final seconds = totalTime % AppConfig.secondsPerMinute;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';

@@ -65,6 +65,7 @@ class _BangumiSectionState extends State<BangumiSection> {
         });
       } else {
         setState(() {
+          _hasError = true;
           _isLoading = false;
         });
       }

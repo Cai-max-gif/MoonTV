@@ -4,11 +4,14 @@ import 'package:http/http.dart' as http;
 import '../models/bangumi.dart';
 import 'api_service.dart';
 import 'douban_cache_service.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 
 /// Bangumi 数据服务（函数级缓存，一天过期）
 class BangumiService {
   static final DoubanCacheService _cache = DoubanCacheService();
   static bool _initialized = false;
+  static const String _userAgent = AppConfig.bangumiUserAgent;
 
   static Future<void> _initCache() async {
     if (!_initialized) {
@@ -58,16 +61,15 @@ class BangumiService {
 
     // 未命中缓存，请求接口
     try {
-      const apiUrl = 'https://api.bgm.tv/calendar';
+      const apiUrl = '${AppConfig.bgmApiBase}/calendar';
       final headers = {
-        'User-Agent':
-            'senshinya/selene/1.0.0 (Android) (http://github.com/senshinya/selene)',
+        'User-Agent': _userAgent,
         'Accept': 'application/json',
       };
 
       final response = await http
           .get(Uri.parse(apiUrl), headers: headers)
-          .timeout(const Duration(seconds: 30));
+          .timeout(AppDurations.networkTimeout);
 
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
@@ -142,10 +144,9 @@ class BangumiService {
     }
 
     try {
-      final apiUrl = 'https://api.bgm.tv/v0/subjects/$bangumiId';
+      final apiUrl = '${AppConfig.bgmApiBase}/v0/subjects/$bangumiId';
       final headers = {
-        'User-Agent':
-            'senshinya/selene/1.0.0 (Android) (http://github.com/senshinya/selene)',
+        'User-Agent': _userAgent,
         'Accept': 'application/json',
       };
 
@@ -154,7 +155,7 @@ class BangumiService {
             Uri.parse(apiUrl),
             headers: headers,
           )
-          .timeout(const Duration(seconds: 30));
+          .timeout(AppDurations.networkTimeout);
 
       if (response.statusCode == 200) {
         try {
@@ -166,7 +167,7 @@ class BangumiService {
             await _cache.set(
               cacheKey,
               details.toJson(),
-              const Duration(days: 3),
+              AppConfig.bangumiDetailCache,
             );
           } catch (cacheError) {
             // 静默处理缓存错误

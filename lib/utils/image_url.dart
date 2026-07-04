@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 // 通用图片地址处理工具
 
 /// 根据来源处理图片 URL（例如豆瓣域名替换）。
@@ -14,29 +16,27 @@ Future<String> getImageUrl(String originalUrl, String? source) async {
 Map<String, String>? getImageRequestHeaders(String imageUrl, String? source) {
   // 检查是否是 manmankan 来源
   final bool isManmankanSource = (source == 'manmankan') || (source == 'upcoming_release') ||
-      RegExp(r'https?://([^/]+\.)?manmankan\.com', caseSensitive: false)
+      RegExp('https?://([^/]+\\.)?${AppConfig.manmankanDomain}', caseSensitive: false)
           .hasMatch(imageUrl);
   
   if (isManmankanSource) {
-    // 为 manmankan 网站添加 Referer 和 UA
     return <String, String>{
-      'Referer': 'https://www.manmankan.com/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+      'Referer': AppConfig.manmankanReferer,
+      'User-Agent': AppConfig.manmankanUserAgent,
+      'Accept': AppConfig.imageAcceptHeader,
     };
   }
 
   // 检查是否是 douban 来源
   final bool isDoubanSource = (source == 'douban') ||
-      RegExp(r'https?://([^/]+\.)?douban(io|)\.com', caseSensitive: false)
+      RegExp('https?://([^/]+\\.)?${AppConfig.doubanDomainPattern}', caseSensitive: false)
           .hasMatch(imageUrl);
 
   if (isDoubanSource) {
-    // 常见可用的 Referer 和 UA，避免 403 或 Android 解码失败
     return <String, String>{
-      'Referer': 'https://movie.douban.com/',
-      'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
-      'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+      'Referer': AppConfig.doubanReferer,
+      'User-Agent': AppConfig.doubanMobileUserAgent,
+      'Accept': AppConfig.imageAcceptHeader,
     };
   }
   return null;

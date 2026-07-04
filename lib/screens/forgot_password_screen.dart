@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_regex.dart';
+import '../constants/app_durations.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
@@ -9,6 +13,8 @@ import '../utils/input_validator_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -59,7 +65,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() {
       _countdown = 60;
     });
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _countdownTimer = Timer.periodic(AppDurations.oneSecond, (timer) {
       if (mounted) {
         setState(() {
           _countdown--;
@@ -77,17 +83,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         content: Text(
           message,
           style: FontUtils.poppins(
-            color: Colors.white,
-            fontSize: 14,
+            color: AppColors.white,
+            fontSize: AppDimens.fontSizeMd,
           ),
         ),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(AppDimens.spacingLg),
+        duration: AppDurations.toastDuration,
       ),
     );
   }
@@ -95,11 +101,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleSendCode() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      _showToast('请输入邮箱地址', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regHintEmail, AppColors.error);
       return;
     }
-    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
-      _showToast('请输入有效的邮箱地址', const Color(0xFFe74c3c));
+    if (!RegExp(AppRegex.email).hasMatch(email)) {
+      _showToast(AppStrings.regValidEmailFormat, AppColors.error);
       return;
     }
 
@@ -110,16 +116,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
-      String sendCodeUrl = '$secureBaseUrl/api/send-verification-code';
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+      String sendCodeUrl = '$secureBaseUrl${AppConfig.sendVerificationCodeEndpoint}';
 
       final response = await http.post(
         Uri.parse(sendCodeUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': AppStrings.contentTypeJson,
         },
         body: json.encode({'email': email, 'type': 'reset'}),
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(AppConfig.authRequestTimeout);
 
       if (!mounted) return;
       setState(() {
@@ -134,25 +140,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               responseData['status'] == 'success';
 
           if (isSuccess) {
-            _showToast('验证码已发送到您的邮箱', const Color(0xFF27ae60));
+            _showToast(AppStrings.regSendCodeSuccess, AppColors.accent);
             _startCountdown();
           } else {
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? '发送验证码失败',
-                const Color(0xFFe74c3c));
+                responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+                AppColors.error);
           }
         } catch (e) {
-          _showToast('服务器响应格式异常', const Color(0xFFe74c3c));
+          _showToast(AppStrings.forgotServerResponseError, AppColors.error);
         }
       } else {
         try {
           final responseData = json.decode(response.body);
           _showToast(
-              responseData['error'] ?? responseData['message'] ?? '发送验证码失败',
-              const Color(0xFFe74c3c));
+              responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+              AppColors.error);
         } catch (e) {
           _showToast(
-              '发送验证码失败 (${response.statusCode})', const Color(0xFFe74c3c));
+              '${AppStrings.regSendCodeFailed} (${response.statusCode})', AppColors.error);
         }
       }
     } catch (e) {
@@ -160,14 +166,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         setState(() {
           _isSendingCode = false;
         });
-        _showToast('网络异常，请稍后重试', const Color(0xFFe74c3c));
+        _showToast(AppStrings.networkRetryLater, AppColors.error);
       }
     }
   }
 
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate() || !_isFormValid) {
-      _showToast('请填写完整的信息', const Color(0xFFe74c3c));
+      _showToast(AppStrings.forgotFillAll, AppColors.error);
       return;
     }
 
@@ -175,18 +181,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final verificationCode = _verificationCodeController.text.trim();
     final newPassword = _newPasswordController.text;
 
-    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
-      _showToast('请输入有效的邮箱地址', const Color(0xFFe74c3c));
+    if (!RegExp(AppRegex.email).hasMatch(email)) {
+      _showToast(AppStrings.regValidEmailFormat, AppColors.error);
       return;
     }
 
     if (newPassword.length < 6) {
-      _showToast('密码长度至少6位', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regValidPasswordMin, AppColors.error);
       return;
     }
 
-    if (!RegExp(r'^\d{6}$').hasMatch(verificationCode)) {
-      _showToast('验证码格式错误，应为6位数字', const Color(0xFFe74c3c));
+    if (!RegExp(AppRegex.verificationCode).hasMatch(verificationCode)) {
+      _showToast(AppStrings.regValidCodeFormatHint, AppColors.error);
       return;
     }
 
@@ -197,20 +203,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
-      String resetUrl = '$secureBaseUrl/api/reset-password';
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+      String resetUrl = '$secureBaseUrl${AppConfig.resetPasswordEndpoint}';
 
       final response = await http.post(
         Uri.parse(resetUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': AppStrings.contentTypeJson,
         },
         body: json.encode({
           'email': email,
           'verificationCode': verificationCode,
           'newPassword': newPassword,
         }),
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(AppConfig.authRequestTimeout);
 
       if (!mounted) return;
       setState(() {
@@ -219,8 +225,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       switch (response.statusCode) {
         case 200:
-          _showToast('密码重置成功！', const Color(0xFF27ae60));
-          await Future.delayed(const Duration(milliseconds: 500));
+          _showToast(AppStrings.forgotResetSuccess, AppColors.accent);
+          await Future.delayed(AppDurations.halfSecond);
           if (mounted) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -232,34 +238,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? '重置失败',
-                const Color(0xFFe74c3c));
+                responseData['error'] ?? responseData['message'] ?? AppStrings.forgotResetFailed,
+                AppColors.error);
           } catch (e) {
-            _showToast('重置失败', const Color(0xFFe74c3c));
+            _showToast(AppStrings.forgotResetFailed, AppColors.error);
           }
           break;
         case 404:
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? '邮箱未注册',
-                const Color(0xFFe74c3c));
+                responseData['error'] ?? responseData['message'] ?? AppStrings.forgotEmailNotRegistered,
+                AppColors.error);
           } catch (e) {
-            _showToast('邮箱未注册', const Color(0xFFe74c3c));
+            _showToast(AppStrings.forgotEmailNotRegistered, AppColors.error);
           }
           break;
         case 500:
-          _showToast('服务器错误', const Color(0xFFe74c3c));
+          _showToast(AppStrings.serverError, AppColors.error);
           break;
         default:
-          _showToast('网络异常', const Color(0xFFe74c3c));
+          _showToast(AppStrings.networkError, AppColors.error);
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        _showToast('网络异常', const Color(0xFFe74c3c));
+        _showToast(AppStrings.networkError, AppColors.error);
       }
     }
   }
@@ -273,38 +279,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return InputDecoration(
       labelText: labelText,
       labelStyle: FontUtils.poppins(
-        color: const Color(0xFF7f8c8d),
-        fontSize: 14,
+        color: AppColors.textSecondary,
+        fontSize: AppDimens.fontSizeMd,
       ),
       hintText: hintText,
       hintStyle: FontUtils.poppins(
-        color: const Color(0xFFbdc3c7),
-        fontSize: 16,
+        color: AppColors.silver,
+        fontSize: AppDimens.fontSizeXl,
       ),
       prefixIcon: Icon(
         prefixIcon,
-        color: const Color(0xFF7f8c8d),
+        color: AppColors.textSecondary,
         size: 20,
       ),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         borderSide: BorderSide.none,
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.6),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 18,
-      ),
+      fillColor: AppColors.white.withValues(alpha: 0.6),
+      contentPadding: AppDimens.inputPadding,
     );
   }
 
@@ -313,33 +316,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       controller: _verificationCodeController,
       keyboardType: TextInputType.number,
       style: FontUtils.poppins(
-        fontSize: 16,
-        color: const Color(0xFF2c3e50),
+        fontSize: AppDimens.fontSizeXl,
+        color: AppColors.primary,
       ),
       decoration: InputDecoration(
-        labelText: '验证码',
+        labelText: AppStrings.regVerificationCode,
         labelStyle: FontUtils.poppins(
-          color: const Color(0xFF7f8c8d),
-          fontSize: 14,
+          color: AppColors.textSecondary,
+          fontSize: AppDimens.fontSizeMd,
         ),
-        hintText: '请输入6位数字验证码',
+        hintText: AppStrings.regHintCode,
         hintStyle: FontUtils.poppins(
-          color: const Color(0xFFbdc3c7),
-          fontSize: 16,
+          color: AppColors.silver,
+          fontSize: AppDimens.fontSizeXl,
         ),
         prefixIcon: const Icon(
           Icons.verified_user,
-          color: Color(0xFF7f8c8d),
+          color: AppColors.textSecondary,
           size: 20,
         ),
         suffixIcon: Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: TextButton(
             onPressed:
                 (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
-              backgroundColor: Colors.transparent,
+              backgroundColor: AppColors.transparent,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               minimumSize: Size.zero,
             ),
@@ -350,39 +353,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFF2c3e50)),
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   )
                 : Text(
-                    _countdown > 0 ? '${_countdown}s' : '获取验证码',
+                    _countdown > 0 ? '${_countdown}s' : AppStrings.regGetCode,
                     style: FontUtils.poppins(
-                      fontSize: 14,
+                      fontSize: AppDimens.fontSizeMd,
                       fontWeight: FontWeight.w500,
                       color: (_countdown > 0)
-                          ? const Color(0xFF7f8c8d)
-                          : const Color(0xFF2c3e50),
+                          ? AppColors.textSecondary
+                          : AppColors.primary,
                     ),
                   ),
           ),
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           borderSide: BorderSide.none,
         ),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.6),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
-        ),
+        fillColor: AppColors.white.withValues(alpha: 0.6),
+        contentPadding: AppDimens.inputPadding,
       ),
       onChanged: (value) {
         final filtered = InputValidatorUtils.filterVerificationCode(value);
@@ -395,10 +395,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       },
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return '请输入验证码';
+          return AppStrings.regValidCode;
         }
-        if (!RegExp(r'^\d{6}$').hasMatch(value)) {
-          return '验证码必须为6位数字';
+        if (!RegExp(AppRegex.verificationCode).hasMatch(value)) {
+          return AppStrings.regValidCodeFormat;
         }
         return null;
       },
@@ -414,12 +414,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFe6f3fb),
-              Color(0xFFeaf3f7),
-              Color(0xFFf7f7f3),
-              Color(0xFFe9ecef),
-              Color(0xFFdbe3ea),
-              Color(0xFFd3dde6),
+              AppColors.lightBlueBg,
+              AppColors.lightBlueBg,
+              AppColors.gradMid2,
+              AppColors.gradMid3,
+              AppColors.gradMid4,
+              AppColors.gradEnd,
             ],
             stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
           ),
@@ -457,25 +457,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 100,
             height: 100,
           ),
-          const SizedBox(height: 20),
+          Gap.h20,
           Text(
             'MoonTV',
             style: FontUtils.sourceCodePro(
-              fontSize: 42,
+              fontSize: AppDimens.fontSizeHero,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF2c3e50),
+              color: AppColors.primary,
               letterSpacing: 1.5,
             ),
           ),
-          const SizedBox(height: 8),
+          Gap.h8,
           Text(
-            '重置您的密码',
+            AppStrings.forgotTitle,
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF7f8c8d),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 32),
+          Gap.h32,
           Form(
             key: _formKey,
             child: Column(
@@ -485,16 +485,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
                   ),
                   decoration: _buildInputDecoration(
-                    labelText: '邮箱',
-                    hintText: '请输入邮箱地址',
+                    labelText: AppStrings.regEmail,
+                    hintText: AppStrings.regHintEmail,
                     prefixIcon: Icons.email,
                   ),
                   onChanged: (value) {
-                    final isValidChar = RegExp(r'^[a-zA-Z0-9.@]*$');
+                    final isValidChar = RegExp(AppRegex.emailInput);
                     if (!isValidChar.hasMatch(value)) {
                       final filtered = InputValidatorUtils.filterEmail(value);
                       if (filtered != value) {
@@ -508,35 +508,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入邮箱地址';
+                      return AppStrings.regHintEmail;
                     }
-                    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-                        .hasMatch(value)) {
-                      return '请输入有效的邮箱地址';
+                    if (!RegExp(AppRegex.email).hasMatch(value)) {
+                      return AppStrings.regValidEmailFormat;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
                 _buildVerificationCodeField(),
-                const SizedBox(height: 16),
+                Gap.h16,
                 TextFormField(
                   controller: _newPasswordController,
                   obscureText: !_isNewPasswordVisible,
                   style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
                   ),
                   decoration: _buildInputDecoration(
-                    labelText: '新密码',
-                    hintText: '请输入密码',
+                    labelText: AppStrings.forgotNewPassword,
+                    hintText: AppStrings.authHintPassword,
                     prefixIcon: Icons.lock,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isNewPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
-                        color: const Color(0xFF7f8c8d),
+                        color: AppColors.textSecondary,
                         size: 20,
                       ),
                       onPressed: () {
@@ -558,15 +557,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入新密码';
+                      return AppStrings.forgotHintNewPassword;
                     }
                     if (value.length < 6) {
-                      return '密码长度至少6位';
+                      return AppStrings.regValidPasswordMin;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -574,16 +573,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       onTap: () {
                         Navigator.of(context).pop();
                       },
-                      child: Text(
-                        '登录',
+                      child: Text(AppStrings.authLogin,
                         style: FontUtils.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF2c3e50),
+                          fontSize: AppDimens.fontSizeMd,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    Gap.w20,
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).pushReplacement(
@@ -591,32 +589,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               builder: (context) => const RegisterScreen()),
                         );
                       },
-                      child: Text(
-                        '注册',
+                      child: Text(AppStrings.authRegister,
                         style: FontUtils.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF2c3e50),
+                          fontSize: AppDimens.fontSizeMd,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleResetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isLoading
-                        ? const Color(0xFFbdc3c7)
-                        : const Color(0xFF2c3e50),
+                        ? AppColors.silver
+                        : AppColors.primary,
                     foregroundColor:
-                        _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
+                        _isLoading ? AppColors.textSecondary : AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
+                    elevation: AppDimens.elevationNone,
+                    shadowColor: AppColors.transparent,
                   ),
                   child: _isLoading
                       ? Row(
@@ -628,25 +625,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  AppColors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            Gap.w12,
                             Text(
-                              '重置中...',
+                              AppStrings.forgotBtnResetting,
                               style: FontUtils.poppins(
-                                fontSize: 16,
+                                fontSize: AppDimens.fontSizeXl,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ],
                         )
                       : Text(
-                          '重置密码',
+                          AppStrings.forgotBtnReset,
                           style: FontUtils.poppins(
-                            fontSize: 16,
+                            fontSize: AppDimens.fontSizeXl,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 1.0,
                           ),

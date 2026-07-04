@@ -11,6 +11,11 @@ import '../utils/image_url.dart';
 import '../models/search_result.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 /// 视频卡片组件
 class VideoCard extends StatefulWidget {
@@ -92,17 +97,17 @@ class _VideoCardState extends State<VideoCard> {
                         width: width,
                         height: height,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 4,
+                              color: AppColors.black.withValues(alpha: 0.1),
+                              blurRadius: AppDimens.shadowBlurSm,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                           child: CachedNetworkImage(
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
@@ -122,27 +127,27 @@ class _VideoCardState extends State<VideoCard> {
                               height: height,
                               decoration: BoxDecoration(
                                 color: themeService.isDarkMode
-                                    ? const Color(0xFF333333)
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8),
+                                    ? AppColors.gray700
+                                    : AppColors.gray300,
+                                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               ),
                             ),
                             // 错误占位符
                             errorWidget: (context, url, error) => Container(
                               color: themeService.isDarkMode
-                                  ? const Color(0xFF333333)
-                                  : Colors.grey[300],
+                                  ? AppColors.gray700
+                                  : AppColors.gray300,
                               child: Icon(
                                 Icons.movie,
                                 color: themeService.isDarkMode
-                                    ? const Color(0xFF666666)
-                                    : Colors.grey,
+                                    ? AppColors.gray600
+                                    : AppColors.gray500,
                                 size: 40,
                               ),
                             ),
                             // 图片淡入动画
-                            fadeInDuration: const Duration(milliseconds: 200),
-                            fadeOutDuration: const Duration(milliseconds: 100),
+                            fadeInDuration: AppDurations.normal,
+                            fadeOutDuration: AppDurations.fastest,
                           ),
                         ),
                       ),
@@ -150,18 +155,18 @@ class _VideoCardState extends State<VideoCard> {
                       if (isPC)
                         AnimatedOpacity(
                           opacity: _isHovered ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 200),
+                          duration: AppDurations.normal,
                           child: Container(
                             width: width,
                             height: height,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.6),
+                                  AppColors.transparent,
+                                  AppColors.black.withValues(alpha: 0.6),
                                 ],
                                 stops: const [0.5, 1.0],
                               ),
@@ -177,58 +182,57 @@ class _VideoCardState extends State<VideoCard> {
                           left: 4,
                           child: AnimatedScale(
                             scale: isPC && _isHovered ? 1.05 : 1.0,
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2c3e50)
+                                color: AppColors.primary
                                     .withValues(alpha: 0.8),
-                                borderRadius: BorderRadius.circular(5),
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                               child: Text(
-                                widget.videoInfo.year,
-                                style: FontUtils.poppins(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  widget.videoInfo.year,
+                                  style: FontUtils.poppins(
+                                    color: AppColors.white,
+                                    fontSize: AppDimens.fontSizeXs,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
                             ),
                           ),
                         ),
-                      // 集数指示器或评分指示器或上映倒计时
-                      if (widget.videoInfo.releaseStatus != null &&
+                      // 上映状态徽章（即将上映模式）
+                      if (widget.from == 'upcoming' &&
+                          widget.videoInfo.releaseStatus != null &&
                           widget.videoInfo.releaseStatus!.isNotEmpty)
-                        // 即将上映模式：显示上映倒计时
                         Positioned(
                           top: 4,
                           right: 4,
                           child: AnimatedScale(
                             scale: isPC && _isHovered ? 1.1 : 1.0,
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 4),
+                                  horizontal: 6, vertical: 3),
                               decoration: BoxDecoration(
-                                color: widget.videoInfo.releaseStatus == '今日上映' || widget.videoInfo.releaseStatus!.startsWith('已上映')
-                                    ? const Color(0xFF27ae60) // 今日上映和已上映用绿色
-                                    : const Color(0xFFf39c12), // 即将上映用橙色
-                                borderRadius: BorderRadius.circular(5),
+                                color: AppColors.gold,
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                               child: Text(
                                 widget.videoInfo.releaseStatus!,
                                 style: FontUtils.poppins(
-                                  color: Colors.white,
-                                  fontSize: 11,
+                                  color: AppColors.white,
+                                  fontSize: AppDimens.fontSize3xs,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ),
                         )
+                      // 集数指示器或评分指示器
                       else if ((widget.from == 'douban' ||
                               widget.from == 'bangumi') &&
                           _shouldShowRating())
@@ -237,21 +241,21 @@ class _VideoCardState extends State<VideoCard> {
                           right: 4,
                           child: AnimatedScale(
                             scale: isPC && _isHovered ? 1.1 : 1.0,
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
                               width: 30,
                               height: 30,
                               decoration: const BoxDecoration(
-                                color: Color(0xFFe91e63), // 粉色圆形背景
+                                color: AppColors.pink, // 粉色圆形背景
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: Text(
                                   widget.videoInfo.rate!,
                                   style: FontUtils.poppins(
-                                    color: Colors.white,
-                                    fontSize: 12,
+                                    color: AppColors.white,
+                                    fontSize: AppDimens.fontSizeXs,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -265,20 +269,20 @@ class _VideoCardState extends State<VideoCard> {
                           right: 4,
                           child: AnimatedScale(
                             scale: isPC && _isHovered ? 1.1 : 1.0,
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF27ae60),
-                                borderRadius: BorderRadius.circular(5),
+                                color: AppColors.accent,
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                               child: Text(
                                 episodeText,
                                 style: FontUtils.poppins(
-                                  color: Colors.white,
-                                  fontSize: 12,
+                                  color: AppColors.white,
+                                  fontSize: AppDimens.fontSizeXs,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -294,7 +298,7 @@ class _VideoCardState extends State<VideoCard> {
                           child: Container(
                             height: 3,
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: AppColors.black.withValues(alpha: 0.3),
                               borderRadius: const BorderRadius.only(
                                 bottomLeft: Radius.circular(8),
                                 bottomRight: Radius.circular(8),
@@ -305,7 +309,7 @@ class _VideoCardState extends State<VideoCard> {
                               widthFactor: widget.videoInfo.progressPercentage,
                               child: Container(
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF27ae60),
+                                  color: AppColors.accent,
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(8),
                                     bottomRight: Radius.circular(8),
@@ -315,15 +319,15 @@ class _VideoCardState extends State<VideoCard> {
                             ),
                           ),
                         ),
-                      // 中心播放按钮或敬请期待（PC平台）
+                      // 中心播放按钮（PC平台）
                       if (isPC)
                         Positioned.fill(
                           child: GestureDetector(
-                            onTap: _shouldShowComingSoon() ? null : widget.onTap,
+                            onTap: widget.onTap,
                             child: Center(
                               child: AnimatedOpacity(
                                 opacity: _isHovered ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 200),
+                                duration: AppDurations.normal,
                                 child: MouseRegion(
                                   onEnter: (_) => setState(
                                       () => _isPlayButtonHovered = true),
@@ -331,51 +335,39 @@ class _VideoCardState extends State<VideoCard> {
                                       () => _isPlayButtonHovered = false),
                                   child: AnimatedScale(
                                     scale: _isPlayButtonHovered ? 1.1 : 1.0,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: AppDurations.normal,
                                     curve: Curves.easeInOut,
-                                    child: _shouldShowComingSoon()
-                                        ? // 显示"敬请期待"
-                                        Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFf39c12),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              '敬请期待',
-                                              style: FontUtils.poppins(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          )
-                                        : // 显示播放按钮
-                                        AnimatedContainer(
-                                            duration:
-                                                const Duration(milliseconds: 200),
-                                            width: 60,
-                                            height: 60,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: _isPlayButtonHovered
-                                                  ? const Color(0xFF27ae60)
-                                                  : Colors.transparent,
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 2.5,
-                                              ),
-                                            ),
-                                            child: CustomPaint(
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: _isPlayButtonHovered
+                                            ? (widget.from == 'upcoming'
+                                                ? AppColors.gold
+                                                : AppColors.accent)
+                                            : AppColors.transparent,
+                                        border: Border.all(
+                                          color: AppColors.white,
+                                          width: 2.5,
+                                        ),
+                                      ),
+                                      child: widget.from == 'upcoming'
+                                          ? const Icon(
+                                              Icons.calendar_today,
+                                              color: AppColors.white,
+                                              size: 28,
+                                            )
+                                          : CustomPaint(
                                               size: const Size(42, 42),
                                               painter: _PlayIconPainter(
-                                                color: Colors.white,
+                                                color: AppColors.white,
                                                 strokeWidth: 2.0,
                                               ),
                                             ),
-                                          ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -384,14 +376,15 @@ class _VideoCardState extends State<VideoCard> {
                         ),
                       // Hover 操作徽章（PC平台）
                       if (isPC) ...[
-                        // 豆瓣和Bangumi模式：左上角链接徽章
-                        if (widget.from == 'douban' || widget.from == 'bangumi')
+                        // 豆瓣和Bangumi模式：左上角链接徽章（即将上映不显示）
+                        if ((widget.from == 'douban' || widget.from == 'bangumi') &&
+                            widget.from != 'upcoming')
                           Positioned(
                             top: 4,
                             left: 4,
                             child: AnimatedOpacity(
                               opacity: _isHovered ? 1.0 : 0.0,
-                              duration: const Duration(milliseconds: 200),
+                              duration: AppDurations.normal,
                               child: MouseRegion(
                                 onEnter: (_) =>
                                     setState(() => _isLinkButtonHovered = true),
@@ -401,18 +394,18 @@ class _VideoCardState extends State<VideoCard> {
                                   onTap: () => _handleLinkButtonTap(),
                                   child: AnimatedScale(
                                     scale: _isLinkButtonHovered ? 1.05 : 1.0,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: AppDurations.normal,
                                     curve: Curves.easeInOut,
                                     child: Container(
                                       width: 33,
                                       height: 33,
                                       decoration: const BoxDecoration(
-                                        color: Color(0xFF27ae60),
+                                        color: AppColors.accent,
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
                                         Icons.link,
-                                        color: Colors.white,
+                                        color: AppColors.white,
                                         size: 18,
                                       ),
                                     ),
@@ -429,7 +422,7 @@ class _VideoCardState extends State<VideoCard> {
                             right: 10,
                             child: AnimatedOpacity(
                               opacity: _isHovered ? 1.0 : 0.0,
-                              duration: const Duration(milliseconds: 200),
+                              duration: AppDurations.normal,
                               child: MouseRegion(
                                 onEnter: (_) => setState(
                                     () => _isSourceCountBadgeHovered = true),
@@ -440,22 +433,22 @@ class _VideoCardState extends State<VideoCard> {
                                   child: AnimatedScale(
                                     scale:
                                         _isSourceCountBadgeHovered ? 1.1 : 1.0,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: AppDurations.normal,
                                     curve: Curves.easeInOut,
                                     child: Container(
                                       width: 30,
                                       height: 30,
                                       decoration: BoxDecoration(
                                         color:
-                                            Colors.grey.withValues(alpha: 0.8),
+                                            AppColors.gray500.withValues(alpha: 0.8),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Center(
                                         child: Text(
                                           '${widget.originalResults!.length}',
                                           style: FontUtils.poppins(
-                                            color: Colors.white,
-                                            fontSize: 12,
+                                            color: AppColors.white,
+                                            fontSize: AppDimens.fontSizeXs,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -473,7 +466,7 @@ class _VideoCardState extends State<VideoCard> {
                             right: 10,
                             child: AnimatedOpacity(
                               opacity: _isHovered ? 1.0 : 0.0,
-                              duration: const Duration(milliseconds: 200),
+                              duration: AppDurations.normal,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -493,8 +486,8 @@ class _VideoCardState extends State<VideoCard> {
                                         child: Icon(
                                           LucideIcons.trash2,
                                           color: _isDeleteButtonHovered
-                                              ? Colors.red
-                                              : Colors.white,
+                                              ? AppColors.error
+                                              : AppColors.white,
                                           size: 24,
                                         ),
                                       ),
@@ -518,10 +511,10 @@ class _VideoCardState extends State<VideoCard> {
                                         child: Icon(
                                           _isFavorited ? Icons.star : Icons.star_border,
                                           color: _isFavorited
-                                              ? const Color(0xFFf1c40f)
+                                              ? AppColors.gold
                                               : (_isFavoriteButtonHovered
-                                                  ? const Color(0xFFf1c40f)
-                                                  : Colors.white),
+                                                  ? AppColors.gold
+                                                  : AppColors.white),
                                           size: 24,
                                         ),
                                       ),
@@ -539,7 +532,7 @@ class _VideoCardState extends State<VideoCard> {
                             right: 10,
                             child: AnimatedOpacity(
                               opacity: _isHovered ? 1.0 : 0.0,
-                              duration: const Duration(milliseconds: 200),
+                              duration: AppDurations.normal,
                               child: MouseRegion(
                                 onEnter: (_) => setState(
                                     () => _isFavoriteButtonHovered = true),
@@ -550,15 +543,15 @@ class _VideoCardState extends State<VideoCard> {
                                   child: AnimatedScale(
                                     scale:
                                         _isFavoriteButtonHovered ? 1.05 : 1.0,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: AppDurations.normal,
                                     curve: Curves.easeInOut,
                                     child: Icon(
                                       _isFavorited ? Icons.star : Icons.star_border,
                                       color: _isFavorited
-                                          ? const Color(0xFFf1c40f)
+                                          ? AppColors.gold
                                           : (_isFavoriteButtonHovered
-                                              ? const Color(0xFFf1c40f)
-                                              : Colors.white),
+                                              ? AppColors.gold
+                                              : AppColors.white),
                                       size: 24,
                                     ),
                                   ),
@@ -569,7 +562,7 @@ class _VideoCardState extends State<VideoCard> {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  Gap.h2,
                   // 标题和源名称容器，确保居中对齐
                   Center(
                     child: Column(
@@ -582,10 +575,10 @@ class _VideoCardState extends State<VideoCard> {
                             fontSize: width < 100 ? 12 : 13, // 根据宽度调整字体大小，调大字体
                             fontWeight: FontWeight.w500,
                             color: isPC && _isHovered
-                                ? Colors.green
+                                ? AppColors.accent
                                 : (themeService.isDarkMode
-                                    ? const Color(0xFFffffff)
-                                    : const Color(0xFF2c3e50)),
+                                    ? AppColors.white
+                                    : AppColors.primary),
                           ),
                           textAlign: TextAlign.center,
                           maxLines: widget.from == 'douban'
@@ -593,12 +586,12 @@ class _VideoCardState extends State<VideoCard> {
                               : 1, // 豆瓣模式允许两行，其他模式一行
                           overflow: TextOverflow.ellipsis,
                         ),
-                        // 豆瓣模式和Bangumi模式不显示来源信息，短剧标签也不显示
+                        // 豆瓣模式、Bangumi模式和即将上映模式不显示来源信息
                         if (widget.from != 'douban' &&
                             widget.from != 'bangumi' &&
                             widget.from != 'agg' &&
-                            widget.videoInfo.sourceName != '短剧') ...[
-                          const SizedBox(height: 3), // 增加title和sourceName之间的间距
+                            widget.from != 'upcoming') ...[
+                          Gap.h4, // 增加title和sourceName之间的间距
                           // 视频源名称
                           Container(
                             padding: EdgeInsets.symmetric(
@@ -608,13 +601,13 @@ class _VideoCardState extends State<VideoCard> {
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color: isPC && _isHovered
-                                    ? Colors.green
-                                    : const Color(0xFF7f8c8d),
+                                    ? AppColors.accent
+                                    : AppColors.textSecondary,
                                 width: 0.8,
                               ),
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusXs),
                             ),
-                            child: Text(
+                              child: Text(
                               widget.from == 'agg'
                                   ? _getAggregatedSourceText(
                                       widget.videoInfo.sourceName)
@@ -623,10 +616,10 @@ class _VideoCardState extends State<VideoCard> {
                                 fontSize:
                                     width < 100 ? 11 : 12, // 根据宽度调整字体大小，调大字体
                                 color: isPC && _isHovered
-                                    ? Colors.green
+                                    ? AppColors.accent
                                     : (widget.from == 'agg'
-                                        ? const Color(0xFF9b59b6) // 聚合模式用紫色文字
-                                        : const Color(0xFF7f8c8d)), // 其他模式用灰色文字
+                                        ? AppColors.purple // 聚合模式用紫色文字
+                                        : AppColors.textSecondary), // 其他模式用灰色文字
                                 height: 1.0, // 进一步减少行高
                               ),
                               textAlign: TextAlign.center,
@@ -645,14 +638,14 @@ class _VideoCardState extends State<VideoCard> {
             // 如果是PC平台，添加hover效果
             if (isPC) {
               return GestureDetector(
-                onTap: _shouldShowComingSoon() ? null : widget.onTap,
+                onTap: widget.onTap,
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
                   onEnter: (_) => setState(() => _isHovered = true),
                   onExit: (_) => setState(() => _isHovered = false),
                   child: AnimatedScale(
                     scale: _isHovered ? 1.05 : 1.0,
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppDurations.normal,
                     curve: Curves.easeInOut,
                     child: cardContent,
                   ),
@@ -662,7 +655,7 @@ class _VideoCardState extends State<VideoCard> {
 
             // 非PC平台，添加GestureDetector
             return GestureDetector(
-              onTap: _shouldShowComingSoon() ? null : widget.onTap,
+              onTap: widget.onTap,
               onLongPress: (widget.from == 'playrecord' ||
                       widget.from == 'douban' ||
                       widget.from == 'bangumi' ||
@@ -680,7 +673,7 @@ class _VideoCardState extends State<VideoCard> {
                       });
 
                       // 使用延迟显示菜单，避免长按阻塞UI
-                      Future.delayed(const Duration(milliseconds: 50), () {
+                      Future.delayed(AppDurations.debounceInterval, () {
                         if (context.mounted) {
                           _showGlobalMenu(context);
                         }
@@ -704,19 +697,6 @@ class _VideoCardState extends State<VideoCard> {
             );
       },
     );
-  }
-
-  /// 判断是否应该显示"敬请期待"
-  bool _shouldShowComingSoon() {
-    // 如果有上映状态
-    if (widget.videoInfo.releaseStatus != null &&
-        widget.videoInfo.releaseStatus!.isNotEmpty) {
-      final status = widget.videoInfo.releaseStatus!;
-      // 已上映或今日上映：不显示敬请期待，显示播放按钮
-      // X天后上映：显示敬请期待
-      return !status.startsWith('已上映') && status != '今日上映';
-    }
-    return false;
   }
 
   /// 根据场景判断是否显示集数信息
@@ -838,14 +818,14 @@ class _VideoCardState extends State<VideoCard> {
   }
 
   /// 处理链接按钮点击
-  Future<void> _handleLinkButtonTap() async {
+  void _handleLinkButtonTap() async {
     try {
       String? url;
       if (widget.from == 'douban' && widget.videoInfo.doubanId != null) {
-        url = 'https://movie.douban.com/subject/${widget.videoInfo.doubanId}';
+        url = '${AppConfig.doubanSubjectUrl}/${widget.videoInfo.doubanId}';
       } else if (widget.from == 'bangumi' &&
           widget.videoInfo.bangumiId != null) {
-        url = 'https://bgm.tv/subject/${widget.videoInfo.bangumiId}';
+        url = '${AppConfig.bgmSubjectUrl}/${widget.videoInfo.bangumiId}';
       }
 
       if (url != null) {
@@ -870,7 +850,7 @@ class _VideoCardState extends State<VideoCard> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.transparent,
           elevation: 0,
           child: Container(
             constraints: BoxConstraints(
@@ -879,12 +859,12 @@ class _VideoCardState extends State<VideoCard> {
             ),
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? const Color(0xFF2C2C2C)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+                  ? AppColors.inputBgDark
+                  : AppColors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: AppColors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -897,13 +877,13 @@ class _VideoCardState extends State<VideoCard> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                   child: Text(
-                    '可用播放源',
+                    AppStrings.panelAvailableSources,
                     style: FontUtils.poppins(
-                      fontSize: 18,
+                      fontSize: AppDimens.fontSizeXxl,
                       fontWeight: FontWeight.w600,
                       color: themeService.isDarkMode
-                          ? const Color(0xFFFFFFFF)
-                          : const Color(0xFF2C2C2C),
+                          ? AppColors.white
+                          : AppColors.inputBgDark,
                     ),
                   ),
                 ),
@@ -916,13 +896,13 @@ class _VideoCardState extends State<VideoCard> {
                       child: Column(
                         children: sources.map((source) {
                           return Material(
-                            color: Colors.transparent,
+                            color: AppColors.transparent,
                             child: InkWell(
                               onTap: () {
                                 Navigator.of(context).pop();
                                 widget.onSourceSelected?.call(source);
                               },
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
@@ -931,19 +911,19 @@ class _VideoCardState extends State<VideoCard> {
                                     Text(
                                       source.sourceName,
                                       style: FontUtils.poppins(
-                                        fontSize: 16,
+                                        fontSize: AppDimens.fontSizeXl,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     const Spacer(),
                                     if (source.episodes.length > 1)
                                       Text(
-                                        '${source.episodes.length}集',
+                                        AppStrings.episodesCount.replaceAll('%d', '${source.episodes.length}'),
                                         style: FontUtils.poppins(
-                                          fontSize: 14,
+                                          fontSize: AppDimens.fontSizeMd,
                                           color: themeService.isDarkMode
-                                              ? Colors.white70
-                                              : Colors.black54,
+                                               ? AppColors.white70
+                                               : AppColors.black54,
                                         ),
                                       ),
                                   ],
@@ -956,7 +936,7 @@ class _VideoCardState extends State<VideoCard> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
               ],
             ),
           ),

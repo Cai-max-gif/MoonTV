@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/download_task.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 class DownloadItemWidget extends StatelessWidget {
   final DownloadTask task;
@@ -27,14 +30,14 @@ class DownloadItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppDimens.spacingMd),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? AppColors.cardDark : AppColors.white,
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.098),
-            blurRadius: 8,
+            color: AppColors.black30,
+            blurRadius: AppDimens.shadowBlurSm,
             offset: const Offset(0, 2),
           ),
         ],
@@ -42,12 +45,12 @@ class DownloadItemWidget extends StatelessWidget {
       child: Row(
         children: [
           _buildCover(),
-          const SizedBox(width: 12),
+          Gap.w12,
           Expanded(child: _buildInfo()),
-          const SizedBox(width: 12),
+          Gap.w12,
           _buildProgressOrContinueButton(),
           if (!task.isCompleted || showDeleteButton) ...[
-            const SizedBox(width: 4),
+            Gap.w4,
             _buildDeleteButton(),
           ],
         ],
@@ -57,11 +60,11 @@ class DownloadItemWidget extends StatelessWidget {
 
   Widget _buildCover() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       child: Container(
         width: 60,
         height: 80,
-        color: isDarkMode ? const Color(0xFF2c2c2c) : const Color(0xFFf0f0f0),
+        color: isDarkMode ? AppColors.inputBgDark : AppColors.inputBgLight,
         child: task.cover.isNotEmpty
             ? Image.network(
                 task.cover,
@@ -75,11 +78,11 @@ class DownloadItemWidget extends StatelessWidget {
 
   Widget _buildPlaceholderCover() {
     return Container(
-      color: isDarkMode ? const Color(0xFF2c2c2c) : const Color(0xFFf0f0f0),
+      color: isDarkMode ? AppColors.inputBgDark : AppColors.inputBgLight,
       child: Icon(
         LucideIcons.film,
-        color: isDarkMode ? const Color(0xFF666666) : const Color(0xFF999999),
-        size: 24,
+        color: isDarkMode ? AppColors.textDarkHint : AppColors.textHint,
+        size: AppDimens.iconLg,
       ),
     );
   }
@@ -91,41 +94,41 @@ class DownloadItemWidget extends StatelessWidget {
         Text(
           task.title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
+        Gap.h4,
         Text(
           task.episodeTitle,
           style: FontUtils.poppins(
-            fontSize: 12,
+            fontSize: AppDimens.fontSizeXs,
             color:
-                isDarkMode ? const Color(0xFF9ca3af) : const Color(0xFF6b7280),
+                isDarkMode ? AppColors.gray400 : AppColors.gray500,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         if (task.status == DownloadStatus.failed) ...[
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '下载失败，点击重试',
+            AppStrings.downloadFailedRetry,
             style: FontUtils.poppins(
-              fontSize: 10,
-              color: const Color(0xFFef4444),
+              fontSize: AppDimens.fontSize2xs,
+              color: AppColors.red,
             ),
           ),
         ],
         if (task.isRetrying) ...[
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '重试中 (${task.retryCount}/5)',
+            '${AppStrings.downloadRetrying} (${task.retryCount}/5)',
             style: FontUtils.poppins(
-              fontSize: 10,
-              color: const Color(0xFFf59e0b),
+              fontSize: AppDimens.fontSize2xs,
+              color: AppColors.amber,
             ),
           ),
         ],
@@ -140,7 +143,7 @@ class DownloadItemWidget extends StatelessWidget {
     if (task.isCompleted) {
       return _buildActionButton(
         icon: LucideIcons.play,
-        color: const Color(0xFF27AE60),
+        color: AppColors.accent,
         onTap: onPlay,
         size: size,
       );
@@ -159,17 +162,17 @@ class DownloadItemWidget extends StatelessWidget {
                 value: task.progress,
                 strokeWidth: strokeWidth,
                 backgroundColor: isDarkMode
-                    ? const Color(0xFF374151)
-                    : const Color(0xFFe5e7eb),
+                    ? AppColors.borderDarkGray
+                    : AppColors.borderLightGray,
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF3b82f6)),
+                    const AlwaysStoppedAnimation<Color>(AppColors.blue),
               ),
               Text(
                 '${task.progressPercent}',
                 style: FontUtils.poppins(
-                  fontSize: 12,
+                  fontSize: AppDimens.fontSizeXs,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3b82f6),
+                  color: AppColors.blue,
                 ),
               ),
             ],
@@ -185,20 +188,20 @@ class DownloadItemWidget extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: const Color(0xFFf59e0b).withValues(alpha: 0.098),
+            color: AppColors.amber.withValues(alpha: 0.098),
             shape: BoxShape.circle,
             border: Border.all(
-              color: const Color(0xFFf59e0b),
+              color: AppColors.amber,
               width: 2,
             ),
           ),
           child: Center(
             child: Text(
-              '继续',
+              AppStrings.downloadContinue,
               style: FontUtils.poppins(
-                fontSize: 10,
+                fontSize: AppDimens.fontSize2xs,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFf59e0b),
+                color: AppColors.amber,
               ),
             ),
           ),
@@ -209,7 +212,7 @@ class DownloadItemWidget extends StatelessWidget {
     if (task.isFailed) {
       return _buildActionButton(
         icon: LucideIcons.refreshCw,
-        color: const Color(0xFFef4444),
+        color: AppColors.red,
         onTap: onResume,
         size: size,
       );
@@ -220,20 +223,20 @@ class DownloadItemWidget extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: const Color(0xFFf59e0b).withValues(alpha: 0.098),
+          color: AppColors.amber.withValues(alpha: 0.098),
           shape: BoxShape.circle,
           border: Border.all(
-            color: const Color(0xFFf59e0b),
+            color: AppColors.amber,
             width: 2,
           ),
         ),
         child: Center(
           child: Text(
-            '重试${task.retryCount}/5',
+            '${AppStrings.downloadRetrying}${task.retryCount}/5',
             style: FontUtils.poppins(
-              fontSize: 9,
+              fontSize: AppDimens.fontSize2xs,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFFf59e0b),
+              color: AppColors.amber,
             ),
           ),
         ),
@@ -245,27 +248,27 @@ class DownloadItemWidget extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: const Color(0xFF6b7280).withValues(alpha: 0.098),
+          color: AppColors.gray500.withValues(alpha: 0.098),
           shape: BoxShape.circle,
           border: Border.all(
-            color: const Color(0xFF6b7280),
+            color: AppColors.gray500,
             width: 2,
           ),
         ),
         child: Center(
           child: Text(
-            '队列',
+            AppStrings.downloadQueueLabel,
             style: FontUtils.poppins(
-              fontSize: 9,
+              fontSize: AppDimens.fontSize2xs,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF6b7280),
+              color: AppColors.gray500,
             ),
           ),
         ),
       );
     }
 
-    return const SizedBox(width: 48.0, height: 48.0);
+    return const SizedBox(width: AppDimens.avatarMd, height: AppDimens.avatarMd);
   }
 
   Widget _buildActionButton({
@@ -301,14 +304,14 @@ class DownloadItemWidget extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFFef4444).withValues(alpha: 0.098),
+          color: AppColors.red.withValues(alpha: 0.098),
           shape: BoxShape.circle,
         ),
         child: const Center(
           child: Icon(
             LucideIcons.trash2,
-            color: Color(0xFFef4444),
-            size: 18,
+            color: AppColors.red,
+            size: AppDimens.iconMd,
           ),
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import '../constants/app_durations.dart';
 
 /// 缓存项数据结构
 class CacheItem<T> {
@@ -297,7 +298,7 @@ class DoubanCacheService {
   /// 定期清理过期缓存（建议在应用启动时调用）
   void startPeriodicCleanup() {
     _periodicCleanupSubscription?.cancel();
-    _periodicCleanupSubscription = Stream.periodic(const Duration(hours: 1)).listen((_) {
+    _periodicCleanupSubscription = Stream.periodic(AppDurations.versionCheckInterval).listen((_) {
       _cleanExpiredCache();
     });
   }

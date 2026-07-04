@@ -1,7 +1,9 @@
+import '../constants/app_config.dart';
+
 /// 播放记录数据模型
 class PlayRecord {
   final String id;
-  final String source; // 来源标识
+  final String source;
   final String title;
   final String sourceName;
   final String year;
@@ -31,7 +33,7 @@ class PlayRecord {
   /// 从JSON创建PlayRecord
   factory PlayRecord.fromJson(String key, Map<String, dynamic> json) {
     // 从key中分离source和id，格式为 "source+id"
-    final parts = key.split('+');
+    final parts = key.split(AppConfig.searchKeySeparator);
     final source = parts.length > 1 ? parts[0] : '';
     final id = parts.length > 1 ? parts[1] : key;
     
@@ -75,9 +77,9 @@ class PlayRecord {
 
   /// 格式化播放时间
   String get formattedPlayTime {
-    final hours = playTime ~/ 3600;
-    final minutes = (playTime % 3600) ~/ 60;
-    final seconds = playTime % 60;
+    final hours = playTime ~/ AppConfig.secondsPerHour;
+    final minutes = (playTime % AppConfig.secondsPerHour) ~/ AppConfig.secondsPerMinute;
+    final seconds = playTime % AppConfig.secondsPerMinute;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -88,9 +90,9 @@ class PlayRecord {
 
   /// 格式化总时间
   String get formattedTotalTime {
-    final hours = totalTime ~/ 3600;
-    final minutes = (totalTime % 3600) ~/ 60;
-    final seconds = totalTime % 60;
+    final hours = totalTime ~/ AppConfig.secondsPerHour;
+    final minutes = (totalTime % AppConfig.secondsPerHour) ~/ AppConfig.secondsPerMinute;
+    final seconds = totalTime % AppConfig.secondsPerMinute;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
