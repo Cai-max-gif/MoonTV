@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 import '../models/douban_movie.dart';
 import '../utils/device_utils.dart';
 import 'video_card.dart';
@@ -7,6 +9,7 @@ import 'video_menu_bottom_sheet.dart';
 import '../models/video_info.dart';
 import '../utils/font_utils.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_dimensions.dart';
 
 class DoubanMoviesGrid extends StatelessWidget {
   final List<DoubanMovie>? movies;
@@ -89,15 +92,15 @@ class DoubanMoviesGrid extends StatelessWidget {
         ShimmerEffect(
           width: width,
           height: height,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        const SizedBox(height: 4),
+        Gap.h4,
         // 标题骨架
         Center(
           child: ShimmerEffect(
             width: width * 0.8,
             height: 12,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
       ],
@@ -112,23 +115,23 @@ class DoubanMoviesGrid extends StatelessWidget {
           const Icon(
             Icons.error_outline,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '加载失败',
+            AppStrings.loadFailed,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            errorMessage ?? '未知错误',
+            errorMessage ?? AppStrings.unknownError,
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
             textAlign: TextAlign.center,
           ),
@@ -139,7 +142,7 @@ class DoubanMoviesGrid extends StatelessWidget {
 
   Widget _buildEmptyState() {
     final bool isMovie = contentType == 'movie';
-    final String contentName = isMovie ? '电影' : '剧集';
+    final String contentName = isMovie ? AppStrings.movie : AppStrings.tvShow;
     
     return Center(
       child: Column(
@@ -148,23 +151,23 @@ class DoubanMoviesGrid extends StatelessWidget {
           Icon(
             isMovie ? Icons.movie_filter_outlined : Icons.tv_outlined,
             size: 80,
-            color: const Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '暂无$contentName',
+            AppStrings.noContentWithName(contentName),
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '当前分类下没有$contentName',
+            AppStrings.noContentTipWithName(contentName),
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
           ),
         ],

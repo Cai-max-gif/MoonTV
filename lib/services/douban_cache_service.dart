@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
+import '../constants/app_durations.dart';
 
 /// 缓存项数据结构
 class CacheItem<T> {
@@ -77,6 +78,9 @@ class DoubanCacheService {
   /// 缓存文件目录
   Directory? _cacheDir;
 
+  /// 定期清理订阅
+  StreamSubscription? _periodicCleanupSubscription;
+
   /// 初始化缓存服务
   Future<void> init() async {
     try {
@@ -90,9 +94,7 @@ class DoubanCacheService {
       // 启动时清理过期缓存
       await _cleanExpiredCache();
     } catch (e) {
-      if (kDebugMode) {
-        print('豆瓣缓存服务初始化失败: $e');
-      }
+      rethrow;
     }
   }
 
@@ -113,15 +115,15 @@ class DoubanCacheService {
         if (!cacheItem.isExpired) {
           // 发现旧格式（Map 且含 items），直接清除并视为未命中
           final raw = cacheItem.data;
-          if (raw is Map && raw.containsKey('items')) {
-            _memoryCache.remove(key);
-            if (_cacheDir != null) {
-              final file = File('${_cacheDir!.path}/$key.json');
-              if (await file.exists()) {
-                try { await file.delete(); } catch (_) {}
+            if (raw is Map && raw.containsKey('items')) {
+              _memoryCache.remove(key);
+              if (_cacheDir != null) {
+                final file = File('${_cacheDir!.path}/$key.json');
+                if (await file.exists()) {
+                  await file.delete();
+                }
               }
-            }
-          } else {
+            } else {
                 // 使用解码器将原始 JSON 转成目标类型
                 try {
                   return decode(raw);
@@ -131,7 +133,7 @@ class DoubanCacheService {
                   if (_cacheDir != null) {
                     final file = File('${_cacheDir!.path}/$key.json');
                     if (await file.exists()) {
-                      try { await file.delete(); } catch (_) {}
+                      await file.delete();
                     }
                   }
                   rethrow;
@@ -152,7 +154,7 @@ class DoubanCacheService {
             final jsonData = json.decode(jsonString);
             
             if (jsonData is! Map<String, dynamic>) {
-              try { await file.delete(); } catch (_) {}
+              await file.delete();
               return null;
             }
 
@@ -163,7 +165,7 @@ class DoubanCacheService {
               // 发现旧格式（Map 且含 items），直接删除并视为未命中
               final raw = cacheItem.data;
               if (raw is Map && raw.containsKey('items')) {
-                try { await file.delete(); } catch (_) {}
+                await file.delete();
               } else {
                 // 重新加载到内存缓存
                 _memoryCache[key] = cacheItem;
@@ -171,9 +173,9 @@ class DoubanCacheService {
                   return decode(raw);
                 } catch (e) {
                   // 解码失败，删除缓存
-                  _memoryCache.remove(key);
-                  try { await file.delete(); } catch (_) {}
-                  rethrow;
+                    _memoryCache.remove(key);
+                    await file.delete();
+                    rethrow;
                 }
               }
             } else {
@@ -181,8 +183,7 @@ class DoubanCacheService {
               await file.delete();
             }
           } catch (e) {
-            // 文件内容不合法或旧格式，直接删除避免反复报错
-            try { await file.delete(); } catch (_) {}
+            await file.delete();
           }
         }
       }
@@ -211,9 +212,7 @@ class DoubanCacheService {
         await file.writeAsString(json.encode(jsonData));
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('设置豆瓣缓存失败: $e');
-      }
+      rethrow;
     }
   }
 
@@ -231,9 +230,7 @@ class DoubanCacheService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('删除豆瓣缓存失败: $e');
-      }
+      rethrow;  
     }
   }
 
@@ -274,9 +271,7 @@ class DoubanCacheService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('清理过期豆瓣缓存失败: $e');
-      }
+      rethrow;  
     }
   }
 
@@ -296,18 +291,22 @@ class DoubanCacheService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('清空所有豆瓣缓存失败: $e');
-      }
+      rethrow;  
     }
   }
 
   /// 定期清理过期缓存（建议在应用启动时调用）
   void startPeriodicCleanup() {
-    // 每小时清理一次过期缓存
-    Stream.periodic(const Duration(hours: 1)).listen((_) {
+    _periodicCleanupSubscription?.cancel();
+    _periodicCleanupSubscription = Stream.periodic(AppDurations.versionCheckInterval).listen((_) {
       _cleanExpiredCache();
     });
+  }
+
+  /// 停止定期清理
+  void stopPeriodicCleanup() {
+    _periodicCleanupSubscription?.cancel();
+    _periodicCleanupSubscription = null;
   }
 
   /// 豆瓣服务专用缓存方法

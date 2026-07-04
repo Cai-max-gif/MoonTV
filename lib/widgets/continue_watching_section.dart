@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/play_record.dart';
@@ -11,6 +12,9 @@ import '../utils/image_url.dart';
 import '../utils/font_utils.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 /// 继续观看组件
 class ContinueWatchingSection extends StatefulWidget {
@@ -131,7 +135,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
 
     _scrollController.animateTo(
       math.max(0, _scrollController.offset - scrollDistance),
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -156,7 +160,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
         _scrollController.position.maxScrollExtent,
         _scrollController.offset + scrollDistance,
       ),
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -233,10 +237,10 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
           builder: (context, themeService, child) {
             return AlertDialog(
               backgroundColor: themeService.isDarkMode
-                  ? const Color(0xFF1e1e1e)
-                  : Colors.white,
+                  ? AppColors.cardDark
+                  : AppColors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
               ),
               contentPadding: const EdgeInsets.all(24),
               content: Column(
@@ -247,41 +251,41 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFe74c3c).withValues(alpha: 0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.delete_outline,
-                      color: Color(0xFFe74c3c),
+                      color: AppColors.error,
                       size: 32,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  Gap.h20,
                   // 标题
                   Text(
-                    '清空播放记录',
+                    AppStrings.clearPlayRecords,
                     style: FontUtils.poppins(
-                      fontSize: 18,
+                      fontSize: AppDimens.fontSizeXxl,
                       fontWeight: FontWeight.w600,
                       color: themeService.isDarkMode
-                          ? const Color(0xFFffffff)
-                          : const Color(0xFF2c3e50),
+                          ? AppColors.white
+                          : AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  Gap.h12,
                   // 描述
                   Text(
-                    '确定要清空所有播放记录吗？此操作无法撤销。',
+                    AppStrings.clearPlayRecordsConfirm,
                     style: FontUtils.poppins(
-                      fontSize: 14,
+                      fontSize: AppDimens.fontSizeMd,
                       color: themeService.isDarkMode
-                          ? const Color(0xFFb0b0b0)
-                          : const Color(0xFF7f8c8d),
+                          ? AppColors.textDarkSecondary
+                          : AppColors.textSecondary,
                       height: 1.4,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
+                  Gap.h24,
                   // 按钮
                   Row(
                     children: [
@@ -291,22 +295,22 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
                           ),
                           child: Text(
-                            '取消',
+                            AppStrings.cancel,
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               fontWeight: FontWeight.w500,
                               color: themeService.isDarkMode
-                                  ? const Color(0xFFb0b0b0)
-                                  : const Color(0xFF7f8c8d),
+                                  ? AppColors.textDarkSecondary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      Gap.w12,
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -314,18 +318,18 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                             _clearPlayRecords();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFe74c3c),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.error,
+                            foregroundColor: AppColors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
-                            elevation: 0,
+                            elevation: AppDimens.elevationNone,
                           ),
                           child: Text(
-                            '清空',
+                            AppStrings.clear,
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -356,15 +360,15 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '播放记录已清空',
-                style: FontUtils.poppins(color: Colors.white),
+                AppStrings.clearPlayRecordsDone,
+                style: FontUtils.poppins(color: AppColors.white),
               ),
-              backgroundColor: const Color(0xFF27ae60),
+              backgroundColor: AppColors.accent,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(AppDimens.spacingLg),
             ),
           );
         }
@@ -374,15 +378,15 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '清空失败',
-                style: FontUtils.poppins(color: Colors.white),
+                AppStrings.clearFailed,
+                style: FontUtils.poppins(color: AppColors.white),
               ),
-              backgroundColor: const Color(0xFFe74c3c),
+              backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(AppDimens.spacingLg),
             ),
           );
         }
@@ -393,15 +397,15 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '清空失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+              '${AppStrings.clearFailed}: ${e.toString()}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFe74c3c),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(AppDimens.spacingLg),
           ),
         );
       }
@@ -436,19 +440,19 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                     Consumer<ThemeService>(
                       builder: (context, themeService, child) {
                         return Text(
-                          '继续观看',
+                          AppStrings.homeContinueWatching,
                           style: FontUtils.poppins(
-                            fontSize: 18,
+                            fontSize: AppDimens.fontSizeXxl,
                             fontWeight: FontWeight.w600,
                             color: themeService.isDarkMode
-                                ? const Color(0xFFffffff)
-                                : const Color(0xFF2c3e50),
+                                ? AppColors.white
+                                : AppColors.primary,
                           ),
                         );
                       },
                     ),
                     if (_playRecords.isNotEmpty) ...[
-                      const SizedBox(width: 8),
+                      Gap.w8,
                       MouseRegion(
                         cursor: DeviceUtils.isPC()
                             ? SystemMouseCursors.click
@@ -474,15 +478,15 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                                 horizontal: 8, vertical: 0),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            overlayColor: Colors.transparent,
+                            overlayColor: AppColors.transparent,
                           ),
                           child: Text(
-                            '清空',
+                            AppStrings.clear,
                             style: FontUtils.poppins(
-                              fontSize: 14,
+                              fontSize: AppDimens.fontSizeMd,
                               color: DeviceUtils.isPC() && _isClearButtonHovered
-                                  ? const Color(0xFFe74c3c) // hover 时红色
-                                  : const Color(0xFF7f8c8d),
+                                  ? AppColors.error // hover 时红色
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -517,15 +521,15 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                             horizontal: 8, vertical: 4),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        overlayColor: Colors.transparent,
+                        overlayColor: AppColors.transparent,
                       ),
                       child: Text(
-                        '查看全部 >',
+                        AppStrings.homeViewMore,
                         style: FontUtils.poppins(
-                          fontSize: 14,
+                          fontSize: AppDimens.fontSizeMd,
                           color: DeviceUtils.isPC() && _isMoreButtonHovered
-                              ? const Color(0xFF27ae60) // hover 时绿色
-                              : const Color(0xFF7f8c8d),
+                              ? AppColors.accent // hover 时绿色
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -533,7 +537,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           // 内容区域
           if (_isLoading)
             _buildLoadingState()
@@ -552,7 +556,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
       onEnter: (_) {
         setState(() => _isHovered = true);
         // 延迟检查以确保滚动控制器已初始化
-        Future.delayed(const Duration(milliseconds: 50), _checkScroll);
+        Future.delayed(AppDurations.debounceInterval, _checkScroll);
       },
       onExit: (_) => setState(() => _isHovered = false),
       child: Stack(
@@ -568,12 +572,12 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                 cursor: SystemMouseCursors.click,
                 child: Container(
                   width: 80,
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
                     child: AnimatedOpacity(
                       opacity: _isHovered ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppDurations.normal,
                       child: Center(
                         child: _buildScrollButton(
                           icon: Icons.chevron_left,
@@ -595,12 +599,12 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                 cursor: SystemMouseCursors.click,
                 child: Container(
                   width: 80,
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
                     child: AnimatedOpacity(
                       opacity: _isHovered ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppDurations.normal,
                       child: Center(
                         child: _buildScrollButton(
                           icon: Icons.chevron_right,
@@ -625,7 +629,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
         return Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: InkWell(
             onTap: onPressed,
             customBorder: const CircleBorder(),
@@ -639,14 +643,14 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: themeService.isDarkMode
-                      ? const Color(0xFF4B5563)
-                      : const Color(0xFFE5E7EB),
+                      ? AppColors.gray600
+                      : AppColors.borderLightGray,
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
+                    color: AppColors.black30,
+                    blurRadius: AppDimens.shadowBlurSm,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -655,8 +659,8 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                 icon,
                 size: 32,
                 color: themeService.isDarkMode
-                    ? const Color(0xFFD1D5DB)
-                    : const Color(0xFF4B5563),
+                    ? AppColors.gray300
+                    : AppColors.gray600,
               ),
             ),
           ),
@@ -771,24 +775,24 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
         ShimmerEffect(
           width: width,
           height: height,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        const SizedBox(height: 6),
+        Gap.h6,
         // 标题骨架
         Center(
           child: ShimmerEffect(
             width: width * 0.8,
             height: 14,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
-        const SizedBox(height: 4),
+        Gap.h4,
         // 源名称骨架
         Center(
           child: ShimmerEffect(
             width: width * 0.6,
             height: 10,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
       ],
@@ -806,25 +810,25 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
           children: [
             Icon(
               Icons.error_outline,
-              color: Colors.grey[400],
+              color: AppColors.gray400,
               size: 32,
             ),
-            const SizedBox(height: 8),
+            Gap.h8,
             Text(
-              '加载播放记录失败',
+              AppStrings.loadPlayRecordsFailed,
               style: FontUtils.poppins(
-                fontSize: 14,
-                color: Colors.grey[600],
+                fontSize: AppDimens.fontSizeMd,
+                color: AppColors.gray600,
               ),
             ),
-            const SizedBox(height: 8),
+            Gap.h8,
             TextButton(
               onPressed: _loadPlayRecords,
               child: Text(
-                '重试',
+                AppStrings.retry,
                 style: FontUtils.poppins(
-                  fontSize: 12,
-                  color: const Color(0xFF2c3e50),
+                  fontSize: AppDimens.fontSizeXs,
+                  color: AppColors.primary,
                 ),
               ),
             ),

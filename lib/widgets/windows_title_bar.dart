@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
+import '../constants/app_colors.dart';
 
 class WindowsTitleBar extends StatefulWidget {
   final bool forceBlack;
@@ -29,15 +31,15 @@ class _WindowsTitleBarState extends State<WindowsTitleBar> {
         // 优先使用自定义背景色，其次使用 forceBlack，最后使用默认颜色
         final backgroundColor = widget.customBackgroundColor ??
             (widget.forceBlack
-                ? Colors.transparent
+                ? AppColors.transparent
                 : (isDark 
-                    ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
-                    : Colors.white.withValues(alpha: 0.8)));
+                    ? AppColors.cardDark.withValues(alpha: 0.9)
+                    : AppColors.white70));
         
         // Windows 11 风格的文字和图标颜色
         final foregroundColor = widget.forceBlack 
-            ? Colors.white
-            : (isDark ? Colors.white : const Color(0xFF202020));
+            ? AppColors.white
+            : (isDark ? AppColors.white : AppColors.darkBg4);
         
         return Container(
           height: 40,
@@ -48,11 +50,11 @@ class _WindowsTitleBarState extends State<WindowsTitleBar> {
             children: [
               // 左侧标题（可选）
               if (widget.title != null) ...[
-                const SizedBox(width: 12),
+                Gap.w12,
                 Text(
                   widget.title!,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppDimens.fontSizeXs,
                     color: foregroundColor.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w400,
                   ),
@@ -83,7 +85,7 @@ class _WindowsTitleBarState extends State<WindowsTitleBar> {
                 onPressed: () {
                   appWindow.close();
                 },
-                icon: Icon(Icons.close, size: 16, color: foregroundColor),
+                icon: Icon(Icons.close, size: AppDimens.iconSm, color: foregroundColor),
                 isDark: isDark,
                 isCloseButton: true,
               ),
@@ -141,16 +143,16 @@ class _WindowsButtonHoverState extends State<_WindowsButtonHover> {
     
     if (_isPressed) {
       backgroundColor = widget.isCloseButton
-          ? const Color(0xFF8B0000) // 深红色
+          ? AppColors.darkRed // 深红色
           : (widget.isDark 
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.06));
+              ? AppColors.white10
+              : AppColors.black30);
     } else if (_isHovered) {
       backgroundColor = widget.isCloseButton
-          ? const Color(0xFFE81123) // Windows 11 红色
+          ? AppColors.winRed // Windows 11 红色
           : (widget.isDark 
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.04));
+              ? AppColors.white10
+              : AppColors.black30);
     }
 
     return MouseRegion(
@@ -167,13 +169,13 @@ class _WindowsButtonHoverState extends State<_WindowsButtonHover> {
         },
         onTapCancel: () => setState(() => _isPressed = false),
         child: Container(
-          color: backgroundColor ?? Colors.transparent,
+          color: backgroundColor ?? AppColors.transparent,
           child: Center(
             child: widget.isCloseButton && _isHovered
                 ? const Icon(
                     Icons.close,
-                    size: 16,
-                    color: Colors.white,
+                    size: AppDimens.iconSm,
+                    color: AppColors.white,
                   )
                 : widget.icon,
           ),

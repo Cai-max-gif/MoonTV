@@ -1,4 +1,4 @@
-package org.Moon.TV
+package org.moon.tv
 
 import io.flutter.embedding.android.FlutterActivity
 

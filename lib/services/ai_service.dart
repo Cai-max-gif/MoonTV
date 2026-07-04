@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class AISettings {
   String provider;
@@ -36,15 +38,17 @@ class AISettings {
     if (baseUrl.isNotEmpty) return baseUrl;
     switch (provider) {
       case 'openai':
-        return 'https://api.openai.com/v1';
+        return AppConfig.aiOpenaiBaseUrl;
       case 'deepseek':
-        return 'https://api.deepseek.com/v1';
+        return AppConfig.aiDeepseekBaseUrl;
       case 'zhipu':
-        return 'https://open.bigmodel.cn/api/paas/v4';
+        return AppConfig.aiZhipuBaseUrl;
       case 'moonshot':
-        return 'https://api.moonshot.cn/v1';
+        return AppConfig.aiMoonshotBaseUrl;
+      case 'mimo':
+        return AppConfig.aiMimoBaseUrl;
       default:
-        return 'https://api.openai.com/v1';
+        return AppConfig.aiOpenaiBaseUrl;
     }
   }
 
@@ -57,7 +61,7 @@ class AIService {
   static const String _settingsKey = 'ai_settings';
   static const String _chatHistoryKey = 'ai_chat_history';
 
-  static const Duration _timeout = Duration(seconds: 60);
+  static Duration get _timeout => AppConfig.aiRequestTimeout;
 
   static Future<List<Map<String, dynamic>>> loadChatHistory() async {
     final prefs = await SharedPreferences.getInstance();
@@ -158,10 +162,10 @@ class AIService {
           .post(
             uri,
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
               'Authorization': 'Bearer ${settings.apiKey}',
             },
-            body: body,
+            body: utf8.encode(body),
           )
           .timeout(_timeout);
 
@@ -187,7 +191,7 @@ class AIService {
     try {
       String url;
       if (settings.provider == 'deepseek') {
-        url = 'https://api.deepseek.com/user/balance';
+        url = '${settings.effectiveBaseUrl}/user/balance';
       } else if (settings.provider == 'moonshot') {
         url = '${settings.effectiveBaseUrl}/users/me/balance';
       } else {
@@ -207,7 +211,8 @@ class AIService {
           .timeout(_timeout);
 
       if (response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+        final responseBody = utf8.decode(response.bodyBytes);
+        return json.decode(responseBody) as Map<String, dynamic>;
       }
 
       return null;
@@ -220,28 +225,17 @@ class AIService {
     required AISettings settings,
     required String userMessage,
     required List<Map<String, String>> conversationHistory,
+    String? systemPrompt,
   }) async {
     if (!settings.isValid) {
-      throw Exception('请先在设置中配置API密钥');
+      throw Exception(AppStrings.errorConfigApiKey);
     }
 
     final baseUrl = settings.effectiveBaseUrl;
     final url = '$baseUrl/chat/completions';
     final uri = Uri.parse(url);
 
-    final messages = <Map<String, String>>[];
-
-    for (final msg in conversationHistory) {
-      messages.add({
-        'role': msg['role']!,
-        'content': msg['content']!,
-      });
-    }
-
-    messages.add({
-      'role': 'user',
-      'content': userMessage,
-    });
+    final messages = _buildMessages(userMessage, conversationHistory, systemPrompt);
 
     final body = json.encode({
       'model': settings.model,
@@ -252,26 +246,32 @@ class AIService {
         .post(
           uri,
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer ${settings.apiKey}',
           },
-          body: body,
+          body: utf8.encode(body),
         )
         .timeout(_timeout);
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final choices = data['choices'] as List<dynamic>;
-      if (choices.isNotEmpty) {
-        final message = choices.first['message'] as Map<String, dynamic>;
-        return message['content'] as String? ?? '';
+      try {
+        final responseBody = utf8.decode(response.bodyBytes);
+        final data = json.decode(responseBody);
+        final choices = data['choices'] as List<dynamic>;
+        if (choices.isNotEmpty) {
+          final message = choices.first['message'] as Map<String, dynamic>;
+          return message['content'] as String? ?? '';
+        }
+        throw Exception('AI没有返回有效回复');
+      } catch (e) {
+        throw Exception('解析响应失败');
       }
-      throw Exception('AI没有返回有效回复');
     }
 
-    String errorMessage = '请求失败';
+    String errorMessage = AppStrings.aiRequestFailed;
     try {
-      final errorData = json.decode(response.body);
+      final responseBody = utf8.decode(response.bodyBytes);
+      final errorData = json.decode(responseBody);
       if (errorData['error'] is Map) {
         errorMessage = errorData['error']['message'] ?? errorMessage;
       } else if (errorData['error'] is String) {
@@ -279,17 +279,49 @@ class AIService {
       } else if (errorData['message'] != null) {
         errorMessage = errorData['message'].toString();
       }
-    } catch (_) {}
+    } catch (e) {
+      // JSON 解析失败时使用默认错误消息
+    }
 
     switch (response.statusCode) {
       case 401:
-        throw Exception('API密钥无效，请检查设置');
+        throw Exception(AppStrings.aiInvalidApiKey);
       case 429:
-        throw Exception('请求过于频繁，请稍后再试');
+        throw Exception(AppStrings.aiRateLimited);
       case 500:
-        throw Exception('服务器内部错误');
+        throw Exception(AppStrings.aiServerError);
       default:
-        throw Exception('请求失败 ($errorMessage)');
+        throw Exception('${AppStrings.aiRequestFailed} ($errorMessage)');
     }
   }
+
+  /// 构建消息列表（系统提示 + 历史消息 + 当前消息）
+  static List<Map<String, String>> _buildMessages(
+    String userMessage,
+    List<Map<String, String>> conversationHistory,
+    String? systemPrompt,
+  ) {
+    final messages = <Map<String, String>>[];
+
+    // 如果有系统提示，添加到消息列表开头
+    if (systemPrompt != null && systemPrompt.isNotEmpty) {
+      messages.add({
+        'role': 'system',
+        'content': systemPrompt,
+      });
+    }
+
+    for (final msg in conversationHistory) {
+      messages.add({
+        'role': msg['role']!,
+        'content': msg['content']!,
+      });
+    }
+    messages.add({
+      'role': 'user',
+      'content': userMessage,
+    });
+    return messages;
+  }
+
 }

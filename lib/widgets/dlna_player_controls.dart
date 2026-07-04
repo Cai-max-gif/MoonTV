@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import 'package:dlna_dart/dlna.dart';
 import '../utils/device_utils.dart';
 
@@ -12,7 +16,7 @@ class HoverButton extends StatefulWidget {
     super.key,
     required this.child,
     required this.onTap,
-    this.padding = const EdgeInsets.all(8),
+    this.padding = const EdgeInsets.all(AppDimens.spacingSm),
   });
 
   @override
@@ -49,7 +53,7 @@ class _HoverButtonState extends State<HoverButton> {
           decoration: _isHovering
               ? BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey.withValues(alpha: 0.5),
+                  color: AppColors.hoverOverlay,
                 )
               : null,
           child: widget.child,
@@ -101,7 +105,7 @@ class _CapsuleHoverButtonState extends State<CapsuleHoverButton> {
         child: Container(
           decoration: _isHovering
               ? BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: AppColors.white10,
                   borderRadius: widget.isLeft
                       ? const BorderRadius.only(
                           topLeft: Radius.circular(22),
@@ -244,7 +248,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
           // 全黑背景
           Positioned.fill(
             child: Container(
-              color: Colors.black,
+              color: AppColors.black,
             ),
           ),
           // 左上角返回按钮
@@ -257,7 +261,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
               },
               child: const Icon(
                 Icons.arrow_back,
-                color: Colors.white,
+                color: AppColors.white,
                 size: 20,
               ),
             ),
@@ -272,14 +276,14 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 ),
                 child: Text(
                   widget.device.info.friendlyName,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                    color: AppColors.white,
+                    fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -298,7 +302,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
               },
               child: const Icon(
                 Icons.power_settings_new,
-                color: Colors.white,
+                color: AppColors.white,
                 size: 20,
               ),
             ),
@@ -309,15 +313,15 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircularProgressIndicator(
-                  color: Colors.white,
+                  color: AppColors.white,
                   strokeWidth: 3,
                 ),
-                SizedBox(height: 16),
+                Gap.h16,
                 Text(
                   '视频加载中...',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                    color: AppColors.white,
+                    fontSize: AppDimens.fontSizeMd,
                   ),
                 ),
               ],
@@ -332,7 +336,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
         // 全黑背景
         Positioned.fill(
           child: Container(
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
 
@@ -351,7 +355,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
-              color: Colors.transparent,
+              color: AppColors.transparent,
             ),
           ),
         ),
@@ -366,7 +370,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
             },
             child: const Icon(
               Icons.arrow_back,
-              color: Colors.white,
+              color: AppColors.white,
               size: 20,
             ),
           ),
@@ -381,14 +385,14 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               ),
               child: Text(
                 widget.device.info.friendlyName,
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
+                  color: AppColors.white,
+                  fontSize: AppDimens.fontSizeMd,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
@@ -408,7 +412,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
             },
             child: const Icon(
               Icons.power_settings_new,
-              color: Colors.white,
+              color: AppColors.white,
               size: 20,
             ),
           ),
@@ -425,25 +429,25 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFF2a2a2a),
-                    Color(0xFF1a1a1a),
-                    Color(0xFF000000),
+                    AppColors.darkBg2,
+                    AppColors.darkBg3,
+                    AppColors.black,
                   ],
                   stops: [0.0, 0.5, 1.0],
                 ),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.white20,
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: AppColors.black.withValues(alpha: 0.5),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: AppColors.white10,
                     blurRadius: 2,
                     offset: const Offset(0, -1),
                   ),
@@ -462,7 +466,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                         decoration: BoxDecoration(
                           border: Border(
                             right: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: AppColors.white20,
                               width: 1,
                             ),
                           ),
@@ -471,8 +475,8 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                           child: Text(
                             '换设备',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
+                              color: AppColors.white,
+                              fontSize: AppDimens.fontSizeMd,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.5,
                             ),
@@ -490,10 +494,10 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                       },
                       child: Center(
                         child: Text(
-                          widget.isPlaying ? '暂停' : '播放',
+                          widget.isPlaying ? AppStrings.dlnaPause : AppStrings.dlnaPlay,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
+                            color: AppColors.white,
+                            fontSize: AppDimens.fontSizeMd,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
                           ),
@@ -529,8 +533,8 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                     },
                     child: Icon(
                       widget.isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
-                      size: 24,
+                      color: AppColors.white,
+                      size: AppDimens.iconLg,
                     ),
                   ),
 
@@ -544,8 +548,8 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                         },
                         child: const Icon(
                           Icons.skip_next,
-                          color: Colors.white,
-                          size: 24,
+                          color: AppColors.white,
+                          size: AppDimens.iconLg,
                         ),
                       ),
                     ),
@@ -557,8 +561,8 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                       child: Text(
                         '${_formatDuration(_isSeekingViaSwipe && _swipeTargetPosition != null ? _swipeTargetPosition! : widget.position)} / ${_formatDuration(widget.duration)}',
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
+                          color: AppColors.white,
+                          fontSize: AppDimens.fontSizeXs,
                         ),
                       ),
                     ),
@@ -649,7 +653,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(3),
                                       color:
-                                          Colors.white.withValues(alpha: 0.3),
+                                          AppColors.white.withValues(alpha: 0.3),
                                     ),
                                   ),
                                 ),
@@ -662,7 +666,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                     height: 6,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(3),
-                                      color: Colors.red,
+                                      color: AppColors.red,
                                     ),
                                   ),
                                 ),
@@ -690,10 +694,10 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                               height: 16,
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                color: Colors.red,
+                                                color: AppColors.red,
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.black
+                                                    color: AppColors.black
                                                         .withValues(alpha: 0.3),
                                                     blurRadius: 4,
                                                     offset: const Offset(0, 2),
@@ -707,16 +711,16 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                           scale:
                                               _isSeekingViaSwipe ? 1.25 : 1.0,
                                           duration:
-                                              const Duration(milliseconds: 150),
+                                              AppDurations.fast,
                                           child: Container(
                                             width: 16,
                                             height: 16,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.red,
+                                              color: AppColors.red,
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black
+                                                  color: AppColors.black
                                                       .withValues(alpha: 0.3),
                                                   blurRadius: 4,
                                                   offset: const Offset(0, 2),
@@ -804,7 +808,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                   height: 6,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(3),
-                                    color: Colors.white.withValues(alpha: 0.3),
+                                    color: AppColors.white.withValues(alpha: 0.3),
                                   ),
                                 ),
                               ),
@@ -817,7 +821,7 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                   height: 6,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(3),
-                                    color: Colors.red,
+                                    color: AppColors.red,
                                   ),
                                 ),
                               ),
@@ -839,16 +843,16 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                               ? 1.25
                                               : 1.0,
                                           duration:
-                                              const Duration(milliseconds: 150),
+                                              AppDurations.fast,
                                           child: Container(
                                             width: 16,
                                             height: 16,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.red,
+                                              color: AppColors.red,
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black
+                                                  color: AppColors.black
                                                       .withValues(alpha: 0.3),
                                                   blurRadius: 4,
                                                   offset: const Offset(0, 2),
@@ -861,16 +865,16 @@ class _DLNAPlayerControlsState extends State<DLNAPlayerControls> {
                                     : AnimatedScale(
                                         scale: _isSeekingViaSwipe ? 1.25 : 1.0,
                                         duration:
-                                            const Duration(milliseconds: 150),
+                                            AppDurations.fast,
                                         child: Container(
                                           width: 16,
                                           height: 16,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Colors.red,
+                                            color: AppColors.red,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black
+                                                color: AppColors.black
                                                     .withValues(alpha: 0.3),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),

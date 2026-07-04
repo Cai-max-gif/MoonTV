@@ -1,4 +1,5 @@
 import 'play_record.dart';
+import '../constants/app_config.dart';
 
 /// 视频信息数据模型，用于VideoCard展示
 class VideoInfo {
@@ -17,6 +18,8 @@ class VideoInfo {
   final String? doubanId; // 豆瓣ID，用于豆瓣模式
   final int? bangumiId; // Bangumi ID，用于Bangumi模式
   final String? rate; // 评分，用于豆瓣模式
+  final String? releaseDate; // 上映日期 (YYYY-MM-DD)，用于即将上映模式
+  final String? releaseStatus; // 上映状态文本，如"3天后上映"、"今日上映"
 
   VideoInfo({
     required this.id,
@@ -34,6 +37,8 @@ class VideoInfo {
     this.doubanId,
     this.bangumiId,
     this.rate,
+    this.releaseDate,
+    this.releaseStatus,
   });
 
   /// 从PlayRecord创建VideoInfo
@@ -41,6 +46,8 @@ class VideoInfo {
     String? doubanId,
     int? bangumiId,
     String? rate,
+    String? releaseDate,
+    String? releaseStatus,
   }) {
     return VideoInfo(
       id: playRecord.id,
@@ -58,16 +65,18 @@ class VideoInfo {
       doubanId: doubanId,
       bangumiId: bangumiId,
       rate: rate,
+      releaseDate: releaseDate,
+      releaseStatus: releaseStatus,
     );
   }
 
   /// 从JSON创建VideoInfo
   factory VideoInfo.fromJson(String key, Map<String, dynamic> json) {
     // 从key中分离source和id，格式为 "source+id"
-    final parts = key.split('+');
+    final parts = key.split(AppConfig.searchKeySeparator);
     final source = parts.length > 1 ? parts[0] : '';
     final id = parts.length > 1 ? parts[1] : key;
-    
+
     return VideoInfo(
       id: id,
       source: source,
@@ -84,6 +93,8 @@ class VideoInfo {
       doubanId: json['douban_id'],
       bangumiId: json['bangumi_id'],
       rate: json['rate'],
+      releaseDate: json['release_date'],
+      releaseStatus: json['release_status'],
     );
   }
 
@@ -103,6 +114,8 @@ class VideoInfo {
       'douban_id': doubanId,
       'bangumi_id': bangumiId,
       'rate': rate,
+      'release_date': releaseDate,
+      'release_status': releaseStatus,
     };
   }
 
@@ -114,9 +127,9 @@ class VideoInfo {
 
   /// 格式化播放时间
   String get formattedPlayTime {
-    final hours = playTime ~/ 3600;
-    final minutes = (playTime % 3600) ~/ 60;
-    final seconds = playTime % 60;
+    final hours = playTime ~/ AppConfig.secondsPerHour;
+    final minutes = (playTime % AppConfig.secondsPerHour) ~/ AppConfig.secondsPerMinute;
+    final seconds = playTime % AppConfig.secondsPerMinute;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -125,11 +138,10 @@ class VideoInfo {
     }
   }
 
-  /// 格式化总时间
-  String get formattedTotalTime {
-    final hours = totalTime ~/ 3600;
-    final minutes = (totalTime % 3600) ~/ 60;
-    final seconds = totalTime % 60;
+  static String formatTotalTime(int totalTime) {
+    final hours = totalTime ~/ AppConfig.secondsPerHour;
+    final minutes = (totalTime % AppConfig.secondsPerHour) ~/ AppConfig.secondsPerMinute;
+    final seconds = totalTime % AppConfig.secondsPerMinute;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';

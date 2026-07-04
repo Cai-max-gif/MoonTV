@@ -1,10 +1,17 @@
 import 'dart:convert';
+import '../constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/user_data_service.dart';
+import '../services/theme_service.dart';
 import '../screens/login_screen.dart';
+import '../screens/download_management_screen.dart';
+import '../screens/download_settings_screen.dart';
+import '../screens/playback_settings_screen.dart';
+import '../screens/danmaku_settings_screen.dart';
 import '../services/page_cache_service.dart';
 import '../services/live_service.dart';
 import '../services/version_service.dart';
@@ -13,8 +20,10 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/update_dialog.dart';
 import '../widgets/announcement_dialog.dart';
-import '../widgets/settings_section.dart';
-import '../widgets/appearance_sync_settings_section.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -63,7 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
-      // 解析cookies字符串
       final cookieMap = <String, String>{};
       final cookiePairs = cookies.split(';');
 
@@ -79,16 +87,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
         }
       }
-      
+
       final authCookie = cookieMap['user_auth'] ?? cookieMap['auth'];
       if (authCookie == null) {
         return 'user';
       }
 
-      // 处理可能的双重编码
       String decoded = Uri.decodeComponent(authCookie);
 
-      // 如果解码后仍然包含 %，说明是双重编码，需要再次解码
       if (decoded.contains('%')) {
         decoded = Uri.decodeComponent(decoded);
       }
@@ -98,7 +104,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       return role ?? 'user';
     } catch (e) {
-      // 解析失败时默认为user
       return 'user';
     }
   }
@@ -111,14 +116,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = true;
       });
 
-      // 清空所有缓存
       LiveService.clearAllCache();
       PageCacheService().clearAllCache();
 
-      // 只清除密码和cookies，保留服务器地址和用户名
       await UserDataService.clearAuthData();
 
-      // 跳转到登录页，并移除所有之前的路由（强制销毁所有页面）
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -142,22 +144,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = true;
       });
 
-      // 显示加载提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在检查更新...',
+              AppStrings.profileCheckingUpdate,
               style: FontUtils.poppins(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
+                    ? AppColors.white
                     : Colors.black,
               ),
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
                 ? Colors.black
-                : Colors.white,
-            duration: const Duration(seconds: 2),
+                : AppColors.white,
+            duration: AppDurations.twoSeconds,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -169,19 +170,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       if (versionInfo != null) {
-        // 有新版本，显示更新对话框
         await UpdateDialog.show(context, versionInfo);
       } else {
-        // 已是最新版本
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '当前已是最新版本',
+              AppStrings.profileAlreadyLatest,
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFF27AE60),
+            backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -192,12 +191,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '检查更新失败: ${e.toString()}',
+              '${AppStrings.profileCheckUpdateFailed}${e.toString()}',
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -220,22 +219,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = true;
       });
 
-      // 显示加载提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在获取公告...',
+              AppStrings.profileFetchingAnnouncement,
               style: FontUtils.poppins(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
+                    ? AppColors.white
                     : Colors.black,
               ),
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
                 ? Colors.black
-                : Colors.white,
-            duration: const Duration(seconds: 2),
+                : AppColors.white,
+            duration: AppDurations.twoSeconds,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -247,19 +245,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       if (announcement != null) {
-        // 显示公告对话框
         await AnnouncementDialog.show(context, announcement);
       } else {
-        // 没有公告
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '暂无公告',
+              AppStrings.profileNoAnnouncement,
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFF27AE60),
+            backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -270,12 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '获取公告失败: ${e.toString()}',
+              '${AppStrings.profileFetchAnnouncementFailed}${e.toString()}',
               style: FontUtils.poppins(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
           ),
@@ -296,17 +292,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     switch (_role) {
       case 'admin':
-        label = '管理员';
-        color = const Color(0xFFf59e0b); // 橙黄色
+        label = AppStrings.profileRoleAdmin;
+        color = AppColors.amber;
         break;
       case 'owner':
-        label = '站长';
-        color = const Color(0xFF8b5cf6); // 紫色
+        label = AppStrings.profileRoleOwner;
+        color = AppColors.violet;
         break;
       case 'user':
       default:
-        label = '用户';
-        color = const Color(0xFF10b981); // 绿色
+        label = AppStrings.profileRoleUser;
+        color = AppColors.emerald;
         break;
     }
 
@@ -314,14 +310,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Text(
         label,
         style: FontUtils.poppins(
-          fontSize: 10,
-          color: Colors.white,
+          fontSize: AppDimens.fontSize2xs,
+          color: AppColors.white,
           fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLg),
+      color: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.borderDarkGray
+          : AppColors.borderLightGray,
+    );
+  }
+
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: AppColors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: iconColor,
+              ),
+              Gap.w12,
+              Text(
+                label,
+                style: FontUtils.poppins(
+                  fontSize: AppDimens.fontSizeXl,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.white
+                      : AppColors.textDarkGray,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              trailing ?? Icon(
+                LucideIcons.chevronRight,
+                size: 20,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textDarkHint
+                    : AppColors.gray400,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -329,32 +384,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeService = Provider.of<ThemeService>(context);
+
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF000000)
-            : const Color(0xFFf5f5f5),
+            ? AppColors.black
+            : AppColors.grayBg,
       ),
       child: ListView(
         children: [
-          // 用户信息区域
           Container(
             padding: const EdgeInsets.all(20),
             margin: EdgeInsets.only(
               left: 16,
               right: 16,
-              top: DeviceUtils.isPC() ? 16 : -10, // 移动端顶部距离改为-10
-              bottom: 16,
+              top: DeviceUtils.isPC() ? 16 : -10,
+              bottom: 32,
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1e1e1e)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+                  ? AppColors.cardDark
+                  : AppColors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -362,118 +418,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 Text(
-                  '当前用户',
+                  AppStrings.profileCurrentUser,
                   textAlign: TextAlign.center,
                   style: FontUtils.poppins(
-                    fontSize: 12,
+                    fontSize: AppDimens.fontSizeXs,
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF9ca3af)
-                        : const Color(0xFF6b7280),
+                        ? AppColors.gray400
+                        : AppColors.gray500,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(height: 8),
-                // 用户名
+                Gap.h8,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _username ?? '未知用户',
+                      _username ?? AppStrings.profileUnknownUser,
                       style: FontUtils.poppins(
-                        fontSize: 18,
+                        fontSize: AppDimens.fontSizeXxl,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF1f2937),
+                            ? AppColors.white
+                            : AppColors.textDarkGray,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // 角色标签
+                    Gap.w8,
                     _buildRoleTag(),
                   ],
                 ),
               ],
             ),
           ),
-
-          // 设置选项区域已移除
-          // 移除了豆瓣数据源、豆瓣图片源、M3U8代理URL和优选测速功能
-
-          const SizedBox(height: 16),
-
-          // 设置选项区域
-          const SettingsSection(),
-
-          const SizedBox(height: 16),
-
-          // 外观和同步设置区域
-          const AppearanceSyncSettingsSection(),
-
-          const SizedBox(height: 16),
-
-          // 操作按钮区域
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLg),
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1e1e1e)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+                  ? AppColors.cardDark
+                  : AppColors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: Column(
               children: [
-                // 公告入口按钮
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _handleViewAnnouncement,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+                _buildSettingsItem(
+                  icon: LucideIcons.folderOutput,
+                  iconColor: AppColors.emerald,
+                  label: AppStrings.profileDownloadManage,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DownloadManagementScreen(),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            LucideIcons.bell,
-                            size: 20,
-                            color: Color(0xFFf59e0b),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '公告',
-                            style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFFffffff)
-                                  : const Color(0xFF1f2937),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                    );
+                  },
+                ),
+                _buildDivider(),
+                _buildSettingsItem(
+                  icon: LucideIcons.settings2,
+                  iconColor: AppColors.violet,
+                  label: AppStrings.profileDownloadSettings,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DownloadSettingsScreen(),
                       ),
-                    ),
+                    );
+                  },
+                ),
+                _buildDivider(),
+                _buildSettingsItem(
+                  icon: LucideIcons.clapperboard,
+                  iconColor: AppColors.amber,
+                  label: AppStrings.profilePlaybackSettings,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PlaybackSettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDivider(),
+                _buildSettingsItem(
+                  icon: LucideIcons.messageSquare,
+                  iconColor: AppColors.pinkAccent,
+                  label: AppStrings.profileDanmakuSettings,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DanmakuSettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDivider(),
+                _buildSettingsItem(
+                  icon: LucideIcons.palette,
+                  iconColor: AppColors.blue,
+                  label: AppStrings.profileThemeSettings,
+                  trailing: Row(
+                    children: [
+                      Icon(
+                        themeService.isDarkMode ? LucideIcons.moon : LucideIcons.sun,
+                        size: AppDimens.iconSm,
+                        color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.gray400
+                        : AppColors.gray500,
+                      ),
+                      Gap.w6,
+                      Text(
+                        themeService.isDarkMode ? AppStrings.profileThemeDark : AppStrings.profileThemeLight,
+                        style: FontUtils.poppins(
+                          fontSize: AppDimens.fontSizeMd,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.gray400
+                              : AppColors.gray500,
+                        ),
+                      ),
+                    ],
                   ),
+                  onTap: () {
+                    themeService.toggleTheme(context);
+                  },
                 ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
+                _buildDivider(),
+                _buildSettingsItem(
+                  icon: LucideIcons.bell,
+                  iconColor: AppColors.amber,
+                  label: AppStrings.profileAnnouncement,
+                  onTap: _handleViewAnnouncement,
                 ),
-                // 检查更新按钮
+                _buildDivider(),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: InkWell(
                     onTap: _handleCheckUpdate,
                     child: Container(
@@ -486,17 +573,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const Icon(
                             LucideIcons.download,
                             size: 20,
-                            color: Color(0xFF3b82f6),
+                            color: AppColors.blue,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
-                            '检查更新',
+                            AppStrings.profileCheckUpdate,
                             style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFFffffff)
-                                  : const Color(0xFF1f2937),
+                              fontSize: AppDimens.fontSizeXl,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.white
+                                : AppColors.textDarkGray,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -508,7 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: GestureDetector(
                               onTap: () async {
                                 final url = Uri.parse(
-                                  'https://github.com/Cai-max-gif/MoonTV',
+                                  AppConfig.githubRepoUrl,
                                 );
                                 if (await canLaunchUrl(url)) {
                                   await launchUrl(
@@ -518,13 +604,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 }
                               },
                               child: Text(
-                                _version.isEmpty ? '1.4.3' : _version,
+                                _version.isEmpty ? AppConfig.defaultVersion : _version,
                                 style: FontUtils.poppins(
-                                  fontSize: 14,
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? const Color(0xFF9ca3af)
-                                      : const Color(0xFF6b7280),
+                                  fontSize: AppDimens.fontSizeMd,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -535,17 +620,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                // 分割线
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
-                ),
-                // 登出按钮
+                _buildDivider(),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: InkWell(
                     onTap: _handleLogout,
                     child: Container(
@@ -558,14 +635,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const Icon(
                             LucideIcons.logOut,
                             size: 20,
-                            color: Color(0xFFef4444),
+                            color: AppColors.red,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
-                            '登出',
+                            AppStrings.authLogout,
                             style: FontUtils.poppins(
-                              fontSize: 16,
-                              color: const Color(0xFFef4444),
+                              fontSize: AppDimens.fontSizeXl,
+                              color: AppColors.red,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -577,7 +654,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-
           SizedBox(height: DeviceUtils.isTablet(context) && !DeviceUtils.isPortraitTablet(context) ? 100 : 40),
         ],
       ),

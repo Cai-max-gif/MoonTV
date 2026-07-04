@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/video_player_surface.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_colors.dart';
 
 class LocalPlayerScreen extends StatefulWidget {
   final String filePath;
@@ -26,7 +27,7 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.black,
       body: VideoPlayerWidget(
         surface: DeviceUtils.isPC()
             ? VideoPlayerSurface.desktop

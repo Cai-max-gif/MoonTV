@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_strings.dart';
 import '../models/play_record.dart';
 import '../models/video_info.dart';
 import '../services/api_service.dart';
@@ -23,7 +24,12 @@ class HotShortDramaSection extends StatefulWidget {
 
   /// 刷新热门短剧数据
   static Future<void> refreshHotShortDramas() async {
-    _currentInstance?._loadHotShortDramas();
+    _currentInstance?.refresh();
+  }
+
+  /// 获取当前已加载的短剧数据
+  static List<Map<String, dynamic>>? getCurrentShortDramas() {
+    return _currentInstance?._shortDramas;
   }
 
   // 静态实例引用，用于触发刷新
@@ -52,28 +58,34 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
     super.dispose();
   }
 
-  /// 加载热门短剧（显示短剧页面的前25个）
-  Future<void> _loadHotShortDramas() async {
+  Future<void> refresh() async {
+    await _loadHotShortDramas(forceRefresh: true);
+  }
+
+  /// 加载热门短剧
+  Future<void> _loadHotShortDramas({bool forceRefresh = false}) async {
     try {
       setState(() {
-        _isLoading = true;
+        if (_shortDramas.isEmpty) {
+          _isLoading = true;
+        }
         _hasError = false;
       });
 
-      // 调用短剧列表API，获取前25个数据
-      final result = await ApiService.getShortDramaList(
-        1, // 默认分类ID
-        1, // 第1页
-        25, // 每页25个，即前25个
+      // 使用推荐接口，服务端会自动选择有数据的分类
+      final result = await ApiService.getRecommendedShortDramas(
         context,
+        size: 25,
       );
 
       if (result.success && result.data != null) {
-        final list = result.data!['list'] as List<dynamic>;
+        final list = result.data!;
         if (mounted) {
           setState(() {
-            _shortDramas.clear();
-            _shortDramas.addAll(list.cast<Map<String, dynamic>>());
+            if (forceRefresh || _shortDramas.isEmpty) {
+              _shortDramas.clear();
+              _shortDramas.addAll(list.cast<Map<String, dynamic>>());
+            }
             _isLoading = false;
           });
         }
@@ -87,7 +99,7 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _hasError = true;
+          _hasError = _shortDramas.isEmpty;
           _isLoading = false;
         });
       }
@@ -123,8 +135,8 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
   @override
   Widget build(BuildContext context) {
     return RecommendationSection(
-      title: '热门短剧',
-      moreText: '查看更多 >',
+      title: AppStrings.homeHotShortDrama,
+      moreText: AppStrings.homeViewMore,
       onMoreTap: widget.onMoreTap,
       videoInfos: _convertToVideoInfos(),
       onItemTap: (videoInfo) {

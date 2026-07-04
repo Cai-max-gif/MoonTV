@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 class PlayerEpisodesPanel extends StatefulWidget {
   final ThemeData theme;
@@ -74,7 +78,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
 
     _scrollController.animateTo(
       offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -85,7 +89,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1c1c1e) : Colors.white,
+        color: isDarkMode ? AppColors.darkCard : AppColors.white,
       ),
       child: Column(
         children: [
@@ -96,7 +100,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '选集 (${widget.episodes.length})',
+                  AppStrings.episodeCount.replaceAll('%d', '${widget.episodes.length}'),
                   style: widget.theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -115,7 +119,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
             child: GridView.builder(
               key: _gridKey,
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: AppDimens.contentPadding,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: widget.crossAxisCount,
                 crossAxisSpacing: 12,
@@ -137,7 +141,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
                     episodeIndex < widget.episodesTitles.length) {
                   episodeTitle = widget.episodesTitles[episodeIndex];
                 } else {
-                  episodeTitle = '第${episodeIndex + 1}集';
+                  episodeTitle = AppStrings.playerEpisodeFormat.replaceAll('%d', '${episodeIndex + 1}');
                 }
 
                 return _EpisodePanelItemWithHover(
@@ -198,15 +202,15 @@ class _EpisodePanelItemWithHoverState extends State<_EpisodePanelItemWithHover> 
         child: Container(
           decoration: BoxDecoration(
             color: widget.isCurrentEpisode
-                ? Colors.green.withValues(alpha: 0.2)
+                ? AppColors.green.withValues(alpha: 0.2)
                 : (_isHovering && DeviceUtils.isPC()
                     ? (widget.isDarkMode 
-                        ? const Color(0xFF1A3D2E)  // 深色模式下的浅绿色
-                        : const Color(0xFFE8F5E9))  // 浅色模式下的浅绿色
-                    : (widget.isDarkMode ? Colors.grey[800] : Colors.grey[200])),
-            borderRadius: BorderRadius.circular(8),
+                        ? AppColors.darkGreen  // 深色模式下的浅绿色
+                        : AppColors.greenBg)  // 浅色模式下的浅绿色
+                    : (widget.isDarkMode ? AppColors.gray800 : AppColors.gray200)),
+            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             border: widget.isCurrentEpisode
-                ? Border.all(color: Colors.green, width: 2)
+                ? Border.all(color: AppColors.green, width: 2)
                 : null,
           ),
           child: Center(
@@ -219,12 +223,12 @@ class _EpisodePanelItemWithHoverState extends State<_EpisodePanelItemWithHover> 
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: widget.isCurrentEpisode
-                      ? Colors.green
+                      ? AppColors.green
                       : (widget.isDarkMode
-                          ? Colors.white
-                          : Colors.black),
+                          ? AppColors.white
+                          : AppColors.black),
                   fontWeight: FontWeight.w500,
-                  fontSize: 14,
+                  fontSize: AppDimens.fontSizeMd,
                 ),
               ),
             ),

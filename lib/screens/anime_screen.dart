@@ -13,12 +13,16 @@ import '../widgets/video_menu_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/pulsing_dots_indicator.dart';
 import '../widgets/bangumi_grid.dart';
+import '../constants/app_config.dart';
 import '../widgets/simple_tab_switcher.dart';
 import 'player_screen.dart';
 import '../widgets/filter_pill_hover.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/filter_options_selector.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_dimensions.dart';
 
 class AnimeScreen extends StatefulWidget {
   const AnimeScreen({super.key});
@@ -48,10 +52,10 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   // 番剧类型选项
   final List<SelectorOption> _animeTypeOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.typeHistory, value: 'history'),
+    SelectorOption(label: AppStrings.typeMusical, value: 'musical'),
     SelectorOption(label: '黑色幽默', value: 'dark_humor'),
-    SelectorOption(label: '历史', value: 'history'),
-    SelectorOption(label: '歌舞', value: 'musical'),
     SelectorOption(label: '励志', value: 'inspirational'),
     SelectorOption(label: '恶搞', value: 'parody'),
     SelectorOption(label: '治愈', value: 'healing'),
@@ -60,19 +64,19 @@ class _AnimeScreenState extends State<AnimeScreen> {
     SelectorOption(label: '情色', value: 'erotic'),
     SelectorOption(label: '国漫', value: 'chinese_anime'),
     SelectorOption(label: '人性', value: 'human_nature'),
-    SelectorOption(label: '悬疑', value: 'suspense'),
+    SelectorOption(label: AppStrings.typeSuspense, value: 'suspense'),
     SelectorOption(label: '恋爱', value: 'love'),
     SelectorOption(label: '魔幻', value: 'fantasy'),
-    SelectorOption(label: '科幻', value: 'sci_fi'),
+    SelectorOption(label: AppStrings.typeSciFi, value: 'sci_fi'),
   ];
 
   // 剧场版类型选项
   final List<SelectorOption> _movieTypeOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
     SelectorOption(label: '定格动画', value: 'stop_motion'),
-    SelectorOption(label: '传记', value: 'biography'),
+    SelectorOption(label: AppStrings.typeBiography, value: 'biography'),
     SelectorOption(label: '美国动画', value: 'us_animation'),
-    SelectorOption(label: '爱情', value: 'romance'),
+    SelectorOption(label: AppStrings.typeRomance, value: 'romance'),
     SelectorOption(label: '黑色幽默', value: 'dark_humor'),
     SelectorOption(label: '歌舞', value: 'musical'),
     SelectorOption(label: '儿童', value: 'children'),
@@ -95,35 +99,35 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   // TV 地区选项（与 TV 一致）
   final List<SelectorOption> _regionOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '华语', value: 'chinese'),
-    SelectorOption(label: '欧美', value: 'western'),
-    SelectorOption(label: '国外', value: 'foreign'),
-    SelectorOption(label: '韩国', value: 'korean'),
-    SelectorOption(label: '日本', value: 'japanese'),
-    SelectorOption(label: '中国大陆', value: 'mainland_china'),
-    SelectorOption(label: '中国香港', value: 'hong_kong'),
-    SelectorOption(label: '美国', value: 'usa'),
-    SelectorOption(label: '英国', value: 'uk'),
-    SelectorOption(label: '泰国', value: 'thailand'),
-    SelectorOption(label: '中国台湾', value: 'taiwan'),
-    SelectorOption(label: '意大利', value: 'italy'),
-    SelectorOption(label: '法国', value: 'france'),
-    SelectorOption(label: '德国', value: 'germany'),
-    SelectorOption(label: '西班牙', value: 'spain'),
-    SelectorOption(label: '俄罗斯', value: 'russia'),
-    SelectorOption(label: '瑞典', value: 'sweden'),
-    SelectorOption(label: '巴西', value: 'brazil'),
-    SelectorOption(label: '丹麦', value: 'denmark'),
-    SelectorOption(label: '印度', value: 'india'),
-    SelectorOption(label: '加拿大', value: 'canada'),
-    SelectorOption(label: '爱尔兰', value: 'ireland'),
-    SelectorOption(label: '澳大利亚', value: 'australia'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
+    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
+    SelectorOption(label: AppStrings.regionForeign, value: 'foreign'),
+    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
+    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
+    SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
+    SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
+    SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
+    SelectorOption(label: AppStrings.regionUK, value: 'uk'),
+    SelectorOption(label: AppStrings.regionThailand, value: 'thailand'),
+    SelectorOption(label: AppStrings.regionTaiwan, value: 'taiwan'),
+    SelectorOption(label: AppStrings.regionItaly, value: 'italy'),
+    SelectorOption(label: AppStrings.regionFrance, value: 'france'),
+    SelectorOption(label: AppStrings.regionGermany, value: 'germany'),
+    SelectorOption(label: AppStrings.regionSpain, value: 'spain'),
+    SelectorOption(label: AppStrings.regionRussia, value: 'russia'),
+    SelectorOption(label: AppStrings.regionSweden, value: 'sweden'),
+    SelectorOption(label: AppStrings.regionBrazil, value: 'brazil'),
+    SelectorOption(label: AppStrings.regionDenmark, value: 'denmark'),
+    SelectorOption(label: AppStrings.regionIndia, value: 'india'),
+    SelectorOption(label: AppStrings.regionCanada, value: 'canada'),
+    SelectorOption(label: AppStrings.regionIreland, value: 'ireland'),
+    SelectorOption(label: AppStrings.regionAustralia, value: 'australia'),
   ];
 
   // 电影地区选项（与 Movie 一致）
   final List<SelectorOption> _movieRegionOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
+    SelectorOption(label: AppStrings.catAll, value: 'all'),
     SelectorOption(label: '华语', value: 'chinese'),
     SelectorOption(label: '欧美', value: 'western'),
     SelectorOption(label: '韩国', value: 'korean'),
@@ -150,7 +154,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   // 年代选项（与 TV 一致）
   final List<SelectorOption> _yearOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
+    SelectorOption(label: AppStrings.catAll, value: 'all'),
     SelectorOption(label: '2020年代', value: '2020s'),
     SelectorOption(label: '2025', value: '2025'),
     SelectorOption(label: '2024', value: '2024'),
@@ -170,7 +174,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   // 平台选项（与 TV 一致）
   final List<SelectorOption> _platformOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
+    SelectorOption(label: AppStrings.catAll, value: 'all'),
     SelectorOption(label: '腾讯视频', value: 'tencent'),
     SelectorOption(label: '爱奇艺', value: 'iqiyi'),
     SelectorOption(label: '优酷', value: 'youku'),
@@ -186,7 +190,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   // 排序选项（与 TV/Movie 一致）
   final List<SelectorOption> _sortOptions = const [
-    SelectorOption(label: '综合排序', value: 'T'),
+    SelectorOption(label: AppStrings.sortComprehensive, value: 'T'),
     SelectorOption(label: '近期热度', value: 'U'),
     SelectorOption(label: '首映时间', value: 'R'),
     SelectorOption(label: '高分优先', value: 'S'),
@@ -212,7 +216,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
   final List<DoubanMovie> _animeList = [];
   final List<BangumiItem> _bangumiList = [];
   int _page = 0;
-  final int _pageLimit = 25;
+  final int _pageLimit = AppConfig.defaultPageLimit;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -255,7 +259,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
       }
 
       // 正常滚动情况：当滚动到距离底部50像素内时触发加载
-      const double threshold = 50.0;
+      const double threshold = AppDimens.scrollLoadMoreThreshold;
       if (position.pixels >= position.maxScrollExtent - threshold) {
         _loadMoreAnimeData();
       }
@@ -392,7 +396,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
                 .toList());
             _hasMore = false; // Bangumi 数据不支持分页
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -494,7 +498,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -514,7 +518,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
         MaterialPageRoute(
           builder: (context) => PlayerScreen(
             title: videoInfo.title,
-            stype: 'movie',
+            stype: AppConfig.stypeMovie,
             year: videoInfo.year,
           ),
         ),
@@ -539,7 +543,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
         _onVideoTap(videoInfo);
         break;
       case VideoMenuAction.doubanDetail:
-        _launchURL('https://movie.douban.com/subject/${videoInfo.id}/');
+        _launchURL('${AppConfig.doubanSubjectUrl}/${videoInfo.id}/');
         break;
       default:
         break;
@@ -563,8 +567,8 @@ class _AnimeScreenState extends State<AnimeScreen> {
   Widget build(BuildContext context) {
     return StyledRefreshIndicator(
       onRefresh: _refreshAnimeData,
-      refreshText: '刷新动漫数据...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshAnime,
+      primaryColor: AppColors.accent,
       child: SingleChildScrollView(
         controller: _scrollController,
         child: Column(
@@ -572,7 +576,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
           children: [
             _buildHeader(),
             _buildFilterSection(),
-            const SizedBox(height: 16),
+            Gap.h16,
             _selectedCategoryValue == '每日放送'
                 ? BangumiGrid(
                     bangumiItems: _bangumiList,
@@ -599,16 +603,16 @@ class _AnimeScreenState extends State<AnimeScreen> {
               // Bangumi 数据无需加载更多，直接显示底部指示器
               (_bangumiList.isNotEmpty && !_isLoading)
                   ? _buildEndOfListIndicator()
-                  : const SizedBox(height: 50)
+                  : Gap.h50
             else if (_isLoadingMore)
               const Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: AppDimens.contentPadding,
                 child: PulsingDotsIndicator(),
               )
             else if (!_hasMore && _animeList.isNotEmpty && !_isLoading)
               _buildEndOfListIndicator()
             else
-              const SizedBox(height: 50), // 占位符保持间距
+              Gap.h50, // 占位符保持间距
           ],
         ),
       ),
@@ -617,14 +621,14 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      padding: AppDimens.pageHeaderPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '动漫',
+            AppStrings.navAnime,
             style: FontUtils.poppins(
-              fontSize: 28,
+              fontSize: AppDimens.fontSizeHeadline,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
@@ -639,13 +643,13 @@ class _AnimeScreenState extends State<AnimeScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.all(AppDimens.spacingLg),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? Colors.white.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -672,7 +676,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
               _fetchAnimeData(isRefresh: true);
             },
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           SizedBox(
             height: 66,
             child: _buildSecondaryFilterSection(),
@@ -700,12 +704,12 @@ class _AnimeScreenState extends State<AnimeScreen> {
         Text(
           '星期',
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6),
+        Gap.h6,
         Expanded(
           child: SimpleTabSwitcher(
             tabs: _weekdayOptions.map((e) => e.label).toList(),
@@ -731,39 +735,39 @@ class _AnimeScreenState extends State<AnimeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '筛选',
+          AppStrings.filterMore,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6),
+        Gap.h6,
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterPill('类型', _animeTypeOptions, _selectedAnimeType,
+                _buildFilterPill(AppStrings.filterType, _animeTypeOptions, _selectedAnimeType,
                     (v) {
                   setState(() => _selectedAnimeType = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('地区', _regionOptions, _selectedAnimeRegion,
+                _buildFilterPill(AppStrings.filterRegion, _regionOptions, _selectedAnimeRegion,
                     (v) {
                   setState(() => _selectedAnimeRegion = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('年代', _yearOptions, _selectedAnimeYear, (v) {
+                _buildFilterPill(AppStrings.filterYear, _yearOptions, _selectedAnimeYear, (v) {
                   setState(() => _selectedAnimeYear = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('平台', _platformOptions, _selectedAnimePlatform,
+                _buildFilterPill(AppStrings.filterPlatform, _platformOptions, _selectedAnimePlatform,
                     (v) {
                   setState(() => _selectedAnimePlatform = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('排序', _sortOptions, _selectedAnimeSort, (v) {
+                _buildFilterPill(AppStrings.filterSort, _sortOptions, _selectedAnimeSort, (v) {
                   setState(() => _selectedAnimeSort = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
@@ -780,20 +784,20 @@ class _AnimeScreenState extends State<AnimeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '筛选',
+          AppStrings.filterMore,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6),
+        Gap.h6,
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterPill('类型', _movieTypeOptions, _selectedMovieType,
+                _buildFilterPill(AppStrings.filterType, _movieTypeOptions, _selectedMovieType,
                     (v) {
                   setState(() => _selectedMovieType = v);
                   _fetchAnimeData(isRefresh: true);
@@ -803,11 +807,11 @@ class _AnimeScreenState extends State<AnimeScreen> {
                   setState(() => _selectedMovieRegion = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('年代', _yearOptions, _selectedMovieYear, (v) {
+                _buildFilterPill(AppStrings.filterYear, _yearOptions, _selectedMovieYear, (v) {
                   setState(() => _selectedMovieYear = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
-                _buildFilterPill('排序', _sortOptions, _selectedMovieSort, (v) {
+                _buildFilterPill(AppStrings.filterSort, _sortOptions, _selectedMovieSort, (v) {
                   setState(() => _selectedMovieSort = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
@@ -864,12 +868,12 @@ class _AnimeScreenState extends State<AnimeScreen> {
         Text(
           title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -910,28 +914,28 @@ class _AnimeScreenState extends State<AnimeScreen> {
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
                   : Colors.grey.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(1),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '已经到底啦~',
+            AppStrings.noMoreData,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.grey[600],
+                  : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
             '共 $totalCount $contentType',
             style: FontUtils.poppins(
-              fontSize: 12,
+              fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.grey[500],
+                  : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
           ),

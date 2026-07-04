@@ -8,6 +8,9 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
 
 class HistoryGrid extends StatefulWidget {
   final Function(PlayRecord) onVideoTap;
@@ -126,10 +129,10 @@ class _HistoryGridState extends State<HistoryGrid>
           _playRecords = result.data!;
         });
       } else {
-        throw Exception(result.errorMessage ?? '获取播放记录失败');
+        throw Exception(result.errorMessage ?? AppStrings.getPlayRecordsFailed);
       }
     } catch (e) {
-      throw Exception('获取播放记录失败: $e');
+      throw Exception('${AppStrings.getPlayRecordsFailed}: $e');
     }
   }
 
@@ -153,7 +156,7 @@ class _HistoryGridState extends State<HistoryGrid>
   Widget _buildLoadingState() {
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: const Color(0xFF27ae60),
+      color: AppColors.accent,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 平板模式根据宽度动态展示6～9列，手机模式3列
@@ -172,7 +175,7 @@ class _HistoryGridState extends State<HistoryGrid>
           final double itemHeight = itemWidth * 2.0;
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: AppDimens.contentPadding,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -201,22 +204,22 @@ class _HistoryGridState extends State<HistoryGrid>
         ShimmerEffect(
           width: width,
           height: height,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        const SizedBox(height: 4),
+        Gap.h4,
         Center(
           child: ShimmerEffect(
             width: width * 0.8,
             height: 12,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
-        const SizedBox(height: 2),
+        Gap.h2,
         Center(
           child: ShimmerEffect(
             width: width * 0.6,
             height: 8,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
       ],
@@ -231,40 +234,40 @@ class _HistoryGridState extends State<HistoryGrid>
           const Icon(
             Icons.error_outline,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '加载失败',
+            AppStrings.loadFailed,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             _errorMessage ?? '未知错误',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           ElevatedButton(
             onPressed: _loadPlayRecords,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF27ae60),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.accent,
+              foregroundColor: AppColors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
             ),
             child: Text(
-              '重试',
+              AppStrings.retry,
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -282,23 +285,23 @@ class _HistoryGridState extends State<HistoryGrid>
           const Icon(
             Icons.history,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '暂无播放历史',
+            AppStrings.noContent,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
             '您观看过的视频将显示在这里',
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
           ),
         ],
@@ -309,7 +312,7 @@ class _HistoryGridState extends State<HistoryGrid>
   Widget _buildHistoryGrid() {
     return RefreshIndicator(
       onRefresh: _loadPlayRecords,
-      color: const Color(0xFF27ae60),
+      color: AppColors.accent,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 平板模式根据宽度动态展示6～9列，手机模式3列
@@ -328,7 +331,7 @@ class _HistoryGridState extends State<HistoryGrid>
           final double itemHeight = itemWidth * 2.0;
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: AppDimens.contentPadding,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

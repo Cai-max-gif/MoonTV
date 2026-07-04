@@ -11,6 +11,8 @@ import 'api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml_events.dart';
 import 'package:gbk_codec/gbk_codec.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 // ignore: unused_import
 import 'dart:async' show unawaited;
@@ -35,9 +37,9 @@ class LiveService {
   static final Map<String, _CacheItem<M3uContent>> _channelsCache = {};
   static final Map<String, _CacheItem<Map<String, EpgData>>> _epgCache = {};
 
-  static const Duration _sourceCacheDuration = Duration(hours: 2);
-  static const Duration _channelCacheDuration = Duration(hours: 2);
-  static const Duration _epgCacheDuration = Duration(hours: 2);
+  static const Duration _sourceCacheDuration = AppConfig.liveCacheDuration;
+  static const Duration _channelCacheDuration = AppConfig.liveCacheDuration;
+  static const Duration _epgCacheDuration = AppConfig.liveCacheDuration;
 
   /// 获取所有直播源（乐观缓存：过期时先返回旧数据，后台异步刷新）
   static Future<List<LiveSource>> getLiveSources(
@@ -102,10 +104,10 @@ class LiveService {
       // 从缓存中获取对应的 LiveSource
       final liveSource = _liveSourcesCache?.data.firstWhere(
           (source) => source.key == sourceKey,
-          orElse: () => throw Exception('未找到直播源: $sourceKey'));
+          orElse: () => throw Exception('${AppStrings.liveSourceNotFound}$sourceKey'));
 
       if (liveSource == null) {
-        throw Exception('未找到直播源: $sourceKey');
+        throw Exception('${AppStrings.liveSourceNotFound}$sourceKey');
       }
 
       // 确定使用的 User-Agent
@@ -116,10 +118,10 @@ class LiveService {
       final response = await http.get(
         Uri.parse(liveSource.url),
         headers: {'User-Agent': userAgent},
-      );
+      ).timeout(AppConfig.liveRequestTimeout);
 
       if (response.statusCode != 200) {
-        throw Exception('请求失败: ${response.statusCode}');
+        throw Exception('${AppStrings.errorRequestFailed}: ${response.statusCode}');
       }
 
       // 处理编码，尝试多种编码方式
@@ -207,7 +209,7 @@ class LiveService {
         // 提取 group-title
         final groupTitleMatch =
             RegExp(r'group-title="([^"]*)"').firstMatch(line);
-        final group = groupTitleMatch?.group(1) ?? '无分组';
+        final group = groupTitleMatch?.group(1) ?? AppStrings.liveUngroupedDefault;
 
         // 提取标题（#EXTINF 行最后的逗号后面的内容）
         // 使用 lastIndexOf 更健壮，避免频道名中包含逗号的问题
@@ -281,17 +283,17 @@ class LiveService {
       // 从缓存中获取对应的 LiveSource
       final liveSource = _liveSourcesCache?.data.firstWhere(
         (source) => source.key == sourceKey,
-        orElse: () => throw Exception('未找到直播源: $sourceKey'),
+        orElse: () => throw Exception('${AppStrings.liveSourceNotFound}$sourceKey'),
       );
 
       if (liveSource == null) {
-        throw Exception('未找到直播源: $sourceKey');
+        throw Exception('${AppStrings.liveSourceNotFound}$sourceKey');
       }
 
       // 从缓存中获取对应的频道列表
       final m3uContent = _channelsCache[sourceKey]?.data;
       if (m3uContent == null) {
-        throw Exception('未找到频道列表: $sourceKey');
+        throw Exception('${AppStrings.liveChannelNotFound}$sourceKey');
       }
 
       // 确定 EPG URL：优先使用 LiveSource 的 epg，其次使用 m3uContent 的 tvgUrl
@@ -304,7 +306,7 @@ class LiveService {
 
       // 确定使用的 User-Agent
       final userAgent =
-          liveSource.ua.isEmpty ? 'AptvPlayer/1.4.10' : liveSource.ua;
+          liveSource.ua.isEmpty ? AppConfig.liveDefaultUserAgent : liveSource.ua;
 
       // 获取所有需要查询的 tvgId
       final tvgIds = m3uContent.channels
@@ -362,7 +364,7 @@ class LiveService {
       final request = http.Request('GET', Uri.parse(epgUrl));
       request.headers['User-Agent'] = userAgent;
 
-      final response = await request.send();
+      final response = await request.send().timeout(AppConfig.liveRequestTimeout);
       if (response.statusCode != 200) {
         return {};
       }

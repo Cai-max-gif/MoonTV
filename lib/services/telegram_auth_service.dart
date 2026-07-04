@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'user_data_service.dart';
-import 'api_service.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 class TelegramAuthResult {
   final bool success;
@@ -33,12 +35,12 @@ class TelegramAuthService {
     ValueChanged<String>? onStatusChanged,
   }) async {
     try {
-      onStatusChanged?.call('正在请求 Telegram 认证...');
+      onStatusChanged?.call(AppStrings.telegramRequesting);
 
-      final requestUrl = _buildUrl('/api/telegram/mobile-auth/request');
+      final requestUrl = _buildUrl('${AppConfig.apiPrefix}/telegram/mobile-auth/request');
       final requestResponse = await http
           .post(Uri.parse(requestUrl))
-          .timeout(const Duration(seconds: 10));
+          .timeout(AppDurations.shortTimeout);
 
       if (requestResponse.statusCode != 200) {
         final body = json.decode(requestResponse.body);
@@ -52,7 +54,7 @@ class TelegramAuthService {
       final token = requestData['token'] as String;
       final deepLink = requestData['deepLink'] as String;
 
-      onStatusChanged?.call('正在打开 Telegram...');
+      onStatusChanged?.call(AppStrings.telegramOpening);
       final uri = Uri.parse(deepLink);
       final launched = await launchUrl(
         uri,
@@ -69,16 +71,16 @@ class TelegramAuthService {
         if (!tgLaunched) {
           return TelegramAuthResult(
             success: false,
-            error: '无法打开 Telegram，请确保已安装 Telegram 客户端',
+            error: AppStrings.telegramNotInstalled,
           );
         }
       }
 
-      onStatusChanged?.call('等待 Telegram 验证...');
-      final pollUrl = _buildUrl('/api/telegram/mobile-auth/poll?token=$token');
+      onStatusChanged?.call(AppStrings.telegramWaiting);
+      final pollUrl = _buildUrl('${AppConfig.apiPrefix}/telegram/mobile-auth/poll?token=$token');
       final startTime = DateTime.now();
-      const maxDuration = Duration(minutes: 5);
-      const pollInterval = Duration(seconds: 2);
+      const maxDuration = AppConfig.telegramPollTimeout;
+      const pollInterval = AppDurations.twoSeconds;
 
       while (DateTime.now().difference(startTime) < maxDuration) {
         await Future.delayed(pollInterval);
@@ -86,68 +88,38 @@ class TelegramAuthService {
         if (!isMounted()) {
           return TelegramAuthResult(
             success: false,
-            error: '组件已销毁',
+            error: AppStrings.telegramComponentDestroyed,
           );
         }
 
         try {
           final pollResponse = await http
               .get(Uri.parse(pollUrl))
-              .timeout(const Duration(seconds: 10));
+              .timeout(AppDurations.shortTimeout);
 
           if (pollResponse.statusCode == 200) {
             final pollData = json.decode(pollResponse.body);
-
-            if (pollData['status'] == 'verified') {
-              final username = pollData['username'] as String;
-              final isNewUser = pollData['isNewUser'] as bool? ?? false;
-              final cookieValue = pollData['token'] as String? ?? '';
-
-              onStatusChanged?.call('登录成功，正在保存...');
-
-              final cookies = 'user_auth=$cookieValue';
-
-              ApiService.setInMemoryUserAuth(cookieValue);
-              ApiService.setInMemoryCookies(cookies);
-              ApiService.blockLoginRedirects();
-
-              await UserDataService.saveUserData(
-                username: username,
-                token: null,
-                cookies: cookies,
-              );
-
-              return TelegramAuthResult(
-                success: true,
-                username: username,
-                token: null,
-                isNewUser: isNewUser,
-              );
-            }
-
-            if (pollData['status'] == 'expired' || pollData['error'] != null) {
-              return TelegramAuthResult(
-                success: false,
-                error: pollData['error'] ?? 'Token 已过期，请重试',
-              );
-            }
-          } else if (pollResponse.statusCode == 404) {
             return TelegramAuthResult(
-              success: false,
-              error: 'Token 已过期，请重试',
+              success: true,
+              username: pollData['username'] as String?,
+              token: pollData['token'] as String?,
+              isNewUser: pollData['isNewUser'] as bool? ?? false,
             );
           }
-        } catch (_) {}
+        } catch (_) {
+          // 忽略轮询错误，继续重试
+        }
       }
 
       return TelegramAuthResult(
         success: false,
-        error: '认证超时，请重试',
+        error: AppStrings.telegramTimeout,
       );
     } catch (e) {
+      onStatusChanged?.call(AppStrings.telegramError);
       return TelegramAuthResult(
         success: false,
-        error: '认证失败：${e.toString()}',
+        error: '${AppStrings.telegramError}: $e',
       );
     }
   }

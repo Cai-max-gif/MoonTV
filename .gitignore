@@ -11,6 +11,7 @@ installer/
 android/.gradle/
 android/build/
 android/app/build/
+android/*.log
 
 # iOS
 ios/Pods/
@@ -40,3 +41,7 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Java/Android crash logs
+hs_err_*.log
+replay_*.log

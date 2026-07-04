@@ -1,43 +1,12 @@
 import 'dart:io';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/user_data_service.dart';
 import '../utils/font_utils.dart';
-
-class HollowRoundSliderThumbShape extends SliderComponentShape {
-  final double thumbRadius;
-
-  const HollowRoundSliderThumbShape({this.thumbRadius = 10});
-
-  @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size.fromRadius(thumbRadius);
-  }
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    required bool isDiscrete,
-    required TextPainter labelPainter,
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required TextDirection textDirection,
-    required double value,
-    required double textScaleFactor,
-    required Size sizeWithOverflow,
-  }) {
-    final Canvas canvas = context.canvas;
-    final Paint paint = Paint()
-      ..color = sliderTheme.thumbColor ?? Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    canvas.drawCircle(center, thumbRadius, paint);
-  }
-}
+import '../widgets/hollow_slider_thumb.dart';
 
 class PlaybackSettingsScreen extends StatefulWidget {
   const PlaybackSettingsScreen({super.key});
@@ -81,6 +50,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadAutoPlayNext() async {
     final enabled = await UserDataService.getAutoPlayNext();
+    if (!mounted) return;
     setState(() {
       _autoPlayNext = enabled;
     });
@@ -88,6 +58,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadDefaultPlaybackSpeed() async {
     final speed = await UserDataService.getDefaultPlaybackSpeed();
+    if (!mounted) return;
     setState(() {
       _defaultPlaybackSpeed = speed;
       _selectedSpeedIndex = _playbackSpeeds.indexOf(speed);
@@ -96,6 +67,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadAutoEnterPictureInPicture() async {
     final enabled = await UserDataService.getAutoEnterPictureInPicture();
+    if (!mounted) return;
     setState(() {
       _autoEnterPictureInPicture = enabled;
     });
@@ -103,6 +75,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadAutoSkipOpeningEnding() async {
     final enabled = await UserDataService.getAutoSkipOpeningEnding();
+    if (!mounted) return;
     setState(() {
       _autoSkipOpeningEnding = enabled;
     });
@@ -110,6 +83,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadSkipOpeningDuration() async {
     final duration = await UserDataService.getSkipOpeningDuration();
+    if (!mounted) return;
     setState(() {
       _skipOpeningDuration = duration;
       _skipOpeningDurationController.text = duration.toString();
@@ -118,6 +92,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadSkipEndingDuration() async {
     final duration = await UserDataService.getSkipEndingDuration();
+    if (!mounted) return;
     setState(() {
       _skipEndingDuration = duration;
       _skipEndingDurationController.text = duration.toString();
@@ -126,6 +101,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
   Future<void> _loadFamilyMode() async {
     final enabled = await UserDataService.getFamilyMode();
+    if (!mounted) return;
     setState(() {
       _familyMode = enabled;
     });
@@ -144,39 +120,39 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
 
     return Scaffold(
       backgroundColor:
-          isDarkMode ? const Color(0xFF000000) : const Color(0xFFf5f5f5),
+          isDarkMode ? AppColors.black : AppColors.grayBg,
       appBar: AppBar(
-        backgroundColor: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-        elevation: 0,
+        backgroundColor: isDarkMode ? AppColors.cardDark : Colors.white,
+        elevation: AppDimens.elevationNone,
         leading: IconButton(
           icon: Icon(
             LucideIcons.arrowLeft,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? Colors.white : AppColors.textDarkGray,
           ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '播放设置',
+          AppStrings.playbackSettingsTitle,
           style: FontUtils.poppins(
-            fontSize: 18,
+            fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : const Color(0xFF1f2937),
+            color: isDarkMode ? Colors.white : AppColors.textDarkGray,
           ),
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppDimens.spacingMd),
         children: [
           // 家庭模式设置
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.098),
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -188,17 +164,17 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   children: [
                     const Icon(
                       LucideIcons.house,
-                      size: 24,
-                      color: Color(0xFF27AE60),
+                      size: AppDimens.iconLg,
+                      color: AppColors.accent,
                     ),
-                    const SizedBox(width: 12),
+                    Gap.w12,
                     Text(
-                      '家庭模式',
+                      AppStrings.playbackFamilyMode,
                       style: FontUtils.poppins(
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                            isDarkMode ? Colors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -211,27 +187,27 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     });
                     UserDataService.saveFamilyMode(value);
                   },
-                  activeThumbColor: const Color(0xFF27AE60),
+                  activeThumbColor: AppColors.accent,
                   inactiveTrackColor: isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
+                      ? AppColors.borderDarkGray
+                      : AppColors.borderLightGray,
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 12),
+          Gap.h12,
 
           // 自动连播设置
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.098),
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -243,17 +219,17 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   children: [
                     const Icon(
                       LucideIcons.repeat,
-                      size: 24,
-                      color: Color(0xFF8b5cf6),
+                      size: AppDimens.iconLg,
+                      color: AppColors.violet,
                     ),
-                    const SizedBox(width: 12),
+                    Gap.w12,
                     Text(
-                      '自动连播',
+                      AppStrings.playbackAutoPlay,
                       style: FontUtils.poppins(
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                            isDarkMode ? Colors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -266,28 +242,28 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     });
                     UserDataService.saveAutoPlayNext(value);
                   },
-                  activeThumbColor: const Color(0xFF8b5cf6),
+                  activeThumbColor: AppColors.violet,
                   inactiveTrackColor: isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
+                      ? AppColors.borderDarkGray
+                      : AppColors.borderLightGray,
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 12),
+          Gap.h12,
 
           // 自动进入画中画设置（仅移动端）
           if (Platform.isAndroid || Platform.isIOS)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: AppDimens.listTilePadding,
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isDarkMode ? AppColors.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(25),
-                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.098),
+                    blurRadius: AppDimens.shadowBlurSm,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -299,18 +275,18 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     children: [
                       const Icon(
                         LucideIcons.pictureInPicture,
-                        size: 24,
-                        color: Color(0xFF3b82f6),
+                        size: AppDimens.iconLg,
+                        color: AppColors.blue,
                       ),
-                      const SizedBox(width: 12),
+                      Gap.w12,
                       Text(
-                        '自动进入画中画',
+                        AppStrings.playbackAutoPIP,
                         style: FontUtils.poppins(
-                          fontSize: 16,
+                          fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w600,
                           color: isDarkMode
                               ? Colors.white
-                              : const Color(0xFF1f2937),
+                              : AppColors.textDarkGray,
                         ),
                       ),
                     ],
@@ -323,27 +299,27 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                       });
                       UserDataService.saveAutoEnterPictureInPicture(value);
                     },
-                    activeThumbColor: const Color(0xFF3b82f6),
+                    activeThumbColor: AppColors.blue,
                     inactiveTrackColor: isDarkMode
-                        ? const Color(0xFF374151)
-                        : const Color(0xFFe5e7eb),
+                        ? AppColors.borderDarkGray
+                        : AppColors.borderLightGray,
                   ),
                 ],
               ),
             ),
 
-          if (Platform.isAndroid || Platform.isIOS) const SizedBox(height: 12),
+          if (Platform.isAndroid || Platform.isIOS) Gap.h12,
 
           // 默认倍速设置
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.098),
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -355,31 +331,31 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   children: [
                     const Icon(
                       LucideIcons.zap,
-                      size: 24,
-                      color: Color(0xFFf59e0b),
+                      size: AppDimens.iconLg,
+                      color: AppColors.amber,
                     ),
-                    const SizedBox(width: 12),
+                    Gap.w12,
                     Text(
-                      '默认倍速',
+                      AppStrings.playbackDefaultSpeed,
                       style: FontUtils.poppins(
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                            isDarkMode ? Colors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
                 Row(
                   children: [
                     Text(
                       '0.5x',
                       style: FontUtils.poppins(
-                        fontSize: 14,
+                        fontSize: AppDimens.fontSizeMd,
                         color: isDarkMode
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
+                            ? AppColors.gray400
+                            : AppColors.gray500,
                       ),
                     ),
                     Expanded(
@@ -389,11 +365,11 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           thumbShape: const HollowRoundSliderThumbShape(
                               thumbRadius: 10),
                           overlayShape: SliderComponentShape.noOverlay,
-                          thumbColor: const Color(0xFFf59e0b),
-                          activeTrackColor: const Color(0xFFf59e0b),
+                          thumbColor: AppColors.amber,
+                          activeTrackColor: AppColors.amber,
                           inactiveTrackColor: isDarkMode
-                              ? const Color(0xFF374151)
-                              : const Color(0xFFe5e7eb),
+                              ? AppColors.borderDarkGray
+                              : AppColors.borderLightGray,
                         ),
                         child: Slider(
                           value: _selectedSpeedIndex.toDouble(),
@@ -419,10 +395,10 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     Text(
                       '2.0x',
                       style: FontUtils.poppins(
-                        fontSize: 14,
+                        fontSize: AppDimens.fontSizeMd,
                         color: isDarkMode
-                            ? const Color(0xFF9ca3af)
-                            : const Color(0xFF6b7280),
+                            ? AppColors.gray400
+                            : AppColors.gray500,
                       ),
                     ),
                   ],
@@ -431,18 +407,18 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          Gap.h12,
 
           // 自动跳过片头片尾设置
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.098),
+                  blurRadius: AppDimens.shadowBlurSm,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -454,17 +430,17 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   children: [
                     const Icon(
                       LucideIcons.skipBack,
-                      size: 24,
-                      color: Color(0xFF3b82f6),
+                      size: AppDimens.iconLg,
+                      color: AppColors.blue,
                     ),
-                    const SizedBox(width: 12),
+                    Gap.w12,
                     Text(
-                      '自动跳过片头片尾',
+                      AppStrings.playbackSkipOpeningEnding,
                       style: FontUtils.poppins(
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : const Color(0xFF1f2937),
+                            isDarkMode ? Colors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -477,28 +453,28 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     });
                     UserDataService.saveAutoSkipOpeningEnding(value);
                   },
-                  activeThumbColor: const Color(0xFF3b82f6),
+                  activeThumbColor: AppColors.blue,
                   inactiveTrackColor: isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFe5e7eb),
+                      ? AppColors.borderDarkGray
+                      : AppColors.borderLightGray,
                 ),
               ],
             ),
           ),
 
           if (_autoSkipOpeningEnding) ...[
-            const SizedBox(height: 12),
+            Gap.h12,
 
             // 片头跳过时长设置
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: AppDimens.listTilePadding,
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isDarkMode ? AppColors.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(25),
-                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.098),
+                    blurRadius: AppDimens.shadowBlurSm,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -510,18 +486,18 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     children: [
                       const Icon(
                         LucideIcons.clock,
-                        size: 24,
-                        color: Color(0xFF10b981),
+                        size: AppDimens.iconLg,
+                        color: AppColors.emerald,
                       ),
-                      const SizedBox(width: 12),
+                      Gap.w12,
                       Text(
-                        '片头跳过时长',
+                        AppStrings.playbackSkipOpeningDuration,
                         style: FontUtils.poppins(
-                          fontSize: 16,
+                          fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w600,
                           color: isDarkMode
                               ? Colors.white
-                              : const Color(0xFF1f2937),
+                              : AppColors.textDarkGray,
                         ),
                       ),
                     ],
@@ -567,24 +543,24 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           style: FontUtils.poppins(
-                            fontSize: 16,
+                            fontSize: AppDimens.fontSizeXl,
                             color: isDarkMode
                                 ? Colors.white
-                                : const Color(0xFF1f2937),
+                                : AppColors.textDarkGray,
                           ),
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               borderSide: BorderSide(
                                 color: isDarkMode
-                                    ? const Color(0xFF374151)
-                                    : const Color(0xFFe5e7eb),
+                                    ? AppColors.borderDarkGray
+                                    : AppColors.borderLightGray,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               borderSide: const BorderSide(
-                                color: Color(0xFF10b981),
+                                color: AppColors.emerald,
                               ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -592,14 +568,14 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      Gap.w8,
                       Text(
-                        '秒',
+                        AppStrings.playbackSeconds,
                         style: FontUtils.poppins(
-                          fontSize: 16,
+                          fontSize: AppDimens.fontSizeXl,
                           color: isDarkMode
                               ? Colors.white
-                              : const Color(0xFF1f2937),
+                              : AppColors.textDarkGray,
                         ),
                       ),
                     ],
@@ -608,18 +584,18 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            Gap.h12,
 
             // 片尾跳过时长设置
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: AppDimens.listTilePadding,
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xFF1e1e1e) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isDarkMode ? AppColors.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(25),
-                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.098),
+                    blurRadius: AppDimens.shadowBlurSm,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -631,18 +607,18 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     children: [
                       const Icon(
                         LucideIcons.clock,
-                        size: 24,
-                        color: Color(0xFF3b82f6),
+                        size: AppDimens.iconLg,
+                        color: AppColors.blue,
                       ),
-                      const SizedBox(width: 12),
+                      Gap.w12,
                       Text(
-                        '片尾跳过时长',
+                        AppStrings.playbackSkipEndingDuration,
                         style: FontUtils.poppins(
-                          fontSize: 16,
+                          fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w600,
                           color: isDarkMode
                               ? Colors.white
-                              : const Color(0xFF1f2937),
+                              : AppColors.textDarkGray,
                         ),
                       ),
                     ],
@@ -688,24 +664,24 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           style: FontUtils.poppins(
-                            fontSize: 16,
+                            fontSize: AppDimens.fontSizeXl,
                             color: isDarkMode
                                 ? Colors.white
-                                : const Color(0xFF1f2937),
+                                : AppColors.textDarkGray,
                           ),
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               borderSide: BorderSide(
                                 color: isDarkMode
-                                    ? const Color(0xFF374151)
-                                    : const Color(0xFFe5e7eb),
+                                    ? AppColors.borderDarkGray
+                                    : AppColors.borderLightGray,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               borderSide: const BorderSide(
-                                color: Color(0xFF3b82f6),
+                                color: AppColors.blue,
                               ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -713,14 +689,14 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      Gap.w8,
                       Text(
-                        '秒',
+                        AppStrings.playbackSeconds,
                         style: FontUtils.poppins(
-                          fontSize: 16,
+                          fontSize: AppDimens.fontSizeXl,
                           color: isDarkMode
                               ? Colors.white
-                              : const Color(0xFF1f2937),
+                              : AppColors.textDarkGray,
                         ),
                       ),
                     ],
@@ -730,16 +706,16 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
             ),
           ],
 
-          const SizedBox(height: 16),
+          Gap.h16,
 
           // 说明文字
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: const Color(0xFFf59e0b).withAlpha(25),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.amber.withValues(alpha: 0.098),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               border: Border.all(
-                color: const Color(0xFFf59e0b).withAlpha(76),
+                color: AppColors.amber.withValues(alpha: 0.298),
               ),
             ),
             child: Row(
@@ -748,17 +724,17 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                 const Icon(
                   LucideIcons.info,
                   size: 20,
-                  color: Color(0xFFf59e0b),
+                  color: AppColors.amber,
                 ),
-                const SizedBox(width: 12),
+                Gap.w12,
                 Expanded(
                   child: Text(
-                    '提示：开启这些设置可以提升您的观看体验，但可能会消耗更多电量和网络流量。',
+                    AppStrings.playbackSettingsTip,
                     style: FontUtils.poppins(
-                      fontSize: 14,
+                      fontSize: AppDimens.fontSizeMd,
                       color: isDarkMode
-                          ? const Color(0xFFf59e0b)
-                          : const Color(0xFF92400e),
+                          ? AppColors.amber
+                          : AppColors.amber800,
                     ),
                   ),
                 ),

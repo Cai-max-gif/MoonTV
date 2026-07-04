@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 import 'package:pip/pip.dart';
 import '../services/user_data_service.dart';
 import 'mobile_player_controls.dart';
@@ -216,15 +218,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     try {
       _player = Player(
         configuration: PlayerConfiguration(
-          vo: Platform.isWindows ? 'libmpv' : 'gpu',
           title: 'MoonTV',
         ),
       );
-      if (Platform.isWindows) {
-        try {
-          await _player!.setProperty('hwdec', 'no');
-        } catch (_) {}
-      }
       _videoController = VideoController(_player!);
       _setupPlayerListeners();
       if (_currentUrl != null) {
@@ -234,7 +230,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         _isInitialized = true;
       });
     } catch (e) {
-      debugPrint('VideoPlayerWidget: failed to initialize player $e');
       setState(() {
         _isInitialized = true;
       });
@@ -265,7 +260,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       });
       widget.onReady?.call();
     } catch (error) {
-      debugPrint('VideoPlayerWidget: failed to open media $error');
       if (mounted) {
         setState(() {
           _isLoadingVideo = false;
@@ -287,11 +281,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _positionSubscription = _player!.stream.position.listen((position) {
       if (_playerDisposed || _player == null) return;
       for (final listener in List<VoidCallback>.from(_progressListeners)) {
-        try {
-          listener();
-        } catch (error) {
-          debugPrint('VideoPlayerWidget: progress listener error $error');
-        }
+        listener();
       }
 
       if (_autoSkipOpeningEnding && _player != null && !_playerDisposed) {
@@ -300,7 +290,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
           // 跳过片头
           if (!_hasSkippedOpening &&
               _skipOpeningDuration > 0 &&
-              position <= const Duration(seconds: 1)) {
+              position <= AppDurations.oneSecond) {
             _hasSkippedOpening = true;
             _player!.seek(Duration(seconds: _skipOpeningDuration));
           }
@@ -353,11 +343,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     });
 
     if (!widget.live) {
-      _completedSubscription = _player!.stream.completed.listen((completed) {
+      _completedSubscription = _player!.stream.completed.listen((completed) async {
         if (!mounted || _playerDisposed || _player == null) return;
         if (completed && !_hasCompleted) {
-          _hasCompleted = true;
-          widget.onVideoCompleted?.call();
+          // 验证播放位置是否真的接近视频结尾
+          // 防止因网络问题或缓冲问题导致的误触发
+          final position = _player!.state.position;
+          final duration = _player!.state.duration;
+
+          // 只有当播放位置在视频最后 5 秒内，或者 duration 为 0 时才认为是真正的播放完成
+          if (duration == Duration.zero ||
+              position >= duration - AppDurations.healthCheckTimeout) {
+            _hasCompleted = true;
+            widget.onVideoCompleted?.call();
+          } else {
+          }
         }
       });
     }
@@ -421,7 +421,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       }
       // widget.onReady?.call();
     } catch (error) {
-      debugPrint('VideoPlayerWidget: error while changing source $error');
       if (mounted) {
         setState(() {
           _isLoadingVideo = false;
@@ -477,14 +476,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         if (!mounted) return;
         switch (state) {
           case PipState.pipStateStarted:
-            debugPrint('PiP started successfully');
             if (mounted) {
               setState(() => _isPipMode = true);
               widget.onPipModeChanged?.call(true);
             }
             break;
           case PipState.pipStateStopped:
-            debugPrint('PiP stopped');
             if (mounted) {
               setState(() {
                 _isPipMode = false;
@@ -493,7 +490,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
             }
             break;
           case PipState.pipStateFailed:
-            debugPrint('PiP failed: $error');
             if (mounted) {
               setState(() => _isPipMode = false);
               widget.onPipModeChanged?.call(false);
@@ -505,14 +501,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Future<void> _enterPipMode() async {
-    debugPrint('_enterPipMode');
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
     }
     try {
       var support = await _pip.isSupported();
       if (!support) {
-        debugPrint('Device does not support PiP!');
         return;
       }
       if (_player != null) {
@@ -520,7 +514,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       }
       await _pip.start();
     } catch (e) {
-      debugPrint('Failed to enter PiP mode: $e');
       _setupPip();
     }
   }
@@ -555,22 +548,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _videoController = null;
 
     if (player != null) {
-      try {
-        // 2. 先暂停播放
-        await player.pause();
-      } catch (_) {}
+      // 2. 先暂停播放
+      await player.pause();
 
-      try {
-        // 3. 先释放 VideoController
-        videoController?.dispose();
-      } catch (_) {}
+      // 3. 先释放 VideoController
+      videoController?.dispose();
 
-      try {
-        // 4. 最后释放 Player
-        await player.dispose();
-      } catch (e) {
-        debugPrint('VideoPlayerWidget: error disposing player $e');
-      }
+      // 4. 最后释放 Player
+      await player.dispose();
     }
   }
 
@@ -617,7 +602,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      color: AppColors.black,
       child: _isInitialized
           ? _videoController != null && _player != null
               ? Video(
@@ -710,12 +695,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                 )
               : const Center(
                   child: CircularProgressIndicator(
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 )
           : const Center(
               child: CircularProgressIndicator(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
     );

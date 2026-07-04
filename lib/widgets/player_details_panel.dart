@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/search_result.dart';
 import '../models/douban_movie.dart';
@@ -27,13 +31,12 @@ class PlayerDetailsPanel extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: showCloseButton 
-            ? (isDarkMode ? const Color(0xFF1c1c1e) : Colors.white)
-            : Colors.transparent,
+            ? (isDarkMode ? AppColors.darkCard : AppColors.white)
+            : AppColors.transparent,
       ),
       child: Column(
         children: [
-          // 标题栏
-          if (showTitle)
+          // 标题         if (showTitle)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
@@ -54,7 +57,7 @@ class PlayerDetailsPanel extends StatelessWidget {
               ),
             ),
           if (!showTitle)
-            const SizedBox(height: 8),
+            Gap.h8,
           Expanded(
             child: doubanDetails != null
                 ? _buildDoubanDetailsPanel(context, isDarkMode)
@@ -75,7 +78,7 @@ class PlayerDetailsPanel extends StatelessWidget {
     final List<String> directors = doubanDetails!.directors;
     final List<String> writers = doubanDetails!.screenwriters;
     final List<String> actors = doubanDetails!.actors;
-    final String summary = doubanDetails!.summary ?? '暂无简介';
+    final String summary = doubanDetails!.summary ?? AppStrings.detailNoSummary;
     final List<String> countries = doubanDetails!.countries;
     final List<String> languages = doubanDetails!.languages;
     final String? duration = doubanDetails!.duration;
@@ -83,7 +86,7 @@ class PlayerDetailsPanel extends StatelessWidget {
     final int? totalEpisodes = doubanDetails!.totalEpisodes;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.spacingLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -93,7 +96,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             children: [
               // 左侧封面
               _buildCoverImage(context, cover, 'douban', isDarkMode),
-              const SizedBox(width: 16),
+              Gap.w16,
               // 右侧信息
               Expanded(
                 child: SizedBox(
@@ -107,7 +110,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                         title,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDarkMode ? Colors.white : Colors.black,
+                          color: isDarkMode ? AppColors.white : AppColors.black,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -120,8 +123,8 @@ class PlayerDetailsPanel extends StatelessWidget {
                           originalTitle,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: isDarkMode
-                                ? Colors.grey[400]
-                                : Colors.grey[600],
+                                ? AppColors.gray400
+                                : AppColors.gray600,
                             fontStyle: FontStyle.italic,
                           ),
                           maxLines: 1,
@@ -141,41 +144,41 @@ class PlayerDetailsPanel extends StatelessWidget {
                               ].join(' | '),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
+                                    ? AppColors.gray400
+                                    : AppColors.gray600,
                               ),
                             ),
-                          const SizedBox(height: 4),
+                          Gap.h4,
                           Text(
                             year,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
+                                  ? AppColors.gray400
+                                  : AppColors.gray600,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          Gap.h4,
                           if (duration != null && duration.isNotEmpty) ...[
                             Text(
                               duration,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
+                                    ? AppColors.gray400
+                                    : AppColors.gray600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            Gap.h4,
                           ],
                           if (totalEpisodes != null && totalEpisodes > 1) ...[
                             Text(
-                              '全$totalEpisodes集',
+                              '$totalEpisodes集',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
+                                    ? AppColors.gray400
+                                    : AppColors.gray600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            Gap.h4,
                           ],
                         ],
                       ),
@@ -191,7 +194,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                     Text(
                       rate,
                       style: theme.textTheme.headlineMedium?.copyWith(
-                        color: Colors.orange,
+                        color: AppColors.orange,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -200,7 +203,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 标签区域
           if (genres.isNotEmpty)
             Column(
@@ -210,10 +213,10 @@ class PlayerDetailsPanel extends StatelessWidget {
                   '风格',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: isDarkMode ? AppColors.white : AppColors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
+                Gap.h8,
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -223,16 +226,16 @@ class PlayerDetailsPanel extends StatelessWidget {
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: isDarkMode
-                                  ? Colors.grey[700]
-                                  : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(16),
+                                  ? AppColors.gray700
+                                  : AppColors.gray200,
+                              borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
                             ),
                             child: Text(
                               genre,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isDarkMode
-                                    ? Colors.grey[300]
-                                    : Colors.grey[700],
+                                    ? AppColors.gray300
+                                    : AppColors.gray700,
                               ),
                             ),
                           ))
@@ -240,7 +243,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                 ),
               ],
             ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 制作信息
           if (directors.isNotEmpty || writers.isNotEmpty || actors.isNotEmpty)
             Column(
@@ -250,14 +253,14 @@ class PlayerDetailsPanel extends StatelessWidget {
                   '制作信息',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: isDarkMode ? AppColors.white : AppColors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
+                Gap.h8,
                 _buildProductionInfo(directors, writers, actors, isDarkMode),
               ],
             ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 简介
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,14 +269,14 @@ class PlayerDetailsPanel extends StatelessWidget {
                 '简介',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black,
+                  color: isDarkMode ? AppColors.white : AppColors.black,
                 ),
               ),
-              const SizedBox(height: 8),
+              Gap.h8,
               Text(
                 summary,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                   height: 1.5,
                 ),
               ),
@@ -286,17 +289,17 @@ class PlayerDetailsPanel extends StatelessWidget {
 
   /// 构建当前详情面板（基于currentDetail）
   Widget _buildCurrentDetailPanel(BuildContext context, bool isDarkMode) {
-    final String title = currentDetail?.title ?? '暂无标题';
+    final String title = currentDetail?.title ?? AppStrings.detailNoTitle;
     final String cover = currentDetail?.poster ?? '';
     final String year = currentDetail?.year ?? '未知年份';
-    final String summary = currentDetail?.desc ?? '暂无简介';
+    final String summary = currentDetail?.desc ?? AppStrings.detailNoSummary;
     final String? sourceName = currentDetail?.sourceName;
     final String? class_ = currentDetail?.class_;
     final List<String> episodes = currentDetail?.episodes ?? [];
     final int totalEpisodes = episodes.length;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.spacingLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -306,7 +309,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             children: [
               // 左侧封面
               _buildCoverImage(context, cover, currentDetail?.source, isDarkMode),
-              const SizedBox(width: 16),
+              Gap.w16,
               // 右侧信息
               Expanded(
                 child: SizedBox(
@@ -320,7 +323,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                         title,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDarkMode ? Colors.white : Colors.black,
+                          color: isDarkMode ? AppColors.white : AppColors.black,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -338,37 +341,37 @@ class PlayerDetailsPanel extends StatelessWidget {
                               decoration: BoxDecoration(
                                 border: Border.all(
                                     color: isDarkMode
-                                        ? Colors.grey[600]!
-                                        : Colors.grey[400]!),
-                                borderRadius: BorderRadius.circular(4),
+                                        ? AppColors.gray600
+                                        : AppColors.gray400),
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                               child: Text(
                                 sourceName,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: isDarkMode
-                                      ? Colors.grey[300]
-                                      : Colors.grey[700],
+                                      ? AppColors.gray300
+                                      : AppColors.gray700,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            Gap.h4,
                           ],
                           Text(
                             year,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
+                                  ? AppColors.gray400
+                                  : AppColors.gray600,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          Gap.h4,
                           if (totalEpisodes > 1)
                             Text(
-                              '全$totalEpisodes集',
+                              '$totalEpisodes集',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
+                                    ? AppColors.gray400
+                                    : AppColors.gray600,
                               ),
                             ),
                         ],
@@ -379,7 +382,7 @@ class PlayerDetailsPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 分类信息
           if (class_ != null && class_.isNotEmpty)
             Column(
@@ -389,10 +392,10 @@ class PlayerDetailsPanel extends StatelessWidget {
                   '分类',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: isDarkMode ? AppColors.white : AppColors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
+                Gap.h8,
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -403,16 +406,16 @@ class PlayerDetailsPanel extends StatelessWidget {
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: isDarkMode
-                                  ? Colors.grey[700]
-                                  : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(16),
+                                  ? AppColors.gray700
+                                  : AppColors.gray200,
+                              borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
                             ),
                             child: Text(
                               category.trim(),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isDarkMode
-                                    ? Colors.grey[300]
-                                    : Colors.grey[700],
+                                    ? AppColors.gray300
+                                    : AppColors.gray700,
                               ),
                             ),
                           ))
@@ -420,7 +423,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                 ),
               ],
             ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 简介
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,14 +432,14 @@ class PlayerDetailsPanel extends StatelessWidget {
                 '简介',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black,
+                  color: isDarkMode ? AppColors.white : AppColors.black,
                 ),
               ),
-              const SizedBox(height: 8),
+              Gap.h8,
               Text(
                 summary,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                   height: 1.5,
                 ),
               ),
@@ -452,7 +455,7 @@ class PlayerDetailsPanel extends StatelessWidget {
       width: 120,
       height: 160,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         child: cover.isNotEmpty
             ? FutureBuilder<String>(
                 future: getImageUrl(cover, source),
@@ -473,25 +476,25 @@ class PlayerDetailsPanel extends StatelessWidget {
                       width: 120,
                       height: 160,
                       decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                        color: isDarkMode ? AppColors.gray800 : AppColors.gray200,
+                        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
                       width: 120,
                       height: 160,
-                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                      color: isDarkMode ? AppColors.gray800 : AppColors.gray200,
                       child: const Icon(Icons.movie, size: 50),
                     ),
-                    fadeInDuration: const Duration(milliseconds: 200),
-                    fadeOutDuration: const Duration(milliseconds: 100),
+                    fadeInDuration: AppDurations.normal,
+                    fadeOutDuration: AppDurations.fastest,
                   );
                 },
               )
             : Container(
                 width: 120,
                 height: 160,
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                color: isDarkMode ? AppColors.gray800 : AppColors.gray200,
                 child: const Icon(Icons.movie, size: 50),
               ),
       ),
@@ -509,11 +512,11 @@ class PlayerDetailsPanel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: List.generate(5, (index) {
           if (index < fullStars) {
-            return const Icon(Icons.star, color: Colors.orange, size: 16);
+            return const Icon(Icons.star, color: AppColors.orange, size: AppDimens.iconSm);
           } else if (index == fullStars && hasHalfStar) {
-            return Icon(Icons.star_half, color: Colors.grey[400], size: 16);
+            return Icon(Icons.star_half, color: AppColors.gray400, size: AppDimens.iconSm);
           } else {
-            return Icon(Icons.star, color: Colors.grey[400], size: 16);
+            return Icon(Icons.star, color: AppColors.gray400, size: AppDimens.iconSm);
           }
         }),
       );
@@ -522,7 +525,7 @@ class PlayerDetailsPanel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: List.generate(
           5,
-          (index) => Icon(Icons.star, color: Colors.grey[400], size: 16),
+          (index) => Icon(Icons.star, color: AppColors.gray400, size: AppDimens.iconSm),
         ),
       );
     }
@@ -543,7 +546,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                 ),
                 children: [
                   const TextSpan(
@@ -561,7 +564,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                 ),
                 children: [
                   const TextSpan(
@@ -579,7 +582,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                 ),
                 children: [
                   const TextSpan(
@@ -595,3 +598,4 @@ class PlayerDetailsPanel extends StatelessWidget {
     );
   }
 }
+

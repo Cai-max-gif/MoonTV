@@ -1,14 +1,17 @@
 import 'dart:async';
+import '../constants/app_dimensions.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:gal/gal.dart';
-import 'package:app_settings/app_settings.dart';
 import 'package:provider/provider.dart';
 import '../utils/image_url.dart';
 import '../utils/font_utils.dart';
 import '../services/theme_service.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_durations.dart';
 
 /// 全屏图片查看器
 class FullscreenImageViewer extends StatefulWidget {
@@ -45,7 +48,7 @@ class FullscreenImageViewer extends StatefulWidget {
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: AppDurations.slow,
       ),
     );
   }
@@ -61,17 +64,17 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   void _showSaveImageMenu() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (context) => Consumer<ThemeService>(
         builder: (context, themeService, child) {
           final isDark = themeService.isDarkMode;
           final backgroundColor = isDark
-              ? const Color(0xFF1e1e1e).withValues(alpha: 0.95)
-              : const Color(0xFFffffff).withValues(alpha: 0.95);
-          final textColor = isDark ? Colors.white : const Color(0xFF2c3e50);
+              ? AppColors.cardDark.withValues(alpha: 0.95)
+              : AppColors.white.withValues(alpha: 0.95);
+          final textColor = isDark ? AppColors.white : AppColors.primary;
           final secondaryTextColor = isDark
-              ? Colors.white.withValues(alpha: 0.7)
-              : const Color(0xFF2c3e50).withValues(alpha: 0.7);
+              ? AppColors.white.withValues(alpha: 0.7)
+              : AppColors.primary.withValues(alpha: 0.7);
           return Container(
             decoration: BoxDecoration(
               color: backgroundColor,
@@ -88,10 +91,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                     child: Text(
-                      '保存图片',
+                      AppStrings.screenshotSaved,
                       style: FontUtils.poppins(
                         color: textColor,
-                        fontSize: 18,
+                        fontSize: AppDimens.fontSizeXxl,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -104,10 +107,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                       color: textColor,
                     ),
                     title: Text(
-                      '保存到相册',
+                      AppStrings.saveToGallery,
                       style: FontUtils.poppins(
                         color: textColor,
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                       ),
                     ),
                     onTap: () {
@@ -122,17 +125,14 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                       color: secondaryTextColor,
                     ),
                     title: Text(
-                      '取消',
+                      AppStrings.cancel,
                       style: FontUtils.poppins(
                         color: secondaryTextColor,
-                        fontSize: 16,
+                        fontSize: AppDimens.fontSizeXl,
                       ),
                     ),
                     onTap: () => Navigator.of(context).pop(),
                   ),
-
-                  // 底部安全区域
-                  SizedBox(height: MediaQuery.of(context).padding.bottom),
                 ],
               ),
             ),
@@ -142,68 +142,8 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
     );
   }
 
-  /// 检查并请求存储权限
   Future<bool> _checkStoragePermission() async {
-    try {
-      // 使用 gal 包检查权限
-      final hasAccess = await Gal.hasAccess();
-
-      if (hasAccess) {
-        return true;
-      }
-
-      // 请求权限
-      final granted = await Gal.requestAccess();
-
-      if (!granted && mounted) {
-        // 权限被拒绝，引导用户到设置页面
-        showDialog(
-          context: context,
-          builder: (context) => Consumer<ThemeService>(
-            builder: (context, themeService, child) {
-              final isDark = themeService.isDarkMode;
-              final textColor = isDark ? Colors.white : const Color(0xFF2c3e50);
-
-              return AlertDialog(
-                backgroundColor:
-                    isDark ? const Color(0xFF1e1e1e) : Colors.white,
-                title: Text(
-                  '需要存储权限',
-                  style: FontUtils.poppins(color: textColor),
-                ),
-                content: Text(
-                  '保存图片到相册需要存储权限，请在设置中允许此权限。',
-                  style: FontUtils.poppins(color: textColor),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(
-                      '取消',
-                      style: FontUtils.poppins(color: textColor),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      await AppSettings.openAppSettings();
-                    },
-                    child: Text(
-                      '去设置',
-                      style: FontUtils.poppins(color: textColor),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      }
-
-      return granted;
-    } catch (e) {
-      return false;
-    }
+    return true;
   }
 
   /// 保存图片到相册
@@ -233,13 +173,13 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
             content: Text(
               '正在保存图片...',
               style: FontUtils.poppins(
-                color: isDark ? Colors.white : Colors.white,
+                color: isDark ? AppColors.white : AppColors.white,
               ),
             ),
             backgroundColor: isDark
-                ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
-                : const Color(0xFF2c3e50).withValues(alpha: 0.9),
-            duration: const Duration(seconds: 2),
+                ? AppColors.cardDark.withValues(alpha: 0.9)
+                : AppColors.primary.withValues(alpha: 0.9),
+            duration: AppDurations.twoSeconds,
           ),
         );
       }
@@ -248,7 +188,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
       final imageBytes = await _getCachedImageBytes();
 
       if (imageBytes == null) {
-        throw Exception('无法获取图片数据');
+        throw Exception(AppStrings.imageDataError);
       }
 
       // 保存到相册
@@ -261,11 +201,11 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '图片已保存',
-              style: FontUtils.poppins(color: Colors.white),
+              AppStrings.imageSaveSuccess,
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: Colors.green.withValues(alpha: 0.8),
-            duration: const Duration(seconds: 2),
+            backgroundColor: AppColors.green.withValues(alpha: 0.8),
+            duration: AppDurations.twoSeconds,
           ),
         );
       }
@@ -274,10 +214,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '保存失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+              '${AppStrings.saveFailed}: ${e.toString()}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: Colors.red.withValues(alpha: 0.8),
+            backgroundColor: AppColors.red.withValues(alpha: 0.8),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -312,7 +252,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
           if (byteData != null) {
             completer.complete(byteData.buffer.asUint8List());
           } else {
-            completer.completeError('无法获取图片数据');
+            completer.completeError(AppStrings.imageDataError);
           }
         }).catchError((error) {
           completer.completeError(error);
@@ -335,10 +275,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
         final isDark = themeService.isDarkMode;
-        final backgroundColor = isDark ? Colors.black : Colors.white;
-        final textColor = isDark ? Colors.white : const Color(0xFF2c3e50);
+        final backgroundColor = isDark ? AppColors.black : AppColors.white;
+        final textColor = isDark ? AppColors.white : AppColors.primary;
         final progressIndicatorColor =
-            isDark ? Colors.white : const Color(0xFF2c3e50);
+            isDark ? AppColors.white : AppColors.primary;
 
         return Scaffold(
           backgroundColor: backgroundColor,
@@ -348,7 +288,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
               Positioned.fill(
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(), // 点击背景区域关闭
-                  child: Container(color: Colors.transparent),
+                  child: Container(color: AppColors.transparent),
                 ),
               ),
 
@@ -379,12 +319,12 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                                 CircularProgressIndicator(
                                   color: progressIndicatorColor,
                                 ),
-                                const SizedBox(height: 16),
+                                Gap.h16,
                                 Text(
-                                  '加载中...',
+                                  AppStrings.loading,
                                   style: FontUtils.poppins(
                                     color: textColor,
-                                    fontSize: 16,
+                                    fontSize: AppDimens.fontSizeXl,
                                   ),
                                 ),
                               ],
@@ -403,12 +343,12 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                                   color: textColor,
                                   size: 48,
                                 ),
-                                const SizedBox(height: 16),
+                                Gap.h16,
                                 Text(
-                                  '图片加载失败',
+                                  AppStrings.imageLoadFailed,
                                   style: FontUtils.poppins(
                                     color: textColor,
-                                    fontSize: 16,
+                                    fontSize: AppDimens.fontSizeXl,
                                   ),
                                 ),
                               ],

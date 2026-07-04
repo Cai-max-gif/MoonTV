@@ -57,5 +57,13 @@
 	<string>MoonTV需要访问您的相册以保存截图</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>MoonTV需要向您的相册添加截图</string>
+	<!-- 本地网络权限 -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>MoonTV需要访问本地网络以发现和连接DLNA设备</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+		<string>_dlna._tcp</string>
+	</array>
 </dict>
 </plist>

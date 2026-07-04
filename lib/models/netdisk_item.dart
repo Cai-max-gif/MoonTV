@@ -1,3 +1,4 @@
+import '../constants/app_strings.dart';
 
 /// 单个网盘资源链接
 class NetDiskLink {
@@ -33,7 +34,7 @@ class NetDiskLink {
   }
 
   /// 显示的标题（优先使用 note，为空时显示占位）
-  String get displayTitle => note.isNotEmpty ? note : '未命名资源';
+  String get displayTitle => note.isNotEmpty ? note : AppStrings.netdiskUnnamedResource;
 
   /// 是否有提取码
   bool get hasPassword => password.isNotEmpty;
@@ -65,7 +66,7 @@ class NetDiskSearchResult {
     if (json['success'] != true) {
       return NetDiskSearchResult(
         success: false,
-        error: json['error'] as String? ?? '未知错误',
+        error: json['error'] as String? ?? AppStrings.msgUnknownError,
       );
     }
 

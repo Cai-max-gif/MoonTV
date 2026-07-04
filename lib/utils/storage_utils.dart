@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
+import '../constants/app_config.dart';
 
 class StorageUtils {
   /// 获取Android平台的Download目录
@@ -20,16 +20,15 @@ class StorageUtils {
         }
         // 如果获取外部存储失败，尝试使用应用文档目录
         final documentsDir = await getApplicationDocumentsDirectory();
-        final downloadDir = Directory('${documentsDir.path}/Download');
+        final downloadDir = Directory('${documentsDir.path}/${AppConfig.downloadDirectoryName}');
         if (!await downloadDir.exists()) {
           await downloadDir.create(recursive: true);
         }
         return downloadDir;
       } catch (e) {
-        debugPrint('Error getting Download directory: $e');
         //  fallback to应用文档目录
         final documentsDir = await getApplicationDocumentsDirectory();
-        final downloadDir = Directory('${documentsDir.path}/Download');
+        final downloadDir = Directory('${documentsDir.path}/${AppConfig.downloadDirectoryName}');
         if (!await downloadDir.exists()) {
           await downloadDir.create(recursive: true);
         }
@@ -43,7 +42,7 @@ class StorageUtils {
   static Future<Directory?> getAndroidMoonTVDownloadDirectory() async {
     final downloadDir = await getAndroidDownloadDirectory();
     if (downloadDir != null) {
-      final moonTVDir = Directory('${downloadDir.path}/MoonTV');
+      final moonTVDir = Directory('${downloadDir.path}/${AppConfig.appName}');
       if (!await moonTVDir.exists()) {
         await moonTVDir.create(recursive: true);
       }
@@ -59,12 +58,12 @@ class StorageUtils {
     } else if (Platform.isIOS) {
       // iOS平台使用应用文档目录
       final documentsDir = await getApplicationDocumentsDirectory();
-      final downloadDir = Directory('${documentsDir.path}/Downloads');
+      final downloadDir = Directory('${documentsDir.path}/${AppConfig.downloadDirectoryName}');
       if (!await downloadDir.exists()) {
         await downloadDir.create(recursive: true);
       }
       // 创建MoonTV子文件夹
-      final moonTVDir = Directory('${downloadDir.path}/MoonTV');
+      final moonTVDir = Directory('${downloadDir.path}/${AppConfig.appName}');
       if (!await moonTVDir.exists()) {
         await moonTVDir.create(recursive: true);
       }
@@ -73,12 +72,12 @@ class StorageUtils {
       // Windows平台使用用户下载目录
       final userProfile = Platform.environment['USERPROFILE'];
       if (userProfile != null) {
-        final downloadsDir = Directory('$userProfile/Downloads');
+        final downloadsDir = Directory('$userProfile/${AppConfig.downloadDirectoryName}');
         if (!await downloadsDir.exists()) {
           await downloadsDir.create(recursive: true);
         }
         // 创建MoonTV子文件夹
-        final moonTVDir = Directory('${downloadsDir.path}/MoonTV');
+        final moonTVDir = Directory('${downloadsDir.path}/${AppConfig.appName}');
         if (!await moonTVDir.exists()) {
           await moonTVDir.create(recursive: true);
         }
@@ -88,12 +87,12 @@ class StorageUtils {
       // macOS平台使用用户下载目录
       final homeDir = Platform.environment['HOME'];
       if (homeDir != null) {
-        final downloadsDir = Directory('$homeDir/Downloads');
+        final downloadsDir = Directory('$homeDir/${AppConfig.downloadDirectoryName}');
         if (!await downloadsDir.exists()) {
           await downloadsDir.create(recursive: true);
         }
         // 创建MoonTV子文件夹
-        final moonTVDir = Directory('${downloadsDir.path}/MoonTV');
+        final moonTVDir = Directory('${downloadsDir.path}/${AppConfig.appName}');
         if (!await moonTVDir.exists()) {
           await moonTVDir.create(recursive: true);
         }
@@ -103,15 +102,16 @@ class StorageUtils {
 
     //  fallback to应用文档目录
     final documentsDir = await getApplicationDocumentsDirectory();
-    final downloadDir = Directory('${documentsDir.path}/Downloads');
+    final downloadDir = Directory('${documentsDir.path}/${AppConfig.downloadDirectoryName}');
     if (!await downloadDir.exists()) {
       await downloadDir.create(recursive: true);
     }
     // 创建MoonTV子文件夹
-    final moonTVDir = Directory('${downloadDir.path}/MoonTV');
+    final moonTVDir = Directory('${downloadDir.path}/${AppConfig.appName}');
     if (!await moonTVDir.exists()) {
       await moonTVDir.create(recursive: true);
     }
     return moonTVDir;
   }
 }
+

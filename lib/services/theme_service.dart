@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'dart:io' show Platform;
 import 'package:macos_window_utils/macos_window_utils.dart';
+import '../constants/app_colors.dart';
 
 class ThemeService extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -18,14 +20,14 @@ class ThemeService extends ChangeNotifier {
     _loadTheme();
   }
 
-  void _loadTheme() async {
+  Future<void> _loadTheme() async {
     // 每次启动都默认跟随系统主题，不保存用户的手动选择
     _themeMode = ThemeMode.system;
     notifyListeners();
     _updateMacOSWindowAppearance();
   }
 
-  void setThemeMode(ThemeMode mode) async {
+  Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     // 不再保存到 SharedPreferences，每次启动都重新遵循系统主题
     notifyListeners();
@@ -33,23 +35,17 @@ class ThemeService extends ChangeNotifier {
   }
 
   // 更新 macOS 窗口外观
-  void _updateMacOSWindowAppearance() async {
+  Future<void> _updateMacOSWindowAppearance() async {
     if (!Platform.isMacOS) return;
 
-    try {
-      // 使用 WindowManipulator.overrideMacOSBrightness 来设置窗口外观
-      if (isDarkMode) {
-        await WindowManipulator.overrideMacOSBrightness(dark: true);
-      } else {
-        await WindowManipulator.overrideMacOSBrightness(dark: false);
-      }
-    } catch (e) {
-      // 忽略错误，可能在某些环境下不支持
-      debugPrint('Failed to update macOS window appearance: $e');
+    if (isDarkMode) {
+      await WindowManipulator.overrideMacOSBrightness(dark: true);
+    } else {
+      await WindowManipulator.overrideMacOSBrightness(dark: false);
     }
   }
 
-  void toggleTheme(BuildContext context) async {
+  Future<void> toggleTheme(BuildContext context) async {
     switch (_themeMode) {
       case ThemeMode.light:
         setThemeMode(ThemeMode.dark);
@@ -74,61 +70,61 @@ class ThemeService extends ChangeNotifier {
     final textTheme = Platform.isWindows
         ? ThemeData.light().textTheme.copyWith(
               bodyLarge: const TextStyle(
-                color: Color(0xFF2c3e50),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Microsoft YaHei',
               ),
               bodyMedium: const TextStyle(
-                color: Color(0xFF2c3e50),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Microsoft YaHei',
               ),
               bodySmall: const TextStyle(
-                color: Color(0xFF7f8c8d),
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Microsoft YaHei',
               ),
               titleLarge: const TextStyle(
-                color: Color(0xFF2c3e50),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Microsoft YaHei',
               ),
               titleMedium: const TextStyle(
-                color: Color(0xFF2c3e50),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Microsoft YaHei',
               ),
               titleSmall: const TextStyle(
-                color: Color(0xFF2c3e50),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Microsoft YaHei',
               ),
             )
         : const TextTheme(
-            bodyLarge: TextStyle(color: Color(0xFF2c3e50)),
-            bodyMedium: TextStyle(color: Color(0xFF2c3e50)),
-            bodySmall: TextStyle(color: Color(0xFF7f8c8d)),
-            titleLarge: TextStyle(color: Color(0xFF2c3e50)),
-            titleMedium: TextStyle(color: Color(0xFF2c3e50)),
-            titleSmall: TextStyle(color: Color(0xFF2c3e50)),
+            bodyLarge: TextStyle(color: AppColors.primary),
+            bodyMedium: TextStyle(color: AppColors.primary),
+            bodySmall: TextStyle(color: AppColors.textSecondary),
+            titleLarge: TextStyle(color: AppColors.primary),
+            titleMedium: TextStyle(color: AppColors.primary),
+            titleSmall: TextStyle(color: AppColors.primary),
           );
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF2c3e50),
+        seedColor: AppColors.primary,
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: const Color(0xFFf8f9fa),
+        scaffoldBackgroundColor: AppColors.scaffoldLight,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFffffff),
-        foregroundColor: Color(0xFF2c3e50),
-        elevation: 0,
+        backgroundColor: AppColors.white,
+        foregroundColor: AppColors.primary,
+        elevation: AppDimens.elevationNone,
       ),
       cardTheme: const CardThemeData(
-        color: Color(0xFFffffff),
-        elevation: 2,
+        color: AppColors.white,
+        elevation: AppDimens.elevationSm,
       ),
       textTheme: textTheme,
       fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
@@ -140,61 +136,61 @@ class ThemeService extends ChangeNotifier {
     final textTheme = Platform.isWindows
         ? ThemeData.dark().textTheme.copyWith(
               bodyLarge: const TextStyle(
-                color: Color(0xFFffffff),
+                color: AppColors.white,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Microsoft YaHei',
               ),
               bodyMedium: const TextStyle(
-                color: Color(0xFFffffff),
+                color: AppColors.white,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Microsoft YaHei',
               ),
               bodySmall: const TextStyle(
-                color: Color(0xFFb0b0b0),
+                color: AppColors.textDarkSecondary,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'Microsoft YaHei',
               ),
               titleLarge: const TextStyle(
-                color: Color(0xFFffffff),
+                color: AppColors.white,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Microsoft YaHei',
               ),
               titleMedium: const TextStyle(
-                color: Color(0xFFffffff),
+                color: AppColors.white,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Microsoft YaHei',
               ),
               titleSmall: const TextStyle(
-                color: Color(0xFFffffff),
+                color: AppColors.white,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Microsoft YaHei',
               ),
             )
         : const TextTheme(
-            bodyLarge: TextStyle(color: Color(0xFFffffff)),
-            bodyMedium: TextStyle(color: Color(0xFFffffff)),
-            bodySmall: TextStyle(color: Color(0xFFb0b0b0)),
-            titleLarge: TextStyle(color: Color(0xFFffffff)),
-            titleMedium: TextStyle(color: Color(0xFFffffff)),
-            titleSmall: TextStyle(color: Color(0xFFffffff)),
+            bodyLarge: TextStyle(color: AppColors.white),
+            bodyMedium: TextStyle(color: AppColors.white),
+            bodySmall: TextStyle(color: AppColors.textDarkSecondary),
+            titleLarge: TextStyle(color: AppColors.white),
+            titleMedium: TextStyle(color: AppColors.white),
+            titleSmall: TextStyle(color: AppColors.white),
           );
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF2c3e50),
+        seedColor: AppColors.primary,
         brightness: Brightness.dark,
       ),
-      scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: AppColors.scaffoldDark,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1e1e1e),
-        foregroundColor: Color(0xFFffffff),
-        elevation: 0,
+        backgroundColor: AppColors.cardDark,
+        foregroundColor: AppColors.white,
+        elevation: AppDimens.elevationNone,
       ),
       cardTheme: const CardThemeData(
-        color: Color(0xFF1e1e1e),
-        elevation: 2,
+        color: AppColors.cardDark,
+        elevation: AppDimens.elevationSm,
       ),
       textTheme: textTheme,
       fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,

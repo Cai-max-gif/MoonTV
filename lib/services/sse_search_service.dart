@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import '../constants/app_regex.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import '../models/search_result.dart';
 import '../models/search_resource.dart';
 import 'user_data_service.dart';
@@ -54,7 +58,7 @@ class SSESearchService {
           allResources.where((resource) => !resource.disabled).toList();
 
       if (resources.isEmpty) {
-        _errorController?.add('没有可用的搜索资源');
+        _errorController?.add(AppStrings.sseNoAvailableResources);
         _isConnected = false;
         return;
       }
@@ -87,7 +91,7 @@ class SSESearchService {
 
       _isConnected = false;
     } catch (e) {
-      _errorController?.add('本地搜索异常: ${e.toString()}');
+      _errorController?.add('${AppStrings.sseLocalSearchError}${e.toString()}');
       _isConnected = false;
     }
   }
@@ -98,7 +102,7 @@ class SSESearchService {
     try {
       // 调用 searchFromApi 并设置 20 秒超时
       final results = await DownstreamService.searchFromApi(resource, query)
-          .timeout(const Duration(seconds: 20));
+          .timeout(AppDurations.networkTimeout);
 
       // 增加完成计数
       _completedSources++;
@@ -118,7 +122,7 @@ class SSESearchService {
     } on TimeoutException {
       // 超时处理
       _completedSources++;
-      _sourceErrors[resource.key] = '搜索超时（20秒）';
+      _sourceErrors[resource.key] = AppStrings.sseSearchTimeout20;
 
       // 发送错误进度更新
       _progressController?.add(SearchProgress(
@@ -126,7 +130,7 @@ class SSESearchService {
         completedSources: _completedSources,
         currentSource: resource.name,
         isComplete: false,
-        error: '搜索超时（20秒）',
+        error: AppStrings.sseSearchTimeout20,
       ));
     } catch (e) {
       // 其他错误处理
@@ -147,7 +151,7 @@ class SSESearchService {
   /// 开始搜索
   Future<void> startSearch(String query) async {
     if (query.trim().isEmpty) {
-      throw Exception('搜索查询不能为空');
+      throw Exception(AppStrings.sseEmptyQuery);
     }
 
     // 如果已有连接，先关闭
@@ -173,7 +177,7 @@ class SSESearchService {
     _isConnected = true;
 
     // 设置15秒超时定时器
-    _timeoutTimer = Timer(const Duration(seconds: 15), () {
+    _timeoutTimer = Timer(AppDurations.mediumTimeout, () {
       if (_isConnected) {
         _handleTimeout();
       }
@@ -191,17 +195,17 @@ class SSESearchService {
       // 获取服务器地址和认证信息
       final baseUrl = await UserDataService.getServerUrlWithDefault();
       // 确保使用HTTPS
-      final secureBaseUrl = baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
+      final secureBaseUrl = baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
       final cookies = await UserDataService.getCookies();
 
       if (cookies == null) {
-        throw Exception('用户未登录');
+        throw Exception(AppStrings.sseUserNotLoggedIn);
       }
 
       // 构建 SSE URL
       final baseUri = Uri.parse(secureBaseUrl);
       final sseUri = baseUri.replace(
-        path: '/api/search/ws',
+        path: '${AppConfig.searchEndpoint}/ws',
         queryParameters: {
           'q': _currentQuery!,
         },
@@ -243,13 +247,13 @@ class SSESearchService {
         return;
       }
 
-      _errorController?.add('连接失败: ${e.toString()}');
+      _errorController?.add('${AppStrings.sseConnectionFailed}${e.toString()}');
       rethrow;
     }
   }
 
   /// 处理 SSE 响应
-  void _handleSSEResponse(http.StreamedResponse response) async {
+  Future<void> _handleSSEResponse(http.StreamedResponse response) async {
     if (response.statusCode != 200) {
       _errorController?.add('SSE 连接失败: ${response.statusCode}');
       return;
@@ -314,7 +318,7 @@ class SSESearchService {
           break;
       }
     } catch (e) {
-      _errorController?.add('消息解析失败: ${e.toString()}');
+      _errorController?.add('${AppStrings.sseParseFailed}${e.toString()}');
     }
   }
 
@@ -405,7 +409,7 @@ class SSESearchService {
       isComplete: true,
     ));
 
-    _errorController?.add('搜索超时（15秒）');
+    _errorController?.add(AppStrings.sseSearchTimeout15);
     _closeConnection();
   }
 
@@ -432,7 +436,7 @@ class SSESearchService {
     }
 
     // 其他错误才显示给用户
-    _errorController?.add('SSE 错误: ${error.toString()}');
+    _errorController?.add('${AppStrings.sseError}${error.toString()}');
   }
 
   /// 处理 SSE 关闭
@@ -469,7 +473,12 @@ class SSESearchService {
 
   /// 释放资源
   void dispose() {
-    stopSearch();
+    _client?.close();
+    _subscription?.cancel();
+    _incrementalResultsController?.close();
+    _errorController?.close();
+    _progressController?.close();
+    _timeoutTimer?.cancel();
   }
 }
 
@@ -501,11 +510,11 @@ class SearchProgress {
   /// 获取进度描述
   String get progressDescription {
     if (isComplete) {
-      return '搜索完成';
+      return AppStrings.sseSearchComplete;
     } else if (currentSource != null) {
-      return '正在搜索: $currentSource';
+      return '${AppStrings.sseSearching}$currentSource';
     } else {
-      return '准备搜索...';
+      return AppStrings.ssePreparing;
     }
   }
 }

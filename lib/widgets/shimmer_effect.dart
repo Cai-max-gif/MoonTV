@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
 
@@ -27,7 +29,7 @@ class _ShimmerEffectState extends State<ShimmerEffect>
   void initState() {
     super.initState();
     _shimmerController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: AppDurations.loadingCycle,
       vsync: this,
     );
     _shimmerAnimation = Tween<double>(
@@ -63,14 +65,14 @@ class _ShimmerEffectState extends State<ShimmerEffect>
                   end: Alignment.centerRight,
                   colors: themeService.isDarkMode
                       ? [
-                          const Color(0xFF333333),
-                          const Color(0xFF1a1a1a),
-                          const Color(0xFF333333),
+                          AppColors.darkDivider,
+                          AppColors.darkBg3,
+                          AppColors.darkDivider,
                         ]
                       : [
-                          Colors.grey[300]!,
-                          Colors.grey[100]!,
-                          Colors.grey[300]!,
+                          AppColors.gray300,
+                          AppColors.gray100,
+                          AppColors.gray300,
                         ],
                   stops: [
                     0.0,

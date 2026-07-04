@@ -13,8 +13,12 @@ import '../widgets/pulsing_dots_indicator.dart';
 import 'player_screen.dart';
 import '../widgets/filter_pill_hover.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_config.dart';
 import '../utils/font_utils.dart';
 import '../widgets/filter_options_selector.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_dimensions.dart';
 
 class TvScreen extends StatefulWidget {
   const TvScreen({super.key});
@@ -26,71 +30,71 @@ class TvScreen extends StatefulWidget {
 class _TvScreenState extends State<TvScreen> {
   // 电视剧一级选择器选项
   final List<SelectorOption> _tvPrimaryOptions = const [
-    SelectorOption(label: '全部', value: '全部'),
-    SelectorOption(label: '最近热门', value: '最近热门'),
+    SelectorOption(label: AppStrings.catAll, value: '全部'),
+    SelectorOption(label: AppStrings.catRecentHot, value: '最近热门'),
   ];
 
   // 电视剧二级选择器选项
   final List<SelectorOption> _tvSecondaryOptions = const [
-    SelectorOption(label: '全部', value: 'tv'),
-    SelectorOption(label: '国产', value: 'tv_domestic'),
-    SelectorOption(label: '欧美', value: 'tv_american'),
-    SelectorOption(label: '日本', value: 'tv_japanese'),
-    SelectorOption(label: '韩国', value: 'tv_korean'),
-    SelectorOption(label: '动漫', value: 'tv_animation'),
-    SelectorOption(label: '纪录片', value: 'tv_documentary'),
+    SelectorOption(label: AppStrings.catAll, value: 'tv'),
+    SelectorOption(label: AppStrings.regionDomestic, value: 'tv_domestic'),
+    SelectorOption(label: AppStrings.regionWestern, value: 'tv_american'),
+    SelectorOption(label: AppStrings.regionJapanese, value: 'tv_japanese'),
+    SelectorOption(label: AppStrings.regionKorean, value: 'tv_korean'),
+    SelectorOption(label: AppStrings.typeAnimation, value: 'tv_animation'),
+    SelectorOption(label: AppStrings.typeDocumentary, value: 'tv_documentary'),
   ];
 
   // 新的筛选选项 - 类型
   final List<SelectorOption> _tvTypeOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '喜剧', value: 'comedy'),
-    SelectorOption(label: '爱情', value: 'romance'),
-    SelectorOption(label: '悬疑', value: 'suspense'),
-    SelectorOption(label: '武侠', value: 'wuxia'),
-    SelectorOption(label: '古装', value: 'costume'),
-    SelectorOption(label: '家庭', value: 'family'),
-    SelectorOption(label: '犯罪', value: 'crime'),
-    SelectorOption(label: '科幻', value: 'sci-fi'),
-    SelectorOption(label: '恐怖', value: 'horror'),
-    SelectorOption(label: '历史', value: 'history'),
-    SelectorOption(label: '战争', value: 'war'),
-    SelectorOption(label: '动作', value: 'action'),
-    SelectorOption(label: '冒险', value: 'adventure'),
-    SelectorOption(label: '传记', value: 'biography'),
-    SelectorOption(label: '剧情', value: 'drama'),
-    SelectorOption(label: '奇幻', value: 'fantasy'),
-    SelectorOption(label: '惊悚', value: 'thriller'),
-    SelectorOption(label: '灾难', value: 'disaster'),
-    SelectorOption(label: '歌舞', value: 'musical'),
-    SelectorOption(label: '音乐', value: 'music'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.typeComedy, value: 'comedy'),
+    SelectorOption(label: AppStrings.typeRomance, value: 'romance'),
+    SelectorOption(label: AppStrings.typeSuspense, value: 'suspense'),
+    SelectorOption(label: AppStrings.typeWuxia, value: 'wuxia'),
+    SelectorOption(label: AppStrings.typeCostume, value: 'costume'),
+    SelectorOption(label: AppStrings.typeFamily, value: 'family'),
+    SelectorOption(label: AppStrings.typeCrime, value: 'crime'),
+    SelectorOption(label: AppStrings.typeSciFi, value: 'sci-fi'),
+    SelectorOption(label: AppStrings.typeHorror, value: 'horror'),
+    SelectorOption(label: AppStrings.typeHistory, value: 'history'),
+    SelectorOption(label: AppStrings.typeWar, value: 'war'),
+    SelectorOption(label: AppStrings.typeAction, value: 'action'),
+    SelectorOption(label: AppStrings.typeAdventure, value: 'adventure'),
+    SelectorOption(label: AppStrings.typeBiography, value: 'biography'),
+    SelectorOption(label: AppStrings.typeDrama, value: 'drama'),
+    SelectorOption(label: AppStrings.typeFantasy, value: 'fantasy'),
+    SelectorOption(label: AppStrings.typeThriller, value: 'thriller'),
+    SelectorOption(label: AppStrings.typeDisaster, value: 'disaster'),
+    SelectorOption(label: AppStrings.typeMusical, value: 'musical'),
+    SelectorOption(label: AppStrings.typeMusic, value: 'music'),
   ];
 
   final List<SelectorOption> _tvRegionOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '华语', value: 'chinese'),
-    SelectorOption(label: '欧美', value: 'western'),
-    SelectorOption(label: '国外', value: 'foreign'),
-    SelectorOption(label: '韩国', value: 'korean'),
-    SelectorOption(label: '日本', value: 'japanese'),
-    SelectorOption(label: '中国大陆', value: 'mainland_china'),
-    SelectorOption(label: '中国香港', value: 'hong_kong'),
-    SelectorOption(label: '美国', value: 'usa'),
-    SelectorOption(label: '英国', value: 'uk'),
-    SelectorOption(label: '泰国', value: 'thailand'),
-    SelectorOption(label: '中国台湾', value: 'taiwan'),
-    SelectorOption(label: '意大利', value: 'italy'),
-    SelectorOption(label: '法国', value: 'france'),
-    SelectorOption(label: '德国', value: 'germany'),
-    SelectorOption(label: '西班牙', value: 'spain'),
-    SelectorOption(label: '俄罗斯', value: 'russia'),
-    SelectorOption(label: '瑞典', value: 'sweden'),
-    SelectorOption(label: '巴西', value: 'brazil'),
-    SelectorOption(label: '丹麦', value: 'denmark'),
-    SelectorOption(label: '印度', value: 'india'),
-    SelectorOption(label: '加拿大', value: 'canada'),
-    SelectorOption(label: '爱尔兰', value: 'ireland'),
-    SelectorOption(label: '澳大利亚', value: 'australia'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
+    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
+    SelectorOption(label: AppStrings.regionForeign, value: 'foreign'),
+    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
+    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
+    SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
+    SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
+    SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
+    SelectorOption(label: AppStrings.regionUK, value: 'uk'),
+    SelectorOption(label: AppStrings.regionThailand, value: 'thailand'),
+    SelectorOption(label: AppStrings.regionTaiwan, value: 'taiwan'),
+    SelectorOption(label: AppStrings.regionItaly, value: 'italy'),
+    SelectorOption(label: AppStrings.regionFrance, value: 'france'),
+    SelectorOption(label: AppStrings.regionGermany, value: 'germany'),
+    SelectorOption(label: AppStrings.regionSpain, value: 'spain'),
+    SelectorOption(label: AppStrings.regionRussia, value: 'russia'),
+    SelectorOption(label: AppStrings.regionSweden, value: 'sweden'),
+    SelectorOption(label: AppStrings.regionBrazil, value: 'brazil'),
+    SelectorOption(label: AppStrings.regionDenmark, value: 'denmark'),
+    SelectorOption(label: AppStrings.regionIndia, value: 'india'),
+    SelectorOption(label: AppStrings.regionCanada, value: 'canada'),
+    SelectorOption(label: AppStrings.regionIreland, value: 'ireland'),
+    SelectorOption(label: AppStrings.regionAustralia, value: 'australia'),
   ];
 
   final List<SelectorOption> _tvYearOptions = const [
@@ -113,11 +117,11 @@ class _TvScreenState extends State<TvScreen> {
   ];
 
   final List<SelectorOption> _tvPlatformOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '腾讯视频', value: 'tencent'),
-    SelectorOption(label: '爱奇艺', value: 'iqiyi'),
-    SelectorOption(label: '优酷', value: 'youku'),
-    SelectorOption(label: '湖南卫视', value: 'hunan_tv'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.platformTencent, value: 'tencent'),
+    SelectorOption(label: AppStrings.platformIqiyi, value: 'iqiyi'),
+    SelectorOption(label: AppStrings.platformYouku, value: 'youku'),
+    SelectorOption(label: AppStrings.platformHunanTv, value: 'hunan_tv'),
     SelectorOption(label: 'Netflix', value: 'netflix'),
     SelectorOption(label: 'HBO', value: 'hbo'),
     SelectorOption(label: 'BBC', value: 'bbc'),
@@ -128,10 +132,10 @@ class _TvScreenState extends State<TvScreen> {
   ];
 
   final List<SelectorOption> _tvSortOptions = const [
-    SelectorOption(label: '综合排序', value: 'T'),
-    SelectorOption(label: '近期热度', value: 'U'),
-    SelectorOption(label: '首播时间', value: 'R'),
-    SelectorOption(label: '高分优先', value: 'S'),
+    SelectorOption(label: AppStrings.sortComprehensive, value: 'T'),
+    SelectorOption(label: AppStrings.sortRecent, value: 'U'),
+    SelectorOption(label: AppStrings.sortAiringTime, value: 'R'),
+    SelectorOption(label: AppStrings.sortRating, value: 'S'),
   ];
 
   String _selectedCategoryValue = '最近热门'; // 默认选中最近热门
@@ -147,7 +151,7 @@ class _TvScreenState extends State<TvScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<DoubanMovie> _tvShows = [];
   int _page = 0;
-  final int _pageLimit = 25;
+  final int _pageLimit = AppConfig.defaultPageLimit;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -188,7 +192,7 @@ class _TvScreenState extends State<TvScreen> {
       }
 
       // 正常滚动情况：当滚动到距离底部50像素内时触发加载
-      const double threshold = 50.0;
+      const double threshold = AppDimens.scrollLoadMoreThreshold;
       if (position.pixels >= position.maxScrollExtent - threshold) {
         _loadMoreTvShows();
       }
@@ -289,7 +293,7 @@ class _TvScreenState extends State<TvScreen> {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -327,7 +331,7 @@ class _TvScreenState extends State<TvScreen> {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -476,7 +480,7 @@ class _TvScreenState extends State<TvScreen> {
         _onVideoTap(videoInfo);
         break;
       case VideoMenuAction.doubanDetail:
-        _launchURL('https://movie.douban.com/subject/${videoInfo.id}/');
+        _launchURL('${AppConfig.doubanSubjectUrl}/${videoInfo.id}/');
         break;
       default:
         break;
@@ -500,8 +504,8 @@ class _TvScreenState extends State<TvScreen> {
   Widget build(BuildContext context) {
     return StyledRefreshIndicator(
       onRefresh: _refreshTvShowsData,
-      refreshText: '刷新电视剧数据...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshTv,
+      primaryColor: AppColors.accent,
       child: SingleChildScrollView(
         controller: _scrollController,
         child: Column(
@@ -509,7 +513,7 @@ class _TvScreenState extends State<TvScreen> {
           children: [
             _buildHeader(),
             _buildFilterSection(),
-            const SizedBox(height: 16),
+            Gap.h16,
             DoubanMoviesGrid(
               movies: _tvShows,
               isLoading: _isLoading && _tvShows.isEmpty,
@@ -529,7 +533,7 @@ class _TvScreenState extends State<TvScreen> {
             else if (!_hasMore && _tvShows.isNotEmpty && !_isLoading)
               _buildEndOfListIndicator()
             else
-              const SizedBox(height: 50), // 占位符保持间距
+              Gap.h50, // 占位符保持间距
           ],
         ),
       ),
@@ -538,14 +542,14 @@ class _TvScreenState extends State<TvScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      padding: AppDimens.pageHeaderPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '电视剧',
+            AppStrings.navTv,
             style: FontUtils.poppins(
-              fontSize: 28,
+              fontSize: AppDimens.fontSizeHeadline,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
@@ -560,19 +564,19 @@ class _TvScreenState extends State<TvScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity, // 设置为100%宽度
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.all(AppDimens.spacingLg),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? Colors.white.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilterRow(
-            '分类',
+            AppStrings.filterCategory,
             _tvPrimaryOptions,
             _selectedCategoryValue,
             (newValue) {
@@ -589,7 +593,7 @@ class _TvScreenState extends State<TvScreen> {
               _fetchTvShows(isRefresh: true);
             },
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 使用固定高度的容器来避免高度跳跃
           SizedBox(
             height: 66, // 增加高度以避免Column底部溢出
@@ -607,38 +611,38 @@ class _TvScreenState extends State<TvScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '筛选',
+          AppStrings.filterMore,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6),
+        Gap.h6,
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterPill('类型', _tvTypeOptions, _selectedTvType, (v) {
+                _buildFilterPill(AppStrings.filterType, _tvTypeOptions, _selectedTvType, (v) {
                   setState(() => _selectedTvType = v);
                   _fetchTvShows(isRefresh: true);
                 }),
-                _buildFilterPill('地区', _tvRegionOptions, _selectedTvRegion,
+                _buildFilterPill(AppStrings.filterRegion, _tvRegionOptions, _selectedTvRegion,
                     (v) {
                   setState(() => _selectedTvRegion = v);
                   _fetchTvShows(isRefresh: true);
                 }),
-                _buildFilterPill('年代', _tvYearOptions, _selectedTvYear, (v) {
+                _buildFilterPill(AppStrings.filterYear, _tvYearOptions, _selectedTvYear, (v) {
                   setState(() => _selectedTvYear = v);
                   _fetchTvShows(isRefresh: true);
                 }),
-                _buildFilterPill('平台', _tvPlatformOptions, _selectedTvPlatform,
+                _buildFilterPill(AppStrings.filterPlatform, _tvPlatformOptions, _selectedTvPlatform,
                     (v) {
                   setState(() => _selectedTvPlatform = v);
                   _fetchTvShows(isRefresh: true);
                 }),
-                _buildFilterPill('排序', _tvSortOptions, _selectedTvSort, (v) {
+                _buildFilterPill(AppStrings.filterSort, _tvSortOptions, _selectedTvSort, (v) {
                   setState(() => _selectedTvSort = v);
                   _fetchTvShows(isRefresh: true);
                 }),
@@ -655,14 +659,14 @@ class _TvScreenState extends State<TvScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '类型',
+          AppStrings.filterType,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6), // 减少间距，与高级筛选保持一致
+        Gap.h6, // 减少间距，与高级筛选保持一致
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -690,7 +694,7 @@ class _TvScreenState extends State<TvScreen> {
     final selectedOption = options.firstWhere((e) => e.value == selectedValue,
         orElse: () => options.first);
     bool isDefault =
-        selectedValue == 'all' || (title == '排序' && selectedValue == 'T');
+        selectedValue == 'all' || (title == AppStrings.filterSort && selectedValue == 'T');
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -730,12 +734,12 @@ class _TvScreenState extends State<TvScreen> {
         Text(
           title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -768,28 +772,28 @@ class _TvScreenState extends State<TvScreen> {
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
                   : Colors.grey.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(1),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '已经到底啦~',
+            AppStrings.noMoreData,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.grey[600],
+                  : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '共 ${_tvShows.length} 部电视剧',
+            AppStrings.countTv.replaceAll('%d', '${_tvShows.length}'),
             style: FontUtils.poppins(
-              fontSize: 12,
+              fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.grey[500],
+                  : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
           ),

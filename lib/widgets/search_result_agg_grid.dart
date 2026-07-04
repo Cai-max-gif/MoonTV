@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 import '../models/search_result.dart';
 import '../models/aggregated_search_result.dart';
 import '../models/video_info.dart';
@@ -8,6 +9,9 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 /// 聚合搜索结果网格组件
 class SearchResultAggGrid extends StatefulWidget {
@@ -131,7 +135,7 @@ class _SearchResultAggGridState extends State<SearchResultAggGrid>
             final videoInfo = aggregatedResult.toVideoInfo();
             
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: AppDurations.slow,
               curve: Curves.easeOut,
               child: VideoCard(
                 key: ValueKey(key), // 使用聚合键作为唯一key
@@ -161,23 +165,23 @@ class _SearchResultAggGridState extends State<SearchResultAggGrid>
           const Icon(
             Icons.search_off,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '暂无搜索结果',
+            AppStrings.searchNoResults,
             style: FontUtils.poppins(
-              fontSize: 18,
-              color: const Color(0xFF2c3e50),
+              fontSize: AppDimens.fontSizeXxl,
+              color: AppColors.primary,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '换个关键词试试吧',
+            AppStrings.searchTryOther,
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF7f8c8d),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.textSecondary,
             ),
           ),
         ],

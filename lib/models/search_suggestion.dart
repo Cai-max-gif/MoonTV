@@ -12,9 +12,9 @@ class SearchSuggestion {
 
   factory SearchSuggestion.fromJson(Map<String, dynamic> json) {
     return SearchSuggestion(
-      text: json['text'] as String,
-      type: json['type'] as String,
-      score: (json['score'] as num).toDouble(),
+      text: (json['text'] as String?) ?? '',
+      type: (json['type'] as String?) ?? '',
+      score: ((json['score'] as num?) ?? 0.0).toDouble(),
     );
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
 
 class SelectorOption {
   final String label;
@@ -37,11 +39,11 @@ class _FilterPillHoverState extends State<FilterPillHover> {
     // 计算颜色：如果是PC且isDefault且hover，显示绿色；否则按原逻辑
     Color textColor;
     if (widget.isPC && widget.isDefault && _isHovered) {
-      textColor = const Color(0xFF27AE60);
+      textColor = AppColors.accent;
     } else if (widget.isDefault) {
-      textColor = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+      textColor = Theme.of(context).textTheme.bodySmall?.color ?? AppColors.gray500;
     } else {
-      textColor = const Color(0xFF27AE60);
+      textColor = AppColors.accent;
     }
 
     return MouseRegion(
@@ -53,24 +55,24 @@ class _FilterPillHoverState extends State<FilterPillHover> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.transparent,
+            borderRadius: BorderRadius.circular(AppDimens.radiusRound),
           ),
           child: Row(
             children: [
               Text(
                 widget.isDefault ? widget.title : widget.selectedOption.label,
                 style: FontUtils.poppins(
-                  fontSize: 13,
+                  fontSize: AppDimens.fontSizeSm,
                   color: textColor,
                   fontWeight:
                       widget.isDefault ? FontWeight.normal : FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 4),
+              Gap.w4,
               Icon(
                 Icons.arrow_drop_down,
-                size: 18,
+                size: AppDimens.iconMd,
                 color: textColor,
               ),
             ],
@@ -110,11 +112,11 @@ class _FilterOptionHoverState extends State<FilterOptionHover> {
     // 计算颜色：如果选中显示白色，如果PC且未选中且hover显示绿色，否则默认
     Color textColor;
     if (widget.isSelected) {
-      textColor = Colors.white;
+      textColor = AppColors.white;
     } else if (widget.isPC && _isHovered) {
-      textColor = const Color(0xFF27AE60);
+      textColor = AppColors.accent;
     } else {
-      textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
+      textColor = Theme.of(context).textTheme.bodyMedium?.color ?? AppColors.black;
     }
 
     // 根据 useCompactLayout 参数决定使用哪种布局
@@ -126,7 +128,7 @@ class _FilterOptionHoverState extends State<FilterOptionHover> {
       cursor: SystemMouseCursors.click,
       child: InkWell(
         onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         child: Container(
           alignment: Alignment.center,
           padding: shouldUseCompactLayout
@@ -134,9 +136,9 @@ class _FilterOptionHoverState extends State<FilterOptionHover> {
               : null,
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? const Color(0xFF27AE60)
+                ? AppColors.accent
                 : Theme.of(context).chipTheme.backgroundColor,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           ),
           child: Text(
             widget.label,

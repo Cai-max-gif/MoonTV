@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../services/search_service.dart';
@@ -101,7 +105,7 @@ class _MainLayoutState extends State<MainLayout> {
     _overlayEntry = null;
   }
 
-  void _fetchSearchSuggestions(String query) async {
+  Future<void> _fetchSearchSuggestions(String query) async {
     if (query.trim().isEmpty) {
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -181,7 +185,7 @@ class _MainLayoutState extends State<MainLayout> {
     }
 
     // 设置新的防抖计时器（300ms），提高响应速度
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+    _debounceTimer = Timer(AppDurations.slow, () {
       if (mounted && query == widget.searchQuery) {
         _fetchSearchSuggestions(query);
       }
@@ -213,11 +217,11 @@ class _MainLayoutState extends State<MainLayout> {
           showWhenUnlinked: false,
           offset: const Offset(0, 42), // 紧贴搜索框
           child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(12),
+            elevation: AppDimens.elevationMd,
+            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
             color: themeService.isDarkMode
-                ? const Color(0xFF1e1e1e)
-                : Colors.white,
+                ? AppColors.cardDark
+                : AppColors.white,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 320),
               child: ListView.builder(
@@ -242,20 +246,20 @@ class _MainLayoutState extends State<MainLayout> {
                         children: [
                           Icon(
                             LucideIcons.search,
-                            size: 16,
+                            size: AppDimens.iconSm,
                             color: themeService.isDarkMode
-                                ? const Color(0xFF666666)
-                                : const Color(0xFF95a5a6),
+                                ? AppColors.textDarkHint
+                                : AppColors.textHint,
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Expanded(
                             child: Text(
                               suggestion,
                               style: FontUtils.poppins(
-                                fontSize: 14,
+                                fontSize: AppDimens.fontSizeMd,
                                 color: themeService.isDarkMode
-                                    ? const Color(0xFFffffff)
-                                    : const Color(0xFF2c3e50),
+                                    ? AppColors.white
+                                    : AppColors.primary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -305,7 +309,7 @@ class _MainLayoutState extends State<MainLayout> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: themeService.isDarkMode
-                                ? const Color(0xFF000000) // 深色模式纯黑色
+                                ? AppColors.black // 深色模式纯黑色
                                 : null,
                             gradient: themeService.isDarkMode
                                 ? null
@@ -313,12 +317,12 @@ class _MainLayoutState extends State<MainLayout> {
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      Color(0xFFe6f3fb), // 浅色模式渐变
-                                      Color(0xFFeaf3f7),
-                                      Color(0xFFf7f7f3),
-                                      Color(0xFFe9ecef),
-                                      Color(0xFFdbe3ea),
-                                      Color(0xFFd3dde6),
+                                      AppColors.lightBlueBg, // 浅色模式渐变
+                                      AppColors.lightBlueBg,
+                                      AppColors.gradMid2,
+                                      AppColors.gradMid3,
+                                      AppColors.gradMid4,
+                                      AppColors.gradEnd,
                                     ],
                                     stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
                                   ),
@@ -330,8 +334,8 @@ class _MainLayoutState extends State<MainLayout> {
                                 WindowsTitleBar(
                                   customBackgroundColor: widget.isSearchMode
                                       ? (themeService.isDarkMode
-                                          ? const Color(0xFF121212)
-                                          : const Color(0xFFf5f5f5))
+                                          ? AppColors.scaffoldDark
+                                          : AppColors.grayBg)
                                       : null,
                                 ),
                               // 固定 Header
@@ -377,11 +381,11 @@ class _MainLayoutState extends State<MainLayout> {
       decoration: BoxDecoration(
         color: widget.isSearchMode
             ? themeService.isDarkMode
-                ? const Color(0xFF121212)
-                : const Color(0xFFf5f5f5)
+                ? AppColors.scaffoldDark
+                : AppColors.grayBg
             : themeService.isDarkMode
-                ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
-                : Colors.white.withValues(alpha: 0.8),
+                ? AppColors.cardDark.withValues(alpha: 0.9)
+                : AppColors.white70,
       ),
       child: widget.isSearchMode
           ? _buildSearchHeader(context, themeService, isTablet)
@@ -391,7 +395,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildNormalHeader(BuildContext context, ThemeService themeService) {
     return SizedBox(
-      height: 32, // 缩小导航栏高度为32px
+      height: AppDimens.avatarSm, // 缩小导航栏高度
       child: Stack(
         children: [
           // 左侧搜索图标
@@ -428,7 +432,7 @@ class _MainLayoutState extends State<MainLayout> {
                   widget.onSearchTap?.call();
 
                   // 延迟重置按钮状态，防止快速重复点击
-                  Future.delayed(const Duration(milliseconds: 300), () {
+                  Future.delayed(AppDurations.slow, () {
                     if (mounted) {
                       setState(() {
                         _isSearchButtonPressed = false;
@@ -438,23 +442,23 @@ class _MainLayoutState extends State<MainLayout> {
                 },
                 behavior: HitTestBehavior.opaque,
                 child: Container(
-                  width: 32,
-                  height: 32,
+                  width: AppDimens.avatarSm,
+                  height: AppDimens.avatarSm,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: DeviceUtils.isPC() && _isSearchButtonHovered
                         ? (themeService.isDarkMode
-                            ? const Color(0xFF333333)
-                            : const Color(0xFFe0e0e0))
-                        : Colors.transparent,
+                            ? AppColors.darkDivider
+                            : AppColors.grayBorder)
+                        : AppColors.transparent,
                   ),
                   child: Center(
                     child: Icon(
                       LucideIcons.search,
                       color: themeService.isDarkMode
-                          ? const Color(0xFFffffff)
-                          : const Color(0xFF2c3e50),
-                      size: 24,
+                          ? AppColors.white
+                          : AppColors.primary,
+                      size: AppDimens.iconLg,
                       weight: 1.0,
                     ),
                   ),
@@ -497,9 +501,9 @@ class _MainLayoutState extends State<MainLayout> {
         child: Container(
           decoration: BoxDecoration(
             color: themeService.isDarkMode
-                ? const Color(0xFF1e1e1e)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+                ? AppColors.cardDark
+                : AppColors.white,
+            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           ),
           child: Focus(
             onFocusChange: (hasFocus) {
@@ -516,12 +520,12 @@ class _MainLayoutState extends State<MainLayout> {
               keyboardType: TextInputType.text,
               textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
-                hintText: '搜索电影、剧集、动漫...',
+                hintText: AppStrings.searchHint,
                 hintStyle: FontUtils.poppins(
                   color: themeService.isDarkMode
-                      ? const Color(0xFF666666)
-                      : const Color(0xFF95a5a6),
-                  fontSize: 14,
+                      ? AppColors.textDarkHint
+                      : AppColors.textHint,
+                  fontSize: AppDimens.fontSizeMd,
                 ),
                 suffixIcon: SizedBox(
                   width: isTablet ? 80 : 80, // 固定宽度确保按钮位置一致
@@ -577,18 +581,18 @@ class _MainLayoutState extends State<MainLayout> {
                                                 .isNotEmpty ??
                                             false)
                                     ? (themeService.isDarkMode
-                                        ? const Color(0xFF333333)
-                                        : const Color(0xFFe0e0e0))
-                                    : Colors.transparent,
+                                        ? AppColors.darkDivider
+                                        : AppColors.grayBorder)
+                                    : AppColors.transparent,
                               ),
                               child: Icon(
                                 LucideIcons.search,
                                 color: (widget.searchQuery?.trim().isNotEmpty ??
                                         false)
-                                    ? const Color(0xFF27ae60)
+                                    ? AppColors.accent
                                     : themeService.isDarkMode
-                                        ? const Color(0xFFb0b0b0)
-                                        : const Color(0xFF7f8c8d),
+                                        ? AppColors.textDarkSecondary
+                                        : AppColors.textSecondary,
                                 size: isTablet ? 18 : 16,
                               ),
                             ),
@@ -634,15 +638,15 @@ class _MainLayoutState extends State<MainLayout> {
                                   color: DeviceUtils.isPC() &&
                                           _isClearButtonHovered
                                       ? (themeService.isDarkMode
-                                          ? const Color(0xFF333333)
-                                          : const Color(0xFFe0e0e0))
-                                      : Colors.transparent,
+                                          ? AppColors.darkDivider
+                                          : AppColors.grayBorder)
+                                      : AppColors.transparent,
                                 ),
                                 child: Icon(
                                   LucideIcons.x,
                                   color: themeService.isDarkMode
-                                      ? const Color(0xFFb0b0b0)
-                                      : const Color(0xFF7f8c8d),
+                                      ? AppColors.textDarkSecondary
+                                      : AppColors.textSecondary,
                                   size: isTablet ? 18 : 16,
                                 ),
                               ),
@@ -661,10 +665,10 @@ class _MainLayoutState extends State<MainLayout> {
                 isDense: true,
               ),
               style: FontUtils.poppins(
-                fontSize: 14,
+                fontSize: AppDimens.fontSizeMd,
                 color: themeService.isDarkMode
-                    ? const Color(0xFFffffff)
-                    : const Color(0xFF2c3e50),
+                    ? AppColors.white
+                    : AppColors.primary,
                 height: 1.2,
               ),
               onSubmitted: (value) {
@@ -682,7 +686,7 @@ class _MainLayoutState extends State<MainLayout> {
     // 平板模式下居中
     if (isTablet) {
       return SizedBox(
-        height: 40, // 固定高度
+        height: AppDimens.spacingXxxl, // 固定高度
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -713,23 +717,23 @@ class _MainLayoutState extends State<MainLayout> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: AppDimens.avatarSm,
+                    height: AppDimens.avatarSm,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: DeviceUtils.isPC() && _isBackButtonHovered
                           ? (themeService.isDarkMode
-                              ? const Color(0xFF333333)
-                              : const Color(0xFFe0e0e0))
-                          : Colors.transparent,
+                              ? AppColors.darkDivider
+                              : AppColors.grayBorder)
+                          : AppColors.transparent,
                     ),
                     child: Center(
                       child: Icon(
                         LucideIcons.arrowLeft,
                         color: themeService.isDarkMode
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF2c3e50),
-                        size: 24,
+                            ? AppColors.white
+                            : AppColors.primary,
+                        size: AppDimens.iconLg,
                         weight: 1.0,
                       ),
                     ),
@@ -753,12 +757,12 @@ class _MainLayoutState extends State<MainLayout> {
 
     // 非平板模式下，搜索框居左，右侧留出按钮空间
     return SizedBox(
-      height: 40, // 固定高度
+      height: AppDimens.spacingXxxl, // 固定高度
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(child: searchBoxWidget),
-          const SizedBox(width: 16),
+          Gap.w16,
           _buildRightButtons(themeService),
         ],
       ),
@@ -805,32 +809,32 @@ class _MainLayoutState extends State<MainLayout> {
                   },
             behavior: HitTestBehavior.opaque,
             child: Container(
-              width: 32,
-              height: 32,
+              width: AppDimens.avatarSm,
+              height: AppDimens.avatarSm,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: DeviceUtils.isPC() && _isThemeButtonHovered
                     ? (themeService.isDarkMode
-                        ? const Color(0xFF333333)
-                        : const Color(0xFFe0e0e0))
-                    : Colors.transparent,
+                        ? AppColors.darkDivider
+                        : AppColors.grayBorder)
+                    : AppColors.transparent,
               ),
               child: Center(
                 child: widget.useNetdiskIcon
                     ? Icon(
                         Icons.cloud,
                         color: themeService.isDarkMode
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF2c3e50),
-                        size: 24,
+                            ? AppColors.white
+                            : AppColors.primary,
+                        size: AppDimens.iconLg,
                       )
                     : Text(
                         'AI',
                         style: TextStyle(
                           color: themeService.isDarkMode
-                              ? const Color(0xFFffffff)
-                              : const Color(0xFF2c3e50),
-                          fontSize: 16,
+                              ? AppColors.white
+                              : AppColors.primary,
+                          fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -844,10 +848,10 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildBottomNavBar(ThemeService themeService) {
     final List<Map<String, dynamic>> navItems = [
-      {'icon': LucideIcons.house, 'label': '首页'},
-      {'icon': LucideIcons.history, 'label': '播放历史'},
-      {'icon': LucideIcons.star, 'label': '收藏夹'},
-      {'icon': LucideIcons.user, 'label': '我的'},
+      {'icon': LucideIcons.house, 'label': AppStrings.navHome},
+      {'icon': LucideIcons.history, 'label': AppStrings.navHistory},
+      {'icon': LucideIcons.star, 'label': AppStrings.navFavorites},
+      {'icon': LucideIcons.user, 'label': AppStrings.navProfile},
     ];
 
     final isTablet = DeviceUtils.isTablet(context);
@@ -863,14 +867,14 @@ class _MainLayoutState extends State<MainLayout> {
       ), // 向上移动20
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
-            : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(36), // 改为36圆角
+            ? AppColors.cardDark.withValues(alpha: 0.9)
+            : AppColors.white70,
+        borderRadius: BorderRadius.circular(AppDimens.radiusCircle), // 改为36圆角
         border: Border(
           top: BorderSide(
             color: themeService.isDarkMode
-                ? const Color(0xFF333333).withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.2),
+                ? AppColors.darkDivider.withValues(alpha: 0.3)
+                : AppColors.white20,
             width: 1,
           ),
         ),
@@ -932,28 +936,28 @@ class _MainLayoutState extends State<MainLayout> {
                         Icon(
                           item['icon'],
                           color: isSelected
-                              ? const Color(0xFF27ae60)
+                              ? AppColors.accent
                               : isHovered
-                                  ? const Color(0xFF52c77a) // hover 时的浅绿色
+                                  ? AppColors.greenLight // hover 时的浅绿色
                                   : themeService.isDarkMode
-                                      ? const Color(0xFFb0b0b0)
-                                      : const Color(0xFF7f8c8d),
-                          size: 24,
+                                      ? AppColors.textDarkSecondary
+                                      : AppColors.textSecondary,
+                          size: AppDimens.iconLg,
                         ),
-                        const SizedBox(height: 2),
+                        Gap.h2,
                         Text(
                           item['label'],
                           style: FontUtils.poppins(
-                            fontSize: 14,
+                            fontSize: AppDimens.fontSizeMd,
                             fontWeight:
                                 isSelected ? FontWeight.w600 : FontWeight.w400,
                             color: isSelected
-                                ? const Color(0xFF27ae60)
+                                ? AppColors.accent
                                 : isHovered
-                                    ? const Color(0xFF52c77a) // hover 时的浅绿色
+                                    ? AppColors.greenLight // hover 时的浅绿色
                                     : themeService.isDarkMode
-                                        ? const Color(0xFFb0b0b0)
-                                        : const Color(0xFF7f8c8d),
+                                        ? AppColors.textDarkSecondary
+                                        : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -976,13 +980,13 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildTopNavLinks(ThemeService themeService) {
     final List<Map<String, dynamic>> navItems = [
-      {'label': '首页'},
-      {'label': '电影'},
-      {'label': '剧集'},
-      {'label': '动漫'},
-      {'label': '综艺'},
-      {'label': '短剧'},
-      {'label': '直播'},
+      {'label': AppStrings.navHome},
+      {'label': AppStrings.navMovie},
+      {'label': AppStrings.navTv},
+      {'label': AppStrings.navAnime},
+      {'label': AppStrings.navShow},
+      {'label': AppStrings.navShortDrama},
+      {'label': AppStrings.navLive},
     ];
 
     final isMobile = !DeviceUtils.isPC();
@@ -1038,12 +1042,12 @@ class _MainLayoutState extends State<MainLayout> {
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w400,
                         color: isSelected
-                            ? const Color(0xFF27ae60)
+                            ? AppColors.accent
                             : isHovered
-                                ? const Color(0xFF52c77a)
+                                ? AppColors.greenLight
                                 : themeService.isDarkMode
-                                    ? const Color(0xFFb0b0b0)
-                                    : const Color(0xFF7f8c8d),
+                                    ? AppColors.textDarkSecondary
+                                    : AppColors.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1102,12 +1106,12 @@ class _MainLayoutState extends State<MainLayout> {
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w400,
                         color: isSelected
-                            ? const Color(0xFF27ae60)
+                            ? AppColors.accent
                             : isHovered
-                                ? const Color(0xFF52c77a)
+                                ? AppColors.greenLight
                                 : themeService.isDarkMode
-                                    ? const Color(0xFFb0b0b0)
-                                    : const Color(0xFF7f8c8d),
+                                    ? AppColors.textDarkSecondary
+                                    : AppColors.textSecondary,
                       ),
                     ),
                   ),

@@ -8,6 +8,10 @@ import '../utils/font_utils.dart';
 import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 /// 推荐信息模块组件
 class RecommendationSection extends StatefulWidget {
@@ -122,7 +126,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
 
     _scrollController.animateTo(
       math.max(0, _scrollController.offset - scrollDistance),
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -147,7 +151,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
         _scrollController.position.maxScrollExtent,
         _scrollController.offset + scrollDistance,
       ),
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       curve: Curves.easeInOut,
     );
   }
@@ -180,11 +184,11 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                     return Text(
                       widget.title,
                       style: FontUtils.poppins(
-                        fontSize: 18,
+                        fontSize: AppDimens.fontSizeXxl,
                         fontWeight: FontWeight.w600,
                         color: themeService.isDarkMode
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF2c3e50),
+                            ? AppColors.white
+                            : AppColors.primary,
                       ),
                     );
                   },
@@ -215,15 +219,15 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                             horizontal: 8, vertical: 4),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        overlayColor: Colors.transparent,
+                        overlayColor: AppColors.transparent,
                       ),
                       child: Text(
                         widget.moreText!,
                         style: FontUtils.poppins(
-                          fontSize: 14,
+                          fontSize: AppDimens.fontSizeMd,
                           color: DeviceUtils.isPC() && _isMoreButtonHovered
-                              ? const Color(0xFF27ae60) // hover 时绿色
-                              : const Color(0xFF7f8c8d),
+                              ? AppColors.accent // hover 时绿色
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -231,7 +235,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           // 内容区域
           if (widget.isLoading)
             _buildLoadingState()
@@ -250,7 +254,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
       onEnter: (_) {
         setState(() => _isHovered = true);
         // 延迟检查以确保滚动控制器已初始化
-        Future.delayed(const Duration(milliseconds: 50), _checkScroll);
+        Future.delayed(AppDurations.debounceInterval, _checkScroll);
       },
       onExit: (_) => setState(() => _isHovered = false),
       child: Stack(
@@ -266,12 +270,12 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                 cursor: SystemMouseCursors.click,
                 child: Container(
                   width: 80,
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
                     child: AnimatedOpacity(
                       opacity: _isHovered ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppDurations.normal,
                       child: Center(
                         child: _buildScrollButton(
                           icon: Icons.chevron_left,
@@ -293,12 +297,12 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                 cursor: SystemMouseCursors.click,
                 child: Container(
                   width: 80,
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
                     child: AnimatedOpacity(
                       opacity: _isHovered ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppDurations.normal,
                       child: Center(
                         child: _buildScrollButton(
                           icon: Icons.chevron_right,
@@ -323,7 +327,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
         return Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: InkWell(
             onTap: onPressed,
             customBorder: const CircleBorder(),
@@ -337,13 +341,13 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: themeService.isDarkMode
-                      ? const Color(0xFF4B5563)
-                      : const Color(0xFFE5E7EB),
+                      ? AppColors.gray600
+                      : AppColors.gray200,
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: AppColors.black30,
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -353,8 +357,8 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                 icon,
                 size: 32,
                 color: themeService.isDarkMode
-                    ? const Color(0xFFD1D5DB)
-                    : const Color(0xFF4B5563),
+                    ? AppColors.gray300
+                    : AppColors.gray600,
               ),
             ),
           ),
@@ -470,15 +474,15 @@ class _RecommendationSectionState extends State<RecommendationSection> {
             ShimmerEffect(
               width: width,
               height: height,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            const SizedBox(height: 6),
+            Gap.h6,
             // 标题骨架
             Center(
               child: ShimmerEffect(
                 width: width * 0.8,
                 height: 14,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               ),
             ),
           ],
@@ -498,26 +502,26 @@ class _RecommendationSectionState extends State<RecommendationSection> {
           children: [
             Icon(
               Icons.error_outline,
-              color: Colors.grey[400],
+              color: AppColors.gray400,
               size: 32,
             ),
-            const SizedBox(height: 8),
+            Gap.h8,
             Text(
-              '加载失败',
+              AppStrings.loadFailed,
               style: FontUtils.poppins(
-                fontSize: 14,
-                color: Colors.grey[600],
+                fontSize: AppDimens.fontSizeMd,
+                color: AppColors.gray600,
               ),
             ),
             if (widget.onRetry != null) ...[
-              const SizedBox(height: 8),
+              Gap.h8,
               TextButton(
                 onPressed: widget.onRetry,
                 child: Text(
-                  '重试',
+                  AppStrings.retry,
                   style: FontUtils.poppins(
-                    fontSize: 12,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXs,
+                    color: AppColors.primary,
                   ),
                 ),
               ),

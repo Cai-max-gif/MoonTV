@@ -13,8 +13,12 @@ import '../widgets/pulsing_dots_indicator.dart';
 import 'player_screen.dart';
 import '../widgets/filter_pill_hover.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_config.dart';
 import '../utils/font_utils.dart';
 import '../widgets/filter_options_selector.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_dimensions.dart';
 
 class ShowScreen extends StatefulWidget {
   const ShowScreen({super.key});
@@ -26,51 +30,51 @@ class ShowScreen extends StatefulWidget {
 class _ShowScreenState extends State<ShowScreen> {
   // 综艺一级选择器选项
   final List<SelectorOption> _showPrimaryOptions = const [
-    SelectorOption(label: '全部', value: '全部'),
-    SelectorOption(label: '最近热门', value: '最近热门'),
+    SelectorOption(label: AppStrings.catAll, value: '全部'),
+    SelectorOption(label: AppStrings.catRecentHot, value: '最近热门'),
   ];
 
   // 综艺二级选择器选项（最近热门模式下的类型选项）
   final List<SelectorOption> _showSecondaryOptions = const [
-    SelectorOption(label: '全部', value: 'show'),
-    SelectorOption(label: '国内', value: 'show_domestic'),
-    SelectorOption(label: '国外', value: 'show_foreign'),
+    SelectorOption(label: AppStrings.catAll, value: 'show'),
+    SelectorOption(label: AppStrings.regionDomestic, value: 'show_domestic'),
+    SelectorOption(label: AppStrings.regionForeign, value: 'show_foreign'),
   ];
 
   // 新的筛选选项 - 类型（全部模式下）
   final List<SelectorOption> _showTypeOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '真人秀', value: 'reality'),
-    SelectorOption(label: '脱口秀', value: 'talkshow'),
-    SelectorOption(label: '音乐', value: 'music'),
-    SelectorOption(label: '歌舞', value: 'musical'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.typeReality, value: 'reality'),
+    SelectorOption(label: AppStrings.typeTalkShow, value: 'talkshow'),
+    SelectorOption(label: AppStrings.typeMusic, value: 'music'),
+    SelectorOption(label: AppStrings.typeMusical, value: 'musical'),
   ];
 
   // 地区选项（与 TV 一致）
   final List<SelectorOption> _showRegionOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '华语', value: 'chinese'),
-    SelectorOption(label: '欧美', value: 'western'),
-    SelectorOption(label: '国外', value: 'foreign'),
-    SelectorOption(label: '韩国', value: 'korean'),
-    SelectorOption(label: '日本', value: 'japanese'),
-    SelectorOption(label: '中国大陆', value: 'mainland_china'),
-    SelectorOption(label: '中国香港', value: 'hong_kong'),
-    SelectorOption(label: '美国', value: 'usa'),
-    SelectorOption(label: '英国', value: 'uk'),
-    SelectorOption(label: '泰国', value: 'thailand'),
-    SelectorOption(label: '中国台湾', value: 'taiwan'),
-    SelectorOption(label: '意大利', value: 'italy'),
-    SelectorOption(label: '法国', value: 'france'),
-    SelectorOption(label: '德国', value: 'germany'),
-    SelectorOption(label: '西班牙', value: 'spain'),
-    SelectorOption(label: '俄罗斯', value: 'russia'),
-    SelectorOption(label: '瑞典', value: 'sweden'),
-    SelectorOption(label: '巴西', value: 'brazil'),
-    SelectorOption(label: '丹麦', value: 'denmark'),
-    SelectorOption(label: '印度', value: 'india'),
-    SelectorOption(label: '加拿大', value: 'canada'),
-    SelectorOption(label: '爱尔兰', value: 'ireland'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
+    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
+    SelectorOption(label: AppStrings.regionForeign, value: 'foreign'),
+    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
+    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
+    SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
+    SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
+    SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
+    SelectorOption(label: AppStrings.regionUK, value: 'uk'),
+    SelectorOption(label: AppStrings.regionThailand, value: 'thailand'),
+    SelectorOption(label: AppStrings.regionTaiwan, value: 'taiwan'),
+    SelectorOption(label: AppStrings.regionItaly, value: 'italy'),
+    SelectorOption(label: AppStrings.regionFrance, value: 'france'),
+    SelectorOption(label: AppStrings.regionGermany, value: 'germany'),
+    SelectorOption(label: AppStrings.regionSpain, value: 'spain'),
+    SelectorOption(label: AppStrings.regionRussia, value: 'russia'),
+    SelectorOption(label: AppStrings.regionSweden, value: 'sweden'),
+    SelectorOption(label: AppStrings.regionBrazil, value: 'brazil'),
+    SelectorOption(label: AppStrings.regionDenmark, value: 'denmark'),
+    SelectorOption(label: AppStrings.regionIndia, value: 'india'),
+    SelectorOption(label: AppStrings.regionCanada, value: 'canada'),
+    SelectorOption(label: AppStrings.regionIreland, value: 'ireland'),
     SelectorOption(label: '澳大利亚', value: 'australia'),
   ];
 
@@ -131,7 +135,7 @@ class _ShowScreenState extends State<ShowScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<DoubanMovie> _shows = [];
   int _page = 0;
-  final int _pageLimit = 25;
+  final int _pageLimit = AppConfig.defaultPageLimit;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -172,7 +176,7 @@ class _ShowScreenState extends State<ShowScreen> {
       }
 
       // 正常滚动情况：当滚动到距离底部50像素内时触发加载
-      const double threshold = 50.0;
+      const double threshold = AppDimens.scrollLoadMoreThreshold;
       if (position.pixels >= position.maxScrollExtent - threshold) {
         _loadMoreShows();
       }
@@ -273,7 +277,7 @@ class _ShowScreenState extends State<ShowScreen> {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -311,7 +315,7 @@ class _ShowScreenState extends State<ShowScreen> {
               _hasMore = false;
             }
           } else {
-            _errorMessage = result.message ?? '加载失败';
+            _errorMessage = result.message ?? AppStrings.loadFailed;
           }
           _isLoading = false;
         });
@@ -460,7 +464,7 @@ class _ShowScreenState extends State<ShowScreen> {
         _onVideoTap(videoInfo);
         break;
       case VideoMenuAction.doubanDetail:
-        _launchURL('https://movie.douban.com/subject/${videoInfo.id}/');
+        _launchURL('${AppConfig.doubanSubjectUrl}/${videoInfo.id}/');
         break;
       default:
         break;
@@ -484,8 +488,8 @@ class _ShowScreenState extends State<ShowScreen> {
   Widget build(BuildContext context) {
     return StyledRefreshIndicator(
       onRefresh: _refreshShowsData,
-      refreshText: '刷新综艺数据...',
-      primaryColor: const Color(0xFF27AE60),
+      refreshText: AppStrings.refreshShow,
+      primaryColor: AppColors.accent,
       child: SingleChildScrollView(
         controller: _scrollController,
         child: Column(
@@ -493,7 +497,7 @@ class _ShowScreenState extends State<ShowScreen> {
           children: [
             _buildHeader(),
             _buildFilterSection(),
-            const SizedBox(height: 16),
+            Gap.h16,
             DoubanMoviesGrid(
               movies: _shows,
               isLoading: _isLoading && _shows.isEmpty,
@@ -513,7 +517,7 @@ class _ShowScreenState extends State<ShowScreen> {
             else if (!_hasMore && _shows.isNotEmpty && !_isLoading)
               _buildEndOfListIndicator()
             else
-              const SizedBox(height: 50), // 占位符保持间距
+              Gap.h50, // 占位符保持间距
           ],
         ),
       ),
@@ -522,14 +526,14 @@ class _ShowScreenState extends State<ShowScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      padding: AppDimens.pageHeaderPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '综艺',
+            AppStrings.navShow,
             style: FontUtils.poppins(
-              fontSize: 28,
+              fontSize: AppDimens.fontSizeHeadline,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
@@ -544,20 +548,20 @@ class _ShowScreenState extends State<ShowScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity, // 设置为100%宽度
-      margin: const EdgeInsets.all(16), // 恢复原来的margin设置
+      margin: const EdgeInsets.all(AppDimens.spacingLg),
       padding: const EdgeInsets.symmetric(
-          vertical: 12, horizontal: 16), // 恢复原来的padding设置
+          vertical: AppDimens.spacingMd, horizontal: AppDimens.spacingLg),
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? Colors.white.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilterRow(
-            '分类',
+            AppStrings.filterCategory,
             _showPrimaryOptions,
             _selectedCategoryValue,
             (newValue) {
@@ -574,7 +578,7 @@ class _ShowScreenState extends State<ShowScreen> {
               _fetchShows(isRefresh: true);
             },
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           // 使用固定高度的容器来避免高度跳跃
           SizedBox(
             height: 66, // 增加高度以避免Column底部溢出
@@ -592,40 +596,40 @@ class _ShowScreenState extends State<ShowScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '筛选',
-          style: FontUtils.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).textTheme.bodyMedium?.color,
+            AppStrings.filterMore,
+            style: FontUtils.poppins(
+              fontSize: AppDimens.fontSizeMd,
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterPill('类型', _showTypeOptions, _selectedShowType,
+          Gap.h6,
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterPill(AppStrings.filterType, _showTypeOptions, _selectedShowType,
                     (v) {
                   setState(() => _selectedShowType = v);
                   _fetchShows(isRefresh: true);
                 }),
-                _buildFilterPill('地区', _showRegionOptions, _selectedShowRegion,
+                _buildFilterPill(AppStrings.filterRegion, _showRegionOptions, _selectedShowRegion,
                     (v) {
                   setState(() => _selectedShowRegion = v);
                   _fetchShows(isRefresh: true);
                 }),
-                _buildFilterPill('年代', _showYearOptions, _selectedShowYear,
+                _buildFilterPill(AppStrings.filterYear, _showYearOptions, _selectedShowYear,
                     (v) {
                   setState(() => _selectedShowYear = v);
                   _fetchShows(isRefresh: true);
                 }),
                 _buildFilterPill(
-                    '平台', _showPlatformOptions, _selectedShowPlatform, (v) {
+                    AppStrings.filterPlatform, _showPlatformOptions, _selectedShowPlatform, (v) {
                   setState(() => _selectedShowPlatform = v);
                   _fetchShows(isRefresh: true);
                 }),
-                _buildFilterPill('排序', _showSortOptions, _selectedShowSort,
+                _buildFilterPill(AppStrings.filterSort, _showSortOptions, _selectedShowSort,
                     (v) {
                   setState(() => _selectedShowSort = v);
                   _fetchShows(isRefresh: true);
@@ -643,14 +647,14 @@ class _ShowScreenState extends State<ShowScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '类型',
+          AppStrings.filterType,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 6), // 减少间距，与高级筛选保持一致
+        Gap.h6, // 减少间距，与高级筛选保持一致
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -678,7 +682,7 @@ class _ShowScreenState extends State<ShowScreen> {
     final selectedOption = options.firstWhere((e) => e.value == selectedValue,
         orElse: () => options.first);
     bool isDefault =
-        selectedValue == 'all' || (title == '排序' && selectedValue == 'T');
+        selectedValue == 'all' || (title == AppStrings.filterSort && selectedValue == 'T');
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -718,12 +722,12 @@ class _ShowScreenState extends State<ShowScreen> {
         Text(
           title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
@@ -756,28 +760,28 @@ class _ShowScreenState extends State<ShowScreen> {
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
                   : Colors.grey.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(1),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '已经到底啦~',
+            AppStrings.noMoreData,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.grey[600],
+                  : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '共 ${_shows.length} 个综艺',
+            AppStrings.countShow.replaceAll('%d', '${_shows.length}'),
             style: FontUtils.poppins(
-              fontSize: 12,
+              fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.grey[500],
+                  : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
           ),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_filex/open_filex.dart';
@@ -9,6 +10,9 @@ import '../services/download_service.dart';
 import '../services/version_service.dart';
 import '../models/download_task.dart';
 import '../widgets/update_dialog.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -22,14 +26,14 @@ class NotificationService {
   bool _initialized = false;
   bool _permissionRequested = false;
 
-  static const int downloadNotificationIdBase = 1000;
-  static const int updateNotificationId = 2000;
+  static const int downloadNotificationIdBase = AppConfig.notificationIdBase;
+  static const int updateNotificationId = AppConfig.notificationIdMax;
 
   Future<void> initialize() async {
     if (_initialized) return;
 
     if (Platform.isAndroid) {
-      const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+      const androidSettings = AndroidInitializationSettings(AppConfig.notificationIcon);
       const initSettings = InitializationSettings(android: androidSettings);
 
       await _notifications.initialize(
@@ -61,14 +65,13 @@ class NotificationService {
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
     } else if (Platform.isWindows || Platform.isLinux) {
-      debugPrint('Local notifications not supported on this platform');
+      // 本地通知不支持此平台
     }
 
     _initialized = true;
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('Notification tapped: ${response.payload}');
     if (response.payload == 'update') {
       _handleUpdateNotificationTap();
     } else if (response.payload != null && response.payload!.startsWith('download_')) {
@@ -77,32 +80,27 @@ class NotificationService {
   }
 
   Future<void> _handleDownloadNotificationTap(String payload) async {
-    try {
-      final taskIdStr = payload.replaceFirst('download_', '');
-      final taskIdHash = int.tryParse(taskIdStr);
-      
-      if (taskIdHash == null) {
-        debugPrint('Invalid download notification payload: $payload');
-        return;
-      }
-
-      final downloadService = DownloadService.instance;
-      
-      DownloadTab targetTab = DownloadTab.downloading;
-      
-      for (final task in downloadService.tasks) {
-        if (task.id.hashCode == taskIdHash) {
-          if (task.status == DownloadStatus.completed) {
-            targetTab = DownloadTab.completed;
-          }
-          break;
-        }
-      }
-
-      _navigateToDownloadManagement(targetTab);
-    } catch (e) {
-      debugPrint('Error handling download notification tap: $e');
+    final taskIdStr = payload.replaceFirst('download_', '');
+    final taskIdHash = int.tryParse(taskIdStr);
+    
+    if (taskIdHash == null) {
+      return;
     }
+
+    final downloadService = DownloadService.instance;
+    
+    DownloadTab targetTab = DownloadTab.downloading;
+    
+    for (final task in downloadService.tasks) {
+      if (task.id.hashCode == taskIdHash) {
+        if (task.status == DownloadStatus.completed) {
+          targetTab = DownloadTab.completed;
+        }
+        break;
+      }
+    }
+
+    _navigateToDownloadManagement(targetTab);
   }
 
   void _navigateToDownloadManagement(DownloadTab tab) {
@@ -120,25 +118,12 @@ class NotificationService {
   void _showUpdateDialog(VersionInfo versionInfo) {
     final context = navigatorKey.currentContext;
     if (context != null) {
-      debugPrint('Showing update dialog for version ${versionInfo.latestVersion}');
-      try {
-        UpdateDialog.show(context, versionInfo);
-      } catch (e) {
-        debugPrint('Error showing update dialog: $e');
-      }
+      UpdateDialog.show(context, versionInfo);
     } else {
-      debugPrint('Cannot show update dialog: navigator context is null');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final ctx = navigatorKey.currentContext;
         if (ctx != null) {
-          debugPrint('Retrying to show update dialog after frame build');
-          try {
-            UpdateDialog.show(ctx, versionInfo);
-          } catch (e) {
-            debugPrint('Error showing update dialog after delay: $e');
-          }
-        } else {
-          debugPrint('Failed to show update dialog: context not available');
+          UpdateDialog.show(ctx, versionInfo);
         }
       });
     }
@@ -151,7 +136,6 @@ class NotificationService {
       var versionInfo = VersionService.storedVersionInfo;
       
       if (versionInfo == null) {
-        debugPrint('Version info not stored, re-checking version...');
         versionInfo = await VersionService.checkForUpdate();
         
         if (versionInfo != null) {
@@ -168,17 +152,16 @@ class NotificationService {
           if (filePath != null) {
             await _openUpdateFile(filePath);
           } else {
-            _showWaitingSnackBar('更新文件不存在，请重新下载');
+            _showWaitingSnackBar(AppStrings.notifUpdateFileNotExist);
           }
         } else if (downloadStatus == UpdateDownloadStatus.downloading) {
-          _showWaitingSnackBar('等待下载完成后安装');
+          _showWaitingSnackBar(AppStrings.notifWaitDownload);
         } else {
-          _showWaitingSnackBar('版本信息不可用，请稍后重试');
+          _showWaitingSnackBar(AppStrings.notifVersionUnavailable);
         }
       }
-    } catch (e) {
-      debugPrint('Error handling update notification tap: $e');
-      _showWaitingSnackBar('处理更新时发生错误');
+    } catch (_) {
+      _showWaitingSnackBar(AppStrings.notifUpdateError);
     }
   }
 
@@ -187,27 +170,23 @@ class NotificationService {
     if (context != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message ?? '等待下载完成后安装'),
+          content: Text(message ?? AppStrings.notifWaitDownload),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 3),
+          shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(AppDimens.radiusMd)),
+          margin: const EdgeInsets.all(AppDimens.spacingLg),
+          duration: AppDurations.toastDuration,
         ),
       );
     }
   }
 
   Future<void> _openUpdateFile(String filePath) async {
-    try {
-      if (Platform.isAndroid) {
-        await OpenFilex.open(filePath);
-      } else if (Platform.isWindows) {
-        await OpenFilex.open(filePath);
-      } else if (Platform.isMacOS) {
-        await OpenFilex.open(filePath);
-      }
-    } catch (e) {
-      debugPrint('Error opening update file: $e');
+    if (Platform.isAndroid) {
+      await OpenFilex.open(filePath);
+    } else if (Platform.isWindows) {
+      await OpenFilex.open(filePath);
+    } else if (Platform.isMacOS) {
+      await OpenFilex.open(filePath);
     }
   }
 
@@ -260,16 +239,16 @@ class NotificationService {
     final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
 
     final androidDetails = AndroidNotificationDetails(
-      'download_channel',
-      '下载通知',
-      channelDescription: '视频下载进度通知',
+      AppConfig.downloadChannelId,
+      AppStrings.notifDownloadChannel,
+      channelDescription: AppStrings.notifDownloadChannelDesc,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       showProgress: true,
       maxProgress: maxProgress,
       progress: progress,
       ongoing: true,
-      icon: '@mipmap/launcher_icon',
+      icon: AppConfig.notificationIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -285,7 +264,7 @@ class NotificationService {
 
     final progressPercent = maxProgress > 0 ? ((progress / maxProgress) * 100).round() : 0;
     final contentTitle = '$title $episodeTitle';
-    final contentText = '下载中 $progressPercent%';
+    final contentText = '${AppStrings.downloadDownloading} $progressPercent%';
 
     await _notifications.show(
       notificationId,
@@ -307,14 +286,14 @@ class NotificationService {
     final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
 
     const androidDetails = AndroidNotificationDetails(
-      'download_channel',
-      '下载通知',
-      channelDescription: '视频下载进度通知',
+      AppConfig.downloadChannelId,
+      AppStrings.notifDownloadChannel,
+      channelDescription: AppStrings.notifDownloadChannelDesc,
       importance: Importance.high,
       priority: Priority.high,
       showProgress: false,
       ongoing: false,
-      icon: '@mipmap/launcher_icon',
+      icon: AppConfig.notificationIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -329,7 +308,7 @@ class NotificationService {
     );
 
     final contentTitle = '$title $episodeTitle';
-    const contentText = '下载完成';
+    final contentText = AppStrings.notifDownloadComplete;
 
     await _notifications.show(
       notificationId,
@@ -351,14 +330,14 @@ class NotificationService {
     final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
 
     const androidDetails = AndroidNotificationDetails(
-      'download_channel',
-      '下载通知',
-      channelDescription: '视频下载进度通知',
+      AppConfig.downloadChannelId,
+      AppStrings.notifDownloadChannel,
+      channelDescription: AppStrings.notifDownloadChannelDesc,
       importance: Importance.high,
       priority: Priority.high,
       showProgress: false,
       ongoing: false,
-      icon: '@mipmap/launcher_icon',
+      icon: AppConfig.notificationIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -373,7 +352,7 @@ class NotificationService {
     );
 
     final contentTitle = '$title $episodeTitle';
-    const contentText = '下载失败';
+    const contentText = AppStrings.downloadFailed;
 
     await _notifications.show(
       notificationId,
@@ -398,16 +377,16 @@ class NotificationService {
     _ensurePermissions();
 
     final androidDetails = AndroidNotificationDetails(
-      'update_channel',
-      '更新通知',
-      channelDescription: '应用更新下载进度通知',
+      AppConfig.updateChannelId,
+      AppStrings.notifUpdateChannel,
+      channelDescription: AppStrings.notifUpdateChannelDesc,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       showProgress: true,
       maxProgress: maxProgress,
       progress: progress,
       ongoing: true,
-      icon: '@mipmap/launcher_icon',
+      icon: AppConfig.notificationIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -422,8 +401,8 @@ class NotificationService {
     );
 
     final progressPercent = maxProgress > 0 ? ((progress / maxProgress) * 100).round() : 0;
-    final contentTitle = '正在更新到 v$version';
-    final contentText = '下载中 $progressPercent%';
+    final contentTitle = '${AppStrings.notifUpdating} v$version';
+    final contentText = '${AppStrings.downloadDownloading} $progressPercent%';
 
     await _notifications.show(
       updateNotificationId,
@@ -439,14 +418,14 @@ class NotificationService {
     _ensurePermissions();
 
     const androidDetails = AndroidNotificationDetails(
-      'update_channel',
-      '更新通知',
-      channelDescription: '应用更新下载进度通知',
+      AppConfig.updateChannelId,
+      AppStrings.notifUpdateChannel,
+      channelDescription: AppStrings.notifUpdateChannelDesc,
       importance: Importance.high,
       priority: Priority.high,
       showProgress: false,
       ongoing: false,
-      icon: '@mipmap/launcher_icon',
+      icon: AppConfig.notificationIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -460,8 +439,8 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    final contentTitle = 'v$version 下载完成';
-    const contentText = '点击安装更新';
+    final contentTitle = 'v$version ${AppStrings.notifDownloadComplete}';
+    final contentText = AppStrings.notifClickToInstall;
 
     await _notifications.show(
       updateNotificationId,
@@ -477,14 +456,14 @@ class NotificationService {
     _ensurePermissions();
 
     const androidDetails = AndroidNotificationDetails(
-      'update_channel',
-      '更新通知',
-      channelDescription: '应用更新下载进度通知',
+      AppConfig.updateChannelId,
+      AppStrings.notifUpdateChannel,
+      channelDescription: AppStrings.notifUpdateChannelDesc,
       importance: Importance.high,
       priority: Priority.high,
       showProgress: false,
       ongoing: false,
-      icon: '@mipmap/launcher_icon',
+      icon: AppConfig.notificationIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -498,8 +477,8 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    final contentTitle = 'v$version 下载失败';
-    const contentText = '请重试';
+    final contentTitle = 'v$version ${AppStrings.notifDownloadFailed}';
+    final contentText = AppStrings.retry;
 
     await _notifications.show(
       updateNotificationId,

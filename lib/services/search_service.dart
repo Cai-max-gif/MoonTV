@@ -7,6 +7,10 @@ import 'api_service.dart';
 import 'downstream_service.dart';
 import 'user_data_service.dart';
 import 'content_filter_service.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_regex.dart';
+import '../constants/app_strings.dart';
 
 /// 搜索服务
 class SearchService {
@@ -85,7 +89,7 @@ class SearchService {
       final firstResource = resources.first;
       final results =
           await DownstreamService.searchFromApi(firstResource, query)
-              .timeout(const Duration(seconds: 5))
+              .timeout(AppDurations.healthCheckTimeout)
               .catchError((error) {
         // 捕获错误，返回空列表
         return <SearchResult>[];
@@ -117,7 +121,7 @@ class SearchService {
       // 并发调用所有资源的搜索，每个调用增加 20 秒超时
       final searchFutures = resources.map((resource) {
         return DownstreamService.searchFromApi(resource, query)
-            .timeout(const Duration(seconds: 20))
+            .timeout(AppDurations.networkTimeout)
             .catchError((error) {
           // 捕获错误，返回空列表
           return <SearchResult>[];
@@ -160,7 +164,7 @@ class SearchService {
       // 找到对应 source 的资源
       final apiSite = allResources.firstWhere(
         (resource) => resource.key == source,
-        orElse: () => throw Exception('未找到对应的源: $source'),
+        orElse: () => throw Exception('${AppStrings.searchSourceNotFound}$source'),
       );
 
       // 如果 detail 不为空，使用特殊源处理
@@ -176,11 +180,10 @@ class SearchService {
       final response = await http.get(
         Uri.parse(detailUrl),
         headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'User-Agent': AppConfig.defaultUserAgent,
           'Accept': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(AppDurations.shortTimeout);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('详情请求失败: ${response.statusCode}');
@@ -230,17 +233,17 @@ class SearchService {
 
       // 如果播放源为空，则尝试从内容中解析 m3u8
       if (episodes.isEmpty && videoDetail['vod_content'] != null) {
-        final m3u8Pattern = RegExp(r'https?://[^\s<>"]+\.m3u8');
+        final m3u8Pattern = RegExp(AppRegex.m3u8Url);
         final matches =
             m3u8Pattern.allMatches(videoDetail['vod_content'] as String);
         episodes = matches.map((match) => match.group(0)!).toList();
       }
 
       // 解析年份
-      String year = 'unknown';
+      String year = AppStrings.unknown;
       if (videoDetail['vod_year'] != null && videoDetail['vod_year'] != '') {
         final yearMatch =
-            RegExp(r'\d{4}').firstMatch(videoDetail['vod_year'] as String);
+            RegExp(AppRegex.yearPattern).firstMatch(videoDetail['vod_year'] as String);
         if (yearMatch != null) {
           year = yearMatch.group(0)!;
         }
@@ -276,11 +279,10 @@ class SearchService {
     final response = await http.get(
       Uri.parse(detailUrl),
       headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'text/html',
+        'User-Agent': AppConfig.defaultUserAgent,
+          'Accept': 'text/html',
       },
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(AppDurations.shortTimeout);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('详情页请求失败: ${response.statusCode}');
@@ -291,15 +293,14 @@ class SearchService {
 
     // 如果是 ffzy 源，使用特殊的正则表达式
     if (apiSite.key == 'ffzy') {
-      final ffzyPattern =
-          RegExp(r'\$(https?://[^"\x27\s]+?/\d{8}/\d+_[a-f0-9]+/index\.m3u8)');
+      final ffzyPattern = RegExp(AppRegex.ffzySource);
       matches =
           ffzyPattern.allMatches(html).map((match) => match.group(0)!).toList();
     }
 
     // 如果没有匹配到，使用通用的正则表达式
     if (matches.isEmpty) {
-      final generalPattern = RegExp(r'\$(https?://[^"\x27\s]+?\.m3u8)');
+      final generalPattern = RegExp(AppRegex.generalM3u8);
       matches = generalPattern
           .allMatches(html)
           .map((match) => match.group(0)!)
@@ -321,24 +322,23 @@ class SearchService {
         List.generate(episodes.length, (i) => (i + 1).toString());
 
     // 提取标题
-    final titleMatch = RegExp(r'<h1[^>]*>([^<]+)</h1>').firstMatch(html);
+    final titleMatch = RegExp(AppRegex.htmlTitle).firstMatch(html);
     final titleText = titleMatch != null ? titleMatch.group(1)!.trim() : '';
 
     // 提取描述
     final descMatch =
-        RegExp(r'<div[^>]*class=["\x27]sketch["\x27][^>]*>([\s\S]*?)</div>')
-            .firstMatch(html);
+        RegExp(AppRegex.htmlDescription).firstMatch(html);
     final descText =
         descMatch != null ? _cleanHtmlTags(descMatch.group(1)!) : '';
 
     // 提取封面
     final coverMatches =
-        RegExp(r'(https?://[^"\x27\s]+?\.jpg)').allMatches(html);
+        RegExp(AppRegex.htmlCoverImage).allMatches(html);
     final coverUrl =
         coverMatches.isNotEmpty ? coverMatches.first.group(0)!.trim() : '';
 
     // 提取年份
-    final yearMatch = RegExp(r'>(\d{4})<').firstMatch(html);
+    final yearMatch = RegExp(AppRegex.htmlYear).firstMatch(html);
     final yearText = yearMatch != null ? yearMatch.group(1)! : 'unknown';
 
     return SearchResult(
@@ -362,10 +362,10 @@ class SearchService {
     if (text.isEmpty) return '';
 
     String cleanedText = text
-        .replaceAll(RegExp(r'<[^>]+>'), '\n')
-        .replaceAll(RegExp(r'\n+'), '\n')
-        .replaceAll(RegExp(r'[ \t]+'), ' ')
-        .replaceAll(RegExp(r'^\n+|\n+$'), '')
+        .replaceAll(RegExp(AppRegex.htmlTag), '\n')
+        .replaceAll(RegExp(AppRegex.newlines), '\n')
+        .replaceAll(RegExp(AppRegex.whitespace), ' ')
+        .replaceAll(RegExp(AppRegex.trimNewlines), '')
         .trim();
 
     return _decodeHtmlEntities(cleanedText);

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +8,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 enum AndroidArch { v7, v8, x86_64, universal }
@@ -26,9 +27,6 @@ enum UpdateDownloadStatus {
 }
 
 class VersionService {
-  static const String githubRepoUrl = 'https://github.com/Cai-max-gif/MoonTV';
-  static const String githubApiUrl =
-      'https://api.github.com/repos/Cai-max-gif/MoonTV/releases/latest';
   static const String _lastCheckKey = 'last_version_check';
   static const String _dismissedVersionKey = 'dismissed_version';
 
@@ -53,11 +51,7 @@ class VersionService {
   static void updateForegroundProgress(double progress) {
     _foregroundDownloadProgress = progress;
     for (final listener in _progressListeners) {
-      try {
-        listener(progress);
-      } catch (e) {
-        debugPrint('Progress listener error: $e');
-      }
+      listener(progress);
     }
   }
 
@@ -95,20 +89,20 @@ class VersionService {
     if (Platform.isAndroid) {
       switch (arch) {
         case AndroidArch.v7:
-          return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV-v7.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-v7.apk';
         case AndroidArch.v8:
-          return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV-v8.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-v8.apk';
         case AndroidArch.x86_64:
-          return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV-x86_64.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-x86_64.apk';
         case AndroidArch.universal:
-          return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV-universal.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-universal.apk';
       }
     } else if (Platform.isWindows) {
-      return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV-Setup.exe';
+      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-Setup.exe';
     } else if (Platform.isMacOS) {
-      return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV.dmg';
+      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}.dmg';
     } else if (Platform.isIOS) {
-      return 'https://github.com/Cai-max-gif/MoonTV/releases/download/$tag/MoonTV.ipa';
+      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}.ipa';
     }
 
     return getReleaseUrl(version);
@@ -120,23 +114,23 @@ class VersionService {
     if (Platform.isAndroid) {
       switch (arch) {
         case AndroidArch.v7:
-          return Future.value('MoonTV-v7.apk');
+          return Future.value('${AppConfig.appName}-v7.apk');
         case AndroidArch.v8:
-          return Future.value('MoonTV-v8.apk');
+          return Future.value('${AppConfig.appName}-v8.apk');
         case AndroidArch.x86_64:
-          return Future.value('MoonTV-x86_64.apk');
+          return Future.value('${AppConfig.appName}-x86_64.apk');
         case AndroidArch.universal:
-          return Future.value('MoonTV-universal.apk');
+          return Future.value('${AppConfig.appName}-universal.apk');
       }
     } else if (Platform.isWindows) {
-      return Future.value('MoonTV-Setup.exe');
+      return Future.value('${AppConfig.appName}-Setup.exe');
     } else if (Platform.isMacOS) {
-      return Future.value('MoonTV.dmg');
+      return Future.value('${AppConfig.appName}.dmg');
     } else if (Platform.isIOS) {
-      return Future.value('MoonTV.ipa');
+      return Future.value('${AppConfig.appName}.ipa');
     }
 
-    return Future.value('MoonTV-$tag');
+    return Future.value('${AppConfig.appName}-$tag');
   }
 
   static Future<bool> requestStoragePermission() async {
@@ -176,17 +170,20 @@ class VersionService {
       final savePath = '${dir.path}/$fileName';
       final dio = Dio();
 
-      await dio.download(
-        url,
-        savePath,
-        cancelToken: _foregroundDownloadCancelToken,
-        onReceiveProgress: onProgress,
-      );
+      try {
+        await dio.download(
+          url,
+          savePath,
+          cancelToken: _foregroundDownloadCancelToken,
+          onReceiveProgress: onProgress,
+        );
 
-      return savePath;
+        return savePath;
+      } finally {
+        dio.close();
+      }
     } catch (e) {
       if (e is DioException && e.type == DioExceptionType.cancel) {
-        debugPrint('Download cancelled');
       }
       return null;
     }
@@ -221,9 +218,9 @@ class VersionService {
       final currentVersion = packageInfo.version;
 
       final response = await http.get(
-        Uri.parse(githubApiUrl),
+        Uri.parse(AppConfig.githubApiReleases),
         headers: {'Accept': 'application/vnd.github.v3+json'},
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(AppDurations.shortTimeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -267,7 +264,7 @@ class VersionService {
   }
 
   static String getReleaseUrl(String version) {
-    return '$githubRepoUrl/releases/tag/v$version';
+    return '${AppConfig.githubRepoUrl}/releases/tag/v$version';
   }
 
   static bool _isNewerVersion(String current, String latest) {
@@ -316,7 +313,7 @@ class VersionService {
 
     final lastCheck = prefs.getInt(_lastCheckKey) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    const dayInMs = 24 * 60 * 60 * 1000;
+    final dayInMs = AppDurations.versionCheckInterval.inMilliseconds;
 
     if (now - lastCheck < dayInMs) {
       return false;
@@ -371,11 +368,7 @@ class VersionService {
   static void _notifyProgress(double progress) {
     _backgroundDownloadProgress = progress;
     for (final listener in _progressListeners) {
-      try {
-        listener(progress);
-      } catch (e) {
-        debugPrint('Progress listener error: $e');
-      }
+      listener(progress);
     }
   }
 
@@ -387,7 +380,6 @@ class VersionService {
     Function()? onFailed,
   }) async {
     if (_isBackgroundDownloading) {
-      debugPrint('Already downloading in background');
       return null;
     }
 
@@ -422,17 +414,21 @@ class VersionService {
 
       final dio = Dio();
 
-      await dio.download(
-        downloadUrl,
-        savePath,
-        cancelToken: _downloadCancelToken,
-        onReceiveProgress: (received, total) {
-          if (total > 0) {
-            final progress = received / total;
-            _notifyProgress(progress);
-          }
-        },
-      );
+      try {
+        await dio.download(
+          downloadUrl,
+          savePath,
+          cancelToken: _downloadCancelToken,
+          onReceiveProgress: (received, total) {
+            if (total > 0) {
+              final progress = received / total;
+              _notifyProgress(progress);
+            }
+          },
+        );
+      } finally {
+        dio.close();
+      }
 
       _backgroundDownloadFilePath = savePath;
       _isBackgroundDownloading = false;
@@ -449,9 +445,7 @@ class VersionService {
       return savePath;
     } catch (e) {
       if (e is DioException && e.type == DioExceptionType.cancel) {
-        debugPrint('Download cancelled');
       } else {
-        debugPrint('Background download failed: $e');
         if (onFailed != null) onFailed();
       }
 
@@ -476,13 +470,9 @@ class VersionService {
 
   static Future<void> clearDownloadedFile() async {
     if (_backgroundDownloadFilePath != null) {
-      try {
-        final file = File(_backgroundDownloadFilePath!);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      } catch (e) {
-        debugPrint('Failed to delete downloaded file: $e');
+      final file = File(_backgroundDownloadFilePath!);
+      if (await file.exists()) {
+        await file.delete();
       }
       _backgroundDownloadFilePath = null;
       _backgroundDownloadVersion = null;
@@ -513,3 +503,4 @@ class VersionInfo {
     required this.updateType,
   });
 }
+

@@ -65,9 +65,9 @@ class EpgProgram {
     try {
       // 格式: "20251021235000 +0900"
       final parts = dateTimeStr.split(' ');
-      if (parts.isEmpty) return DateTime.now();
-
+      // split always returns at least 1 element; check if first part is empty
       final dateTimePart = parts[0];
+      if (dateTimePart.length < 14) return DateTime.now();
       // 解析: YYYYMMDDHHMMSS
       final year = int.parse(dateTimePart.substring(0, 4));
       final month = int.parse(dateTimePart.substring(4, 6));

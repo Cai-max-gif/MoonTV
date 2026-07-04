@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_regex.dart';
+import '../constants/app_durations.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
@@ -9,6 +13,8 @@ import '../utils/font_utils.dart';
 import '../utils/input_validator_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'home_screen.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -83,17 +89,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         content: Text(
           message,
           style: FontUtils.poppins(
-            color: Colors.white,
-            fontSize: 14,
+            color: AppColors.white,
+            fontSize: AppDimens.fontSizeMd,
           ),
         ),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(AppDimens.spacingLg),
+        duration: AppDurations.toastDuration,
       ),
     );
   }
@@ -102,7 +108,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _countdown = 60;
     });
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _countdownTimer = Timer.periodic(AppDurations.oneSecond, (timer) {
       if (mounted) {
         setState(() {
           _countdown--;
@@ -117,11 +123,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleSendCode() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      _showToast('请输入邮箱地址', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regHintEmail, AppColors.error);
       return;
     }
-    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
-      _showToast('请输入有效的邮箱地址', const Color(0xFFe74c3c));
+    if (!RegExp(AppRegex.email).hasMatch(email)) {
+      _showToast(AppStrings.regValidEmailFormat, AppColors.error);
       return;
     }
 
@@ -131,19 +137,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
+      if (!mounted) return;
       // 确保使用HTTPS
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
-      String sendCodeUrl = '$secureBaseUrl/api/send-verification-code';
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+      String sendCodeUrl = '$secureBaseUrl${AppConfig.sendVerificationCodeEndpoint}';
 
       final response = await http.post(
         Uri.parse(sendCodeUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': AppStrings.contentTypeJson,
         },
         body: json.encode({'email': email}),
-      );
+      ).timeout(AppConfig.authRequestTimeout);
 
+      if (!mounted) return;
       setState(() {
         _isSendingCode = false;
       });
@@ -157,40 +165,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
               responseData['status'] == 'success';
 
           if (isSuccess) {
-            _showToast('验证码已发送到您的邮箱', const Color(0xFF27ae60));
+            _showToast(AppStrings.regSendCodeSuccess, AppColors.accent);
             _startCountdown();
           } else {
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? '发送验证码失败',
-                const Color(0xFFe74c3c));
+                responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+                AppColors.error);
           }
         } catch (e) {
           // 如果JSON解析失败，也认为是成功（服务器可能返回空响应）
-          _showToast('验证码已发送到您的邮箱', const Color(0xFF27ae60));
+          _showToast(AppStrings.regSendCodeSuccess, AppColors.accent);
           _startCountdown();
         }
       } else {
         try {
           final responseData = json.decode(response.body);
           _showToast(
-              responseData['error'] ?? responseData['message'] ?? '发送验证码失败',
-              const Color(0xFFe74c3c));
+              responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+              AppColors.error);
         } catch (e) {
           _showToast(
-              '发送验证码失败 (${response.statusCode})', const Color(0xFFe74c3c));
+              '${AppStrings.regSendCodeFailed} (${response.statusCode})', AppColors.error);
         }
       }
     } catch (e) {
-      setState(() {
-        _isSendingCode = false;
-      });
-      _showToast('网络异常，请稍后重试', const Color(0xFFe74c3c));
+      if (mounted) {
+        setState(() {
+          _isSendingCode = false;
+        });
+        _showToast(AppStrings.networkRetryLater, AppColors.error);
+      }
     }
   }
 
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate() || !_isFormValid) {
-      _showToast('请填写完整的注册信息', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regFillAll, AppColors.error);
       return;
     }
 
@@ -201,28 +211,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final verificationCode = _verificationCodeController.text.trim();
 
     if (!InputValidatorUtils.isRegisterUsernameValid(username)) {
-      _showToast('用户名只能包含字母、数字和汉字', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regValidUsernameChars, AppColors.error);
       return;
     }
 
     if (password.length < 6) {
-      _showToast('密码长度至少6位', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regValidPasswordMin, AppColors.error);
       return;
     }
 
     if (password != confirmPassword) {
-      _showToast('两次输入的密码不一致', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regValidPasswordMismatch, AppColors.error);
       return;
     }
 
     // 验证验证码
     if (verificationCode.isEmpty) {
-      _showToast('请输入验证码', const Color(0xFFe74c3c));
+      _showToast(AppStrings.regValidCode, AppColors.error);
       return;
     }
 
-    if (!RegExp(r'^\d{6}$').hasMatch(verificationCode)) {
-      _showToast('验证码格式错误，应为6位数字', const Color(0xFFe74c3c));
+    if (!RegExp(AppRegex.verificationCode).hasMatch(verificationCode)) {
+      _showToast(AppStrings.regValidCodeFormatHint, AppColors.error);
       return;
     }
 
@@ -232,15 +242,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
+      if (!mounted) return;
       // 确保使用HTTPS
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
-      String registerUrl = '$secureBaseUrl/api/register';
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+      String registerUrl = '$secureBaseUrl${AppConfig.registerEndpoint}';
 
       final response = await http.post(
         Uri.parse(registerUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': AppStrings.contentTypeJson,
         },
         body: json.encode({
           'username': username,
@@ -249,8 +260,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'confirmPassword': confirmPassword,
           'verificationCode': verificationCode,
         }),
-      );
+      ).timeout(AppConfig.authRequestTimeout);
 
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -278,8 +290,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           }
 
           if (mounted) {
-            _showToast('注册成功！', const Color(0xFF27ae60));
-            await Future.delayed(const Duration(milliseconds: 500));
+            _showToast(AppStrings.authNewUserSuccess, AppColors.accent);
+            await Future.delayed(AppDurations.halfSecond);
             if (mounted) {
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -292,40 +304,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? '注册失败', const Color(0xFFe74c3c));
+                responseData['error'] ?? AppStrings.authRegisterFailed, AppColors.error);
           } catch (e) {
-            _showToast('注册失败', const Color(0xFFe74c3c));
+            _showToast(AppStrings.authRegisterFailed, AppColors.error);
           }
           break;
         case 403:
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? '注册功能已关闭', const Color(0xFFe74c3c));
+                responseData['error'] ?? AppStrings.authRegisterDisabled, AppColors.error);
           } catch (e) {
-            _showToast('注册功能已关闭', const Color(0xFFe74c3c));
+            _showToast(AppStrings.authRegisterDisabled, AppColors.error);
           }
           break;
         case 429:
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? '操作过于频繁', const Color(0xFFe74c3c));
+                responseData['error'] ?? AppStrings.authTooFrequent, AppColors.error);
           } catch (e) {
-            _showToast('操作过于频繁', const Color(0xFFe74c3c));
+            _showToast(AppStrings.authTooFrequent, AppColors.error);
           }
           break;
         case 500:
-          _showToast('服务器错误', const Color(0xFFe74c3c));
+          _showToast(AppStrings.serverError, AppColors.error);
           break;
         default:
-          _showToast('网络异常', const Color(0xFFe74c3c));
+          _showToast(AppStrings.networkError, AppColors.error);
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      _showToast('网络异常', const Color(0xFFe74c3c));
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showToast(AppStrings.networkError, AppColors.error);
+      }
     }
   }
 
@@ -338,38 +352,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return InputDecoration(
       labelText: labelText,
       labelStyle: FontUtils.poppins(
-        color: const Color(0xFF7f8c8d),
-        fontSize: 14,
+        color: AppColors.textSecondary,
+        fontSize: AppDimens.fontSizeMd,
       ),
       hintText: hintText,
       hintStyle: FontUtils.poppins(
-        color: const Color(0xFFbdc3c7),
-        fontSize: 16,
+        color: AppColors.silver,
+        fontSize: AppDimens.fontSizeXl,
       ),
       prefixIcon: Icon(
         prefixIcon,
-        color: const Color(0xFF7f8c8d),
+        color: AppColors.textSecondary,
         size: 20,
       ),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         borderSide: BorderSide.none,
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.6),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 18,
-      ),
+      fillColor: AppColors.white.withValues(alpha: 0.6),
+      contentPadding: AppDimens.inputPadding,
     );
   }
 
@@ -378,33 +389,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: _verificationCodeController,
       keyboardType: TextInputType.number,
       style: FontUtils.poppins(
-        fontSize: 16,
-        color: const Color(0xFF2c3e50),
+        fontSize: AppDimens.fontSizeXl,
+        color: AppColors.primary,
       ),
       decoration: InputDecoration(
         labelText: '验证码',
         labelStyle: FontUtils.poppins(
-          color: const Color(0xFF7f8c8d),
-          fontSize: 14,
+          color: AppColors.textSecondary,
+          fontSize: AppDimens.fontSizeMd,
         ),
-        hintText: '请输入6位数字验证码',
+        hintText: AppStrings.regHintCode,
         hintStyle: FontUtils.poppins(
-          color: const Color(0xFFbdc3c7),
-          fontSize: 16,
+          color: AppColors.silver,
+          fontSize: AppDimens.fontSizeXl,
         ),
         prefixIcon: const Icon(
           Icons.verified_user,
-          color: Color(0xFF7f8c8d),
+          color: AppColors.textSecondary,
           size: 20,
         ),
         suffixIcon: Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: TextButton(
             onPressed:
                 (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
-              backgroundColor: Colors.transparent,
+              backgroundColor: AppColors.transparent,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               minimumSize: Size.zero,
             ),
@@ -415,39 +426,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFF2c3e50)),
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   )
                 : Text(
-                    _countdown > 0 ? '${_countdown}s' : '获取验证码',
+                    _countdown > 0 ? '${_countdown}s' : AppStrings.regGetCode,
                     style: FontUtils.poppins(
-                      fontSize: 14,
+                      fontSize: AppDimens.fontSizeMd,
                       fontWeight: FontWeight.w500,
                       color: (_countdown > 0)
-                          ? const Color(0xFF7f8c8d)
-                          : const Color(0xFF2c3e50),
+                          ? AppColors.textSecondary
+                          : AppColors.primary,
                     ),
                   ),
           ),
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           borderSide: BorderSide.none,
         ),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.6),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
-        ),
+        fillColor: AppColors.white.withValues(alpha: 0.6),
+        contentPadding: AppDimens.inputPadding,
       ),
       onChanged: (value) {
         final filtered = InputValidatorUtils.filterVerificationCode(value);
@@ -460,9 +468,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return '请输入验证码';
+          return AppStrings.regValidCode;
         }
-        if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+        if (!RegExp(AppRegex.verificationCode).hasMatch(value)) {
           return '验证码必须为6位数字';
         }
         return null;
@@ -481,12 +489,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFe6f3fb),
-              Color(0xFFeaf3f7),
-              Color(0xFFf7f7f3),
-              Color(0xFFe9ecef),
-              Color(0xFFdbe3ea),
-              Color(0xFFd3dde6),
+              AppColors.lightBlueBg,
+              AppColors.lightBlueBg,
+              AppColors.gradMid2,
+              AppColors.gradMid3,
+              AppColors.gradMid4,
+              AppColors.gradEnd,
             ],
             stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
           ),
@@ -523,25 +531,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
           width: 100,
           height: 100,
         ),
-        const SizedBox(height: 20),
+        Gap.h20,
         Text(
           'MoonTV',
           style: FontUtils.sourceCodePro(
-            fontSize: 42,
+            fontSize: AppDimens.fontSizeHero,
             fontWeight: FontWeight.w400,
-            color: const Color(0xFF2c3e50),
+            color: AppColors.primary,
             letterSpacing: 1.5,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         Text(
           '创建您的新账户',
           style: FontUtils.poppins(
-            fontSize: 14,
-            color: const Color(0xFF7f8c8d),
+            fontSize: AppDimens.fontSizeMd,
+            color: AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: 32),
+        Gap.h32,
         Form(
           key: _formKey,
           child: Column(
@@ -550,8 +558,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 controller: _usernameController,
                 style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2c3e50),
+                  fontSize: AppDimens.fontSizeXl,
+                  color: AppColors.primary,
                 ),
                 decoration: _buildInputDecoration(
                   labelText: '用户名',
@@ -559,7 +567,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.person,
                 ),
                 onChanged: (value) {
-                  final isValidChar = RegExp(r'^[a-zA-Z0-9\u4e00-\u9fa5]*$');
+                  final isValidChar = RegExp(AppRegex.usernameRegister);
                   if (!isValidChar.hasMatch(value)) {
                     final filtered =
                         InputValidatorUtils.filterRegisterUsername(value);
@@ -574,29 +582,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '请输入用户名';
+                    return AppStrings.regValidUsername;
                   }
                   if (!InputValidatorUtils.isRegisterUsernameValid(value)) {
-                    return '用户名只能包含字母、数字和汉字';
+                    return AppStrings.regValidUsernameChars;
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              Gap.h16,
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2c3e50),
+                  fontSize: AppDimens.fontSizeXl,
+                  color: AppColors.primary,
                 ),
                 decoration: _buildInputDecoration(
-                  labelText: '邮箱',
-                  hintText: '请输入邮箱地址',
+                  labelText: AppStrings.regEmail,
+                  hintText: AppStrings.regHintEmail,
                   prefixIcon: Icons.email,
                 ),
                 onChanged: (value) {
-                  final isValidChar = RegExp(r'^[a-zA-Z0-9.@]*$');
+                  final isValidChar = RegExp(AppRegex.emailInput);
                   if (!isValidChar.hasMatch(value)) {
                     final filtered = InputValidatorUtils.filterEmail(value);
                     if (filtered != value) {
@@ -609,320 +617,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   }
                 },
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请输入邮箱地址';
-                  }
-                  if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value)) {
-                    return '请输入有效的邮箱地址';
-                  }
-                  final allowedDomains = [
-                    'gmail.com',
-                    'qq.com',
-                    '163.com',
-                    '126.com',
-                    'outlook.com',
-                    'hotmail.com',
-                    'foxmail.com',
-                    'sina.com',
-                    'sohu.com',
-                    'yahoo.com',
-                    'aliyun.com',
-                    'icloud.com',
-                    'live.com',
-                    'msn.com',
-                    '139.com',
-                    'yeah.net'
-                  ];
-                  final domain = value.split('@').last.toLowerCase();
-                  if (!allowedDomains.contains(domain)) {
-                    return '不支持此邮箱';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildVerificationCodeField(),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2c3e50),
-                ),
-                decoration: _buildInputDecoration(
-                  labelText: '密码',
-                  hintText: '请输入密码',
-                  prefixIcon: Icons.lock,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: const Color(0xFF7f8c8d),
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-                onChanged: (value) {
-                  final filtered = InputValidatorUtils.filterPassword(value);
-                  if (filtered != value) {
-                    _passwordController.value = TextEditingValue(
-                      text: filtered,
-                      selection:
-                          TextSelection.collapsed(offset: filtered.length),
-                    );
-                  }
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请输入密码';
-                  }
-                  if (value.length < 6) {
-                    return '密码长度至少6位';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: !_isConfirmPasswordVisible,
-                style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2c3e50),
-                ),
-                decoration: _buildInputDecoration(
-                  labelText: '确认密码',
-                  hintText: '再次输入密码',
-                  prefixIcon: Icons.lock_outline,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isConfirmPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: const Color(0xFF7f8c8d),
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-                onChanged: (value) {
-                  final filtered = InputValidatorUtils.filterPassword(value);
-                  if (filtered != value) {
-                    _confirmPasswordController.value = TextEditingValue(
-                      text: filtered,
-                      selection:
-                          TextSelection.collapsed(offset: filtered.length),
-                    );
-                  }
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请再次输入密码';
-                  }
-                  if (value != _passwordController.text) {
-                    return '两次输入的密码不一致';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleRegister,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isLoading
-                      ? const Color(0xFFbdc3c7)
-                      : const Color(0xFF2c3e50),
-                  foregroundColor:
-                      _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                ),
-                child: _isLoading
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '注册中...',
-                            style: FontUtils.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        '注册',
-                        style: FontUtils.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '已有账户？',
-                    style: FontUtils.poppins(
-                      fontSize: 14,
-                      color: const Color(0xFF7f8c8d),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      '立即登录',
-                      style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF2c3e50),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabletLayout() {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 480),
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/images/logo/logo.png',
-            width: 100,
-            height: 100,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'MoonTV',
-            style: FontUtils.sourceCodePro(
-              fontSize: 42,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFF2c3e50),
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '创建您的新账户',
-            style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF7f8c8d),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _usernameController,
-                  style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
-                  ),
-                  decoration: _buildInputDecoration(
-                    labelText: '用户名',
-                    hintText: '请输入用户名',
-                    prefixIcon: Icons.person,
-                  ),
-                  onChanged: (value) {
-                    final isValidChar = RegExp(r'^[a-zA-Z0-9\u4e00-\u9fa5]*$');
-                    if (!isValidChar.hasMatch(value)) {
-                      final filtered =
-                          InputValidatorUtils.filterRegisterUsername(value);
-                      if (filtered != value) {
-                        _usernameController.value = TextEditingValue(
-                          text: filtered,
-                          selection:
-                              TextSelection.collapsed(offset: filtered.length),
-                        );
-                      }
-                    }
-                  },
-                  validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入用户名';
+                      return AppStrings.regValidEmail;
                     }
-                    if (!InputValidatorUtils.isRegisterUsernameValid(value)) {
-                      return '用户名只能包含字母、数字和汉字';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
-                  ),
-                  decoration: _buildInputDecoration(
-                    labelText: '邮箱',
-                    hintText: '请输入邮箱地址',
-                    prefixIcon: Icons.email,
-                  ),
-                  onChanged: (value) {
-                    final isValidChar = RegExp(r'^[a-zA-Z0-9.@]*$');
-                    if (!isValidChar.hasMatch(value)) {
-                      final filtered = InputValidatorUtils.filterEmail(value);
-                      if (filtered != value) {
-                        _emailController.value = TextEditingValue(
-                          text: filtered,
-                          selection:
-                              TextSelection.collapsed(offset: filtered.length),
-                        );
-                      }
-                    }
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入邮箱地址';
-                    }
-                    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-                        .hasMatch(value)) {
-                      return '请输入有效的邮箱地址';
+                    if (!RegExp(AppRegex.email).hasMatch(value)) {
+                      return AppStrings.regValidEmailFormat;
                     }
                     final allowedDomains = [
                       'gmail.com',
@@ -944,29 +643,337 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ];
                     final domain = value.split('@').last.toLowerCase();
                     if (!allowedDomains.contains(domain)) {
-                      return '不支持此邮箱';
+                      return AppStrings.regValidEmailDomain;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
+                _buildVerificationCodeField(),
+              Gap.h16,
+              TextFormField(
+                controller: _passwordController,
+                obscureText: !_isPasswordVisible,
+                style: FontUtils.poppins(
+                  fontSize: AppDimens.fontSizeXl,
+                  color: AppColors.primary,
+                ),
+                decoration: _buildInputDecoration(
+                  labelText: '密码',
+                  hintText: AppStrings.regHintPassword,
+                  prefixIcon: Icons.lock,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+                onChanged: (value) {
+                  final filtered = InputValidatorUtils.filterPassword(value);
+                  if (filtered != value) {
+                    _passwordController.value = TextEditingValue(
+                      text: filtered,
+                      selection:
+                          TextSelection.collapsed(offset: filtered.length),
+                    );
+                  }
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppStrings.regValidPassword;
+                  }
+                  if (value.length < 6) {
+                    return AppStrings.regValidPasswordMin;
+                  }
+                  return null;
+                },
+              ),
+              Gap.h16,
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: !_isConfirmPasswordVisible,
+                style: FontUtils.poppins(
+                  fontSize: AppDimens.fontSizeXl,
+                  color: AppColors.primary,
+                ),
+                decoration: _buildInputDecoration(
+                  labelText: AppStrings.regConfirmPassword,
+                  hintText: AppStrings.regHintConfirmPassword,
+                  prefixIcon: Icons.lock_outline,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+                onChanged: (value) {
+                  final filtered = InputValidatorUtils.filterPassword(value);
+                  if (filtered != value) {
+                    _confirmPasswordController.value = TextEditingValue(
+                      text: filtered,
+                      selection:
+                          TextSelection.collapsed(offset: filtered.length),
+                    );
+                  }
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppStrings.regValidConfirmPassword;
+                  }
+                  if (value != _passwordController.text) {
+                    return AppStrings.regValidPasswordMismatch;
+                  }
+                  return null;
+                },
+              ),
+              Gap.h32,
+              ElevatedButton(
+                onPressed: _isLoading ? null : _handleRegister,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isLoading
+                      ? AppColors.silver
+                      : AppColors.primary,
+                  foregroundColor:
+                      _isLoading ? AppColors.textSecondary : AppColors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
+                  ),
+                  elevation: AppDimens.elevationNone,
+                  shadowColor: AppColors.transparent,
+                ),
+                child: _isLoading
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.white,
+                              ),
+                            ),
+                          ),
+                          Gap.w12,
+                          Text(
+                            AppStrings.regBtnRegistering,
+                            style: FontUtils.poppins(
+                              fontSize: AppDimens.fontSizeXl,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        AppStrings.regBtnRegister,
+                        style: FontUtils.poppins(
+                          fontSize: AppDimens.fontSizeXl,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+              ),
+              Gap.h24,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    AppStrings.regAlreadyHaveAccount,
+                    style: FontUtils.poppins(
+                      fontSize: AppDimens.fontSizeMd,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      AppStrings.regLoginNow,
+                      style: FontUtils.poppins(
+                        fontSize: AppDimens.fontSizeMd,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 480),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingXxl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/logo/logo.png',
+            width: 100,
+            height: 100,
+          ),
+          Gap.h20,
+          Text(
+            'MoonTV',
+            style: FontUtils.sourceCodePro(
+              fontSize: AppDimens.fontSizeHero,
+              fontWeight: FontWeight.w400,
+              color: AppColors.primary,
+              letterSpacing: 1.5,
+            ),
+          ),
+          Gap.h8,
+          Text(
+            '创建您的新账户',
+            style: FontUtils.poppins(
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Gap.h32,
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _usernameController,
+                  style: FontUtils.poppins(
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
+                  ),
+                  decoration: _buildInputDecoration(
+                  labelText: AppStrings.regUsername,
+                  hintText: AppStrings.regHintUsername,
+                    prefixIcon: Icons.person,
+                  ),
+                  onChanged: (value) {
+                    final isValidChar = RegExp(AppRegex.usernameRegister);
+                    if (!isValidChar.hasMatch(value)) {
+                      final filtered =
+                          InputValidatorUtils.filterRegisterUsername(value);
+                      if (filtered != value) {
+                        _usernameController.value = TextEditingValue(
+                          text: filtered,
+                          selection:
+                              TextSelection.collapsed(offset: filtered.length),
+                        );
+                      }
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                    return AppStrings.regValidUsername;
+                    }
+                    if (!InputValidatorUtils.isRegisterUsernameValid(value)) {
+                      return AppStrings.regValidUsernameChars;
+                    }
+                    return null;
+                  },
+                ),
+                Gap.h16,
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: FontUtils.poppins(
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
+                  ),
+                  decoration: _buildInputDecoration(
+                    labelText: AppStrings.regEmail,
+                    hintText: AppStrings.regHintEmail,
+                    prefixIcon: Icons.email,
+                  ),
+                  onChanged: (value) {
+                    final isValidChar = RegExp(AppRegex.emailInput);
+                    if (!isValidChar.hasMatch(value)) {
+                      final filtered = InputValidatorUtils.filterEmail(value);
+                      if (filtered != value) {
+                        _emailController.value = TextEditingValue(
+                          text: filtered,
+                          selection:
+                              TextSelection.collapsed(offset: filtered.length),
+                        );
+                      }
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AppStrings.regValidEmail;
+                    }
+                    if (!RegExp(AppRegex.email).hasMatch(value)) {
+                      return AppStrings.regValidEmailFormat;
+                    }
+                    final allowedDomains = [
+                      'gmail.com',
+                      'qq.com',
+                      '163.com',
+                      '126.com',
+                      'outlook.com',
+                      'hotmail.com',
+                      'foxmail.com',
+                      'sina.com',
+                      'sohu.com',
+                      'yahoo.com',
+                      'aliyun.com',
+                      'icloud.com',
+                      'live.com',
+                      'msn.com',
+                      '139.com',
+                      'yeah.net'
+                    ];
+                    final domain = value.split('@').last.toLowerCase();
+                    if (!allowedDomains.contains(domain)) {
+                      return AppStrings.regValidEmailDomain;
+                    }
+                    return null;
+                  },
+                ),
+                Gap.h16,
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
                   style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
                   ),
                   decoration: _buildInputDecoration(
-                    labelText: '密码',
-                    hintText: '请输入密码',
+                    labelText: AppStrings.regHintPassword,
+                    hintText: AppStrings.regHintPassword,
                     prefixIcon: Icons.lock,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
-                        color: const Color(0xFF7f8c8d),
+                        color: AppColors.textSecondary,
                         size: 20,
                       ),
                       onPressed: () {
@@ -988,38 +995,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入密码';
+                      return AppStrings.regValidPassword;
                     }
                     if (value.length < 6) {
-                      return '密码长度至少6位';
+                      return AppStrings.regValidPasswordMin;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_isConfirmPasswordVisible,
                   style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
                   ),
                   decoration: _buildInputDecoration(
-                    labelText: '确认密码',
-                    hintText: '再次输入密码',
+                    labelText: AppStrings.regConfirmPassword,
+                    hintText: AppStrings.regHintConfirmPassword,
                     prefixIcon: Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isConfirmPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
-                        color: const Color(0xFF7f8c8d),
+                        color: AppColors.textSecondary,
                         size: 20,
                       ),
                       onPressed: () {
                         setState(() {
-                          _isConfirmPasswordVisible =
-                              !_isConfirmPasswordVisible;
+                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
                         });
                       },
                     ),
@@ -1036,31 +1042,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请再次输入密码';
+                      return AppStrings.regValidConfirmPassword;
                     }
                     if (value != _passwordController.text) {
-                      return '两次输入的密码不一致';
+                      return AppStrings.regValidPasswordMismatch;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
                 _buildVerificationCodeField(),
-                const SizedBox(height: 32),
+                Gap.h32,
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isLoading
-                        ? const Color(0xFFbdc3c7)
-                        : const Color(0xFF2c3e50),
+                        ? AppColors.silver
+                        : AppColors.primary,
                     foregroundColor:
-                        _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
+                        _isLoading ? AppColors.textSecondary : AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
+                    elevation: AppDimens.elevationNone,
+                    shadowColor: AppColors.transparent,
                   ),
                   child: _isLoading
                       ? Row(
@@ -1072,39 +1078,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  AppColors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            Gap.w12,
                             Text(
-                              '注册中...',
+                              AppStrings.regBtnRegistering,
                               style: FontUtils.poppins(
-                                fontSize: 16,
+                                fontSize: AppDimens.fontSizeXl,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ],
                         )
                       : Text(
-                          '注册',
+                        AppStrings.regBtnRegister,
                           style: FontUtils.poppins(
-                            fontSize: 16,
+                            fontSize: AppDimens.fontSizeXl,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 1.0,
                           ),
                         ),
                 ),
-                const SizedBox(height: 24),
+                Gap.h24,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '已有账户？',
+                      AppStrings.regAlreadyHaveAccount,
                       style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF7f8c8d),
+                        fontSize: AppDimens.fontSizeMd,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     GestureDetector(
@@ -1112,10 +1118,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Navigator.of(context).pop();
                       },
                       child: Text(
-                        '立即登录',
+                        AppStrings.regLoginNow,
                         style: FontUtils.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF2c3e50),
+                          fontSize: AppDimens.fontSizeMd,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

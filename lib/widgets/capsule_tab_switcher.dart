@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 
 class CapsuleTabSwitcher extends StatefulWidget {
   final List<String> tabs;
@@ -40,7 +43,7 @@ class _CapsuleTabSwitcherState extends State<CapsuleTabSwitcher>
     _oldIndex = _selectedIndex;
 
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.slow,
       vsync: this,
     );
 
@@ -61,7 +64,7 @@ class _CapsuleTabSwitcherState extends State<CapsuleTabSwitcher>
       final textPainter = TextPainter(
         text: TextSpan(
           text: tab,
-          style: FontUtils.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+          style: FontUtils.poppins(fontSize: AppDimens.fontSizeXs, fontWeight: FontWeight.w600),
         ),
         maxLines: 1,
         textDirection: TextDirection.ltr,
@@ -143,9 +146,9 @@ class _CapsuleTabSwitcherState extends State<CapsuleTabSwitcher>
             height: 32,
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? const Color(0xFF333333)
-                  : const Color(0xFFe0e0e0),
-              borderRadius: BorderRadius.circular(16),
+                  ? AppColors.darkDivider
+                  : AppColors.grayBorder,
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
             ),
             child: Stack(
               children: [
@@ -160,14 +163,14 @@ class _CapsuleTabSwitcherState extends State<CapsuleTabSwitcher>
                         height: 32,
                         decoration: BoxDecoration(
                           color: themeService.isDarkMode
-                              ? const Color(0xFF1e1e1e)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
+                              ? AppColors.cardDark
+                              : AppColors.white,
+                          borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
                           boxShadow: [
                             BoxShadow(
                               color: themeService.isDarkMode
-                                  ? Colors.black.withValues(alpha: 0.3)
-                                  : Colors.black.withValues(alpha: 0.1),
+                                  ? AppColors.black30
+                                  : AppColors.black30,
                               blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
@@ -289,19 +292,19 @@ class _CapsuleTabHoverState extends State<_CapsuleTabHover> {
                 // 选中状态：使用原来的颜色插值逻辑
                 color = Color.lerp(
                   widget.themeService.isDarkMode
-                      ? const Color(0xFFb0b0b0)
-                      : const Color(0xFF7f8c8d),
-                  widget.themeService.isDarkMode ? Colors.white : Colors.black,
+                      ? AppColors.textDarkSecondary
+                      : AppColors.textSecondary,
+                  widget.themeService.isDarkMode ? AppColors.white : AppColors.black,
                   progress,
                 )!;
               } else if (widget.isPC && _isHovered) {
                 // PC上未选中且hover：显示绿色
-                color = const Color(0xFF27AE60);
+                color = AppColors.accent;
               } else {
                 // 未选中且未hover：默认颜色
                 color = widget.themeService.isDarkMode
-                    ? const Color(0xFFb0b0b0)
-                    : const Color(0xFF7f8c8d);
+                    ? AppColors.textDarkSecondary
+                    : AppColors.textSecondary;
               }
 
               final fontWeight =
@@ -310,7 +313,7 @@ class _CapsuleTabHoverState extends State<_CapsuleTabHover> {
               return Text(
                 widget.label,
                 style: FontUtils.poppins(
-                  fontSize: 12,
+                  fontSize: AppDimens.fontSizeXs,
                   fontWeight: fontWeight,
                   color: color,
                 ),

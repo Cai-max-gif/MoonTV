@@ -7,6 +7,7 @@ import '../models/download_task.dart';
 import '../utils/storage_utils.dart';
 import 'download_engine.dart';
 import 'notification_service.dart';
+import '../constants/app_durations.dart';
 
 class DownloadService extends ChangeNotifier {
   static const String _downloadTasksKey = 'download_tasks';
@@ -87,54 +88,48 @@ class DownloadService extends ChangeNotifier {
     }
 
     if (tasksJson != null) {
-      try {
-        final List<dynamic> decoded = json.decode(tasksJson);
-        _tasks.clear();
-        _tasks.addAll(decoded.map((e) => DownloadTask.fromJson(e)));
+      final List<dynamic> decoded = json.decode(tasksJson);
+      _tasks.clear();
+      _tasks.addAll(decoded.map((e) => DownloadTask.fromJson(e)));
 
-        for (final task in _tasks) {
-          if (task.status == DownloadStatus.downloading &&
-              !_activeEngines.containsKey(task.id)) {
-            task.status = DownloadStatus.paused;
-          }
-          if (task.status == DownloadStatus.completed) {
-            final originalFilePath = task.localFilePath;
-            if (!await File(originalFilePath).exists()) {
-              if (_savePath.isNotEmpty && task.savePath != _savePath) {
-                final alternativePath =
-                    _savePath + (Platform.pathSeparator) + task.localFileName;
-                if (await File(alternativePath).exists()) {
-                  task.savePath = _savePath;
-                } else if (task.savePath.isEmpty && _savePath.isNotEmpty) {
-                  task.savePath = _savePath;
-                } else {
-                  task.status = DownloadStatus.failed;
-                  continue;
-                }
+      for (final task in _tasks) {
+        if (task.status == DownloadStatus.downloading &&
+            !_activeEngines.containsKey(task.id)) {
+          task.status = DownloadStatus.paused;
+        }
+        if (task.status == DownloadStatus.completed) {
+          final originalFilePath = task.localFilePath;
+          if (!await File(originalFilePath).exists()) {
+            if (_savePath.isNotEmpty && task.savePath != _savePath) {
+              final alternativePath =
+                  _savePath + (Platform.pathSeparator) + task.localFileName;
+              if (await File(alternativePath).exists()) {
+                task.savePath = _savePath;
               } else if (task.savePath.isEmpty && _savePath.isNotEmpty) {
                 task.savePath = _savePath;
               } else {
                 task.status = DownloadStatus.failed;
                 continue;
               }
+            } else if (task.savePath.isEmpty && _savePath.isNotEmpty) {
+              task.savePath = _savePath;
+            } else {
+              task.status = DownloadStatus.failed;
+              continue;
             }
-            try {
-              final tempDir = Directory('${task.localFilePath}_temp');
-              if (await tempDir.exists()) {
-                await tempDir.delete(recursive: true);
-              }
-            } catch (_) {}
+          }
+          final tempDir = Directory('${task.localFilePath}_temp');
+          if (await tempDir.exists()) {
+            await tempDir.delete(recursive: true);
           }
         }
-
-        _normalizeRetryingTasks();
-
-        await _scanLocalDownloads();
-
-        notifyListeners();
-      } catch (e) {
-        debugPrint('Failed to load download tasks: $e');
       }
+
+      _normalizeRetryingTasks();
+
+      await _scanLocalDownloads();
+
+      notifyListeners();
     }
 
     _processQueue();
@@ -295,7 +290,7 @@ class DownloadService extends ChangeNotifier {
       notifyListeners();
       await _saveTasks();
 
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(AppDurations.oneSecond);
 
       _queueProcessing = false;
       _processQueue();
@@ -436,7 +431,8 @@ class DownloadService extends ChangeNotifier {
   void _startDownload(DownloadTask task) {
     if (_activeEngines.containsKey(task.id)) return;
 
-    final engine = DownloadEngine();
+    final headers = _buildRequestHeaders(task.videoUrl);
+    final engine = DownloadEngine(referer: headers['Referer'], origin: headers['Origin']);
     _activeEngines[task.id] = engine;
 
     int lastProgressPercent = 0;
@@ -446,6 +442,7 @@ class DownloadService extends ChangeNotifier {
       m3u8Url: task.videoUrl,
       savePath: task.localFilePath,
       concurrentThreads: _concurrentThreads,
+      headers: headers,
       onProgress: (progress, downloadedBytes, totalBytes) {
         final idx = _tasks.indexWhere((t) => t.id == task.id);
         if (idx < 0) return;
@@ -500,7 +497,7 @@ class DownloadService extends ChangeNotifier {
         notifyListeners();
         _saveTasks();
 
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(AppDurations.twoSeconds, () {
           final idx2 = _tasks.indexWhere((t) => t.id == task.id);
           if (idx2 >= 0 && _tasks[idx2].status == DownloadStatus.retrying) {
             _tasks[idx2].status = DownloadStatus.queued;
@@ -528,19 +525,15 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<void> _cleanupTaskFiles(DownloadTask task) async {
-    try {
-      final outputFile = File(task.localFilePath);
-      if (await outputFile.exists()) {
-        await outputFile.delete();
-      }
-    } catch (_) {}
+    final outputFile = File(task.localFilePath);
+    if (await outputFile.exists()) {
+      await outputFile.delete();
+    }
 
-    try {
-      final tempDir = Directory('${task.localFilePath}_temp');
-      if (await tempDir.exists()) {
-        await tempDir.delete(recursive: true);
-      }
-    } catch (_) {}
+    final tempDir = Directory('${task.localFilePath}_temp');
+    if (await tempDir.exists()) {
+      await tempDir.delete(recursive: true);
+    }
   }
 
   Future<void> _scanLocalDownloads() async {
@@ -576,26 +569,22 @@ class DownloadService extends ChangeNotifier {
 
     bool hasNewTasks = false;
 
-    try {
-      final files = (await downloadDir.list().toList()).where((entity) {
-        return entity is File && entity.path.endsWith('.ts');
-      }).cast<File>();
+    final files = (await downloadDir.list().toList()).where((entity) {
+      return entity is File && entity.path.endsWith('.ts');
+    }).cast<File>();
 
-      for (final file in files) {
-        final fileName = file.path.split(Platform.pathSeparator).last;
-        if (existingFileNames.contains(fileName)) {
-          continue;
-        }
-
-        final task = _parseFileNameToTask(fileName, dirPath);
-        if (task != null) {
-          _tasks.add(task);
-          existingFileNames.add(fileName);
-          hasNewTasks = true;
-        }
+    for (final file in files) {
+      final fileName = file.path.split(Platform.pathSeparator).last;
+      if (existingFileNames.contains(fileName)) {
+        continue;
       }
-    } catch (e) {
-      debugPrint('Error scanning directory $dirPath: $e');
+
+      final task = _parseFileNameToTask(fileName, dirPath);
+      if (task != null) {
+        _tasks.add(task);
+        existingFileNames.add(fileName);
+        hasNewTasks = true;
+      }
     }
 
     return hasNewTasks;
@@ -650,6 +639,19 @@ class DownloadService extends ChangeNotifier {
     }
 
     return null;
+  }
+
+  Map<String, String> _buildRequestHeaders(String url) {
+    final headers = <String, String>{};
+    
+    final uri = Uri.parse(url);
+    final origin = uri.hasPort
+      ? '${uri.scheme}://${uri.host}:${uri.port}'
+      : '${uri.scheme}://${uri.host}';
+    headers['Origin'] = origin;
+    headers['Referer'] = '$origin${uri.path}';
+    
+    return headers;
   }
 
   @override

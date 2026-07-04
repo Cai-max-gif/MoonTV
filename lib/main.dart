@@ -18,6 +18,9 @@ import 'dart:async';
 import 'package:macos_window_utils/macos_window_utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'constants/app_dimensions.dart';
+import 'constants/app_durations.dart';
+import 'constants/app_config.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -48,25 +51,38 @@ void main() async {
   // 启动定期清理
   cacheService.startPeriodicCleanup();
 
-  runApp(const MoonTVApp());
+  // 在原生启动画面期间检查自动登录，避免首帧闪烁
+  bool canAutoLogin = false;
+  try {
+    canAutoLogin = await UserDataService.hasAutoLoginData();
+    if (canAutoLogin) {
+      final loginResult = await ApiService.autoLogin();
+      canAutoLogin = loginResult.success;
+    }
+  } catch (e) {
+    canAutoLogin = false;
+  }
+
+  runApp(MoonTVApp(canAutoLogin: canAutoLogin));
 
   // 初始化 Windows 窗口配置
   if (Platform.isWindows) {
     doWhenWindowReady(() {
       final win = appWindow;
-      const initialSize = Size(1024, 600);
-      const minSize = Size(1024, 600);
+      const initialSize = Size(AppDimens.windowDefaultWidth, AppDimens.windowDefaultHeight);
+      const minSize = Size(AppDimens.windowMinWidth, AppDimens.windowMinHeight);
       win.minSize = minSize;
       win.size = initialSize;
       win.alignment = Alignment.center;
-      win.title = "MoonTV";
+      win.title = AppConfig.appName;
       win.show();
     });
   }
 }
 
 class MoonTVApp extends StatelessWidget {
-  const MoonTVApp({super.key});
+  final bool canAutoLogin;
+  const MoonTVApp({super.key, required this.canAutoLogin});
 
   @override
   Widget build(BuildContext context) {
@@ -75,19 +91,19 @@ class MoonTVApp extends StatelessWidget {
       child: Consumer<ThemeService>(
         builder: (context, themeService, child) {
           return MaterialApp(
-            title: 'MoonTV',
+            title: AppConfig.appName,
             debugShowCheckedModeBanner: false,
             navigatorKey: navigatorKey,
             theme: themeService.lightTheme,
             darkTheme: themeService.darkTheme,
             themeMode: themeService.themeMode,
-            home: const AppWrapper(),
+            home: AppWrapper(canAutoLogin: canAutoLogin),
             builder: (context, child) {
               // 为 Windows 平台改善字体渲染
               if (Platform.isWindows) {
                 return MediaQuery(
                   data: MediaQuery.of(context).copyWith(
-                    textScaler: const TextScaler.linear(1.0),
+                    textScaler: TextScaler.linear(AppDimens.windowsTextScaleFactor),
                   ),
                   child: child!,
                 );
@@ -102,20 +118,22 @@ class MoonTVApp extends StatelessWidget {
 }
 
 class AppWrapper extends StatefulWidget {
-  const AppWrapper({super.key});
+  final bool canAutoLogin;
+  const AppWrapper({super.key, required this.canAutoLogin});
 
   @override
   State<AppWrapper> createState() => _AppWrapperState();
 }
 
 class _AppWrapperState extends State<AppWrapper> {
-  bool _isLoading = true;
   Timer? _accountStatusTimer;
 
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    if (widget.canAutoLogin) {
+      _executeStartupFlow();
+    }
     _startAccountStatusCheck();
     UserDataService.initDanmakuEnabled();
     UserDataService.initDanmakuSettings();
@@ -129,7 +147,7 @@ class _AppWrapperState extends State<AppWrapper> {
 
   void _startAccountStatusCheck() {
     // 初始检查间隔为30秒
-    Duration checkInterval = const Duration(seconds: 30);
+    Duration checkInterval = AppDurations.accountCheckInterval;
 
     _accountStatusTimer = Timer.periodic(checkInterval, (timer) {
       _checkAccountStatus();
@@ -146,6 +164,7 @@ class _AppWrapperState extends State<AppWrapper> {
         // 检查是否已登录
         final isLoggedIn = await UserDataService.isLoggedIn();
         if (!isLoggedIn) {
+          _accountStatusTimer?.cancel();
           return;
         }
 
@@ -189,23 +208,17 @@ class _AppWrapperState extends State<AppWrapper> {
           }
         }
       } catch (e) {
-        // 检查失败，忽略错误
       }
     });
   }
 
-  void _checkLoginStatus() async {
+  Future<void> checkLoginStatus() async {
     try {
       // 检查是否有自动登录所需的数据
       final hasAutoLoginData = await UserDataService.hasAutoLoginData();
 
       if (!hasAutoLoginData) {
-        // 如果没有自动登录数据，直接进入登录页
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        // 如果没有自动登录数据，直接留在登录页
         return;
       }
 
@@ -216,20 +229,11 @@ class _AppWrapperState extends State<AppWrapper> {
         if (loginResult.success) {
           // 自动登录成功，执行启动流程
           await _executeStartupFlow();
-        } else {
-          // 自动登录失败，进入登录页
-          setState(() {
-            _isLoading = false;
-          });
         }
+        // 自动登录失败，留在登录页
       }
     } catch (e) {
-      // 发生异常，进入登录页
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      // 发生异常，留在登录页
     }
   }
 
@@ -264,13 +268,6 @@ class _AppWrapperState extends State<AppWrapper> {
         // 无版本更新，显示公告
         await _checkAndShowAnnouncement(announcement);
       }
-
-      // 进入首页
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
     }
   }
 
@@ -286,66 +283,12 @@ class _AppWrapperState extends State<AppWrapper> {
         }
       }
     } catch (e) {
-      // 公告显示失败，不影响主流程
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Consumer<ThemeService>(
-        builder: (context, themeService, child) {
-          return Scaffold(
-            body: Container(
-              decoration: BoxDecoration(
-                color: themeService.isDarkMode
-                    ? const Color(0xFF000000) // 深色模式纯黑色
-                    : null,
-                gradient: themeService.isDarkMode
-                    ? null
-                    : const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFFe6f3fb),
-                          Color(0xFFeaf3f7),
-                          Color(0xFFf7f7f3),
-                          Color(0xFFe9ecef),
-                          Color(0xFFdbe3ea),
-                          Color(0xFFd3dde6),
-                        ],
-                        stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
-                      ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          themeService.isDarkMode
-                              ? const Color(0xFFffffff)
-                              : const Color(0xFF2c3e50)),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      '正在检查登录状态...',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: themeService.isDarkMode
-                            ? const Color(0xFFffffff)
-                            : const Color(0xFF2c3e50),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
+    if (widget.canAutoLogin) return const HomeScreen();
     return const LoginScreen();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import '../constants/app_config.dart';
 
 class UserDataService {
   static const String _usernameKey = 'username';
@@ -25,28 +26,23 @@ class UserDataService {
   static const String _danmakuAntiBlockKey = 'danmaku_anti_block';
   static const String _danmakuSyncSpeedKey = 'danmaku_sync_speed';
 
-  static const String _syncPlaybackProgressKey = 'sync_playback_progress';
-  static const String _syncFavoritesKey = 'sync_favorites';
-  static const String _syncWatchHistoryKey = 'sync_watch_history';
-  static const String _syncSettingsKey = 'sync_settings';
-
   static const String _loginAttemptsKey = 'login_attempts';
   static const String _lastLoginAttemptKey = 'last_login_attempt';
   static const String _accountLockedUntilKey = 'account_locked_until';
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  static const int _maxLoginAttempts = 5;
-  static const Duration _lockDuration = Duration(minutes: 15);
+  static int get _maxLoginAttempts => AppConfig.maxLoginAttempts;
+  static Duration get _lockDuration => AppConfig.loginLockDuration;
 
   static final ValueNotifier<bool> danmakuEnabledNotifier =
       ValueNotifier<bool>(false);
-  static final ValueNotifier<int> danmakuSpeedNotifier = ValueNotifier<int>(2);
+  static final ValueNotifier<int> danmakuSpeedNotifier = ValueNotifier<int>(AppConfig.danmakuDefaultSpeed);
   static final ValueNotifier<int> danmakuOpacityNotifier =
-      ValueNotifier<int>(100);
+      ValueNotifier<int>(AppConfig.danmakuDefaultOpacity);
   static final ValueNotifier<double> danmakuFontSizeNotifier =
-      ValueNotifier<double>(1.0);
+      ValueNotifier<double>(AppConfig.danmakuDefaultFontSize);
   static final ValueNotifier<double> danmakuDisplayAreaNotifier =
-      ValueNotifier<double>(1.0);
+      ValueNotifier<double>(AppConfig.danmakuDefaultDisplayArea);
   static final ValueNotifier<bool> danmakuAntiBlockNotifier =
       ValueNotifier<bool>(true);
   static final ValueNotifier<bool> danmakuSyncSpeedNotifier =
@@ -82,7 +78,7 @@ class UserDataService {
 
   // 获取默认服务器地址
   static String getDefaultServerUrl() {
-    return 'https://moontv.cc.cd';
+    return AppConfig.serverBaseUrl;
   }
 
   // 获取服务器地址（固定返回默认值）
@@ -359,15 +355,12 @@ class UserDataService {
 
   static Future<int> getDanmakuSpeed() async {
     final prefs = await SharedPreferences.getInstance();
-    try {
-      return prefs.getInt(_danmakuSpeedKey)?.clamp(0, 4) ?? 2;
-    } catch (_) {
-      return (prefs.getDouble(_danmakuSpeedKey) ?? 2).toInt().clamp(0, 4);
-    }
+    return prefs.getInt(_danmakuSpeedKey)?.clamp(0, 4) ??
+        (prefs.getDouble(_danmakuSpeedKey) ?? 2).toInt().clamp(0, 4);
   }
 
   static Future<void> saveDanmakuOpacity(int opacity) async {
-    final clamped = opacity.clamp(0, 100);
+    final clamped = opacity.clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax);
     danmakuOpacityNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_danmakuOpacityKey, clamped);
@@ -375,11 +368,8 @@ class UserDataService {
 
   static Future<int> getDanmakuOpacity() async {
     final prefs = await SharedPreferences.getInstance();
-    try {
-      return prefs.getInt(_danmakuOpacityKey)?.clamp(0, 100) ?? 100;
-    } catch (_) {
-      return (prefs.getDouble(_danmakuOpacityKey) ?? 100).toInt().clamp(0, 100);
-    }
+    return prefs.getInt(_danmakuOpacityKey)?.clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax) ??
+        (prefs.getDouble(_danmakuOpacityKey) ?? AppConfig.danmakuDefaultOpacity).toInt().clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax);
   }
 
   static Future<void> saveDanmakuFontSize(double fontSize) async {
@@ -426,47 +416,5 @@ class UserDataService {
   static Future<bool> getDanmakuSyncSpeed() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_danmakuSyncSpeedKey) ?? true;
-  }
-
-  // ==================== 同步设置 ====================
-
-  static Future<void> saveSyncPlaybackProgress(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_syncPlaybackProgressKey, enabled);
-  }
-
-  static Future<bool> getSyncPlaybackProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_syncPlaybackProgressKey) ?? true;
-  }
-
-  static Future<void> saveSyncFavorites(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_syncFavoritesKey, enabled);
-  }
-
-  static Future<bool> getSyncFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_syncFavoritesKey) ?? true;
-  }
-
-  static Future<void> saveSyncWatchHistory(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_syncWatchHistoryKey, enabled);
-  }
-
-  static Future<bool> getSyncWatchHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_syncWatchHistoryKey) ?? true;
-  }
-
-  static Future<void> saveSyncSettings(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_syncSettingsKey, enabled);
-  }
-
-  static Future<bool> getSyncSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_syncSettingsKey) ?? true;
   }
 }

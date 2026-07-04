@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 
 class PulsingDotsIndicator extends StatefulWidget {
   const PulsingDotsIndicator({super.key});
@@ -17,7 +19,7 @@ class _PulsingDotsIndicatorState extends State<PulsingDotsIndicator>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: AppDurations.oneSecond,
     );
 
     _animations = List.generate(3, (index) {
@@ -60,7 +62,7 @@ class _PulsingDotsIndicatorState extends State<PulsingDotsIndicator>
                     width: 10.0,
                     height: 10.0,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF27AE60),
+                      color: AppColors.accent,
                       shape: BoxShape.circle,
                     ),
                   ),

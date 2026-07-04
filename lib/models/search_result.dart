@@ -1,4 +1,5 @@
 import 'video_info.dart';
+import '../constants/app_strings.dart';
 
 /// 搜索结果数据模型
 class SearchResult {
@@ -72,18 +73,18 @@ class SearchResult {
 
   /// 获取显示用的类型名称
   String get displayType {
-    return typeName ?? class_ ?? '未知';
+    return typeName ?? class_ ?? AppStrings.unknown;
   }
 
   /// 获取集数信息
   String get episodeInfo {
     if (episodes.isEmpty) return '';
-    return '共${episodes.length}集';
+    return '${AppStrings.episodesCount}'.replaceAll('%d', '${episodes.length}');
   }
 
   /// 获取年份信息
   String get yearInfo {
-    return year.isNotEmpty ? year : '未知年份';
+    return year.isNotEmpty ? year : '${AppStrings.unknown}年份';
   }
 
   /// 转换为VideoInfo
@@ -137,7 +138,7 @@ abstract class SearchEvent {
       case 'complete':
         return SearchCompleteEvent.fromJson(json);
       default:
-        throw Exception('未知的搜索事件类型: $typeString');
+        throw Exception('${AppStrings.unknown}的搜索事件类型: $typeString');
     }
   }
 }
@@ -213,7 +214,7 @@ class SearchSourceErrorEvent extends SearchEvent {
     return SearchSourceErrorEvent(
       source: json['source'] ?? '',
       sourceName: json['sourceName'] ?? '',
-      error: json['error'] ?? '未知错误',
+      error: json['error'] ?? AppStrings.msgUnknownError,
       timestamp: json['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
     );
   }

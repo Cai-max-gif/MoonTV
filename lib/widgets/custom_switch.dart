@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
 
 class CustomSwitch extends StatefulWidget {
   final bool value;
@@ -13,9 +15,9 @@ class CustomSwitch extends StatefulWidget {
     super.key,
     required this.value,
     required this.onChanged,
-    this.activeColor = Colors.green,
-    this.inactiveColor = Colors.grey,
-    this.thumbColor = Colors.white,
+    this.activeColor = AppColors.green,
+    this.inactiveColor = AppColors.gray500,
+    this.thumbColor = AppColors.white,
     this.width = 50.0,
     this.height = 30.0,
   });
@@ -35,7 +37,7 @@ class _CustomSwitchState extends State<CustomSwitch>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: AppDurations.normal,
     );
 
     _thumbAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(

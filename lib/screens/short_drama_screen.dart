@@ -5,59 +5,96 @@ import '../widgets/capsule_tab_switcher.dart';
 import '../widgets/custom_refresh_indicator.dart';
 import '../widgets/short_drama_grid.dart';
 import '../services/api_service.dart';
-
 import '../widgets/video_menu_bottom_sheet.dart';
 import '../widgets/pulsing_dots_indicator.dart';
+import '../widgets/hot_short_drama_section.dart';
 import 'player_screen.dart';
 import '../utils/font_utils.dart';
-import '../widgets/filter_pill_hover.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
+import '../constants/app_dimensions.dart';
 
 class ShortDramaScreen extends StatefulWidget {
-  const ShortDramaScreen({super.key});
+  final List<Map<String, dynamic>>? initialData;
+
+  const ShortDramaScreen({super.key, this.initialData});
 
   @override
   State<ShortDramaScreen> createState() => _ShortDramaScreenState();
 }
 
+class SelectorOption {
+  final String label;
+  final String value;
+
+  const SelectorOption({required this.label, required this.value});
+}
+
 class _ShortDramaScreenState extends State<ShortDramaScreen> {
-  // 短剧的一级选择器选项（热门/最新/高分）
-  // 注意：由于后端 API 不支持排序参数，_selectedCategoryValue 仅用于：
-  // 1. UI 状态显示（展示当前选中的标签）
-  // 2. 请求过期检查（stale-check），避免返回的是旧筛选条件的数据
-  // API 调用始终使用 _selectedCategoryId（分类ID），排序选项不会传递给后端
-  final List<SelectorOption> _shortDramaPrimaryOptions = const [
-    SelectorOption(label: '全部', value: '全部'),
-    SelectorOption(label: '热门短剧', value: '热门'),
-    SelectorOption(label: '最新短剧', value: '最新'),
-    SelectorOption(label: '高分短剧', value: '高分'),
-  ];
-
-  String _selectedCategoryValue = '热门';
-
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _shortDramas = [];
   int _page = 1;
-  final int _pageLimit = 25;
+  final int _pageLimit = AppConfig.shortDramaPageLimit;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
   String? _errorMessage;
   List<dynamic> _categories = [];
-  int _selectedCategoryId = 1;
+  int _selectedCategoryId = 2;
+  String? _selectedCategoryName = '女频恋爱';
 
-  /// 获取当前筛选状态（用于 stale-check）
-  /// 返回格式: "筛选值|分类ID"
-  String _getCurrentFilterState() {
-    return '$_selectedCategoryValue|$_selectedCategoryId';
-  }
+  final List<Map<String, dynamic>> _defaultCategories = [
+    {'type_id': 2, 'type_name': '女频恋爱'},
+    {'type_id': 3, 'type_name': '反转爽剧'},
+    {'type_id': 4, 'type_name': '古装仙侠'},
+    {'type_id': 5, 'type_name': '年代穿越'},
+    {'type_id': 6, 'type_name': '脑洞悬疑'},
+    {'type_id': 7, 'type_name': '现代都市'},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchShortDramas(isRefresh: true);
-    _scrollController.addListener(() {
-      _handleScroll();
-    });
+    _categories = _defaultCategories;
+
+    final hotDramas = HotShortDramaSection.getCurrentShortDramas();
+    if (hotDramas != null && hotDramas.isNotEmpty) {
+      _shortDramas.addAll(hotDramas);
+      _isLoading = false;
+    } else if (widget.initialData != null && widget.initialData!.isNotEmpty) {
+      _shortDramas.addAll(widget.initialData!);
+      _isLoading = false;
+    } else {
+      _isLoading = true;
+    }
+
+    _syncCategoriesAndLoad();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  Future<void> _syncCategoriesAndLoad() async {
+    final categoriesResult = await ApiService.getShortDramaCategories(context);
+    if (!mounted) return;
+    if (categoriesResult.success && categoriesResult.data != null) {
+      final newCategories = categoriesResult.data!;
+      final filtered = newCategories.where((cat) {
+        final typeName = cat['type_name'] as String? ?? '';
+        return typeName != '短剧' && typeName != '擦边短剧';
+      }).toList();
+      if (filtered.isNotEmpty) {
+        final firstCategory = filtered.first;
+        setState(() {
+          _categories = filtered;
+          _selectedCategoryId = firstCategory['type_id'] as int? ?? 2;
+          _selectedCategoryName = firstCategory['type_name'] as String? ?? '女频恋爱';
+        });
+      }
+    }
+
+    if (mounted) {
+      _fetchShortDramas(isRefresh: true);
+    }
   }
 
   @override
@@ -66,51 +103,36 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     super.dispose();
   }
 
-  /// 处理滚动事件，支持内容不足一屏时的加载更多
   void _handleScroll() {
-    if (_scrollController.hasClients) {
-      final position = _scrollController.position;
+    if (!_scrollController.hasClients) return;
 
-      // 如果内容不足以滚动（maxScrollExtent <= 0），直接尝试加载更多
-      if (position.maxScrollExtent <= 0) {
-        // 检查是否有更多数据且当前不在加载中
-        if (_hasMore &&
-            !_isLoading &&
-            !_isLoadingMore &&
-            _shortDramas.isNotEmpty) {
-          _loadMoreShortDramas();
-        }
-        return;
-      }
+    final position = _scrollController.position;
 
-      // 正常滚动情况：当滚动到距离底部50像素内时触发加载
-      const double threshold = 50.0;
-      if (position.pixels >= position.maxScrollExtent - threshold) {
+    if (position.maxScrollExtent <= 0) {
+      if (_hasMore && !_isLoading && !_isLoadingMore && _shortDramas.isNotEmpty) {
         _loadMoreShortDramas();
       }
+      return;
+    }
+
+    const double threshold = AppDimens.scrollLoadMoreThreshold;
+    if (position.pixels >= position.maxScrollExtent - threshold) {
+      _loadMoreShortDramas();
     }
   }
 
-  /// 检查内容是否不足一屏，如果是则自动加载更多
   void _checkAndLoadMoreIfNeeded() {
-    if (!_scrollController.hasClients ||
-        !_hasMore ||
-        _isLoading ||
-        _isLoadingMore) {
+    if (!_scrollController.hasClients || !_hasMore || _isLoading || _isLoadingMore) {
       return;
     }
 
     final position = _scrollController.position;
-
-    // 如果内容不足以滚动，说明没有填满屏幕，自动加载更多
     if (position.maxScrollExtent <= 0 && _shortDramas.isNotEmpty) {
       _loadMoreShortDramas();
     }
   }
 
   Future<void> _fetchShortDramas({bool isRefresh = false}) async {
-    final requestFilterState = _getCurrentFilterState();
-
     if (isRefresh) {
       _page = 1;
       _hasMore = true;
@@ -121,49 +143,14 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       _errorMessage = null;
     });
 
-    // 并行加载分类列表和短剧列表
-    final futures = <Future>[
-      ApiService.getShortDramaList(
-        _selectedCategoryId,
-        isRefresh ? 1 : _page,
-        _pageLimit,
-        context,
-      ),
-    ];
-
-    if (_categories.isEmpty) {
-      futures.add(ApiService.getShortDramaCategories(context));
-    }
-
-    final results = await Future.wait(futures);
+    final result = await ApiService.getShortDramaList(
+      _selectedCategoryId,
+      isRefresh ? 1 : _page,
+      _pageLimit,
+      context,
+    );
 
     if (!mounted) return;
-
-    // 处理短剧列表结果（始终是第一个）
-    final result = results[0] as ApiResponse<Map<String, dynamic>>;
-
-    // 处理分类结果（如果有）
-    if (results.length > 1) {
-      final categoriesResult = results[1] as ApiResponse<List<dynamic>>;
-      if (categoriesResult.success && categoriesResult.data != null) {
-        final newCategories = categoriesResult.data!;
-        if (newCategories.isNotEmpty) {
-          final newCategoryId = newCategories[0]['type_id'] ?? 1;
-          if (_selectedCategoryId != newCategoryId && !isRefresh) {
-            _selectedCategoryId = newCategoryId;
-          }
-          _categories = newCategories;
-        }
-      }
-    }
-
-    // 检查当前筛选状态是否仍然与发起请求时一致
-    if (requestFilterState != _getCurrentFilterState()) {
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
 
     setState(() {
       if (result.success && result.data != null) {
@@ -173,19 +160,15 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         }
         _shortDramas.addAll(list.cast<Map<String, dynamic>>());
         _page++;
-        if (list.isEmpty) {
-          _hasMore = false;
-        }
+        _hasMore = list.length >= _pageLimit;
       } else {
-        // 只有在首次加载（列表为空）时才显示错误
         if (_shortDramas.isEmpty) {
-          _errorMessage = result.message ?? '加载失败';
+          _errorMessage = result.message ?? AppStrings.loadFailed;
         }
       }
       _isLoading = false;
     });
 
-    // 如果是刷新且内容不足一屏，尝试自动加载更多
     if (isRefresh && result.success && result.data != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -198,14 +181,10 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   Future<void> _loadMoreShortDramas() async {
     if (_isLoading || _isLoadingMore || !_hasMore) return;
 
-    // 记录发起请求时的筛选状态
-    final requestFilterState = _getCurrentFilterState();
-
     setState(() {
       _isLoadingMore = true;
     });
 
-    // 获取短剧列表
     final result = await ApiService.getShortDramaList(
       _selectedCategoryId,
       _page,
@@ -214,23 +193,12 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     );
 
     if (mounted) {
-      // 检查当前筛选状态是否仍然与发起请求时一致
-      if (requestFilterState != _getCurrentFilterState()) {
-        // 筛选状态已改变，忽略这个过期的响应
-        return;
-      }
-
       setState(() {
         if (result.success && result.data != null) {
           final list = result.data!['list'] as List<dynamic>;
           _shortDramas.addAll(list.cast<Map<String, dynamic>>());
           _page++;
-          // 只有当返回的数据为空时才停止分页
-          if (list.isEmpty) {
-            _hasMore = false;
-          }
-        } else {
-          // Can show a toast or a small error indicator at the bottom
+          _hasMore = list.length >= _pageLimit;
         }
         _isLoadingMore = false;
       });
@@ -247,15 +215,14 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       MaterialPageRoute(
         builder: (context) => PlayerScreen(
           title: shortDrama['name'] ?? '',
-          stype: 'shortdrama',
+          stype: AppConfig.stypeShortDrama,
           id: shortDrama['id'].toString(),
         ),
       ),
     );
   }
 
-  void _handleMenuAction(
-      Map<String, dynamic> shortDrama, VideoMenuAction action) {
+  void _handleMenuAction(Map<String, dynamic> shortDrama, VideoMenuAction action) {
     switch (action) {
       case VideoMenuAction.play:
         _onVideoTap(shortDrama);
@@ -265,39 +232,51 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     }
   }
 
+  void _onCategorySelected(String categoryValue) {
+    final category = _categories.firstWhere(
+      (c) => c['type_name'] == categoryValue,
+      orElse: () => {'type_id': 1, 'type_name': '全部'},
+    );
+    setState(() {
+      _selectedCategoryId = category['type_id'] as int? ?? 1;
+      _selectedCategoryName = category['type_name'] as String? ?? '全部';
+      _shortDramas.clear();
+      _isLoading = true;
+    });
+    _fetchShortDramas(isRefresh: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return StyledRefreshIndicator(
       onRefresh: _refreshShortDramasData,
-      refreshText: '刷新短剧数据...',
-      primaryColor: const Color(0xFF27AE60),
-      child: SingleChildScrollView(
+      refreshText: AppStrings.refreshShortDrama,
+      primaryColor: AppColors.accent,
+      child: CustomScrollView(
         controller: _scrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            _buildFilterSection(),
-            const SizedBox(height: 16),
-            ShortDramaGrid(
-              shortDramas: _shortDramas,
-              isLoading: _isLoading && _shortDramas.isEmpty,
-              errorMessage: _errorMessage,
-              onVideoTap: _onVideoTap,
-              onGlobalMenuAction: _handleMenuAction,
-            ),
-            // 底部指示器 - 加载更多或到底提示
-            if (_isLoadingMore)
-              const Padding(
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader()),
+          SliverToBoxAdapter(child: _buildFilterSection()),
+          SliverToBoxAdapter(child: Gap.h16),
+          ShortDramaGrid(
+            shortDramas: _shortDramas,
+            isLoading: _isLoading && _shortDramas.isEmpty,
+            errorMessage: _errorMessage,
+            onVideoTap: _onVideoTap,
+            onGlobalMenuAction: _handleMenuAction,
+          ).buildSliver(),
+          if (_isLoadingMore)
+            const SliverToBoxAdapter(
+              child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: PulsingDotsIndicator(),
-              )
-            else if (!_hasMore && _shortDramas.isNotEmpty && !_isLoading)
-              _buildEndOfListIndicator()
-            else
-              const SizedBox(height: 50), // 占位符保持间距
-          ],
-        ),
+              ),
+            )
+          else if (!_hasMore && _shortDramas.isNotEmpty && !_isLoading)
+            SliverToBoxAdapter(child: _buildEndOfListIndicator())
+          else
+            const SliverToBoxAdapter(child: SizedBox(height: 50)),
+        ],
       ),
     );
   }
@@ -309,14 +288,14 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '短剧',
+            AppStrings.navShortDrama,
             style: FontUtils.poppins(
-              fontSize: 28,
+              fontSize: AppDimens.fontSizeHeadline,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
-          
+
         ],
       ),
     );
@@ -325,25 +304,25 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   Widget _buildFilterSection() {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
-      width: double.infinity, // 设置为100%宽度
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      width: double.infinity,
+      margin: const EdgeInsets.all(AppDimens.spacingLg),
+      padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? Colors.white.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: _buildFilterRow(
-        '分类',
-        _shortDramaPrimaryOptions,
-        _selectedCategoryValue,
-        (newValue) {
-          setState(() {
-            _selectedCategoryValue = newValue;
-          });
-          _fetchShortDramas(isRefresh: true);
-        },
+        AppStrings.filterCategory,
+        _categories
+            .map((c) => SelectorOption(
+                  label: c['type_name'] as String,
+                  value: c['type_name'] as String,
+                ))
+            .toList(),
+        _selectedCategoryName ?? '',
+        _onCategorySelected,
       ),
     );
   }
@@ -360,18 +339,19 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
         Text(
           title,
           style: FontUtils.poppins(
-            fontSize: 14,
+            fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        Gap.h8,
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: CapsuleTabSwitcher(
             tabs: items.map((e) => e.label).toList(),
-            selectedTab:
-                items.firstWhere((e) => e.value == selectedValue).label,
+            selectedTab: selectedValue.isNotEmpty
+                ? items.firstWhere((e) => e.value == selectedValue).label
+                : items.first.label,
             onTabChanged: (newLabel) {
               final newValue =
                   items.firstWhere((e) => e.label == newLabel).value;
@@ -387,8 +367,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-          16, 8, 16, 16), // 减少顶部padding，保持底部padding与加载指示器一致
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
         children: [
           Container(
@@ -398,28 +377,28 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
                   : Colors.grey.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(1),
+              borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '已经到底啦~',
+            AppStrings.noMoreData,
             style: FontUtils.poppins(
-              fontSize: 14,
+              fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.6)
-                  : Colors.grey[600],
+                  : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.h4,
           Text(
-            '共 ${_shortDramas.length} 部短剧',
+            AppStrings.countShortDrama.replaceAll('%d', '${_shortDramas.length}'),
             style: FontUtils.poppins(
-              fontSize: 12,
+              fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
                   ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.grey[500],
+                  : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
           ),

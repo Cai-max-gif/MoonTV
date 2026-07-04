@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_strings.dart';
 
 class PlayerDownloadPanel extends StatefulWidget {
   final ThemeData theme;
@@ -121,7 +124,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1c1c1e) : Colors.white,
+        color: isDarkMode ? AppColors.darkCard : AppColors.white,
       ),
       child: Column(
         children: [
@@ -132,7 +135,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '下载 (${widget.episodes.length})',
+                  AppStrings.downloadCount.replaceAll('%d', '${widget.episodes.length}'),
                   style: widget.theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -146,10 +149,10 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
                           Checkbox(
                             value: _selectAll,
                             onChanged: (_) => _toggleSelectAll(),
-                            activeColor: Colors.green,
+                            activeColor: AppColors.green,
                           ),
                           Text(
-                            '全选',
+                            AppStrings.panelSelectAll,
                             style: widget.theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -170,7 +173,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
             child: GridView.builder(
               key: _gridKey,
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: AppDimens.contentPadding,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 12,
@@ -190,7 +193,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
                     episodeIndex < widget.episodesTitles.length) {
                   episodeTitle = widget.episodesTitles[episodeIndex];
                 } else {
-                  episodeTitle = '第${episodeIndex + 1}集';
+                  episodeTitle = AppStrings.playerEpisodeFormat.replaceAll('%d', '${episodeIndex + 1}');
                 }
 
                 return _DownloadEpisodeItem(
@@ -210,17 +213,17 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
             child: ElevatedButton(
               onPressed: _downloadSelected,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.green,
                 minimumSize: const Size(double.infinity, 48),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                 ),
               ),
               child: Text(
-                '下载 (${_selectedEpisodes.where((selected) => selected).length})',
+                  AppStrings.downloadCount.replaceAll('%d', '${_selectedEpisodes.where((selected) => selected).length}'),
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
+                  color: AppColors.white,
+                  fontSize: AppDimens.fontSizeXl,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -273,21 +276,21 @@ class _DownloadEpisodeItemState extends State<_DownloadEpisodeItem> {
         child: Container(
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? Colors.green.withValues(alpha: 0.2)
+                ? AppColors.green.withValues(alpha: 0.2)
                 : (widget.isCurrentEpisode
-                    ? Colors.blue.withValues(alpha: 0.2)
+                    ? AppColors.blue.withValues(alpha: 0.2)
                     : (_isHovering && DeviceUtils.isPC()
                         ? (widget.isDarkMode
-                            ? const Color(0xFF1A3D2E)
-                            : const Color(0xFFE8F5E9))
+                            ? AppColors.darkGreen
+                            : AppColors.greenBg)
                         : (widget.isDarkMode
-                            ? Colors.grey[800]
-                            : Colors.grey[200]))),
-            borderRadius: BorderRadius.circular(8),
+                            ? AppColors.gray800
+                            : AppColors.gray200))),
+            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             border: widget.isSelected
-                ? Border.all(color: Colors.green, width: 2)
+                ? Border.all(color: AppColors.green, width: 2)
                 : (widget.isCurrentEpisode
-                    ? Border.all(color: Colors.blue, width: 2)
+                    ? Border.all(color: AppColors.blue, width: 2)
                     : null),
           ),
           child: Stack(
@@ -304,14 +307,14 @@ class _DownloadEpisodeItemState extends State<_DownloadEpisodeItem> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: widget.isSelected
-                          ? Colors.green
+                          ? AppColors.green
                           : (widget.isCurrentEpisode
-                              ? Colors.blue
+                              ? AppColors.blue
                               : (widget.isDarkMode
-                                  ? Colors.white
-                                  : Colors.black)),
+                                  ? AppColors.white
+                                  : AppColors.black)),
                       fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      fontSize: AppDimens.fontSizeMd,
                     ),
                   ),
                 ),
@@ -324,7 +327,7 @@ class _DownloadEpisodeItemState extends State<_DownloadEpisodeItem> {
                   child: Checkbox(
                     value: widget.isSelected,
                     onChanged: (_) => widget.onTap(),
-                    activeColor: Colors.green,
+                    activeColor: AppColors.green,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),

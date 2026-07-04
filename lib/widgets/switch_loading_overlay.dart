@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
 import '../utils/device_utils.dart';
+import '../constants/app_colors.dart';
 
 /// 切换播放源/集数时的加载蒙版组件
 class SwitchLoadingOverlay extends StatelessWidget {
@@ -22,7 +24,7 @@ class SwitchLoadingOverlay extends StatelessWidget {
 
     return Positioned.fill(
       child: Container(
-        color: Colors.black,
+        color: AppColors.black,
         child: Stack(
           children: [
             // 左上角返回按钮
@@ -33,16 +35,16 @@ class SwitchLoadingOverlay extends StatelessWidget {
                 child: DeviceUtils.isPC()
                     ? _HoverBackButton(
                         onTap: onBackPressed!,
-                        iconColor: Colors.white,
+                        iconColor: AppColors.white,
                       )
                     : GestureDetector(
                         onTap: onBackPressed,
                         behavior: HitTestBehavior.opaque,
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(AppDimens.spacingSm),
                           child: const Icon(
                             Icons.arrow_back,
-                            color: Colors.white,
+                            color: AppColors.white,
                             size: 20,
                           ),
                         ),
@@ -65,8 +67,8 @@ class SwitchLoadingOverlay extends StatelessWidget {
                           height: 100,
                           decoration: BoxDecoration(
                             color:
-                                const Color(0xFF2ecc71).withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(20),
+                                AppColors.green.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(AppDimens.radiusRound),
                           ),
                         ),
                       ),
@@ -78,20 +80,20 @@ class SwitchLoadingOverlay extends StatelessWidget {
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF2ecc71), Color(0xFF27ae60)],
+                            colors: [AppColors.green, AppColors.accent],
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
                         ),
                         child: const Center(
                           child: Text(
                             '🎬',
-                            style: TextStyle(fontSize: 24),
+                            style: TextStyle(fontSize: AppDimens.iconLg),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  Gap.h24,
                   // 加载文案
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -99,8 +101,8 @@ class SwitchLoadingOverlay extends StatelessWidget {
                       Text(
                         message,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
+                          color: AppColors.white,
+                          fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -143,11 +145,11 @@ class _HoverBackButtonState extends State<_HoverBackButton> {
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppDimens.spacingSm),
           decoration: _isHovering
               ? BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey.withValues(alpha: 0.5),
+                  color: AppColors.hoverOverlay,
                 )
               : null,
           child: Icon(

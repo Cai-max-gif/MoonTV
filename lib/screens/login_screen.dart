@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_regex.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
@@ -10,7 +13,10 @@ import '../utils/input_validator_utils.dart';
 import '../widgets/windows_title_bar.dart';
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
+import '../constants/app_config.dart';
+import '../constants/app_durations.dart';
 import 'register_screen.dart';
+import '../constants/app_strings.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,8 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadSavedUserData();
   }
 
-  void _loadSavedUserData() async {
+  Future<void> _loadSavedUserData() async {
     final userData = await UserDataService.getAllUserData();
+    if (!mounted) return;
     bool hasData = false;
 
     if (userData['username'] != null) {
@@ -61,25 +68,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleTelegramLogin() async {
+  Future<void> _handleTelegramLogin() async {
     if (_isTelegramLoading) return;
 
     // 检查账户是否被锁定
     bool isLocked = await UserDataService.isAccountLocked();
+    if (!mounted) return;
     if (isLocked) {
       final remainingTime = await UserDataService.getAccountLockRemainingTime();
       if (remainingTime != null) {
         final minutes = remainingTime.inMinutes;
-        _showToast('账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
+        _showToast(AppStrings.formatLockedMinutes.replaceAll('%d', '$minutes'), AppColors.error);
       } else {
-        _showToast('账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+        _showToast(AppStrings.formatLockedLater, AppColors.error);
       }
       return;
     }
 
     setState(() {
       _isTelegramLoading = true;
-      _telegramStatus = '正在连接 Telegram...';
+      _telegramStatus = AppStrings.authTelegramConnecting;
     });
 
     final result = await TelegramAuthService.authenticate(
@@ -102,9 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result.success) {
       if (result.isNewUser) {
-        _showToast('注册成功，请查看 Telegram 机器人发送的账号密码', const Color(0xFF2ecc71));
+        _showToast(AppStrings.authTelegramRegisterSuccess, AppColors.green);
       } else {
-        _showToast('登录成功', const Color(0xFF2ecc71));
+        _showToast(AppStrings.authLoginSuccess, AppColors.green);
       }
       Navigator.pushAndRemoveUntil(
         context,
@@ -117,18 +125,19 @@ class _LoginScreenState extends State<LoginScreen> {
       
       // 检查是否被锁定
       bool isLocked = await UserDataService.isAccountLocked();
+      if (!mounted) return;
       if (isLocked) {
         final remainingTime = await UserDataService.getAccountLockRemainingTime();
         if (remainingTime != null) {
           final minutes = remainingTime.inMinutes;
-          _showToast('${result.error ?? 'Telegram 登录失败'}，账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
+          _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，账户已被锁定，请$minutes分钟后再试', AppColors.error);
         } else {
-          _showToast('${result.error ?? 'Telegram 登录失败'}，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+          _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，账户已被锁定，请稍后再试', AppColors.error);
         }
       } else {
         final attempts = await UserDataService.getLoginAttempts();
         final remainingAttempts = 5 - attempts;
-        _showToast('${result.error ?? 'Telegram 登录失败'}，还有$remainingAttempts次尝试机会', const Color(0xFFe74c3c));
+        _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，还有$remainingAttempts次尝试机会', AppColors.error);
       }
     }
   }
@@ -176,37 +185,38 @@ class _LoginScreenState extends State<LoginScreen> {
         content: Text(
           message,
           style: FontUtils.poppins(
-            color: Colors.white,
-            fontSize: 14,
+            color: AppColors.white,
+            fontSize: AppDimens.fontSizeMd,
           ),
         ),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLg),
+        duration: AppDurations.toastDuration,
       ),
     );
   }
 
-  void _handleLogin() async {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate() ||
         !_isFormValid ||
         _passwordController.text.isEmpty) {
-      _showToast('请填写完整的登录信息', const Color(0xFFe74c3c));
+        _showToast(AppStrings.authLoginEmpty, AppColors.error);
       return;
     }
 
     bool isLocked = await UserDataService.isAccountLocked();
+    if (!mounted) return;
     if (isLocked) {
       final remainingTime = await UserDataService.getAccountLockRemainingTime();
       if (remainingTime != null) {
         final minutes = remainingTime.inMinutes;
-        _showToast('账户已被锁定，请$minutes分钟后再试', const Color(0xFFe74c3c));
+        _showToast(AppStrings.formatLockedMinutes.replaceAll('%d', '$minutes'), AppColors.error);
       } else {
-        _showToast('账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+        _showToast(AppStrings.authAccountLockedLater, AppColors.error);
       }
       return;
     }
@@ -220,8 +230,8 @@ class _LoginScreenState extends State<LoginScreen> {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
       // 确保使用HTTPS
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(r'^http://'), 'https://');
-      String loginUrl = '$secureBaseUrl/api/login';
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+      String loginUrl = '$secureBaseUrl${AppConfig.loginEndpoint}';
 
       // 判断是否为邮箱登录
       bool isEmailLogin = InputValidatorUtils.isEmail(_usernameController.text);
@@ -230,15 +240,16 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await http.post(
         Uri.parse(loginUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': AppStrings.contentTypeJson,
         },
         body: json.encode({
           'username': _usernameController.text,
           'password': _passwordController.text,
           'isEmail': isEmailLogin,
         }),
-      );
+      ).timeout(AppConfig.authRequestTimeout);
 
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -287,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
         case 401:
           // 解析响应体，检查是否为账号封禁
-          String errorMessage = '用户名或密码错误';
+          String errorMessage = AppStrings.authLoginFailed;
           bool isBanned = false;
           try {
             final responseData = json.decode(response.body);
@@ -323,37 +334,38 @@ class _LoginScreenState extends State<LoginScreen> {
           isLocked = await UserDataService.isAccountLocked();
           if (isBanned) {
             // 账号被封禁，直接显示封禁提示
-            _showToast(errorMessage, const Color(0xFFe74c3c));
+            _showToast(errorMessage, AppColors.error);
           } else if (isLocked) {
             final remainingTime =
                 await UserDataService.getAccountLockRemainingTime();
             if (remainingTime != null) {
               final minutes = remainingTime.inMinutes;
               _showToast('$errorMessage，账户已被锁定，请$minutes分钟后再试',
-                  const Color(0xFFe74c3c));
+                  AppColors.error);
             } else {
-              _showToast('$errorMessage，账户已被锁定，请稍后再试', const Color(0xFFe74c3c));
+              _showToast('$errorMessage，${AppStrings.authAccountLocked}', AppColors.error);
             }
           } else {
             final attempts = await UserDataService.getLoginAttempts();
-            final remainingAttempts = 5 - attempts;
+        final remainingAttempts = AppConfig.maxLoginAttempts - attempts;
             _showToast('$errorMessage，还有$remainingAttempts次尝试机会',
-                const Color(0xFFe74c3c));
+                AppColors.error);
           }
           break;
         case 500:
-          _showToast('服务器错误', const Color(0xFFe74c3c));
+          _showToast(AppStrings.serverError, AppColors.error);
           break;
         default:
-          _showToast('网络异常', const Color(0xFFe74c3c));
+          _showToast(AppStrings.networkError, AppColors.error);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
       // 记录登录失败
       await UserDataService.recordLoginFailure();
-      _showToast('网络异常', const Color(0xFFe74c3c));
+      _showToast(AppStrings.networkError, AppColors.error);
     }
   }
 
@@ -368,12 +380,12 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFe6f3fb), // #e6f3fb 0%
-              Color(0xFFeaf3f7), // #eaf3f7 18%
-              Color(0xFFf7f7f3), // #f7f7f3 38%
-              Color(0xFFe9ecef), // #e9ecef 60%
-              Color(0xFFdbe3ea), // #dbe3ea 80%
-              Color(0xFFd3dde6), // #d3dde6 100%
+              AppColors.gradStart, // #e6f3fb 0%
+              AppColors.gradMid1, // #eaf3f7 18%
+              AppColors.gradMid2, // #f7f7f3 38%
+              AppColors.gradMid3, // #e9ecef 60%
+              AppColors.gradMid4, // #dbe3ea 80%
+              AppColors.gradEnd, // #d3dde6 100%
             ],
             stops: [0.0, 0.18, 0.38, 0.60, 0.80, 1.0],
           ),
@@ -411,21 +423,21 @@ class _LoginScreenState extends State<LoginScreen> {
         // Logo 图标
         Image.asset(
           'assets/images/logo/logo.png',
-          width: 100,
-          height: 100,
+          width: AppDimens.logoSize,
+          height: AppDimens.logoSize,
         ),
-        const SizedBox(height: 20),
+        Gap.h20,
         // MoonTV 标题
         Text(
           'MoonTV',
           style: FontUtils.sourceCodePro(
-            fontSize: 42,
+            fontSize: AppDimens.fontSizeHero,
             fontWeight: FontWeight.w400,
-            color: const Color(0xFF2c3e50),
+            color: AppColors.primary,
             letterSpacing: 1.5,
           ),
         ),
-        const SizedBox(height: 40),
+        Gap.h40,
 
         // 登录表单 - 无边框设计
         Form(
@@ -437,46 +449,43 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: _usernameController,
                 style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2c3e50),
+                  fontSize: AppDimens.fontSizeXl,
+                  color: AppColors.primary,
                 ),
                 decoration: InputDecoration(
-                  labelText: '用户名或邮箱',
+                  labelText: AppStrings.authUsernameOrEmail,
                   labelStyle: FontUtils.poppins(
-                    color: const Color(0xFF7f8c8d),
-                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontSize: AppDimens.fontSizeMd,
                   ),
-                  hintText: '请输入用户名或邮箱',
+                  hintText: AppStrings.authHintUsernameOrEmail,
                   hintStyle: FontUtils.poppins(
-                    color: const Color(0xFFbdc3c7),
-                    fontSize: 16,
+                    color: AppColors.silver,
+                    fontSize: AppDimens.fontSizeXl,
                   ),
                   prefixIcon: Icon(
                     _isEmailInput ? Icons.email : Icons.person,
-                    color: const Color(0xFF7f8c8d),
+                    color: AppColors.textSecondary,
                     size: 20,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.6),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
+                  fillColor: AppColors.white.withValues(alpha: 0.6),
+                  contentPadding: AppDimens.inputPadding,
                 ),
                 onChanged: (value) {
-                  final isValidChar = RegExp(r'^[a-zA-Z0-9_.@\u4e00-\u9fa5]*$');
+                  final isValidChar = RegExp(AppRegex.usernameLogin);
                   if (!isValidChar.hasMatch(value)) {
                     String filtered;
                     if (InputValidatorUtils.isEmail(value)) {
@@ -495,45 +504,45 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '请输入用户名或邮箱';
+                    return AppStrings.authValidUsernameOrEmail;
                   }
                   if (InputValidatorUtils.isEmail(value)) {
                     if (!InputValidatorUtils.isEmailValid(value)) {
-                      return '请输入有效的邮箱地址';
+                      return AppStrings.authValidEmail;
                     }
                   } else {
                     if (!InputValidatorUtils.isLoginUsernameValid(value)) {
-                      return '用户名长度不能超过32个字符';
+                      return AppStrings.authValidUsernameLength;
                     }
                   }
                   return null;
                 },
                 onFieldSubmitted: (_) => _handleSubmit(),
               ),
-              const SizedBox(height: 20),
+              Gap.h20,
 
               // 密码输入框
               TextFormField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
                 style: FontUtils.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2c3e50),
+                  fontSize: AppDimens.fontSizeXl,
+                  color: AppColors.primary,
                 ),
                 decoration: InputDecoration(
-                  labelText: '密码',
+                  labelText: AppStrings.authPassword,
                   labelStyle: FontUtils.poppins(
-                    color: const Color(0xFF7f8c8d),
-                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontSize: AppDimens.fontSizeMd,
                   ),
-                  hintText: '请输入密码',
+                  hintText: AppStrings.authHintPassword,
                   hintStyle: FontUtils.poppins(
-                    color: const Color(0xFFbdc3c7),
-                    fontSize: 16,
+                    color: AppColors.silver,
+                    fontSize: AppDimens.fontSizeXl,
                   ),
                   prefixIcon: const Icon(
                     Icons.lock,
-                    color: Color(0xFF7f8c8d),
+                    color: AppColors.textSecondary,
                     size: 20,
                   ),
                   suffixIcon: IconButton(
@@ -541,7 +550,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _isPasswordVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: const Color(0xFF7f8c8d),
+                      color: AppColors.textSecondary,
                       size: 20,
                     ),
                     onPressed: () {
@@ -551,23 +560,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.6),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
+                  fillColor: AppColors.white.withValues(alpha: 0.6),
+                  contentPadding: AppDimens.inputPadding,
                 ),
                 onChanged: (value) {
                   final filtered = InputValidatorUtils.filterPassword(value);
@@ -581,16 +587,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '请输入密码';
+                    return AppStrings.authValidPassword;
                   }
                   if (!InputValidatorUtils.isPasswordValid(value)) {
-                    return '密码长度不能超过32个字符';
+                    return AppStrings.authValidPasswordLength;
                   }
                   return null;
                 },
                 onFieldSubmitted: (_) => _handleSubmit(),
               ),
-              const SizedBox(height: 12),
+              Gap.h12,
 
               // 注册 + 忘记密码
               Row(
@@ -604,15 +610,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text(
-                      '注册',
+                      AppStrings.authRegister,
                       style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF2c3e50),
+                        fontSize: AppDimens.fontSizeMd,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 20),
+                  Gap.w20,
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(
@@ -621,32 +627,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text(
-                      '忘记密码',
+                      AppStrings.authForgotPassword,
                       style: FontUtils.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF2c3e50),
+                        fontSize: AppDimens.fontSizeMd,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              Gap.h12,
 
               // 登录按钮
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _isLoading
-                      ? const Color(0xFFbdc3c7)
-                      : const Color(0xFF2c3e50),
+                      ? AppColors.silver
+                      : AppColors.primary,
                   foregroundColor:
-                      _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
+                      _isLoading ? AppColors.textSecondary : AppColors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                   ),
-                  elevation: 0,
+                  elevation: AppDimens.elevationNone,
                   shadowColor: Colors.transparent,
                 ),
                 child: _isLoading
@@ -659,31 +665,31 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                AppColors.white,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          Gap.w12,
                           Text(
-                            '登录中...',
+                            AppStrings.authLoginLoading,
                             style: FontUtils.poppins(
-                              fontSize: 16,
+                              fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                         ],
                       )
                     : Text(
-                        '登录',
+                        AppStrings.authLogin,
                         style: FontUtils.poppins(
-                          fontSize: 16,
+                          fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 1.0,
                         ),
                       ),
               ),
-              const SizedBox(height: 20),
+              Gap.h20,
               // Telegram 登录图标
               Center(
                 child: Column(
@@ -696,22 +702,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 40,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                color: Color(0xFF0088cc),
+                                color: AppColors.linkBlue,
                               ),
                             )
                           : const Icon(
                               Icons.telegram,
-                              color: Color(0xFF0088cc),
+                              color: AppColors.linkBlue,
                               size: 40,
                             ),
                     ),
                     if (_telegramStatus != null) ...[
-                      const SizedBox(height: 8),
+                      Gap.h8,
                       Text(
                         _telegramStatus!,
                         style: FontUtils.poppins(
-                          fontSize: 12,
-                          color: const Color(0xFF666666),
+                          fontSize: AppDimens.fontSizeXs,
+                          color: AppColors.textDarkHint,
                         ),
                       ),
                     ],
@@ -729,28 +735,28 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildTabletLayout() {
     return Container(
       constraints: const BoxConstraints(maxWidth: 480),
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingXxl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Logo 图标
           Image.asset(
             'assets/images/logo/logo.png',
-            width: 100,
-            height: 100,
+            width: AppDimens.logoSize,
+            height: AppDimens.logoSize,
           ),
-          const SizedBox(height: 20),
+          Gap.h20,
           // MoonTV 标题
           Text(
             'MoonTV',
             style: FontUtils.sourceCodePro(
-              fontSize: 42,
+              fontSize: AppDimens.fontSizeHero,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF2c3e50),
+              color: AppColors.primary,
               letterSpacing: 1.5,
             ),
           ),
-          const SizedBox(height: 40),
+          Gap.h40,
 
           // 登录表单 - 无边框设计
           Form(
@@ -762,47 +768,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _usernameController,
                   style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
                   ),
                   decoration: InputDecoration(
-                    labelText: '用户名或邮箱',
+                    labelText: AppStrings.authUsernameOrEmail,
                     labelStyle: FontUtils.poppins(
-                      color: const Color(0xFF7f8c8d),
-                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                      fontSize: AppDimens.fontSizeMd,
                     ),
-                    hintText: '请输入用户名或邮箱',
+                    hintText: AppStrings.authHintUsernameOrEmail,
                     hintStyle: FontUtils.poppins(
-                      color: const Color(0xFFbdc3c7),
-                      fontSize: 16,
+                      color: AppColors.silver,
+                      fontSize: AppDimens.fontSizeXl,
                     ),
                     prefixIcon: Icon(
                       _isEmailInput ? Icons.email : Icons.person,
-                      color: const Color(0xFF7f8c8d),
+                      color: AppColors.textSecondary,
                       size: 20,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.6),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
+                    fillColor: AppColors.white.withValues(alpha: 0.6),
+                    contentPadding: AppDimens.inputPadding,
                   ),
                   onChanged: (value) {
                     final isValidChar =
-                        RegExp(r'^[a-zA-Z0-9_.@\u4e00-\u9fa5]*$');
+                        RegExp(AppRegex.usernameLogin);
                     if (!isValidChar.hasMatch(value)) {
                       String filtered;
                       if (InputValidatorUtils.isEmail(value)) {
@@ -822,45 +825,45 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入用户名或邮箱';
+                      return AppStrings.authValidUsernameOrEmail;
                     }
                     if (InputValidatorUtils.isEmail(value)) {
                       if (!InputValidatorUtils.isEmailValid(value)) {
-                        return '请输入有效的邮箱地址';
+                        return AppStrings.authValidEmail;
                       }
                     } else {
                       if (!InputValidatorUtils.isLoginUsernameValid(value)) {
-                        return '用户名长度不能超过32个字符';
+                        return AppStrings.authValidUsernameLength;
                       }
                     }
                     return null;
                   },
                   onFieldSubmitted: (_) => _handleSubmit(),
                 ),
-                const SizedBox(height: 20),
+                Gap.h20,
 
                 // 密码输入框
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
                   style: FontUtils.poppins(
-                    fontSize: 16,
-                    color: const Color(0xFF2c3e50),
+                    fontSize: AppDimens.fontSizeXl,
+                    color: AppColors.primary,
                   ),
                   decoration: InputDecoration(
                     labelText: '密码',
                     labelStyle: FontUtils.poppins(
-                      color: const Color(0xFF7f8c8d),
-                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                      fontSize: AppDimens.fontSizeMd,
                     ),
-                    hintText: '请输入密码',
+                    hintText: AppStrings.authHintPassword,
                     hintStyle: FontUtils.poppins(
-                      color: const Color(0xFFbdc3c7),
-                      fontSize: 16,
+                      color: AppColors.silver,
+                      fontSize: AppDimens.fontSizeXl,
                     ),
                     prefixIcon: const Icon(
                       Icons.lock,
-                      color: Color(0xFF7f8c8d),
+                      color: AppColors.textSecondary,
                       size: 20,
                     ),
                     suffixIcon: IconButton(
@@ -868,7 +871,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         _isPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
-                        color: const Color(0xFF7f8c8d),
+                        color: AppColors.textSecondary,
                         size: 20,
                       ),
                       onPressed: () {
@@ -878,23 +881,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.6),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
+                    fillColor: AppColors.white.withValues(alpha: 0.6),
+                    contentPadding: AppDimens.inputPadding,
                   ),
                   onChanged: (value) {
                     final filtered = InputValidatorUtils.filterPassword(value);
@@ -908,16 +908,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入密码';
+                      return AppStrings.authValidPassword;
                     }
                     if (!InputValidatorUtils.isPasswordValid(value)) {
-                      return '密码长度不能超过32个字符';
+                      return AppStrings.authValidPasswordLength;
                     }
                     return null;
                   },
                   onFieldSubmitted: (_) => _handleSubmit(),
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
 
                 // 注册 + 忘记密码
                 Row(
@@ -931,15 +931,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                       child: Text(
-                        '注册',
+                      AppStrings.authRegister,
                         style: FontUtils.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF2c3e50),
+                          fontSize: AppDimens.fontSizeMd,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    Gap.w20,
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
@@ -949,32 +949,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                       child: Text(
-                        '忘记密码',
+                        AppStrings.authForgotPassword,
                         style: FontUtils.poppins(
-                          fontSize: 14,
-                          color: const Color(0xFF2c3e50),
+                          fontSize: AppDimens.fontSizeMd,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                Gap.h12,
 
                 // 登录按钮
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isLoading
-                        ? const Color(0xFFbdc3c7)
-                        : const Color(0xFF2c3e50),
+                        ? AppColors.silver
+                        : AppColors.primary,
                     foregroundColor:
-                        _isLoading ? const Color(0xFF7f8c8d) : Colors.white,
+                        _isLoading ? AppColors.textSecondary : AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
-                    elevation: 0,
+                    elevation: AppDimens.elevationNone,
                     shadowColor: Colors.transparent,
                   ),
                   child: _isLoading
@@ -987,31 +987,31 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  AppColors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            Gap.w12,
                             Text(
-                              '登录中...',
+                              AppStrings.authLoginLoading,
                               style: FontUtils.poppins(
-                                fontSize: 16,
+                                fontSize: AppDimens.fontSizeXl,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ],
                         )
                       : Text(
-                          '登录',
+                          AppStrings.authLogin,
                           style: FontUtils.poppins(
-                            fontSize: 16,
+                            fontSize: AppDimens.fontSizeXl,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 1.0,
                           ),
                         ),
                 ),
-                // const SizedBox(height: 20),
+                // Gap.h20,
                 // Telegram 登录图标
                 Center(
                   child: Column(
@@ -1024,22 +1024,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                 height: 40,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: Color(0xFF0088cc),
+                                  color: AppColors.linkBlue,
                                 ),
                               )
                             : const Icon(
                                 Icons.telegram,
-                                color: Color(0xFF0088cc),
+                                color: AppColors.linkBlue,
                                 size: 40,
                               ),
                       ),
                       if (_telegramStatus != null) ...[
-                        const SizedBox(height: 8),
+                        Gap.h8,
                         Text(
                           _telegramStatus!,
                           style: FontUtils.poppins(
-                            fontSize: 12,
-                            color: const Color(0xFF666666),
+                            fontSize: AppDimens.fontSizeXs,
+                            color: AppColors.textDarkHint,
                           ),
                         ),
                       ],

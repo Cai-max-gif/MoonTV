@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:pointycastle/export.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class M3U8Segment {
   final String url;
@@ -31,21 +33,30 @@ class DownloadEngine {
   final Dio _dio;
   bool _cancelled = false;
 
-  DownloadEngine({Dio? dio})
+  DownloadEngine({Dio? dio, String? referer, String? origin})
       : _dio = dio ??
             Dio(BaseOptions(
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 60),
+              connectTimeout: AppConfig.downloadConnectTimeout,
+              receiveTimeout: AppConfig.downloadReceiveTimeout,
               headers: {
-                'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'User-Agent': AppConfig.defaultUserAgent,
                 'Accept': '*/*',
-                'Accept-Language': 'zh-CN,zh;q=0.9',
+                'Accept-Language': AppConfig.headerAcceptLanguage,
+                if (referer != null) 'Referer': referer,
+                if (origin != null) 'Origin': origin,
               },
             ));
 
   void cancel() {
     _cancelled = true;
+  }
+
+  Map<String, dynamic> _mergeHeaders(Map<String, String>? customHeaders) {
+    final mergedHeaders = <String, dynamic>{..._dio.options.headers};
+    if (customHeaders != null) {
+      mergedHeaders.addAll(customHeaders);
+    }
+    return mergedHeaders;
   }
 
   Future<String> download({
@@ -54,12 +65,13 @@ class DownloadEngine {
     required int concurrentThreads,
     required void Function(double progress, int downloadedBytes, int totalBytes)
         onProgress,
+    Map<String, String>? headers,
   }) async {
     _cancelled = false;
 
-    final parseResult = await _parseM3U8(m3u8Url);
+    final parseResult = await _parseM3U8(m3u8Url, headers: headers);
 
-    if (_cancelled) throw Exception('下载已取消');
+    if (_cancelled) throw Exception(AppStrings.updateCancelled);
 
     if (parseResult.segments.isEmpty) {
       throw Exception('未解析到任何视频片段，可能不是有效的 M3U8 地址');
@@ -90,14 +102,14 @@ class DownloadEngine {
     Uint8List? keyBytes;
     if (parseResult.keyUrl != null && parseResult.keyBytes == null) {
       try {
-        keyBytes = await _downloadKey(parseResult.keyUrl!);
+        keyBytes = await _downloadKey(parseResult.keyUrl!, headers: headers);
       } catch (e) {
         await _cleanupTemp(tempDir);
         throw Exception('下载解密密钥失败: $e');
       }
       if (_cancelled) {
         await _cleanupTemp(tempDir);
-        throw Exception('下载已取消');
+        throw Exception(AppStrings.updateCancelled);
       }
     } else {
       keyBytes = parseResult.keyBytes;
@@ -141,6 +153,7 @@ class DownloadEngine {
             keyBytes: keyBytes,
             ivString: parseResult.ivString,
             segmentIndex: segmentIndex,
+            headers: headers,
           );
         } catch (_) {
           hasFailed = true;
@@ -163,12 +176,12 @@ class DownloadEngine {
 
     if (_cancelled) {
       await _cleanupTemp(tempDir);
-      throw Exception('下载已取消');
+      throw Exception(AppStrings.updateCancelled);
     }
 
     if (hasFailed) {
       await _cleanupTemp(tempDir);
-      throw Exception('下载失败：部分片段下载出错');
+      throw Exception(AppStrings.downloadSegmentFailed);
     }
 
     final allSegmentPaths = <String>[];
@@ -207,14 +220,30 @@ class DownloadEngine {
     int downloaded,
     int total,
   ) {
-    try {
-      callback(progress, downloaded, total);
-    } catch (_) {}
+    callback(progress, downloaded, total);
   }
 
-  Future<M3U8ParseResult> _parseM3U8(String m3u8Url) async {
-    final response = await _dio.get(m3u8Url);
+  Future<M3U8ParseResult> _parseM3U8(String m3u8Url, {int depth = 0, Map<String, String>? headers}) async {
+    if (depth > 5) {
+      throw Exception('M3U8 解析层级过深，可能存在循环引用');
+    }
+
+    final requestOptions = Options(headers: _mergeHeaders(headers));
+    final response = await _dio.get(m3u8Url, options: requestOptions);
     final content = response.data.toString();
+
+    if (!content.startsWith('#EXTM3U')) {
+      throw Exception('无效的 M3U8 链接');
+    }
+
+    if (content.contains('#EXT-X-STREAM-INF')) {
+      final subPlaylistUrl = _extractSubPlaylistUrl(content, m3u8Url);
+      if (subPlaylistUrl == null) {
+        throw Exception('无法从主播放列表提取子播放列表');
+      }
+      return _parseM3U8(subPlaylistUrl, depth: depth + 1, headers: headers);
+    }
+
     final lines = content.split('\n').map((l) => l.trim()).toList();
 
     String? keyUrl;
@@ -274,6 +303,51 @@ class DownloadEngine {
     );
   }
 
+  String? _extractSubPlaylistUrl(String content, String baseUrl) {
+    final lines = content.split('\n').map((l) => l.trim()).toList();
+    
+    String? bestUrl;
+    int bestBandwidth = 0;
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      
+      if (line.startsWith('#EXT-X-STREAM-INF')) {
+        final bandwidthMatch = RegExp(r'BANDWIDTH=(\d+)').firstMatch(line);
+        final bandwidth = bandwidthMatch != null 
+            ? int.parse(bandwidthMatch.group(1)!) 
+            : 0;
+
+        String? url;
+        
+        final streamInfEnd = line.indexOf(',');
+        if (streamInfEnd != -1) {
+          final remaining = line.substring(streamInfEnd + 1).trim();
+          if (remaining.isNotEmpty && !remaining.startsWith('#')) {
+            url = remaining;
+          }
+        }
+        
+        if (url == null && i + 1 < lines.length) {
+          final nextLine = lines[i + 1].trim();
+          if (nextLine.isNotEmpty && !nextLine.startsWith('#')) {
+            url = nextLine;
+          }
+        }
+
+        if (url != null) {
+          final resolvedUrl = _resolveUrl(url, baseUrl);
+          if (bandwidth > bestBandwidth) {
+            bestBandwidth = bandwidth;
+            bestUrl = resolvedUrl;
+          }
+        }
+      }
+    }
+    
+    return bestUrl;
+  }
+
   String? _extractAttr(String line, String attrName) {
     final pattern = RegExp('$attrName=("([^"]*)"|([^,]*))');
     final match = pattern.firstMatch(line);
@@ -283,11 +357,12 @@ class DownloadEngine {
     return null;
   }
 
-  Future<Uint8List> _downloadKey(String keyUrl) async {
-    final response = await _dio.get(
-      keyUrl,
-      options: Options(responseType: ResponseType.bytes),
+  Future<Uint8List> _downloadKey(String keyUrl, {Map<String, String>? headers}) async {
+    final requestOptions = Options(
+      responseType: ResponseType.bytes,
+      headers: _mergeHeaders(headers),
     );
+    final response = await _dio.get(keyUrl, options: requestOptions);
     return Uint8List.fromList(response.data as List<int>);
   }
 
@@ -297,16 +372,18 @@ class DownloadEngine {
     required Uint8List? keyBytes,
     required String? ivString,
     required int segmentIndex,
+    Map<String, String>? headers,
   }) async {
     int retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = AppConfig.maxRetries;
 
     while (retryCount < maxRetries) {
       try {
-        final response = await _dio.get(
-          url,
-          options: Options(responseType: ResponseType.stream),
+        final requestOptions = Options(
+          responseType: ResponseType.stream,
+          headers: _mergeHeaders(headers),
         );
+        final response = await _dio.get(url, options: requestOptions);
 
         final responseStream = (response.data as ResponseBody).stream;
 
@@ -343,17 +420,15 @@ class DownloadEngine {
   }
   
   Future<void> _cleanupPartialFile(String savePath) async {
-    try {
-      final file = File(savePath);
-      if (await file.exists()) {
-        await file.delete();
-      }
-      final tempPath = '$savePath._enc';
-      final tempFile = File(tempPath);
-      if (await tempFile.exists()) {
-        await tempFile.delete();
-      }
-    } catch (_) {}
+    final file = File(savePath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+    final tempPath = '$savePath._enc';
+    final tempFile = File(tempPath);
+    if (await tempFile.exists()) {
+      await tempFile.delete();
+    }
   }
 
   Future<int> _streamToFile(Stream<List<int>> stream, String path) async {
@@ -372,11 +447,9 @@ class DownloadEngine {
       await sink.close();
       // 如果发生错误或文件为空，删除部分文件
       if (hasError || totalBytes == 0) {
-        try {
-          if (await file.exists()) {
-            await file.delete();
-          }
-        } catch (_) {}
+        if (await file.exists()) {
+          await file.delete();
+        }
       }
     }
     return totalBytes;
@@ -426,12 +499,15 @@ class DownloadEngine {
   }
 
   Uint8List _buildIvBytes(String? ivString, int segmentIndex) {
-    if (ivString != null && ivString.length == 32) {
-      final iv = Uint8List(16);
-      for (int i = 0; i < 16; i++) {
-        iv[i] = int.parse(ivString.substring(i * 2, i * 2 + 2), radix: 16);
+    if (ivString != null) {
+      final cleanIv = ivString.startsWith('0x') ? ivString.substring(2) : ivString;
+      if (cleanIv.length == 32) {
+        final iv = Uint8List(16);
+        for (int i = 0; i < 16; i++) {
+          iv[i] = int.parse(cleanIv.substring(i * 2, i * 2 + 2), radix: 16);
+        }
+        return iv;
       }
-      return iv;
     }
     return _intToBigEndianBytes(segmentIndex);
   }
@@ -447,17 +523,38 @@ class DownloadEngine {
 
   Future<void> _mergeSegments(
       List<String> segmentPaths, String outputPath) async {
-    if (segmentPaths.isEmpty) return;
+    if (segmentPaths.isEmpty) {
+      throw Exception('没有可合并的视频片段');
+    }
+
+    int totalSize = 0;
+    final validSegments = <String>[];
+
+    for (final segPath in segmentPaths) {
+      final segFile = File(segPath);
+      if (await segFile.exists()) {
+        final size = await segFile.length();
+        if (size > 0) {
+          validSegments.add(segPath);
+          totalSize += size;
+        }
+      }
+    }
+
+    if (validSegments.isEmpty) {
+      throw Exception('没有有效的视频片段可合并');
+    }
+
+    if (totalSize < AppConfig.m3u8MinFileSize) {
+      throw Exception('合并后的文件大小异常，可能下载失败');
+    }
 
     final outputFile = File(outputPath);
     final output = outputFile.openWrite();
     try {
-      for (final segPath in segmentPaths) {
-        final segFile = File(segPath);
-        if (await segFile.exists()) {
-          final stream = segFile.openRead();
-          await output.addStream(stream);
-        }
+      for (final segPath in validSegments) {
+        final stream = File(segPath).openRead();
+        await output.addStream(stream);
       }
     } finally {
       await output.close();
@@ -465,11 +562,9 @@ class DownloadEngine {
   }
 
   Future<void> _cleanupTemp(Directory tempDir) async {
-    try {
-      if (await tempDir.exists()) {
-        await tempDir.delete(recursive: true);
-      }
-    } catch (_) {}
+    if (await tempDir.exists()) {
+      await tempDir.delete(recursive: true);
+    }
   }
 
   String _resolveUrl(String url, String baseUrl) {
@@ -478,12 +573,16 @@ class DownloadEngine {
     }
 
     final baseUri = Uri.parse(baseUrl);
+    final hostWithPort = baseUri.hasPort
+        ? '${baseUri.host}:${baseUri.port}'
+        : baseUri.host;
+
     if (url.startsWith('/')) {
-      return '${baseUri.scheme}://${baseUri.host}${baseUri.hasPort ? ':${baseUri.port}' : ''}$url';
+      return '${baseUri.scheme}://$hostWithPort$url';
     } else {
       final basePath =
           baseUri.path.substring(0, baseUri.path.lastIndexOf('/') + 1);
-      return '${baseUri.scheme}://${baseUri.host}${baseUri.hasPort ? ':${baseUri.port}' : ''}$basePath$url';
+      return '${baseUri.scheme}://$hostWithPort$basePath$url';
     }
   }
 

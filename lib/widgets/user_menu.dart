@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -13,6 +14,10 @@ import '../services/version_service.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import 'update_dialog.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 class UserMenu extends StatefulWidget {
   final bool isDarkMode;
@@ -132,7 +137,7 @@ class _UserMenuState extends State<UserMenu> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('已清除豆瓣缓存')));
+        ).showSnackBar(SnackBar(content: Text(AppStrings.profileClearDone)));
         // 清除后关闭菜单
         widget.onClose?.call();
       }
@@ -140,7 +145,7 @@ class _UserMenuState extends State<UserMenu> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('清除豆瓣缓存失败')));
+        ).showSnackBar(SnackBar(content: Text(AppStrings.profileClearFailed)));
         // 即便失败也关闭菜单，避免停留
         widget.onClose?.call();
       }
@@ -154,11 +159,11 @@ class _UserMenuState extends State<UserMenu> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在检查更新...',
-              style: FontUtils.poppins(color: Colors.white),
+              AppStrings.profileCheckingUpdate,
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: Colors.black,
-            duration: const Duration(seconds: 2),
+            backgroundColor: AppColors.black,
+            duration: AppDurations.twoSeconds,
           ),
         );
       }
@@ -175,10 +180,10 @@ class _UserMenuState extends State<UserMenu> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '当前已是最新版本',
-              style: FontUtils.poppins(color: Colors.white),
+              AppStrings.profileAlreadyLatest,
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFF27AE60),
+            backgroundColor: AppColors.accent,
           ),
         );
       }
@@ -187,10 +192,10 @@ class _UserMenuState extends State<UserMenu> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '检查更新失败: ${e.toString()}',
-              style: FontUtils.poppins(color: Colors.white),
+              '${AppStrings.profileCheckUpdateFailed}${e.toString()}',
+              style: FontUtils.poppins(color: AppColors.white),
             ),
-            backgroundColor: const Color(0xFFef4444),
+            backgroundColor: AppColors.red,
           ),
         );
       }
@@ -203,17 +208,17 @@ class _UserMenuState extends State<UserMenu> {
 
     switch (_role) {
       case 'admin':
-        label = '管理员';
-        color = const Color(0xFFf59e0b); // 橙黄色
+        label = AppStrings.profileRoleAdmin;
+        color = AppColors.orange; // 橙黄色
         break;
       case 'owner':
-        label = '站长';
-        color = const Color(0xFF8b5cf6); // 紫色
+        label = AppStrings.profileRoleOwner;
+        color = AppColors.violet; // 紫色
         break;
       case 'user':
       default:
-        label = '用户';
-        color = const Color(0xFF10b981); // 绿色
+        label = AppStrings.profileRoleUser;
+        color = AppColors.emerald; // 绿色
         break;
     }
 
@@ -221,13 +226,13 @@ class _UserMenuState extends State<UserMenu> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Text(
         label,
         style: FontUtils.poppins(
-          fontSize: 10,
-          color: Colors.white,
+          fontSize: AppDimens.fontSize2xs,
+          color: AppColors.white,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -243,7 +248,7 @@ class _UserMenuState extends State<UserMenu> {
     required IconData icon,
   }) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
@@ -252,18 +257,18 @@ class _UserMenuState extends State<UserMenu> {
               icon,
               size: 20,
               color: widget.isDarkMode
-                  ? const Color(0xFF9ca3af)
-                  : const Color(0xFF6b7280),
+                  ? AppColors.gray400
+                  : AppColors.gray500,
             ),
-            const SizedBox(width: 12),
+            Gap.w12,
             Expanded(
               child: Text(
                 title,
                 style: FontUtils.poppins(
-                  fontSize: 16,
+                  fontSize: AppDimens.fontSizeXl,
                   color: widget.isDarkMode
-                      ? const Color(0xFFffffff)
-                      : const Color(0xFF1f2937),
+                      ? AppColors.white
+                      : AppColors.textDarkGray,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -274,19 +279,19 @@ class _UserMenuState extends State<UserMenu> {
                 setState(() {});
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: AppDurations.normal,
                 width: 44,
                 height: 24,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                   color: value
-                      ? const Color(0xFF10b981)
+                      ? AppColors.emerald
                       : (widget.isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb)),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray),
                 ),
                 child: AnimatedAlign(
-                  duration: const Duration(milliseconds: 200),
+                  duration: AppDurations.normal,
                   alignment:
                       value ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
@@ -295,7 +300,7 @@ class _UserMenuState extends State<UserMenu> {
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+          color: AppColors.white,
                     ),
                   ),
                 ),
@@ -310,11 +315,11 @@ class _UserMenuState extends State<UserMenu> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: GestureDetector(
         onTap: widget.onClose,
         child: Container(
-          color: Colors.black.withValues(alpha: 0.3),
+          color: AppColors.black30,
           child: Center(
             child: GestureDetector(
               onTap: () {}, // 阻止点击菜单内容时关闭
@@ -323,13 +328,13 @@ class _UserMenuState extends State<UserMenu> {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
                   color: widget.isDarkMode
-                      ? const Color(0xFF2c2c2c)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                      ? AppColors.inputBgDark
+                      : AppColors.white,
+                  borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
+                      color: AppColors.black30,
+                      blurRadius: AppDimens.shadowBlurLg,
                       offset: const Offset(0, 8),
                     ),
                   ],
@@ -343,32 +348,32 @@ class _UserMenuState extends State<UserMenu> {
                       child: Column(
                         children: [
                           Text(
-                            '当前用户',
+                            AppStrings.profileCurrentUser,
                             textAlign: TextAlign.center,
                             style: FontUtils.poppins(
-                              fontSize: 12,
+                              fontSize: AppDimens.fontSizeXs,
                               color: widget.isDarkMode
-                                  ? const Color(0xFF9ca3af)
-                                  : const Color(0xFF6b7280),
+                                  ? AppColors.gray400
+                                  : AppColors.gray500,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          Gap.h8,
                           // 用户名
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                _username ?? '未知用户',
+                                _username ?? AppStrings.profileUnknownUser,
                                 style: FontUtils.poppins(
-                                  fontSize: 18,
+                                  fontSize: AppDimens.fontSizeXxl,
                                   color: widget.isDarkMode
-                                      ? const Color(0xFFffffff)
-                                      : const Color(0xFF1f2937),
+                                      ? AppColors.white
+                                      : AppColors.textDarkGray,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              Gap.w8,
                               // 角色标签
                               _buildRoleTag(),
                             ],
@@ -380,12 +385,12 @@ class _UserMenuState extends State<UserMenu> {
                     Container(
                       height: 1,
                       color: widget.isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     // 本地搜索选项
                     _buildToggleOption(
-                      title: '本地搜索',
+                      title: AppStrings.profileLocalSearch,
                       value: _localSearch,
                       onChanged: (value) async {
                         await UserDataService.saveLocalSearch(value);
@@ -399,12 +404,12 @@ class _UserMenuState extends State<UserMenu> {
                     Container(
                       height: 1,
                       color: widget.isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     // 清除豆瓣缓存按钮
                     Material(
-                      color: Colors.transparent,
+                      color: AppColors.transparent,
                       child: InkWell(
                         onTap: _handleClearDoubanCache,
                         child: Container(
@@ -417,16 +422,16 @@ class _UserMenuState extends State<UserMenu> {
                               const Icon(
                                 LucideIcons.trash2,
                                 size: 20,
-                                color: Color(0xFFf59e0b),
+                                color: AppColors.orange,
                               ),
-                              const SizedBox(width: 12),
+                              Gap.w12,
                               Text(
-                                '清除豆瓣缓存',
+                                AppStrings.profileClearDoubanCache,
                                 style: FontUtils.poppins(
-                                  fontSize: 16,
+                                  fontSize: AppDimens.fontSizeXl,
                                   color: widget.isDarkMode
-                                      ? const Color(0xFFffffff)
-                                      : const Color(0xFF1f2937),
+                                      ? AppColors.white
+                                      : AppColors.textDarkGray,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -439,12 +444,12 @@ class _UserMenuState extends State<UserMenu> {
                     Container(
                       height: 1,
                       color: widget.isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     // 检查更新按钮
                     Material(
-                      color: Colors.transparent,
+                      color: AppColors.transparent,
                       child: InkWell(
                         onTap: _handleCheckUpdate,
                         child: Container(
@@ -457,16 +462,16 @@ class _UserMenuState extends State<UserMenu> {
                               const Icon(
                                 LucideIcons.download,
                                 size: 20,
-                                color: Color(0xFF3b82f6),
+                                color: AppColors.blue,
                               ),
-                              const SizedBox(width: 12),
+                              Gap.w12,
                               Text(
-                                '检查更新',
+                                AppStrings.profileCheckUpdate,
                                 style: FontUtils.poppins(
-                                  fontSize: 16,
+                                  fontSize: AppDimens.fontSizeXl,
                                   color: widget.isDarkMode
-                                      ? const Color(0xFFffffff)
-                                      : const Color(0xFF1f2937),
+                                      ? AppColors.white
+                                      : AppColors.textDarkGray,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -479,12 +484,12 @@ class _UserMenuState extends State<UserMenu> {
                     Container(
                       height: 1,
                       color: widget.isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     // 登出按钮
                     Material(
-                      color: Colors.transparent,
+                      color: AppColors.transparent,
                       child: InkWell(
                         onTap: _handleLogout,
                         child: Container(
@@ -497,14 +502,14 @@ class _UserMenuState extends State<UserMenu> {
                               const Icon(
                                 LucideIcons.logOut,
                                 size: 20,
-                                color: Color(0xFFef4444),
+                                color: AppColors.red,
                               ),
-                              const SizedBox(width: 12),
+                              Gap.w12,
                               Text(
-                                '登出',
+                                AppStrings.authLogout,
                                 style: FontUtils.poppins(
-                                  fontSize: 16,
-                                  color: const Color(0xFFef4444),
+                                  fontSize: AppDimens.fontSizeXl,
+                                  color: AppColors.red,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -517,8 +522,8 @@ class _UserMenuState extends State<UserMenu> {
                     Container(
                       height: 1,
                       color: widget.isDarkMode
-                          ? const Color(0xFF374151)
-                          : const Color(0xFFe5e7eb),
+                          ? AppColors.borderDarkGray
+                          : AppColors.borderLightGray,
                     ),
                     // 版本号
                     MouseRegion(
@@ -527,8 +532,8 @@ class _UserMenuState extends State<UserMenu> {
                           : MouseCursor.defer,
                       child: GestureDetector(
                         onTap: () async {
-                          final url = Uri.parse(
-                            'https://github.com/Cai-max-gif/MoonTV',
+                                final url = Uri.parse(
+                                  AppConfig.githubRepoUrl,
                           );
                           if (await canLaunchUrl(url)) {
                             await launchUrl(
@@ -544,12 +549,12 @@ class _UserMenuState extends State<UserMenu> {
                           ),
                           child: Center(
                             child: Text(
-                              _version.isEmpty ? '1.4.3' : _version,
+                              _version.isEmpty ? AppConfig.defaultVersion : _version,
                               style: FontUtils.poppins(
-                                fontSize: 14,
+                                fontSize: AppDimens.fontSizeMd,
                                 color: widget.isDarkMode
-                                    ? const Color(0xFF9ca3af)
-                                    : const Color(0xFF6b7280),
+                                    ? AppColors.gray400
+                                    : AppColors.gray500,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

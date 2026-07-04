@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-
+import '../constants/app_colors.dart';
 import '../models/search_result.dart';
 import '../models/video_info.dart';
 import '../services/page_cache_service.dart';
@@ -9,6 +9,9 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 /// 搜索结果网格组件
 class SearchResultsGrid extends StatefulWidget {
@@ -83,7 +86,7 @@ class _SearchResultsGridState extends State<SearchResultsGrid>
             final videoInfo = result.toVideoInfo();
 
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: AppDurations.slow,
               curve: Curves.easeOut,
               child: VideoCard(
                 key: ValueKey(
@@ -115,23 +118,23 @@ class _SearchResultsGridState extends State<SearchResultsGrid>
           const Icon(
             Icons.search_off,
             size: 80,
-            color: Color(0xFFbdc3c7),
+            color: AppColors.silver,
           ),
-          const SizedBox(height: 24),
+          Gap.h24,
           Text(
-            '暂无搜索结果',
+            AppStrings.searchNoResults,
             style: FontUtils.poppins(
-              fontSize: 18,
+              fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF7f8c8d),
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           Text(
-            '请尝试其他关键词或调整筛选条件',
+            AppStrings.searchTryOther,
             style: FontUtils.poppins(
-              fontSize: 14,
-              color: const Color(0xFF95a5a6),
+              fontSize: AppDimens.fontSizeMd,
+              color: AppColors.gray475,
             ),
           ),
         ],

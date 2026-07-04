@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import '../services/live_service.dart';
 import '../models/live_channel.dart';
 import '../models/live_source.dart';
@@ -35,7 +39,7 @@ class _LiveScreenState extends State<LiveScreen>
   void initState() {
     super.initState();
     _refreshIconController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: AppDurations.oneSecond,
       vsync: this,
     );
     _loadChannels();
@@ -52,7 +56,7 @@ class _LiveScreenState extends State<LiveScreen>
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
+        duration: AppDurations.slow,
         curve: Curves.easeOut,
       );
     }
@@ -71,7 +75,7 @@ class _LiveScreenState extends State<LiveScreen>
       if (liveSources.isEmpty) {
         if (mounted) {
           setState(() {
-            _errorMessage = '暂无直播源';
+            _errorMessage = AppStrings.liveNoSource;
             _isLoading = false;
             _isInitialLoad = false;
             _liveSources = [];
@@ -99,7 +103,7 @@ class _LiveScreenState extends State<LiveScreen>
       if (channels.isEmpty) {
         if (mounted) {
           setState(() {
-            _errorMessage = '该直播源暂无频道';
+            _errorMessage = AppStrings.liveNoChannel;
             _isLoading = false;
           });
         }
@@ -109,7 +113,7 @@ class _LiveScreenState extends State<LiveScreen>
       // 4. 按 group 进行聚类
       final Map<String, List<LiveChannel>> groupedChannels = {};
       for (var channel in channels) {
-        final groupName = channel.group.isEmpty ? '未分组' : channel.group;
+        final groupName = channel.group.isEmpty ? AppStrings.liveUngrouped : channel.group;
         if (!groupedChannels.containsKey(groupName)) {
           groupedChannels[groupName] = [];
         }
@@ -133,7 +137,7 @@ class _LiveScreenState extends State<LiveScreen>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = '加载失败: $e';
+          _errorMessage = '${AppStrings.liveLoadFailed}$e';
           _isLoading = false;
           _isInitialLoad = false;
         });
@@ -159,7 +163,7 @@ class _LiveScreenState extends State<LiveScreen>
       if (liveSources.isEmpty) {
         if (mounted) {
           setState(() {
-            _errorMessage = '暂无直播源';
+            _errorMessage = AppStrings.liveNoSource;
             _liveSources = [];
             _currentSource = null;
           });
@@ -179,7 +183,7 @@ class _LiveScreenState extends State<LiveScreen>
           // 当前源不存在，使用第一个源
           targetSource = liveSources.first;
           if (mounted) {
-            _showMessage('当前源已不存在，已切换到 ${targetSource.name}');
+            _showMessage('${AppStrings.liveSourceSwitched}${targetSource.name}');
           }
         }
       } else {
@@ -193,7 +197,7 @@ class _LiveScreenState extends State<LiveScreen>
       if (channels.isEmpty) {
         if (mounted) {
           setState(() {
-            _errorMessage = '该直播源暂无频道';
+            _errorMessage = AppStrings.liveNoChannel;
             _liveSources = liveSources;
             _currentSource = targetSource;
           });
@@ -204,7 +208,7 @@ class _LiveScreenState extends State<LiveScreen>
       // 4. 按 group 进行聚类
       final Map<String, List<LiveChannel>> groupedChannels = {};
       for (var channel in channels) {
-        final groupName = channel.group.isEmpty ? '未分组' : channel.group;
+        final groupName = channel.group.isEmpty ? AppStrings.liveUngrouped : channel.group;
         if (!groupedChannels.containsKey(groupName)) {
           groupedChannels[groupName] = [];
         }
@@ -230,9 +234,9 @@ class _LiveScreenState extends State<LiveScreen>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = '刷新失败: $e';
+          _errorMessage = '${AppStrings.liveRefreshFailed}$e';
         });
-        _showMessage('刷新失败: $e');
+        _showMessage('${AppStrings.liveRefreshFailed}$e');
       }
     } finally {
       // 停止旋转动画
@@ -251,14 +255,14 @@ class _LiveScreenState extends State<LiveScreen>
       SnackBar(
         content: Text(
           message,
-          style: FontUtils.poppins(color: Colors.white),
+          style: FontUtils.poppins(color: AppColors.white),
         ),
-        backgroundColor: const Color(0xFF3498DB),
+        backgroundColor: AppColors.info,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         ),
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(AppDimens.spacingLg),
       ),
     );
   }
@@ -318,15 +322,15 @@ class _LiveScreenState extends State<LiveScreen>
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? const Color(0xFF1e1e1e).withValues(alpha: 0.9)
-            : Colors.white.withValues(alpha: 0.8),
+            ? AppColors.cardDark.withValues(alpha: 0.9)
+            : AppColors.white.withValues(alpha: 0.8),
       ),
       child: Row(
         children: [
           // 直播源筛选（只有多个源时显示）
           if (showSourceFilter) ...[
             _buildFilterPill(
-              '直播源',
+              AppStrings.liveSource,
               sourceOptions,
               _currentSource?.key ?? '',
               (value) {
@@ -341,12 +345,12 @@ class _LiveScreenState extends State<LiveScreen>
               },
               themeService,
             ),
-            const SizedBox(width: 8),
+            Gap.w8,
           ],
           // 分组筛选（首次加载完成后才显示）
           if (showGroupFilter)
             _buildFilterPill(
-              '分组',
+              AppStrings.liveGroup,
               groupOptions,
               _selectedGroup,
               (value) {
@@ -392,9 +396,9 @@ class _LiveScreenState extends State<LiveScreen>
                         Icons.refresh,
                         size: 20,
                         color: _isRefreshing
-                            ? const Color(0xFF27ae60)
+                            ? AppColors.accent
                             : (DeviceUtils.isPC() && _isRefreshButtonHovered
-                                ? const Color(0xFF27ae60)
+                                ? AppColors.accent
                                 : (themeService.isDarkMode
                                     ? Colors.grey[600]
                                     : Colors.grey[500])),
@@ -481,7 +485,7 @@ class _LiveScreenState extends State<LiveScreen>
               crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppDimens.spacingLg),
                   child: Center(
                     child: Text(
                       title,
@@ -511,24 +515,24 @@ class _LiveScreenState extends State<LiveScreen>
                                 onSelected(option.value);
                                 Navigator.pop(context);
                               },
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 alignment: Alignment.centerLeft, // 内容左对齐
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? const Color(0xFF27AE60)
+                                      ? AppColors.accent
                                       : Theme.of(context)
                                           .chipTheme
                                           .backgroundColor,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                                 ),
                                 child: Text(
                                   option.label,
                                   textAlign: TextAlign.left, // 文字左对齐
                                   style: TextStyle(
-                                    color: isSelected ? Colors.white : null,
+                                    color: isSelected ? AppColors.white : null,
                                   ),
                                 ),
                               ),
@@ -539,7 +543,7 @@ class _LiveScreenState extends State<LiveScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                Gap.h16,
               ],
             ),
           );
@@ -554,15 +558,15 @@ class _LiveScreenState extends State<LiveScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           Text(
-            '加载中...',
+            AppStrings.loading,
             style: FontUtils.poppins(
               color: themeService.isDarkMode
-                  ? const Color(0xFFb0b0b0)
-                  : const Color(0xFF7f8c8d),
+                  ? AppColors.textDarkSecondary
+                  : AppColors.textSecondary,
             ),
           ),
         ],
@@ -576,15 +580,15 @@ class _LiveScreenState extends State<LiveScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF27ae60)),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           Text(
-            '刷新中...',
+            AppStrings.liveRefreshing,
             style: FontUtils.poppins(
               color: themeService.isDarkMode
-                  ? const Color(0xFFb0b0b0)
-                  : const Color(0xFF7f8c8d),
+                  ? AppColors.textDarkSecondary
+                  : AppColors.textSecondary,
             ),
           ),
         ],
@@ -601,30 +605,30 @@ class _LiveScreenState extends State<LiveScreen>
             Icons.error_outline,
             size: 64,
             color: themeService.isDarkMode
-                ? const Color(0xFF666666)
-                : const Color(0xFF95a5a6),
+                ? AppColors.textDarkHint
+                : AppColors.textHint,
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           Text(
-            _errorMessage ?? '加载失败',
+            _errorMessage ?? AppStrings.loadFailed,
             style: FontUtils.poppins(
               color: themeService.isDarkMode
-                  ? const Color(0xFFb0b0b0)
-                  : const Color(0xFF7f8c8d),
+                  ? AppColors.textDarkSecondary
+                  : AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          Gap.h16,
           ElevatedButton(
             onPressed: refreshChannels,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF27ae60),
+              backgroundColor: AppColors.accent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
             ),
             child: Text(
-              '刷新',
-              style: FontUtils.poppins(color: Colors.white),
+              AppStrings.retry,
+              style: FontUtils.poppins(color: AppColors.white),
             ),
           ),
         ],
@@ -638,11 +642,11 @@ class _LiveScreenState extends State<LiveScreen>
     if (channels.isEmpty) {
       return Center(
         child: Text(
-          '暂无频道',
+          AppStrings.msgNoData,
           style: FontUtils.poppins(
             color: themeService.isDarkMode
-                ? const Color(0xFFb0b0b0)
-                : const Color(0xFF7f8c8d),
+                ? AppColors.textDarkSecondary
+                : AppColors.textSecondary,
           ),
         ),
       );
@@ -654,7 +658,7 @@ class _LiveScreenState extends State<LiveScreen>
 
     return GridView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.spacingLg),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: childAspectRatio,
@@ -693,11 +697,11 @@ class _LiveScreenState extends State<LiveScreen>
       return Container(
         width: double.infinity,
         height: double.infinity,
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppDimens.spacingSm),
         decoration: BoxDecoration(
           color: themeService.isDarkMode
-              ? const Color(0xFF2a2a2a)
-              : const Color(0xFFc0c0c0),
+                ? AppColors.darkBg2
+                : AppColors.gray350,
         ),
         child: Image.network(
           channel.logo,
@@ -722,16 +726,16 @@ class _LiveScreenState extends State<LiveScreen>
       height: double.infinity,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? const Color(0xFF2a2a2a)
-            : const Color(0xFFc0c0c0),
+            ? AppColors.darkBg2
+            : AppColors.gray350,
       ),
       child: Center(
         child: Icon(
           Icons.tv,
           size: 48,
           color: themeService.isDarkMode
-              ? const Color(0xFF666666)
-              : const Color(0xFF95a5b0),
+              ? AppColors.textDarkHint
+              : AppColors.gray475,
         ),
       ),
     );
@@ -770,7 +774,7 @@ class _LiveChannelCardState extends State<_LiveChannelCard> {
         onTap: widget.onTap,
         child: AnimatedScale(
           scale: isPC && _isHovered ? 1.05 : 1.0,
-          duration: const Duration(milliseconds: 200),
+          duration: AppDurations.normal,
           curve: Curves.easeInOut,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -783,14 +787,14 @@ class _LiveChannelCardState extends State<_LiveChannelCard> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: widget.themeService.isDarkMode
-                          ? const Color(0xFF1e1e1e)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                          ? AppColors.cardDark
+                          : AppColors.white,
+                      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
                     child: Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                           child: widget.buildChannelLogo(
                               widget.channel, widget.themeService),
                         ),
@@ -800,17 +804,17 @@ class _LiveChannelCardState extends State<_LiveChannelCard> {
                 ),
               ),
               // 标题 - 放在卡片下方居中
-              const SizedBox(height: 8),
+              Gap.h8,
               Text(
                 widget.channel.name,
                 style: FontUtils.poppins(
-                  fontSize: 13,
+                  fontSize: AppDimens.fontSizeSm,
                   fontWeight: FontWeight.w500,
                   color: isPC && _isHovered
-                      ? const Color(0xFF27ae60)
+                      ? AppColors.accent
                       : (widget.themeService.isDarkMode
-                          ? Colors.white
-                          : const Color(0xFF2c3e50)),
+                          ? AppColors.white
+                          : AppColors.primary),
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
