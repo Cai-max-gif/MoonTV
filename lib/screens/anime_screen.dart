@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/pulsing_dots_indicator.dart';
 import '../widgets/bangumi_grid.dart';
 import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 import '../widgets/simple_tab_switcher.dart';
 import 'player_screen.dart';
 import '../widgets/filter_pill_hover.dart';
@@ -21,7 +22,6 @@ import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
 import '../widgets/filter_options_selector.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
 import '../constants/app_dimensions.dart';
 
 class AnimeScreen extends StatefulWidget {
@@ -31,186 +31,186 @@ class AnimeScreen extends StatefulWidget {
   State<AnimeScreen> createState() => _AnimeScreenState();
 }
 
-class _AnimeScreenState extends State<AnimeScreen> {
+class _AnimeScreenState extends State<AnimeScreen> with AutomaticKeepAliveClientMixin {
   // 动漫一级选择器选项
   final List<SelectorOption> _animePrimaryOptions = const [
-    SelectorOption(label: '每日放送', value: '每日放送'),
-    SelectorOption(label: '番剧', value: '番剧'),
-    SelectorOption(label: '剧场版', value: '剧场版'),
+    SelectorOption(label: AppStrings.animeDailyBroadcast, value: AppStrings.animeDailyBroadcast),
+    SelectorOption(label: AppStrings.animeSeries, value: AppStrings.animeSeries),
+    SelectorOption(label: AppStrings.animeMovie, value: AppStrings.animeMovie),
   ];
 
   // 星期选项
   final List<SelectorOption> _weekdayOptions = const [
-    SelectorOption(label: '周一', value: '1'),
-    SelectorOption(label: '周二', value: '2'),
-    SelectorOption(label: '周三', value: '3'),
-    SelectorOption(label: '周四', value: '4'),
-    SelectorOption(label: '周五', value: '5'),
-    SelectorOption(label: '周六', value: '6'),
-    SelectorOption(label: '周日', value: '7'),
+    SelectorOption(label: AppStrings.weekMonday, value: '1'),
+    SelectorOption(label: AppStrings.weekTuesday, value: '2'),
+    SelectorOption(label: AppStrings.weekWednesday, value: '3'),
+    SelectorOption(label: AppStrings.weekThursday, value: '4'),
+    SelectorOption(label: AppStrings.weekFriday, value: '5'),
+    SelectorOption(label: AppStrings.weekSaturday, value: '6'),
+    SelectorOption(label: AppStrings.weekSunday, value: '7'),
   ];
 
   // 番剧类型选项
   final List<SelectorOption> _animeTypeOptions = const [
-    SelectorOption(label: AppStrings.all, value: 'all'),
-    SelectorOption(label: AppStrings.typeHistory, value: 'history'),
-    SelectorOption(label: AppStrings.typeMusical, value: 'musical'),
-    SelectorOption(label: '黑色幽默', value: 'dark_humor'),
-    SelectorOption(label: '励志', value: 'inspirational'),
-    SelectorOption(label: '恶搞', value: 'parody'),
-    SelectorOption(label: '治愈', value: 'healing'),
-    SelectorOption(label: '运动', value: 'sports'),
-    SelectorOption(label: '后宫', value: 'harem'),
-    SelectorOption(label: '情色', value: 'erotic'),
-    SelectorOption(label: '国漫', value: 'chinese_anime'),
-    SelectorOption(label: '人性', value: 'human_nature'),
-    SelectorOption(label: AppStrings.typeSuspense, value: 'suspense'),
-    SelectorOption(label: '恋爱', value: 'love'),
-    SelectorOption(label: '魔幻', value: 'fantasy'),
-    SelectorOption(label: AppStrings.typeSciFi, value: 'sci_fi'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.contentTypeAll),
+    SelectorOption(label: AppStrings.typeHistory, value: AppConfig.contentTypeHistory),
+    SelectorOption(label: AppStrings.typeMusical, value: AppConfig.contentTypeMusical),
+    SelectorOption(label: AppStrings.typeDarkHumor, value: AppConfig.contentTypeDarkHumor),
+    SelectorOption(label: AppStrings.typeInspirational, value: AppConfig.contentTypeInspirational),
+    SelectorOption(label: AppStrings.typeParody, value: AppConfig.contentTypeParody),
+    SelectorOption(label: AppStrings.typeHealing, value: AppConfig.contentTypeHealing),
+    SelectorOption(label: AppStrings.typeSports, value: AppConfig.contentTypeSports),
+    SelectorOption(label: AppStrings.typeHarem, value: AppConfig.contentTypeHarem),
+    SelectorOption(label: AppStrings.typeErotic, value: AppConfig.contentTypeErotic),
+    SelectorOption(label: AppStrings.typeChineseAnime, value: AppConfig.contentTypeChineseAnime),
+    SelectorOption(label: AppStrings.typeHumanNature, value: AppConfig.contentTypeHumanNature),
+    SelectorOption(label: AppStrings.typeSuspense, value: AppConfig.contentTypeSuspense),
+    SelectorOption(label: AppStrings.typeLove, value: AppConfig.contentTypeLove),
+    SelectorOption(label: AppStrings.typeFantasy, value: AppConfig.contentTypeFantasy),
+    SelectorOption(label: AppStrings.typeSciFi, value: AppConfig.contentTypeSciFi),
   ];
 
   // 剧场版类型选项
   final List<SelectorOption> _movieTypeOptions = const [
-    SelectorOption(label: AppStrings.all, value: 'all'),
-    SelectorOption(label: '定格动画', value: 'stop_motion'),
-    SelectorOption(label: AppStrings.typeBiography, value: 'biography'),
-    SelectorOption(label: '美国动画', value: 'us_animation'),
-    SelectorOption(label: AppStrings.typeRomance, value: 'romance'),
-    SelectorOption(label: '黑色幽默', value: 'dark_humor'),
-    SelectorOption(label: '歌舞', value: 'musical'),
-    SelectorOption(label: '儿童', value: 'children'),
-    SelectorOption(label: '二次元', value: 'anime'),
-    SelectorOption(label: '动物', value: 'animal'),
-    SelectorOption(label: '青春', value: 'youth'),
-    SelectorOption(label: '历史', value: 'history'),
-    SelectorOption(label: '励志', value: 'inspirational'),
-    SelectorOption(label: '恶搞', value: 'parody'),
-    SelectorOption(label: '治愈', value: 'healing'),
-    SelectorOption(label: '运动', value: 'sports'),
-    SelectorOption(label: '后宫', value: 'harem'),
-    SelectorOption(label: '情色', value: 'erotic'),
-    SelectorOption(label: '人性', value: 'human_nature'),
-    SelectorOption(label: '悬疑', value: 'suspense'),
-    SelectorOption(label: '恋爱', value: 'love'),
-    SelectorOption(label: '魔幻', value: 'fantasy'),
-    SelectorOption(label: '科幻', value: 'sci_fi'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.contentTypeAll),
+    SelectorOption(label: AppStrings.typeStopMotion, value: AppConfig.contentTypeStopMotion),
+    SelectorOption(label: AppStrings.typeBiography, value: AppConfig.contentTypeBiography),
+    SelectorOption(label: AppStrings.typeUsAnimation, value: AppConfig.contentTypeUsAnimation),
+    SelectorOption(label: AppStrings.typeRomance, value: AppConfig.contentTypeRomance),
+    SelectorOption(label: AppStrings.typeDarkHumor, value: AppConfig.contentTypeDarkHumor),
+    SelectorOption(label: AppStrings.typeMusical, value: AppConfig.contentTypeMusical),
+    SelectorOption(label: AppStrings.typeChildren, value: AppConfig.contentTypeChildren),
+    SelectorOption(label: AppStrings.typeAnime, value: AppConfig.stypeAnime),
+    SelectorOption(label: AppStrings.typeAnimal, value: AppConfig.contentTypeAnimal),
+    SelectorOption(label: AppStrings.typeYouth, value: AppConfig.contentTypeYouth),
+    SelectorOption(label: AppStrings.typeHistory, value: AppConfig.contentTypeHistory),
+    SelectorOption(label: AppStrings.typeInspirational, value: AppConfig.contentTypeInspirational),
+    SelectorOption(label: AppStrings.typeParody, value: AppConfig.contentTypeParody),
+    SelectorOption(label: AppStrings.typeHealing, value: AppConfig.contentTypeHealing),
+    SelectorOption(label: AppStrings.typeSports, value: AppConfig.contentTypeSports),
+    SelectorOption(label: AppStrings.typeHarem, value: AppConfig.contentTypeHarem),
+    SelectorOption(label: AppStrings.typeErotic, value: AppConfig.contentTypeErotic),
+    SelectorOption(label: AppStrings.typeHumanNature, value: AppConfig.contentTypeHumanNature),
+    SelectorOption(label: AppStrings.typeSuspense, value: AppConfig.contentTypeSuspense),
+    SelectorOption(label: AppStrings.typeLove, value: AppConfig.contentTypeLove),
+    SelectorOption(label: AppStrings.typeFantasy, value: AppConfig.contentTypeFantasy),
+    SelectorOption(label: AppStrings.typeSciFi, value: AppConfig.contentTypeSciFi),
   ];
 
   // TV 地区选项（与 TV 一致）
   final List<SelectorOption> _regionOptions = const [
-    SelectorOption(label: AppStrings.all, value: 'all'),
-    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
-    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
-    SelectorOption(label: AppStrings.regionForeign, value: 'foreign'),
-    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
-    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
-    SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
-    SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
-    SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
-    SelectorOption(label: AppStrings.regionUK, value: 'uk'),
-    SelectorOption(label: AppStrings.regionThailand, value: 'thailand'),
-    SelectorOption(label: AppStrings.regionTaiwan, value: 'taiwan'),
-    SelectorOption(label: AppStrings.regionItaly, value: 'italy'),
-    SelectorOption(label: AppStrings.regionFrance, value: 'france'),
-    SelectorOption(label: AppStrings.regionGermany, value: 'germany'),
-    SelectorOption(label: AppStrings.regionSpain, value: 'spain'),
-    SelectorOption(label: AppStrings.regionRussia, value: 'russia'),
-    SelectorOption(label: AppStrings.regionSweden, value: 'sweden'),
-    SelectorOption(label: AppStrings.regionBrazil, value: 'brazil'),
-    SelectorOption(label: AppStrings.regionDenmark, value: 'denmark'),
-    SelectorOption(label: AppStrings.regionIndia, value: 'india'),
-    SelectorOption(label: AppStrings.regionCanada, value: 'canada'),
-    SelectorOption(label: AppStrings.regionIreland, value: 'ireland'),
-    SelectorOption(label: AppStrings.regionAustralia, value: 'australia'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.contentTypeAll),
+    SelectorOption(label: AppStrings.filterValueChinese, value: AppConfig.filterRegionChinese),
+    SelectorOption(label: AppStrings.filterValueWestern, value: AppConfig.filterRegionWestern),
+    SelectorOption(label: AppStrings.regionForeign, value: AppConfig.filterRegionForeign),
+    SelectorOption(label: AppStrings.filterValueKorean, value: AppConfig.filterRegionKorean),
+    SelectorOption(label: AppStrings.filterValueJapanese, value: AppConfig.filterRegionJapanese),
+    SelectorOption(label: AppStrings.regionMainlandChina, value: AppConfig.filterRegionMainlandChina),
+    SelectorOption(label: AppStrings.regionHongKong, value: AppConfig.filterRegionHongKong),
+    SelectorOption(label: AppStrings.regionUSA, value: AppConfig.filterRegionUSA),
+    SelectorOption(label: AppStrings.regionUK, value: AppConfig.filterRegionUK),
+    SelectorOption(label: AppStrings.regionThailand, value: AppConfig.filterRegionThailand),
+    SelectorOption(label: AppStrings.regionTaiwan, value: AppConfig.filterRegionTaiwan),
+    SelectorOption(label: AppStrings.regionItaly, value: AppConfig.filterRegionItaly),
+    SelectorOption(label: AppStrings.regionFrance, value: AppConfig.filterRegionFrance),
+    SelectorOption(label: AppStrings.regionGermany, value: AppConfig.filterRegionGermany),
+    SelectorOption(label: AppStrings.regionSpain, value: AppConfig.filterRegionSpain),
+    SelectorOption(label: AppStrings.regionRussia, value: AppConfig.filterRegionRussia),
+    SelectorOption(label: AppStrings.regionSweden, value: AppConfig.filterRegionSweden),
+    SelectorOption(label: AppStrings.regionBrazil, value: AppConfig.filterRegionBrazil),
+    SelectorOption(label: AppStrings.regionDenmark, value: AppConfig.filterRegionDenmark),
+    SelectorOption(label: AppStrings.regionIndia, value: AppConfig.filterRegionIndia),
+    SelectorOption(label: AppStrings.regionCanada, value: AppConfig.filterRegionCanada),
+    SelectorOption(label: AppStrings.regionIreland, value: AppConfig.filterRegionIreland),
+    SelectorOption(label: AppStrings.regionAustralia, value: AppConfig.filterRegionAustralia),
   ];
 
   // 电影地区选项（与 Movie 一致）
   final List<SelectorOption> _movieRegionOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: 'all'),
-    SelectorOption(label: '华语', value: 'chinese'),
-    SelectorOption(label: '欧美', value: 'western'),
-    SelectorOption(label: '韩国', value: 'korean'),
-    SelectorOption(label: '日本', value: 'japanese'),
-    SelectorOption(label: '中国大陆', value: 'mainland_china'),
-    SelectorOption(label: '美国', value: 'usa'),
-    SelectorOption(label: '中国香港', value: 'hong_kong'),
-    SelectorOption(label: '中国台湾', value: 'taiwan'),
-    SelectorOption(label: '英国', value: 'uk'),
-    SelectorOption(label: '法国', value: 'france'),
-    SelectorOption(label: '德国', value: 'germany'),
-    SelectorOption(label: '意大利', value: 'italy'),
-    SelectorOption(label: '西班牙', value: 'spain'),
-    SelectorOption(label: '印度', value: 'india'),
-    SelectorOption(label: '泰国', value: 'thailand'),
-    SelectorOption(label: '俄罗斯', value: 'russia'),
-    SelectorOption(label: '加拿大', value: 'canada'),
-    SelectorOption(label: '澳大利亚', value: 'australia'),
-    SelectorOption(label: '爱尔兰', value: 'ireland'),
-    SelectorOption(label: '瑞典', value: 'sweden'),
-    SelectorOption(label: '巴西', value: 'brazil'),
-    SelectorOption(label: '丹麦', value: 'denmark'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.contentTypeAll),
+    SelectorOption(label: AppStrings.filterValueChinese, value: AppConfig.filterRegionChinese),
+    SelectorOption(label: AppStrings.filterValueWestern, value: AppConfig.filterRegionWestern),
+    SelectorOption(label: AppStrings.filterValueKorean, value: AppConfig.filterRegionKorean),
+    SelectorOption(label: AppStrings.filterValueJapanese, value: AppConfig.filterRegionJapanese),
+    SelectorOption(label: AppStrings.regionMainlandChina, value: AppConfig.filterRegionMainlandChina),
+    SelectorOption(label: AppStrings.regionUSA, value: AppConfig.filterRegionUSA),
+    SelectorOption(label: AppStrings.regionHongKong, value: AppConfig.filterRegionHongKong),
+    SelectorOption(label: AppStrings.regionTaiwan, value: AppConfig.filterRegionTaiwan),
+    SelectorOption(label: AppStrings.regionUK, value: AppConfig.filterRegionUK),
+    SelectorOption(label: AppStrings.regionFrance, value: AppConfig.filterRegionFrance),
+    SelectorOption(label: AppStrings.regionGermany, value: AppConfig.filterRegionGermany),
+    SelectorOption(label: AppStrings.regionItaly, value: AppConfig.filterRegionItaly),
+    SelectorOption(label: AppStrings.regionSpain, value: AppConfig.filterRegionSpain),
+    SelectorOption(label: AppStrings.regionIndia, value: AppConfig.filterRegionIndia),
+    SelectorOption(label: AppStrings.regionThailand, value: AppConfig.filterRegionThailand),
+    SelectorOption(label: AppStrings.regionRussia, value: AppConfig.filterRegionRussia),
+    SelectorOption(label: AppStrings.regionCanada, value: AppConfig.filterRegionCanada),
+    SelectorOption(label: AppStrings.regionAustralia, value: AppConfig.filterRegionAustralia),
+    SelectorOption(label: AppStrings.regionIreland, value: AppConfig.filterRegionIreland),
+    SelectorOption(label: AppStrings.regionSweden, value: AppConfig.filterRegionSweden),
+    SelectorOption(label: AppStrings.regionBrazil, value: AppConfig.filterRegionBrazil),
+    SelectorOption(label: AppStrings.regionDenmark, value: AppConfig.filterRegionDenmark),
   ];
 
   // 年代选项（与 TV 一致）
   final List<SelectorOption> _yearOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: 'all'),
-    SelectorOption(label: '2020年代', value: '2020s'),
-    SelectorOption(label: '2025', value: '2025'),
-    SelectorOption(label: '2024', value: '2024'),
-    SelectorOption(label: '2023', value: '2023'),
-    SelectorOption(label: '2022', value: '2022'),
-    SelectorOption(label: '2021', value: '2021'),
-    SelectorOption(label: '2020', value: '2020'),
-    SelectorOption(label: '2019', value: '2019'),
-    SelectorOption(label: '2010年代', value: '2010s'),
-    SelectorOption(label: '2000年代', value: '2000s'),
-    SelectorOption(label: '90年代', value: '1990s'),
-    SelectorOption(label: '80年代', value: '1980s'),
-    SelectorOption(label: '70年代', value: '1970s'),
-    SelectorOption(label: '60年代', value: '1960s'),
-    SelectorOption(label: '更早', value: 'earlier'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.contentTypeAll),
+    SelectorOption(label: AppStrings.year2020s, value: AppConfig.filterYear2020s),
+    SelectorOption(label: AppStrings.year2025, value: AppConfig.filterYear2025),
+    SelectorOption(label: AppStrings.year2024, value: AppConfig.filterYear2024),
+    SelectorOption(label: AppStrings.year2023, value: AppConfig.filterYear2023),
+    SelectorOption(label: AppStrings.year2022, value: AppConfig.filterYear2022),
+    SelectorOption(label: AppStrings.year2021, value: AppConfig.filterYear2021),
+    SelectorOption(label: AppStrings.year2020, value: AppConfig.filterYear2020),
+    SelectorOption(label: AppStrings.year2019, value: AppConfig.filterYear2019),
+    SelectorOption(label: AppStrings.year2010s, value: AppConfig.filterYear2010s),
+    SelectorOption(label: AppStrings.year2000s, value: AppConfig.filterYear2000s),
+    SelectorOption(label: AppStrings.year1990s, value: AppConfig.filterYear1990s),
+    SelectorOption(label: AppStrings.year1980s, value: AppConfig.filterYear1980s),
+    SelectorOption(label: AppStrings.year1970s, value: AppConfig.filterYear1970s),
+    SelectorOption(label: AppStrings.year1960s, value: AppConfig.filterYear1960s),
+    SelectorOption(label: AppStrings.yearEarlier, value: AppConfig.filterYearEarlier),
   ];
 
   // 平台选项（与 TV 一致）
   final List<SelectorOption> _platformOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: 'all'),
-    SelectorOption(label: '腾讯视频', value: 'tencent'),
-    SelectorOption(label: '爱奇艺', value: 'iqiyi'),
-    SelectorOption(label: '优酷', value: 'youku'),
-    SelectorOption(label: '湖南卫视', value: 'hunan_tv'),
-    SelectorOption(label: 'Netflix', value: 'netflix'),
-    SelectorOption(label: 'HBO', value: 'hbo'),
-    SelectorOption(label: 'BBC', value: 'bbc'),
-    SelectorOption(label: 'NHK', value: 'nhk'),
-    SelectorOption(label: 'CBS', value: 'cbs'),
-    SelectorOption(label: 'NBC', value: 'nbc'),
-    SelectorOption(label: 'tvN', value: 'tvn'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.contentTypeAll),
+    SelectorOption(label: AppStrings.platformTencent, value: AppConfig.filterPlatformTencent),
+    SelectorOption(label: AppStrings.platformIqiyi, value: AppConfig.filterPlatformIqiyi),
+    SelectorOption(label: AppStrings.platformYouku, value: AppConfig.filterPlatformYouku),
+    SelectorOption(label: AppStrings.platformHunanTv, value: AppConfig.filterPlatformHunanTv),
+    SelectorOption(label: AppStrings.platformNetflix, value: AppConfig.filterPlatformNetflix),
+    SelectorOption(label: AppStrings.platformHBO, value: AppConfig.filterPlatformHBO),
+    SelectorOption(label: AppStrings.platformBBC, value: AppConfig.filterPlatformBBC),
+    SelectorOption(label: AppStrings.platformNHK, value: AppConfig.filterPlatformNHK),
+    SelectorOption(label: AppStrings.platformCBS, value: AppConfig.filterPlatformCBS),
+    SelectorOption(label: AppStrings.platformNBC, value: AppConfig.filterPlatformNBC),
+    SelectorOption(label: AppStrings.platformTvN, value: AppConfig.filterPlatformTvN),
   ];
 
   // 排序选项（与 TV/Movie 一致）
   final List<SelectorOption> _sortOptions = const [
     SelectorOption(label: AppStrings.sortComprehensive, value: 'T'),
-    SelectorOption(label: '近期热度', value: 'U'),
-    SelectorOption(label: '首映时间', value: 'R'),
-    SelectorOption(label: '高分优先', value: 'S'),
+    SelectorOption(label: AppStrings.sortRecent, value: 'U'),
+    SelectorOption(label: AppStrings.sortAiringTime, value: 'R'),
+    SelectorOption(label: AppStrings.sortRating, value: 'S'),
   ];
 
-  String _selectedCategoryValue = '每日放送'; // 默认选中每日放送
+  String _selectedCategoryValue = AppStrings.animeDailyBroadcast; // 默认选中每日放送
   String _selectedWeekday = DateTime.now().weekday.toString(); // 默认选中当前星期
 
   // 番剧筛选状态
-  String _selectedAnimeType = 'all';
-  String _selectedAnimeRegion = 'all';
-  String _selectedAnimeYear = 'all';
-  String _selectedAnimePlatform = 'all';
-  String _selectedAnimeSort = 'T';
+  String _selectedAnimeType = AppConfig.contentTypeAll;
+  String _selectedAnimeRegion = AppConfig.contentTypeAll;
+  String _selectedAnimeYear = AppConfig.contentTypeAll;
+  String _selectedAnimePlatform = AppConfig.contentTypeAll;
+  String _selectedAnimeSort = AppStrings.sortDefault;
 
   // 剧场版筛选状态
-  String _selectedMovieType = 'all';
-  String _selectedMovieRegion = 'all';
-  String _selectedMovieYear = 'all';
-  String _selectedMovieSort = 'T';
+  String _selectedMovieType = AppConfig.contentTypeAll;
+  String _selectedMovieRegion = AppConfig.contentTypeAll;
+  String _selectedMovieYear = AppConfig.contentTypeAll;
+  String _selectedMovieSort = AppStrings.sortDefault;
 
   final ScrollController _scrollController = ScrollController();
   final List<DoubanMovie> _animeList = [];
@@ -242,7 +242,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
       final position = _scrollController.position;
 
       // 每日放送不需要加载更多
-      if (_selectedCategoryValue == '每日放送') {
+      if (_selectedCategoryValue == AppStrings.animeDailyBroadcast) {
         return;
       }
 
@@ -268,7 +268,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   Future<void> _loadMoreAnimeData() async {
     if (_isLoading || _isLoadingMore || !_hasMore) return;
-    if (_selectedCategoryValue == '每日放送') return; // Bangumi 数据不支持分页
+    if (_selectedCategoryValue == AppStrings.animeDailyBroadcast) return; // Bangumi 数据不支持分页
 
     setState(() {
       _isLoadingMore = true;
@@ -283,54 +283,54 @@ class _AnimeScreenState extends State<AnimeScreen> {
     String kind;
     String format;
 
-    if (_selectedCategoryValue == '番剧') {
+    if (_selectedCategoryValue == AppStrings.animeSeries) {
       categoryValue = _selectedAnimeType;
       regionValue = _selectedAnimeRegion;
       yearValue = _selectedAnimeYear;
       platformValue = _selectedAnimePlatform;
       sortValue = _selectedAnimeSort;
-      kind = 'tv';
-      format = '电视剧';
+      kind = AppConfig.stypeTv;
+      format = AppStrings.navTv;
     } else {
       // 剧场版
       categoryValue = _selectedMovieType;
       regionValue = _selectedMovieRegion;
       yearValue = _selectedMovieYear;
-      platformValue = 'all';
+      platformValue = AppConfig.contentTypeAll;
       sortValue = _selectedMovieSort;
-      kind = 'movie';
+      kind = AppConfig.stypeMovie;
       format = '';
     }
 
     // 转换参数为中文标签
-    if (regionValue != 'all') {
+    if (regionValue != AppConfig.contentTypeAll) {
       final regionOptions =
-          _selectedCategoryValue == '番剧' ? _regionOptions : _movieRegionOptions;
+          _selectedCategoryValue == AppStrings.animeSeries ? _regionOptions : _movieRegionOptions;
       regionValue =
           regionOptions.firstWhere((e) => e.value == regionValue).label;
     }
 
-    if (yearValue != 'all') {
+    if (yearValue != AppConfig.contentTypeAll) {
       yearValue = _yearOptions.firstWhere((e) => e.value == yearValue).label;
     }
 
-    if (categoryValue != 'all') {
-      final typeOptions = _selectedCategoryValue == '番剧'
+    if (categoryValue != AppConfig.contentTypeAll) {
+      final typeOptions = _selectedCategoryValue == AppStrings.animeSeries
           ? _animeTypeOptions
           : _movieTypeOptions;
       categoryValue =
           typeOptions.firstWhere((e) => e.value == categoryValue).label;
     }
 
-    if (_selectedCategoryValue == '番剧' && platformValue != 'all') {
+    if (_selectedCategoryValue == AppStrings.animeSeries && platformValue != AppConfig.contentTypeAll) {
       platformValue =
           _platformOptions.firstWhere((e) => e.value == platformValue).label;
     }
 
-    final params = _selectedCategoryValue == '番剧'
+    final params = _selectedCategoryValue == AppStrings.animeSeries
         ? DoubanRecommendsParams(
             kind: kind,
-            category: '动画',
+            category: AppStrings.navAnime,
             label: categoryValue,
             format: format,
             region: regionValue,
@@ -342,7 +342,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
           )
         : DoubanRecommendsParams(
             kind: kind,
-            category: '动画',
+            category: AppStrings.navAnime,
             label: categoryValue,
             format: format,
             region: regionValue,
@@ -382,7 +382,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
       _errorMessage = null;
     });
 
-    if (_selectedCategoryValue == '每日放送') {
+    if (_selectedCategoryValue == AppStrings.animeDailyBroadcast) {
       // 获取 Bangumi 数据
       final weekdayInt = int.parse(_selectedWeekday);
       final result =
@@ -411,28 +411,28 @@ class _AnimeScreenState extends State<AnimeScreen> {
       String kind;
       String format;
 
-      if (_selectedCategoryValue == '番剧') {
+      if (_selectedCategoryValue == AppStrings.animeSeries) {
         categoryValue = _selectedAnimeType;
         regionValue = _selectedAnimeRegion;
         yearValue = _selectedAnimeYear;
         platformValue = _selectedAnimePlatform;
         sortValue = _selectedAnimeSort;
-        kind = 'tv';
-        format = '电视剧';
+        kind = AppConfig.stypeTv;
+        format = AppStrings.navTv;
       } else {
         // 剧场版
         categoryValue = _selectedMovieType;
         regionValue = _selectedMovieRegion;
         yearValue = _selectedMovieYear;
-        platformValue = 'all';
+        platformValue = AppConfig.contentTypeAll;
         sortValue = _selectedMovieSort;
-        kind = 'movie';
+        kind = AppConfig.stypeMovie;
         format = '';
       }
 
       // 转换地区参数为中文标签
-      if (regionValue != 'all') {
-        final regionOptions = _selectedCategoryValue == '番剧'
+      if (regionValue != AppConfig.contentTypeAll) {
+        final regionOptions = _selectedCategoryValue == AppStrings.animeSeries
             ? _regionOptions
             : _movieRegionOptions;
         regionValue =
@@ -440,13 +440,13 @@ class _AnimeScreenState extends State<AnimeScreen> {
       }
 
       // 转换年代参数为中文标签
-      if (yearValue != 'all') {
+      if (yearValue != AppConfig.contentTypeAll) {
         yearValue = _yearOptions.firstWhere((e) => e.value == yearValue).label;
       }
 
       // 转换类型参数为中文标签
-      if (categoryValue != 'all') {
-        final typeOptions = _selectedCategoryValue == '番剧'
+      if (categoryValue != AppConfig.contentTypeAll) {
+        final typeOptions = _selectedCategoryValue == AppStrings.animeSeries
             ? _animeTypeOptions
             : _movieTypeOptions;
         categoryValue =
@@ -454,15 +454,15 @@ class _AnimeScreenState extends State<AnimeScreen> {
       }
 
       // 转换平台参数为中文标签（仅番剧需要）
-      if (_selectedCategoryValue == '番剧' && platformValue != 'all') {
+      if (_selectedCategoryValue == AppStrings.animeSeries && platformValue != AppConfig.contentTypeAll) {
         platformValue =
             _platformOptions.firstWhere((e) => e.value == platformValue).label;
       }
 
-      final params = _selectedCategoryValue == '番剧'
+      final params = _selectedCategoryValue == AppStrings.animeSeries
           ? DoubanRecommendsParams(
               kind: kind,
-              category: '动画',
+              category: AppStrings.categoryAnimation,
               label: categoryValue,
               format: format,
               region: regionValue,
@@ -474,7 +474,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
             )
           : DoubanRecommendsParams(
               kind: kind,
-              category: '动画',
+              category: AppStrings.categoryAnimation,
               label: categoryValue,
               format: format,
               region: regionValue,
@@ -511,7 +511,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
   }
 
   void _onVideoTap(VideoInfo videoInfo) {
-    if (_selectedCategoryValue == '剧场版') {
+    if (_selectedCategoryValue == AppStrings.animeMovie) {
       // 剧场版，传递 title 和 stype=movie
       Navigator.push(
         context,
@@ -557,7 +557,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not launch $url')),
+          SnackBar(content: Text(AppStrings.couldNotLaunchUrl(url))),
         );
       }
     }
@@ -565,6 +565,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return StyledRefreshIndicator(
       onRefresh: _refreshAnimeData,
       refreshText: AppStrings.refreshAnime,
@@ -577,7 +578,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
             _buildHeader(),
             _buildFilterSection(),
             Gap.h16,
-            _selectedCategoryValue == '每日放送'
+            _selectedCategoryValue == AppStrings.animeDailyBroadcast
                 ? BangumiGrid(
                     bangumiItems: _bangumiList,
                     isLoading: _isLoading && _bangumiList.isEmpty,
@@ -586,7 +587,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
                     onGlobalMenuAction: (videoInfo, action) {
                       _handleMenuAction(videoInfo, action);
                     },
-                    contentType: 'anime',
+                    contentType: AppConfig.stypeAnime,
                   )
                 : DoubanMoviesGrid(
                     movies: _animeList,
@@ -596,10 +597,10 @@ class _AnimeScreenState extends State<AnimeScreen> {
                     onGlobalMenuAction: (videoInfo, action) {
                       _handleMenuAction(videoInfo, action);
                     },
-                    contentType: 'anime',
+                    contentType: AppConfig.stypeAnime,
                   ),
             // 底部指示器 - 加载更多或到底提示
-            if (_selectedCategoryValue == '每日放送')
+            if (_selectedCategoryValue == AppStrings.animeDailyBroadcast)
               // Bangumi 数据无需加载更多，直接显示底部指示器
               (_bangumiList.isNotEmpty && !_isLoading)
                   ? _buildEndOfListIndicator()
@@ -647,15 +648,15 @@ class _AnimeScreenState extends State<AnimeScreen> {
       padding: AppDimens.listTilePadding,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.8),
+            ? AppColors.white10
+            : AppColors.white80,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilterRow(
-            '分类',
+            AppStrings.filterCategory,
             _animePrimaryOptions,
             _selectedCategoryValue,
             (newValue) {
@@ -663,22 +664,22 @@ class _AnimeScreenState extends State<AnimeScreen> {
                 _selectedCategoryValue = newValue;
                 // 重置筛选为默认值
                 _selectedWeekday = DateTime.now().weekday.toString();
-                _selectedAnimeType = 'all';
-                _selectedAnimeRegion = 'all';
-                _selectedAnimeYear = 'all';
-                _selectedAnimePlatform = 'all';
-                _selectedAnimeSort = 'T';
-                _selectedMovieType = 'all';
-                _selectedMovieRegion = 'all';
-                _selectedMovieYear = 'all';
-                _selectedMovieSort = 'T';
+                _selectedAnimeType = AppConfig.contentTypeAll;
+                _selectedAnimeRegion = AppConfig.contentTypeAll;
+                _selectedAnimeYear = AppConfig.contentTypeAll;
+                _selectedAnimePlatform = AppConfig.contentTypeAll;
+                _selectedAnimeSort = AppStrings.sortDefault;
+                _selectedMovieType = AppConfig.contentTypeAll;
+                _selectedMovieRegion = AppConfig.contentTypeAll;
+                _selectedMovieYear = AppConfig.contentTypeAll;
+                _selectedMovieSort = AppStrings.sortDefault;
               });
               _fetchAnimeData(isRefresh: true);
             },
           ),
           Gap.h16,
           SizedBox(
-            height: 66,
+            height: AppDimens.filterSectionHeight,
             child: _buildSecondaryFilterSection(),
           ),
         ],
@@ -687,12 +688,11 @@ class _AnimeScreenState extends State<AnimeScreen> {
   }
 
   Widget _buildSecondaryFilterSection() {
-    if (_selectedCategoryValue == '每日放送') {
+    if (_selectedCategoryValue == AppStrings.animeDailyBroadcast) {
       return _buildWeekdayFilterSection();
-    } else if (_selectedCategoryValue == '番剧') {
+    } else if (_selectedCategoryValue == AppStrings.animeSeries) {
       return _buildAnimeFilterSection();
     } else {
-      // 剧场版
       return _buildMovieFilterSection();
     }
   }
@@ -702,7 +702,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '星期',
+          AppStrings.weekTitle,
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeMd,
             fontWeight: FontWeight.w500,
@@ -803,7 +803,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
                   _fetchAnimeData(isRefresh: true);
                 }),
                 _buildFilterPill(
-                    '地区', _movieRegionOptions, _selectedMovieRegion, (v) {
+                    AppStrings.filterRegion, _movieRegionOptions, _selectedMovieRegion, (v) {
                   setState(() => _selectedMovieRegion = v);
                   _fetchAnimeData(isRefresh: true);
                 }),
@@ -828,7 +828,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
     final selectedOption = options.firstWhere((e) => e.value == selectedValue,
         orElse: () => options.first);
     bool isDefault =
-        selectedValue == 'all' || (title == '排序' && selectedValue == 'T');
+        selectedValue == AppConfig.contentTypeAll || (title == AppStrings.filterSort && selectedValue == AppStrings.sortDefault);
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -874,18 +874,15 @@ class _AnimeScreenState extends State<AnimeScreen> {
           ),
         ),
         Gap.h8,
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: CapsuleTabSwitcher(
-            tabs: items.map((e) => e.label).toList(),
-            selectedTab:
-                items.firstWhere((e) => e.value == selectedValue).label,
-            onTabChanged: (newLabel) {
-              final newValue =
-                  items.firstWhere((e) => e.label == newLabel).value;
-              onItemSelected(newValue);
-            },
-          ),
+        CapsuleTabSwitcher(
+          tabs: items.map((e) => e.label).toList(),
+          selectedTab:
+              items.firstWhere((e) => e.value == selectedValue).label,
+          onTabChanged: (newLabel) {
+            final newValue =
+                items.firstWhere((e) => e.label == newLabel).value;
+            onItemSelected(newValue);
+          },
         ),
       ],
     );
@@ -893,27 +890,27 @@ class _AnimeScreenState extends State<AnimeScreen> {
 
   Widget _buildEndOfListIndicator() {
     final themeService = Provider.of<ThemeService>(context);
-    final totalCount = _selectedCategoryValue == '每日放送'
+    final totalCount = _selectedCategoryValue == AppStrings.animeDailyBroadcast
         ? _bangumiList.length
         : _animeList.length;
-    final contentType = _selectedCategoryValue == '每日放送'
-        ? '个番剧'
-        : _selectedCategoryValue == '番剧'
-            ? '部番剧'
-            : '部动画电影';
+    final contentType = _selectedCategoryValue == AppStrings.animeDailyBroadcast
+        ? AppStrings.countAnimeSeries
+        : _selectedCategoryValue == AppStrings.animeSeries
+            ? AppStrings.countAllAnime
+            : AppStrings.countAnimeMovie;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: AppDimens.paddingLeft16Right16Top8Bottom16,
       child: Column(
         children: [
           Container(
-            width: 60,
-            height: 2,
+            width: AppDimens.videoCardCoverWidth,
+            height: AppDimens.dividerThicknessMd,
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.grey.withValues(alpha: 0.4),
+                  ? AppColors.white30
+                  : AppColors.grey40,
               borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
@@ -923,18 +920,18 @@ class _AnimeScreenState extends State<AnimeScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.6)
+                  ? AppColors.white60
                   : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
           ),
           Gap.h4,
           Text(
-            '共 $totalCount $contentType',
+            AppStrings.totalCountWithName(totalCount, contentType),
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.4)
+                  ? AppColors.white60
                   : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
@@ -943,4 +940,7 @@ class _AnimeScreenState extends State<AnimeScreen> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

@@ -1,4 +1,5 @@
-import 'dart:ui';
+﻿import 'dart:ui';
+import '../constants/app_config.dart';
 
 enum DanmuMode {
   scroll(0),
@@ -37,23 +38,23 @@ class DanmuItem {
 
   factory DanmuItem.fromJson(Map<String, dynamic> json) {
     return DanmuItem(
-      text: json['text'] as String,
-      time: (json['time'] as num).toDouble(),
-      color: json['color'] != null
-          ? _parseColor(json['color'] as String)
+      text: json[AppConfig.jsonText] as String,
+      time: (json[AppConfig.jsonTime] as num).toDouble(),
+      color: json[AppConfig.jsonColor] != null
+          ? _parseColor(json[AppConfig.jsonColor] as String)
           : null,
-      mode: DanmuMode.fromValue(json['mode'] as int? ?? 0),
+      mode: DanmuMode.fromValue(json[AppConfig.jsonMode] as int? ?? 0),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'text': text,
-      'time': time,
-      'color': color != null
+      AppConfig.jsonText: text,
+      AppConfig.jsonTime: time,
+      AppConfig.jsonColor: color != null
           ? '#${color!.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}'
           : null,
-      'mode': mode.value,
+      AppConfig.jsonMode: mode.value,
     };
   }
 

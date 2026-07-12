@@ -6,6 +6,7 @@ import 'api_service.dart';
 import 'douban_cache_service.dart';
 import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 
 /// 豆瓣推荐数据请求参数
 class DoubanRecommendsParams {
@@ -46,18 +47,18 @@ class DoubanRequestParams {
     required this.kind,
     required this.category,
     required this.type,
-    this.pageLimit = 25,
+    this.pageLimit = AppConfig.defaultPageLimit,
     this.page = 0,
   });
 
   /// 构建查询参数
   Map<String, String> toQueryParams() {
     return {
-      'kind': kind,
-      'category': category,
-      'type': type,
-      'pageLimit': pageLimit.toString(),
-      'page': page.toString(),
+      AppConfig.queryKind: kind,
+      AppConfig.queryCategory: category,
+      AppConfig.queryType: type,
+      AppConfig.queryPageLimit: pageLimit.toString(),
+      AppConfig.queryPage: page.toString(),
     };
   }
 }
@@ -88,7 +89,7 @@ class DoubanService {
     required String kind,
     required String category,
     required String type,
-    int pageLimit = 25,
+    int pageLimit = AppConfig.defaultPageLimit,
     int page = 0,
   }) async {
     // 初始化缓存服务
@@ -111,11 +112,11 @@ class DoubanService {
             .map((m) {
               final map = m as Map<String, dynamic>;
               return DoubanMovie(
-                id: map['id']?.toString() ?? '',
-                title: map['title']?.toString() ?? '',
-                poster: map['poster']?.toString() ?? '',
-                rate: map['rate']?.toString(),
-                year: map['year']?.toString() ?? '',
+                id: map[AppConfig.jsonId]?.toString() ?? '',
+                title: map[AppConfig.jsonTitle]?.toString() ?? '',
+                poster: map[AppConfig.jsonPoster]?.toString() ?? '',
+                rate: map[AppConfig.jsonRate]?.toString(),
+                year: map[AppConfig.jsonYear]?.toString() ?? '',
               );
             })
             .toList(),
@@ -133,9 +134,9 @@ class DoubanService {
 
     try {
       final headers = {
-        'User-Agent': AppConfig.doubanUserAgent,
-        'Referer': AppConfig.doubanReferer,
-        'Accept': 'application/json, text/plain, */*',
+        AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+        AppConfig.headerReferer: AppConfig.doubanReferer,
+        AppConfig.headerAccept: AppConfig.headerAcceptJsonTextPlain,
       };
 
       final response = await http
@@ -164,30 +165,30 @@ class DoubanService {
           return ApiResponse.success(doubanResponse.items,
               statusCode: response.statusCode);
         } catch (parseError) {
-          return ApiResponse.error('豆瓣数据解析失败: ${parseError.toString()}');
+          return ApiResponse.error('${AppStrings.doubanParseFailed}: ${parseError.toString()}');
         }
       } else {
         return ApiResponse.error(
-          '获取豆瓣数据失败: ${response.statusCode}',
+          '${AppStrings.doubanFetchFailed}: ${response.statusCode}',
           statusCode: response.statusCode,
         );
       }
     } catch (e) {
-      return ApiResponse.error('豆瓣数据请求异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.doubanRequestException}: ${e.toString()}');
     }
   }
 
   /// 获取热门电影数据
   static Future<ApiResponse<List<DoubanMovie>>> getHotMovies(
     BuildContext context, {
-    int pageLimit = 25,
+    int pageLimit = AppConfig.defaultPageLimit,
     int page = 0,
   }) async {
     return getCategoryData(
       context,
-      kind: 'movie',
-      category: '热门',
-      type: '全部',
+      kind: AppConfig.stypeMovie,
+      category: AppStrings.categoryHot,
+      type: AppStrings.all,
       pageLimit: pageLimit,
       page: page,
     );
@@ -196,14 +197,14 @@ class DoubanService {
   /// 获取热门剧集数据
   static Future<ApiResponse<List<DoubanMovie>>> getHotTvShows(
     BuildContext context, {
-    int pageLimit = 25,
+    int pageLimit = AppConfig.defaultPageLimit,
     int page = 0,
   }) async {
     return getCategoryData(
       context,
-      kind: 'tv',
-      category: '最近热门',
-      type: 'tv',
+      kind: AppConfig.stypeTv,
+      category: AppStrings.filterValueRecentHot,
+      type: AppConfig.stypeTv,
       pageLimit: pageLimit,
       page: page,
     );
@@ -212,14 +213,14 @@ class DoubanService {
   /// 获取热门综艺数据
   static Future<ApiResponse<List<DoubanMovie>>> getHotShows(
     BuildContext context, {
-    int pageLimit = 25,
+    int pageLimit = AppConfig.defaultPageLimit,
     int page = 0,
   }) async {
     return getCategoryData(
       context,
-      kind: 'tv',
-      category: 'show',
-      type: 'show',
+      kind: AppConfig.stypeTv,
+      category: AppConfig.categoryShow,
+      type: AppConfig.stypeShow,
       pageLimit: pageLimit,
       page: page,
     );
@@ -258,11 +259,11 @@ class DoubanService {
             .map((m) {
               final map = m as Map<String, dynamic>;
               return DoubanMovie(
-                id: map['id']?.toString() ?? '',
-                title: map['title']?.toString() ?? '',
-                poster: map['poster']?.toString() ?? '',
-                rate: map['rate']?.toString(),
-                year: map['year']?.toString() ?? '',
+                id: map[AppConfig.jsonId]?.toString() ?? '',
+                title: map[AppConfig.jsonTitle]?.toString() ?? '',
+                poster: map[AppConfig.jsonPoster]?.toString() ?? '',
+                rate: map[AppConfig.jsonRate]?.toString(),
+                year: map[AppConfig.jsonYear]?.toString() ?? '',
               );
             })
             .toList(),
@@ -275,21 +276,21 @@ class DoubanService {
       // 缓存读取失败，继续执行网络请求
     }
     // 处理筛选参数，将 'all' 转换为空字符串
-    String category = params.category == 'all' ? '' : params.category;
-    String format = params.format == 'all' ? '' : params.format;
-    String region = params.region == 'all' ? '' : params.region;
-    String year = params.year == 'all' ? '' : params.year;
-    String platform = params.platform == 'all' ? '' : params.platform;
-    String label = params.label == 'all' ? '' : params.label;
+    String category = params.category == AppConfig.contentTypeAll ? '' : params.category;
+    String format = params.format == AppConfig.contentTypeAll ? '' : params.format;
+    String region = params.region == AppConfig.contentTypeAll ? '' : params.region;
+    String year = params.year == AppConfig.contentTypeAll ? '' : params.year;
+    String platform = params.platform == AppConfig.contentTypeAll ? '' : params.platform;
+    String label = params.label == AppConfig.contentTypeAll ? '' : params.label;
     String sort = params.sort == 'T' ? '' : params.sort;
 
     // 构建 selected_categories
-    Map<String, dynamic> selectedCategories = {'类型': category};
+    Map<String, dynamic> selectedCategories = {AppStrings.filterType: category};
     if (format.isNotEmpty) {
-      selectedCategories['形式'] = format;
+      selectedCategories[AppStrings.filterFormat] = format;
     }
     if (region.isNotEmpty) {
-      selectedCategories['地区'] = region;
+      selectedCategories[AppStrings.filterRegion] = region;
     }
 
     // 构建 tags 数组
@@ -319,17 +320,17 @@ class DoubanService {
 
     // 构建查询参数
     final queryParams = <String, String>{
-      'refresh': '0',
-      'start': (params.page * params.pageLimit).toString(),
-      'count': params.pageLimit.toString(),
-      'selected_categories': json.encode(selectedCategories),
-      'uncollect': 'false',
-      'score_range': '0,10',
-      'tags': tags.join(','),
+      AppConfig.queryRefresh: '0',
+      AppConfig.queryStart: (params.page * params.pageLimit).toString(),
+      AppConfig.queryCount: params.pageLimit.toString(),
+      AppConfig.querySelectedCategories: json.encode(selectedCategories),
+      AppConfig.queryUncollect: 'false',
+      AppConfig.queryScoreRange: '0,10',
+      AppConfig.queryTags: tags.join(','),
     };
 
     if (sort.isNotEmpty) {
-      queryParams['sort'] = sort;
+      queryParams[AppConfig.querySort] = sort;
     }
 
     final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
@@ -337,9 +338,9 @@ class DoubanService {
 
     try {
       final headers = {
-        'User-Agent': AppConfig.doubanUserAgent,
-        'Referer': AppConfig.doubanReferer,
-        'Accept': 'application/json, text/plain, */*',
+        AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+        AppConfig.headerReferer: AppConfig.doubanReferer,
+        AppConfig.headerAccept: AppConfig.headerAcceptJsonTextPlain,
       };
 
       final response = await http
@@ -354,9 +355,9 @@ class DoubanService {
           final Map<String, dynamic> data = json.decode(response.body);
 
           // 过滤并转换数据
-          final itemsData = data['items'] as List<dynamic>? ?? [];
+          final itemsData = data[AppConfig.jsonItems] as List<dynamic>? ?? [];
           final filteredItems = itemsData
-              .where((item) => item['type'] == 'movie' || item['type'] == 'tv')
+              .where((item) => item[AppConfig.jsonType] == AppConfig.stypeMovie || item[AppConfig.jsonType] == AppConfig.stypeTv)
               .map((item) => DoubanMovie.fromJson(item as Map<String, dynamic>))
               .toList();
 
@@ -374,16 +375,16 @@ class DoubanService {
           return ApiResponse.success(filteredItems,
               statusCode: response.statusCode);
         } catch (parseError) {
-          return ApiResponse.error('豆瓣推荐数据解析失败: ${parseError.toString()}');
+          return ApiResponse.error('${AppStrings.doubanRecommendParseFailed}: ${parseError.toString()}');
         }
       } else {
         return ApiResponse.error(
-          '获取豆瓣推荐数据失败: ${response.statusCode}',
+          '${AppStrings.doubanRecommendFetchFailed}: ${response.statusCode}',
           statusCode: response.statusCode,
         );
       }
     } catch (e) {
-      return ApiResponse.error('豆瓣推荐数据请求异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.doubanRecommendRequestException}: ${e.toString()}');
     }
   }
 
@@ -412,8 +413,8 @@ class DoubanService {
 
           // 处理推荐列表
           List<DoubanRecommendItem> recommends = [];
-          if (map['recommends'] != null) {
-            final recommendsData = map['recommends'] as List<dynamic>? ?? [];
+          if (map[AppConfig.jsonRecommends] != null) {
+            final recommendsData = map[AppConfig.jsonRecommends] as List<dynamic>? ?? [];
             recommends = recommendsData
                 .map((r) =>
                     DoubanRecommendItem.fromJson(r as Map<String, dynamic>))
@@ -421,37 +422,37 @@ class DoubanService {
           }
 
           return DoubanMovieDetails(
-            id: map['id']?.toString() ?? '',
-            title: map['title']?.toString() ?? '',
-            poster: map['poster']?.toString() ?? '',
-            rate: map['rate']?.toString(),
-            year: map['year']?.toString() ?? '',
-            summary: map['summary']?.toString(),
-            genres: (map['genres'] as List<dynamic>? ?? [])
+            id: map[AppConfig.jsonId]?.toString() ?? '',
+            title: map[AppConfig.jsonTitle]?.toString() ?? '',
+            poster: map[AppConfig.jsonPoster]?.toString() ?? '',
+            rate: map[AppConfig.jsonRate]?.toString(),
+            year: map[AppConfig.jsonYear]?.toString() ?? '',
+            summary: map[AppConfig.jsonSummary]?.toString(),
+            genres: (map[AppConfig.jsonGenres] as List<dynamic>? ?? [])
                 .map((g) => g.toString())
                 .toList(),
-            directors: (map['directors'] as List<dynamic>? ?? [])
+            directors: (map[AppConfig.jsonDirectors] as List<dynamic>? ?? [])
                 .map((d) => d.toString())
                 .toList(),
-            screenwriters: (map['screenwriters'] as List<dynamic>? ?? [])
+            screenwriters: (map[AppConfig.jsonScreenwriters] as List<dynamic>? ?? [])
                 .map((s) => s.toString())
                 .toList(),
-            actors: (map['actors'] as List<dynamic>? ?? [])
+            actors: (map[AppConfig.jsonActors] as List<dynamic>? ?? [])
                 .map((a) => a.toString())
                 .toList(),
-            duration: map['duration']?.toString(),
-            countries: (map['countries'] as List<dynamic>? ?? [])
+            duration: map[AppConfig.jsonDuration]?.toString(),
+            countries: (map[AppConfig.jsonCountries] as List<dynamic>? ?? [])
                 .map((c) => c.toString())
                 .toList(),
-            languages: (map['languages'] as List<dynamic>? ?? [])
+            languages: (map[AppConfig.jsonLanguages] as List<dynamic>? ?? [])
                 .map((l) => l.toString())
                 .toList(),
-            releaseDate: map['releaseDate']?.toString(),
-            originalTitle: map['originalTitle']?.toString(),
-            imdbId: map['imdbId']?.toString(),
-            totalEpisodes: map['totalEpisodes'] is int
-                ? map['totalEpisodes'] as int
-                : int.tryParse(map['totalEpisodes']?.toString() ?? ''),
+            releaseDate: map[AppConfig.jsonReleaseDateCamel]?.toString(),
+            originalTitle: map[AppConfig.jsonOriginalTitleCamel]?.toString(),
+            imdbId: map[AppConfig.jsonImdbId]?.toString(),
+            totalEpisodes: map[AppConfig.jsonTotalEpisodesCamel] is int
+                ? map[AppConfig.jsonTotalEpisodesCamel] as int
+                : int.tryParse(map[AppConfig.jsonTotalEpisodesCamel]?.toString() ?? ''),
             recommends: recommends,
           );
         },
@@ -471,9 +472,9 @@ class DoubanService {
 
     try {
       final headers = {
-        'User-Agent': AppConfig.doubanUserAgent,
-        'Referer': AppConfig.doubanReferer,
-        'Accept': 'application/json, text/plain, */*',
+        AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+        AppConfig.headerReferer: AppConfig.doubanReferer,
+        AppConfig.headerAccept: AppConfig.headerAcceptJsonTextPlain,
       };
 
       final response = await http
@@ -488,12 +489,12 @@ class DoubanService {
           // 解析 rexxar JSON 响应
           final data = jsonDecode(response.body);
           if (data is! Map<String, dynamic>) {
-            return ApiResponse.error('豆瓣详情数据格式错误');
+            return ApiResponse.error(AppStrings.bangumiCacheFormatError);
           }
 
           final details = DoubanMovieDetails.fromJson(data);
           if (details.title.trim().isEmpty) {
-            return ApiResponse.error('豆瓣详情数据解析为空');
+            return ApiResponse.error(AppStrings.doubanDetailParseEmpty);
           }
 
           // 缓存成功的结果，缓存时间为1天
@@ -509,16 +510,16 @@ class DoubanService {
 
           return ApiResponse.success(details, statusCode: response.statusCode);
         } catch (parseError) {
-          return ApiResponse.error('豆瓣详情数据解析失败: ${parseError.toString()}');
+          return ApiResponse.error('${AppStrings.doubanDetailParseFailed}: ${parseError.toString()}');
         }
       } else {
         return ApiResponse.error(
-          '获取豆瓣详情数据失败: ${response.statusCode}',
+          '${AppStrings.doubanDetailFetchFailed}: ${response.statusCode}',
           statusCode: response.statusCode,
         );
       }
     } catch (e) {
-      return ApiResponse.error('豆瓣详情数据请求异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.doubanDetailRequestException}: ${e.toString()}');
     }
   }
 }

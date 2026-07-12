@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_dimensions.dart';
 import 'package:provider/provider.dart';
 import '../utils/font_utils.dart';
 import '../services/theme_service.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 /// 自定义下拉刷新指示器
 class CustomRefreshIndicator extends StatelessWidget {
@@ -57,7 +58,7 @@ class CustomRefreshIndicatorContent extends StatelessWidget {
         final indicatorColor = color ?? AppColors.accent; // 绿色主题
         
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: AppDimens.paddingHorizontal20Vertical12,
           decoration: BoxDecoration(
             color: indicatorColor,
             borderRadius: BorderRadius.circular(AppDimens.radiusRound),
@@ -65,7 +66,7 @@ class CustomRefreshIndicatorContent extends StatelessWidget {
               BoxShadow(
                 color: indicatorColor.withValues(alpha: 0.3),
                 blurRadius: AppDimens.shadowBlurSm,
-                offset: const Offset(0, 2),
+                offset: AppDimens.offset02,
               ),
             ],
           ),
@@ -76,12 +77,12 @@ class CustomRefreshIndicatorContent extends StatelessWidget {
                 Icon(
                   icon,
                   color: AppColors.white,
-                  size: 20,
+                  size: AppDimens.iconSize20,
                 ),
                 Gap.w8,
               ],
               Text(
-                text ?? '下拉刷新',
+                text ?? AppStrings.pullToRefresh,
                 style: FontUtils.poppins(
                   color: AppColors.white,
                   fontSize: AppDimens.fontSizeMd,

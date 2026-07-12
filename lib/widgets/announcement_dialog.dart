@@ -29,7 +29,7 @@ class AnnouncementDialog extends StatelessWidget {
           curve: Curves.easeOut,
         ),
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          margin: AppDimens.paddingHorizontal24Vertical40,
           decoration: BoxDecoration(
             color: isDarkMode ? AppColors.cardDark : AppColors.white,
             borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
@@ -37,13 +37,13 @@ class AnnouncementDialog extends StatelessWidget {
               BoxShadow(
                 color: AppColors.black30,
                 blurRadius: AppDimens.shadowBlurLg,
-                offset: const Offset(0, 8),
+                offset: AppDimens.offset08,
               ),
             ],
             border: Border.all(
               color: isDarkMode
-                  ? AppColors.borderDarkGray
-                  : AppColors.borderLightGray,
+                  ? AppColors.gray700
+                  : AppColors.gray200,
               width: 0.5,
             ),
           ),
@@ -52,15 +52,14 @@ class AnnouncementDialog extends StatelessWidget {
             children: [
               // 标题栏
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: AppDimens.paddingHorizontal20Vertical8,
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
                       color: isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray,
-                      width: 1,
+                          ? AppColors.gray700
+                          : AppColors.gray200,
+                      width: AppDimens.dividerThicknessThin,
                     ),
                   ),
                 ),
@@ -70,8 +69,8 @@ class AnnouncementDialog extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.all(6),
+                          margin: AppDimens.paddingRight10,
+                          padding: AppDimens.paddingAll6,
                           decoration: BoxDecoration(
                             color: isDarkMode
                                 ? AppColors.emerald.withValues(alpha: 0.2)
@@ -105,9 +104,9 @@ class AnnouncementDialog extends StatelessWidget {
                             : AppColors.gray500,
                       ),
                       onPressed: onClose,
-                      padding: const EdgeInsets.all(6),
+                      padding: AppDimens.paddingAll6,
                       hoverColor: isDarkMode
-                          ? AppColors.borderDarkGray
+                          ? AppColors.gray700
                           : AppColors.gray100,
                     ),
                   ],
@@ -116,7 +115,7 @@ class AnnouncementDialog extends StatelessWidget {
 
               // 公告内容
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: AppDimens.paddingAll20,
                 child: Text(
                   announcement.content,
                   style: FontUtils.poppins(
@@ -125,7 +124,7 @@ class AnnouncementDialog extends StatelessWidget {
                         ? AppColors.gray300
                         : AppColors.gray600,
                     fontWeight: FontWeight.w400,
-                    height: 1.5,
+                    height: AppDimens.lineHeightLoose,
                   ),
                   textAlign: TextAlign.left,
                 ),

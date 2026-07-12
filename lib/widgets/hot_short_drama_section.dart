@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import '../models/play_record.dart';
 import '../models/video_info.dart';
 import '../services/api_service.dart';
@@ -75,7 +76,7 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
       // 使用推荐接口，服务端会自动选择有数据的分类
       final result = await ApiService.getRecommendedShortDramas(
         context,
-        size: 25,
+        size: AppConfig.defaultRecommendSize,
       );
 
       if (result.success && result.data != null) {
@@ -116,19 +117,19 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
   /// 转换单个短剧为VideoInfo
   VideoInfo _convertToVideoInfo(Map<String, dynamic> shortDrama) {
     return VideoInfo(
-      id: shortDrama['id'].toString(),
-      title: shortDrama['name'] ?? '',
-      year: shortDrama['update_time']?.toString().substring(0, 4) ?? '',
-      cover: shortDrama['cover'] ?? '',
-      source: 'shortdrama',
-      sourceName: '短剧',
+      id: shortDrama[AppConfig.jsonId].toString(),
+      title: shortDrama[AppConfig.jsonName] ?? '',
+      year: shortDrama[AppConfig.jsonUpdateTime]?.toString().substring(0, 4) ?? '',
+      cover: shortDrama[AppConfig.jsonCover] ?? '',
+      source: AppConfig.sourceShortDrama,
+      sourceName: AppStrings.shortDramaName,
       index: 1,
       totalEpisodes:
-          int.tryParse(shortDrama['episode_count']?.toString() ?? '0') ?? 0,
+          int.tryParse(shortDrama[AppConfig.jsonEpisodeCount]?.toString() ?? '0') ?? 0,
       playTime: 0,
       totalTime: 0,
       saveTime: DateTime.now().millisecondsSinceEpoch,
-      searchTitle: shortDrama['name'] ?? '',
+      searchTitle: shortDrama[AppConfig.jsonName] ?? '',
     );
   }
 
@@ -161,7 +162,7 @@ class _HotShortDramaSectionState extends State<HotShortDramaSection> {
       hasError: _hasError,
       onRetry: _loadHotShortDramas,
       cardCount: 2.75,
-      from: 'shortdrama', // 传递from参数为'shortdrama'，确保显示集数而不是链接图标
+      from: AppConfig.sourceShortDrama, // 传递from参数为AppConfig.sourceShortDrama，确保显示集数而不是链接图标
     );
   }
 }

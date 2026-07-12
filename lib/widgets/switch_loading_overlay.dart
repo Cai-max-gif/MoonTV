@@ -45,7 +45,7 @@ class SwitchLoadingOverlay extends StatelessWidget {
                           child: const Icon(
                             Icons.arrow_back,
                             color: AppColors.white,
-                            size: 20,
+                            size: AppDimens.iconSize20,
                           ),
                         ),
                       ),
@@ -63,8 +63,8 @@ class SwitchLoadingOverlay extends StatelessWidget {
                       RotationTransition(
                         turns: animationController,
                         child: Container(
-                          width: 100,
-                          height: 100,
+                          width: AppDimens.loadingAnimationSize,
+                          height: AppDimens.loadingAnimationSize,
                           decoration: BoxDecoration(
                             color:
                                 AppColors.green.withValues(alpha: 0.3),
@@ -74,8 +74,8 @@ class SwitchLoadingOverlay extends StatelessWidget {
                       ),
                       // 中间的图标容器
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: AppDimens.iconSize80,
+                        height: AppDimens.iconSize80,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
@@ -155,7 +155,7 @@ class _HoverBackButtonState extends State<_HoverBackButton> {
           child: Icon(
             Icons.arrow_back,
             color: widget.iconColor,
-            size: 20,
+            size: AppDimens.iconSize20,
           ),
         ),
       ),

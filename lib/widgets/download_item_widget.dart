@@ -5,6 +5,7 @@ import '../models/download_task.dart';
 import '../utils/font_utils.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 
 class DownloadItemWidget extends StatelessWidget {
   final DownloadTask task;
@@ -29,7 +30,7 @@ class DownloadItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: AppDimens.marginHorizontal16Vertical6,
       padding: const EdgeInsets.all(AppDimens.spacingMd),
       decoration: BoxDecoration(
         color: isDarkMode ? AppColors.cardDark : AppColors.white,
@@ -38,7 +39,7 @@ class DownloadItemWidget extends StatelessWidget {
           BoxShadow(
             color: AppColors.black30,
             blurRadius: AppDimens.shadowBlurSm,
-            offset: const Offset(0, 2),
+            offset: AppDimens.offset02,
           ),
         ],
       ),
@@ -62,8 +63,8 @@ class DownloadItemWidget extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       child: Container(
-        width: 60,
-        height: 80,
+        width: AppDimens.videoCardCoverWidth,
+        height: AppDimens.videoCardCoverHeight,
         color: isDarkMode ? AppColors.inputBgDark : AppColors.inputBgLight,
         child: task.cover.isNotEmpty
             ? Image.network(
@@ -125,7 +126,7 @@ class DownloadItemWidget extends StatelessWidget {
         if (task.isRetrying) ...[
           Gap.h4,
           Text(
-            '${AppStrings.downloadRetrying} (${task.retryCount}/5)',
+            '${AppStrings.downloadRetrying} (${task.retryCount}/${AppConfig.downloadMaxRetryCount})',
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSize2xs,
               color: AppColors.amber,
@@ -137,8 +138,8 @@ class DownloadItemWidget extends StatelessWidget {
   }
 
   Widget _buildProgressOrContinueButton() {
-    const size = 48.0;
-    const strokeWidth = 4.0;
+    const size = AppDimens.downloadButtonSize;
+    const strokeWidth = AppDimens.downloadProgressStrokeWidth;
 
     if (task.isCompleted) {
       return _buildActionButton(
@@ -162,8 +163,8 @@ class DownloadItemWidget extends StatelessWidget {
                 value: task.progress,
                 strokeWidth: strokeWidth,
                 backgroundColor: isDarkMode
-                    ? AppColors.borderDarkGray
-                    : AppColors.borderLightGray,
+                    ? AppColors.gray700
+                    : AppColors.gray200,
                 valueColor:
                     const AlwaysStoppedAnimation<Color>(AppColors.blue),
               ),
@@ -192,7 +193,7 @@ class DownloadItemWidget extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(
               color: AppColors.amber,
-              width: 2,
+              width: AppDimens.dividerThicknessMd,
             ),
           ),
           child: Center(
@@ -227,12 +228,12 @@ class DownloadItemWidget extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(
             color: AppColors.amber,
-            width: 2,
+            width: AppDimens.dividerThicknessMd,
           ),
         ),
         child: Center(
           child: Text(
-            '${AppStrings.downloadRetrying}${task.retryCount}/5',
+            '${AppStrings.downloadRetrying}${task.retryCount}/${AppConfig.downloadMaxRetryCount}',
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSize2xs,
               fontWeight: FontWeight.w600,
@@ -252,7 +253,7 @@ class DownloadItemWidget extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(
             color: AppColors.gray500,
-            width: 2,
+            width: AppDimens.dividerThicknessMd,
           ),
         ),
         child: Center(
@@ -290,7 +291,7 @@ class DownloadItemWidget extends StatelessWidget {
           child: Icon(
             icon,
             color: color,
-            size: 20,
+            size: AppDimens.iconSize20,
           ),
         ),
       ),
@@ -301,8 +302,8 @@ class DownloadItemWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onDelete,
       child: Container(
-        width: 36,
-        height: 36,
+        width: AppDimens.progressIndicatorWidth,
+        height: AppDimens.progressIndicatorWidth,
         decoration: BoxDecoration(
           color: AppColors.red.withValues(alpha: 0.098),
           shape: BoxShape.circle,

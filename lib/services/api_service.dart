@@ -21,6 +21,7 @@ import '../constants/app_regex.dart';
 import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_strings.dart';
+import '../utils/security_utils.dart';
 
 /// API响应结果类
 class ApiResponse<T> {
@@ -70,9 +71,7 @@ class ApiService {
   // 内存级 X-User-Auth 值（传给自定义 header，绕过 dart:io Cookie 头限制）
   static String? _inMemoryUserAuth;
 
-  // CSRF token 缓存（从服务端获取）
-  static String? _csrfToken;
-  static String? _csrfSessionCookie;
+  
 
   // Telegram 登录保护：阻止所有跳回登录页的请求
   static bool _loginRedirectBlocked = false;
@@ -133,31 +132,20 @@ class ApiService {
     Map<String, String>? additionalHeaders,
     bool includeAuth = true,
   }) async {
-    // 确保 csrf_session cookie 已获取
-    await _getCsrfToken();
-
     final headers = <String, String>{
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-Requested-With': AppConfig.headerXmlHttpRequest, // 防止CSRF攻击
+      AppConfig.headerContentType: AppStrings.contentTypeJsonUtf8,
+      AppConfig.headerAccept: AppConfig.headerAcceptJson,
+      AppConfig.headerXRequestedWith: AppConfig.headerXmlHttpRequest,
     };
 
-    if (_csrfToken != null && _csrfToken!.isNotEmpty) {
-      headers['X-CSRF-TOKEN'] = _csrfToken!;
-    }
-
-    // 构建 Cookie 列表
     final cookieParts = <String>[];
-    if (_csrfSessionCookie != null && _csrfSessionCookie!.isNotEmpty) {
-      cookieParts.add('csrf_session=$_csrfSessionCookie');
-    }
 
     // 添加认证信息
     if (includeAuth) {
       // 优先使用令牌认证
       final authToken = await UserDataService.getAuthToken();
       if (authToken != null && authToken.isNotEmpty) {
-        headers['Authorization'] = 'Bearer $authToken';
+        headers[AppConfig.headerAuthorization] = '${AppStrings.authorizationBearer}$authToken';
       } else {
         // fallback to cookies认证
         final cookies = await _getCookies();
@@ -168,12 +156,12 @@ class ApiService {
 
       // 额外发送 X-User-Auth header（绕过 dart:io Cookie 头限制）
       if (_inMemoryUserAuth != null && _inMemoryUserAuth!.isNotEmpty) {
-        headers['X-User-Auth'] = _inMemoryUserAuth!;
+        headers[AppConfig.headerXUserAuth] = _inMemoryUserAuth!;
       }
     }
 
     if (cookieParts.isNotEmpty) {
-      headers['Cookie'] = cookieParts.join('; ');
+      headers[AppConfig.headerCookie] = cookieParts.join('; ');
     }
 
     // 添加额外头部
@@ -184,69 +172,7 @@ class ApiService {
     return headers;
   }
 
-  /// 获取CSRF令牌（从服务端获取并缓存）
-  static Future<String> _getCsrfToken() async {
-    if (_csrfToken != null && _csrfSessionCookie != null) {
-      return _csrfToken!;
-    }
-
-    try {
-      final baseUrl = await _getBaseUrl();
-      final url = '$baseUrl${AppConfig.csrfTokenEndpoint}';
-
-      // CSRF token 端点需要认证，构建认证请求头
-      final fetchHeaders = <String, String>{};
-      final authToken = await UserDataService.getAuthToken();
-      if (authToken != null && authToken.isNotEmpty) {
-        fetchHeaders['Authorization'] = 'Bearer $authToken';
-      } else {
-        final cookies = await _getCookies();
-        if (cookies != null && cookies.isNotEmpty) {
-          fetchHeaders['Cookie'] = cookies;
-        }
-      }
-      if (_inMemoryUserAuth != null && _inMemoryUserAuth!.isNotEmpty) {
-        fetchHeaders['X-User-Auth'] = _inMemoryUserAuth!;
-      }
-
-      final response = await http.get(Uri.parse(url), headers: fetchHeaders).timeout(AppDurations.shortTimeout);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        _csrfToken = data['token'] as String?;
-        _csrfSessionCookie = data['sessionId'] as String?;
-
-        if (_csrfSessionCookie == null || _csrfSessionCookie!.isEmpty) {
-          final setCookie = response.headers['set-cookie'];
-          if (setCookie != null) {
-            final parts = setCookie.split(';');
-            for (final part in parts) {
-              final kv = part.trim().split('=');
-              if (kv.length == 2 && kv[0] == 'csrf_session') {
-                _csrfSessionCookie = kv[1];
-                break;
-              }
-            }
-          }
-        }
-
-        if (_csrfToken != null && _csrfSessionCookie != null) {
-          return _csrfToken!;
-        }
-      }
-    } catch (_) {
-      // CSRF token 获取失败，服务端会因无有效 session 而拒绝
-    }
-
-    // 回退：返回空字符串（服务端会因为无有效session而拒绝）
-    return '';
-  }
-
-  /// 清除 CSRF 缓存（token 过期或 403 时调用）
-  static void clearCsrfCache() {
-    _csrfToken = null;
-    _csrfSessionCookie = null;
-  }
+  
 
   /// 处理响应
   static Future<ApiResponse<T>> _handleResponse<T>(
@@ -260,10 +186,10 @@ class ApiService {
       String errorMessage = AppStrings.authLoginFailed;
       try {
         final errorData = json.decode(response.body);
-        if (errorData.containsKey('message')) {
-          errorMessage = errorData['message'] as String;
-        } else if (errorData.containsKey('error')) {
-          errorMessage = errorData['error'] as String;
+        if (errorData.containsKey(AppConfig.jsonMessage)) {
+          errorMessage = errorData[AppConfig.jsonMessage] as String;
+        } else if (errorData.containsKey(AppConfig.jsonError)) {
+          errorMessage = errorData[AppConfig.jsonError] as String;
         }
       } catch (e) {
         // 解析失败，使用默认错误信息
@@ -288,14 +214,7 @@ class ApiService {
       );
     }
 
-    // 处理403权限不足（可能是 CSRF token 过期）
-    if (response.statusCode == 403) {
-      clearCsrfCache();
-      return ApiResponse.error(
-        AppStrings.serverError,
-        statusCode: 403,
-      );
-    }
+    
 
     // 处理其他错误状态码
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -303,7 +222,7 @@ class ApiService {
       try {
         final errorData = json.decode(response.body);
         errorMessage =
-            errorData['message'] ?? errorData['error'] ?? errorMessage;
+            errorData[AppConfig.jsonMessage] ?? errorData[AppConfig.jsonError] ?? errorMessage;
       } catch (e) {
         // 如果解析失败，使用默认错误信息
         switch (response.statusCode) {
@@ -416,22 +335,7 @@ class ApiService {
   /// 过滤查询参数，防止注入攻击
   static Map<String, String> _filterQueryParameters(
       Map<String, String> parameters) {
-    final filtered = <String, String>{};
-    parameters.forEach((key, value) {
-      // 移除可能的注入字符和危险字符
-      String filteredValue = value
-          .replaceAll("'", '')
-          .replaceAll('"', '')
-          .replaceAll(';', '')
-          .replaceAll('--', '')
-          .replaceAll('/*', '')
-          .replaceAll('*/', '')
-          .replaceAll('<', '')
-          .replaceAll('>', '')
-          .trim();
-      filtered[key] = filteredValue;
-    });
-    return filtered;
+    return SecurityUtils.filterQueryParameters(parameters);
   }
 
   /// POST请求
@@ -469,15 +373,7 @@ class ApiService {
     }
 
     try {
-      final result = await doRequest();
-
-      // CSRF 403 自动重试：清除缓存并重建请求
-      if (result.statusCode == 403) {
-        clearCsrfCache();
-        return await doRequest();
-      }
-
-      return result;
+      return await doRequest();
     } catch (e) {
       return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
@@ -485,49 +381,7 @@ class ApiService {
 
   /// 过滤请求体，防止注入攻击
   static Map<String, dynamic> _filterRequestBody(Map<String, dynamic> body) {
-    final filtered = <String, dynamic>{};
-    body.forEach((key, value) {
-      if (value is String) {
-        // 对字符串值进行过滤
-        String filteredValue = value
-            .replaceAll("'", '')
-            .replaceAll('"', '')
-            .replaceAll(';', '')
-            .replaceAll('--', '')
-            .replaceAll('/*', '')
-            .replaceAll('*/', '')
-            .replaceAll('<', '')
-            .replaceAll('>', '')
-            .trim();
-        filtered[key] = filteredValue;
-      } else if (value is Map) {
-        // 递归过滤嵌套的Map
-        filtered[key] = _filterRequestBody(value as Map<String, dynamic>);
-      } else if (value is List) {
-        // 过滤列表中的字符串元素
-        filtered[key] = value.map((item) {
-          if (item is String) {
-            return item
-                .replaceAll("'", '')
-                .replaceAll('"', '')
-                .replaceAll(';', '')
-                .replaceAll('--', '')
-                .replaceAll('/*', '')
-                .replaceAll('*/', '')
-                .replaceAll('<', '')
-                .replaceAll('>', '')
-                .trim();
-          } else if (item is Map) {
-            return _filterRequestBody(item as Map<String, dynamic>);
-          }
-          return item;
-        }).toList();
-      } else {
-        // 其他类型保持不变
-        filtered[key] = value;
-      }
-    });
-    return filtered;
+    return SecurityUtils.filterRequestBody(body);
   }
 
   /// PUT请求
@@ -564,14 +418,7 @@ class ApiService {
     }
 
     try {
-      final result = await doRequest();
-
-      if (result.statusCode == 403) {
-        clearCsrfCache();
-        return await doRequest();
-      }
-
-      return result;
+      return await doRequest();
     } catch (e) {
       return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
@@ -603,14 +450,7 @@ class ApiService {
     }
 
     try {
-      final result = await doRequest();
-
-      if (result.statusCode == 403) {
-        clearCsrfCache();
-        return await doRequest();
-      }
-
-      return result;
+      return await doRequest();
     } catch (e) {
       return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
@@ -635,7 +475,7 @@ class ApiService {
         );
 
         // 移除Content-Type，让http包自动设置multipart的Content-Type
-        requestHeaders.remove('Content-Type');
+        requestHeaders.remove(AppConfig.headerContentType);
 
         final request = http.MultipartRequest('POST', Uri.parse(url));
         request.headers.addAll(requestHeaders);
@@ -688,8 +528,8 @@ class ApiService {
       final response = await http.get(
         Uri.parse('$baseUrl${AppConfig.favoritesEndpoint}'),
         headers: {
-          'Accept': 'application/json',
-          'Cookie': cookies,
+          AppConfig.headerAccept: AppConfig.headerAcceptJson,
+          AppConfig.headerCookie: cookies,
         },
       ).timeout(_timeout);
 
@@ -752,7 +592,7 @@ class ApiService {
       final response = await post<void>(
         AppConfig.searchHistoryEndpoint,
         context: context,
-        body: {'keyword': query},
+        body: {AppConfig.jsonKeyword: query},
       );
 
       return response;
@@ -799,8 +639,8 @@ class ApiService {
       // 构建正确的请求体格式
       final key = '${playRecord.source}+${playRecord.id}';
       final body = {
-        'key': key,
-        'record': playRecord.toJson(),
+        AppConfig.jsonKey: key,
+        AppConfig.jsonRecord: playRecord.toJson(),
       };
 
       final response = await post<void>(
@@ -852,8 +692,8 @@ class ApiService {
     try {
       final key = '$source+$id';
       final body = {
-        'key': key,
-        'favorite': favoriteData,
+        AppConfig.jsonKey: key,
+        AppConfig.jsonFavorite: favoriteData,
       };
 
       final response = await post<void>(
@@ -892,7 +732,7 @@ class ApiService {
 
       final response = await http.get(
         Uri.parse('$baseUrl${AppConfig.healthEndpoint}'),
-        headers: {'Accept': 'application/json'},
+        headers: {AppConfig.headerAccept: AppConfig.headerAcceptJson},
       ).timeout(AppDurations.healthCheckTimeout);
 
       return response.statusCode == 200;
@@ -922,7 +762,7 @@ class ApiService {
       final response = await Future.value(get<bool>(
         AppConfig.userStatusEndpoint,
         context: context,
-        fromJson: (data) => data['status'] == AppConfig.accountStatusActive,
+        fromJson: (data) => data[AppConfig.jsonStatus] == AppConfig.accountStatusActive,
       )).timeout(AppDurations.healthCheckTimeout, onTimeout: () {
         return ApiResponse<bool>.error(AppStrings.networkError);
       });
@@ -982,8 +822,8 @@ class ApiService {
       final response = await get<SearchResult>(
         AppConfig.detailEndpoint,
         queryParameters: {
-          'source': source,
-          'id': id,
+          AppConfig.jsonSource: source,
+          AppConfig.jsonId: id,
         },
         fromJson: (data) => SearchResult.fromJson(data as Map<String, dynamic>),
       );
@@ -1006,14 +846,14 @@ class ApiService {
       final response = await get<Map<String, dynamic>>(
         AppConfig.searchEndpoint,
         queryParameters: {
-          'q': query.trim(),
+          AppConfig.queryQ: query.trim(),
         },
         fromJson: (data) => data as Map<String, dynamic>,
       );
 
       if (response.success && response.data != null) {
         final data = response.data!;
-        final results = data['results'] as List<dynamic>? ?? [];
+        final results = data[AppConfig.jsonResults] as List<dynamic>? ?? [];
 
         // 应用家庭模式过滤
         final familyMode = await UserDataService.getFamilyMode();
@@ -1067,7 +907,7 @@ class ApiService {
         AppConfig.liveSourcesEndpoint,
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
-          final list = responseData['data'] as List<dynamic>;
+          final list = responseData[AppConfig.jsonData] as List<dynamic>;
           return list
               .map((item) => LiveSource.fromJson(item as Map<String, dynamic>))
               .toList();
@@ -1091,10 +931,10 @@ class ApiService {
     try {
       final response = await get<List<LiveChannel>>(
         AppConfig.liveChannelsEndpoint,
-        queryParameters: {'source': source},
+        queryParameters: {AppConfig.jsonSource: source},
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
-          final list = responseData['data'] as List<dynamic>;
+          final list = responseData[AppConfig.jsonData] as List<dynamic>;
           return list
               .map((item) => LiveChannel.fromJson(item as Map<String, dynamic>))
               .toList();
@@ -1119,12 +959,12 @@ class ApiService {
       final response = await get<EpgData>(
         AppConfig.epgEndpoint,
         queryParameters: {
-          'tvgId': tvgId,
-          'source': source,
+          AppConfig.jsonTvgId: tvgId,
+          AppConfig.jsonSource: source,
         },
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
-          final epgData = responseData['data'] as Map<String, dynamic>;
+          final epgData = responseData[AppConfig.jsonData] as Map<String, dynamic>;
           return EpgData.fromJson(epgData);
         },
       );
@@ -1146,10 +986,10 @@ class ApiService {
     try {
       final response = await get<List<SearchSuggestion>>(
         AppConfig.searchSuggestionsEndpoint,
-        queryParameters: {'q': query.trim()},
+        queryParameters: {AppConfig.queryQ: query.trim()},
         fromJson: (data) {
           final responseData = data as Map<String, dynamic>;
-          final list = responseData['suggestions'] as List<dynamic>;
+          final list = responseData[AppConfig.jsonSuggestions] as List<dynamic>;
           return list
               .map((item) =>
                   SearchSuggestion.fromJson(item as Map<String, dynamic>))
@@ -1199,8 +1039,8 @@ class ApiService {
         .where((key) => params[key] != null)
         .toList()
         ..sort();
-    final paramsStr = sortedParams.map((key) => '$key=${params[key]}').join('&');
-    return 'shortdrama-$prefix-$paramsStr';
+    final paramsStr = sortedParams.map((key) => '$key=${params[key]}').join(AppConfig.urlSeparatorAmpersand);
+    return '${AppConfig.cacheKeyPrefixShortDrama}-$prefix-$paramsStr';
   }
 
   /// 获取短剧分类列表（带缓存和请求去重）
@@ -1258,25 +1098,25 @@ class ApiService {
   static Future<ApiResponse<Map<String, dynamic>>> getShortDramaList(
       int categoryId, int page, int size, BuildContext context) async {
     try {
-      final cacheKey = _getShortDramaCacheKey('list', {
-        'categoryId': categoryId,
-        'page': page,
-        'size': size,
+      final cacheKey = _getShortDramaCacheKey(AppConfig.cacheKeyPrefixList, {
+        AppConfig.queryCategoryId: categoryId,
+        AppConfig.queryPage: page,
+        AppConfig.queryPageLimit: size,
       });
 
       // 优先检查缓存
       if (_cachedShortDramaLists.containsKey(cacheKey)) {
         final cached = _cachedShortDramaLists[cacheKey]!;
-        final cacheTime = DateTime.fromMillisecondsSinceEpoch(cached['_cacheTime'] as int);
+        final cacheTime = DateTime.fromMillisecondsSinceEpoch(cached[AppConfig.jsonCacheTime] as int);
         final duration = page == 1 ? _shortDramaListCacheDuration * 2 : _shortDramaListCacheDuration;
         
         // 如果缓存未过期，直接返回缓存
         if (DateTime.now().difference(cacheTime) < duration) {
-          return ApiResponse.success(Map<String, dynamic>.from(cached)..remove('_cacheTime'));
+          return ApiResponse.success(Map<String, dynamic>.from(cached)..remove(AppConfig.jsonCacheTime));
         }
         
         // 如果缓存已过期但有数据，先返回缓存，后台异步刷新
-        final cachedData = Map<String, dynamic>.from(cached)..remove('_cacheTime');
+        final cachedData = Map<String, dynamic>.from(cached)..remove(AppConfig.jsonCacheTime);
         _refreshShortDramaListAsync(categoryId, page, size, context);
         return ApiResponse.success(cachedData);
       }
@@ -1292,10 +1132,10 @@ class ApiService {
       try {
         final result = await requestPromise;
         if (result.success && result.data != null) {
-          final list = result.data!['list'] as List?;
+          final list = result.data![AppConfig.jsonList] as List?;
           if (list != null && list.isNotEmpty) {
             final cacheData = Map<String, dynamic>.from(result.data!);
-            cacheData['_cacheTime'] = DateTime.now().millisecondsSinceEpoch;
+            cacheData[AppConfig.jsonCacheTime] = DateTime.now().millisecondsSinceEpoch;
             _cachedShortDramaLists[cacheKey] = cacheData;
           }
         }
@@ -1305,14 +1145,14 @@ class ApiService {
       }
     } catch (e) {
       // 网络错误时尝试返回缓存
-      final cacheKey = _getShortDramaCacheKey('list', {
-        'categoryId': categoryId,
-        'page': page,
-        'size': size,
+      final cacheKey = _getShortDramaCacheKey(AppConfig.cacheKeyPrefixList, {
+        AppConfig.queryCategoryId: categoryId,
+        AppConfig.queryPage: page,
+        AppConfig.queryPageLimit: size,
       });
       if (_cachedShortDramaLists.containsKey(cacheKey)) {
         final cached = _cachedShortDramaLists[cacheKey]!;
-        return ApiResponse.success(Map<String, dynamic>.from(cached)..remove('_cacheTime'));
+        return ApiResponse.success(Map<String, dynamic>.from(cached)..remove(AppConfig.jsonCacheTime));
       }
       return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
@@ -1324,15 +1164,15 @@ class ApiService {
     try {
       final result = await _fetchShortDramaList(categoryId, page, size, context);
       if (result.success && result.data != null) {
-        final list = result.data!['list'] as List?;
+        final list = result.data![AppConfig.jsonList] as List?;
         if (list != null && list.isNotEmpty) {
-          final cacheKey = _getShortDramaCacheKey('list', {
-            'categoryId': categoryId,
-            'page': page,
-            'size': size,
+          final cacheKey = _getShortDramaCacheKey(AppConfig.cacheKeyPrefixList, {
+            AppConfig.queryCategoryId: categoryId,
+            AppConfig.queryPage: page,
+            AppConfig.queryPageLimit: size,
           });
           final cacheData = Map<String, dynamic>.from(result.data!);
-          cacheData['_cacheTime'] = DateTime.now().millisecondsSinceEpoch;
+          cacheData[AppConfig.jsonCacheTime] = DateTime.now().millisecondsSinceEpoch;
           _cachedShortDramaLists[cacheKey] = cacheData;
         }
       }
@@ -1347,9 +1187,9 @@ class ApiService {
     final requestHeaders = await _buildHeaders();
 
     final queryParams = {
-      'categoryId': categoryId.toString(),
-      'page': page.toString(),
-      'size': size.toString(),
+      AppConfig.queryCategoryId: categoryId.toString(),
+      AppConfig.queryPage: page.toString(),
+      AppConfig.queryPageLimit: size.toString(),
     };
     final filteredParams = _filterQueryParameters(queryParams);
     final uri = Uri.parse(url).replace(queryParameters: filteredParams);
@@ -1378,11 +1218,11 @@ class ApiService {
       int id, int episode, String? name, BuildContext context) async {
     try {
       final queryParameters = <String, String>{
-        'id': id.toString(),
-        'episode': episode.toString(),
+        AppConfig.jsonId: id.toString(),
+        AppConfig.jsonEpisode: episode.toString(),
       };
       if (name != null && name.isNotEmpty) {
-        queryParameters['name'] = name;
+        queryParameters[AppConfig.jsonName] = name;
       }
 
       final response = await get<Map<String, dynamic>>(
@@ -1403,12 +1243,12 @@ class ApiService {
       int id, int episode, String? name, BuildContext context) async {
     try {
       final queryParameters = <String, String>{
-        'id': id.toString(),
-        'episode': episode.toString(),
-        'proxy': 'true',
+        AppConfig.jsonId: id.toString(),
+        AppConfig.jsonEpisode: episode.toString(),
+        AppConfig.jsonProxy: 'true',
       };
       if (name != null && name.isNotEmpty) {
-        queryParameters['name'] = name;
+        queryParameters[AppConfig.jsonName] = name;
       }
 
       final response = await get<Map<String, dynamic>>(
@@ -1429,9 +1269,9 @@ class ApiService {
       int id, List<int> episodes, BuildContext context) async {
     try {
       final queryParameters = {
-        'id': id.toString(),
-        'episodes': episodes.join(','),
-        'proxy': 'true',
+        AppConfig.jsonId: id.toString(),
+        AppConfig.jsonEpisodes: episodes.join(','),
+        AppConfig.jsonProxy: 'true',
       };
 
       final response = await get<List<dynamic>>(
@@ -1439,8 +1279,8 @@ class ApiService {
         queryParameters: queryParameters,
         context: context,
         fromJson: (data) {
-          if (data is Map && data.containsKey('results')) {
-            return (data['results'] as List).toList();
+          if (data is Map && data.containsKey(AppConfig.jsonResults)) {
+            return (data[AppConfig.jsonResults] as List).toList();
           }
           return (data as List).toList();
         },
@@ -1457,9 +1297,9 @@ class ApiService {
       String query, int page, int size, BuildContext context) async {
     try {
       final queryParameters = {
-        'query': query.trim(),
-        'page': page.toString(),
-        'size': size.toString(),
+        AppConfig.queryQuery: query.trim(),
+        AppConfig.queryPage: page.toString(),
+        AppConfig.queryPageLimit: size.toString(),
       };
 
       final response = await get<Map<String, dynamic>>(
@@ -1477,27 +1317,27 @@ class ApiService {
 
   /// 获取推荐短剧（支持分类和数量参数）
   static Future<ApiResponse<List<dynamic>>> getRecommendedShortDramas(
-      BuildContext context, {int? category, int size = 10}) async {
+      BuildContext context, {int? category, int size = AppConfig.defaultRecommendSize}) async {
     try {
-      final cacheKey = _getShortDramaCacheKey('recommends', {
-        'category': category,
-        'size': size,
+      final cacheKey = _getShortDramaCacheKey(AppConfig.cacheKeyPrefixRecommends, {
+        AppConfig.queryCategory: category,
+        AppConfig.queryPageLimit: size,
       });
 
       // 检查缓存
       if (_cachedShortDramaRecommends != null && _cachedShortDramaRecommends!.containsKey(cacheKey)) {
         final cached = _cachedShortDramaRecommends![cacheKey]!;
-        final cacheTime = DateTime.fromMillisecondsSinceEpoch(cached['_cacheTime'] as int);
+        final cacheTime = DateTime.fromMillisecondsSinceEpoch(cached[AppConfig.jsonCacheTime] as int);
         if (DateTime.now().difference(cacheTime) < _shortDramaRecommendCacheDuration) {
-          return ApiResponse.success(cached['data'] as List<dynamic>);
+          return ApiResponse.success(cached[AppConfig.jsonData] as List<dynamic>);
         }
       }
 
       final queryParameters = <String, String>{};
       if (category != null) {
-        queryParameters['category'] = category.toString();
+        queryParameters[AppConfig.jsonCategory] = category.toString();
       }
-      queryParameters['size'] = size.toString();
+      queryParameters[AppConfig.jsonSize] = size.toString();
 
       final response = await get<List<dynamic>>(
         AppConfig.shortDramaRecommendEndpoint,
@@ -1509,21 +1349,21 @@ class ApiService {
       if (response.success && response.data != null && response.data!.isNotEmpty) {
         _cachedShortDramaRecommends ??= {};
         _cachedShortDramaRecommends![cacheKey] = {
-          'data': response.data,
-          '_cacheTime': DateTime.now().millisecondsSinceEpoch,
+          AppConfig.jsonData: response.data,
+          AppConfig.jsonCacheTime: DateTime.now().millisecondsSinceEpoch,
         };
       }
 
       return response;
     } catch (e) {
       // 网络错误时尝试返回缓存
-      final cacheKey = _getShortDramaCacheKey('recommends', {
-        'category': category,
-        'size': size,
+      final cacheKey = _getShortDramaCacheKey(AppConfig.cacheKeyPrefixRecommends, {
+        AppConfig.queryCategory: category,
+        AppConfig.queryPageLimit: size,
       });
       if (_cachedShortDramaRecommends != null && _cachedShortDramaRecommends!.containsKey(cacheKey)) {
         final cached = _cachedShortDramaRecommends![cacheKey]!;
-        return ApiResponse.success(cached['data'] as List<dynamic>);
+        return ApiResponse.success(cached[AppConfig.jsonData] as List<dynamic>);
       }
       return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
     }
@@ -1535,7 +1375,7 @@ class ApiService {
     try {
       final response = await get<Map<String, dynamic>>(
         AppConfig.shortDramaEpisodeCountEndpoint,
-        queryParameters: {'id': id.toString()},
+        queryParameters: {AppConfig.jsonId: id.toString()},
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
       );
@@ -1557,11 +1397,11 @@ class ApiService {
   }) async {
     try {
       final params = <String, String>{};
-      if (title != null) params['title'] = title;
-      if (year != null) params['year'] = year;
-      if (episode != null) params['episode'] = episode;
-      if (doubanId != null) params['douban_id'] = doubanId;
-      if (episodeId != null) params['episode_id'] = episodeId;
+      if (title != null) params[AppConfig.jsonTitle] = title;
+      if (year != null) params[AppConfig.jsonYear] = year;
+      if (episode != null) params[AppConfig.jsonEpisode] = episode;
+      if (doubanId != null) params[AppConfig.jsonDoubanId] = doubanId;
+      if (episodeId != null) params[AppConfig.jsonEpisodeId] = episodeId;
 
       final response = await get<List<DanmuItem>>(
         AppConfig.danmuExternalEndpoint,
@@ -1574,7 +1414,7 @@ class ApiService {
                 .toList();
           }
           if (data is Map<String, dynamic>) {
-            final danmuList = data['danmu'] as List?;
+            final danmuList = data[AppConfig.jsonDanmu] as List?;
             if (danmuList != null) {
               return danmuList
                   .map((e) => DanmuItem.fromJson(e as Map<String, dynamic>))
@@ -1599,7 +1439,7 @@ class ApiService {
     try {
       final response = await get<Map<String, dynamic>>(
         AppConfig.danmuExternalSearchEndpoint,
-        queryParameters: {'keyword': keyword.trim()},
+        queryParameters: {AppConfig.queryKeyword: keyword.trim()},
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
       );
@@ -1618,7 +1458,7 @@ class ApiService {
     try {
       final response = await get<NetDiskSearchResult>(
         AppConfig.netdiskSearchEndpoint,
-        queryParameters: {'q': query.trim()},
+        queryParameters: {AppConfig.queryQ: query.trim()},
         context: context,
         fromJson: (data) =>
             NetDiskSearchResult.fromJson(data as Map<String, dynamic>),

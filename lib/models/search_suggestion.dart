@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 /// 搜索建议模型
 class SearchSuggestion {
   final String text;
@@ -12,17 +14,17 @@ class SearchSuggestion {
 
   factory SearchSuggestion.fromJson(Map<String, dynamic> json) {
     return SearchSuggestion(
-      text: (json['text'] as String?) ?? '',
-      type: (json['type'] as String?) ?? '',
-      score: ((json['score'] as num?) ?? 0.0).toDouble(),
+      text: (json[AppConfig.jsonText] as String?) ?? '',
+      type: (json[AppConfig.jsonType] as String?) ?? '',
+      score: ((json[AppConfig.jsonScore] as num?) ?? 0.0).toDouble(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'text': text,
-      'type': type,
-      'score': score,
+      AppConfig.jsonText: text,
+      AppConfig.jsonType: type,
+      AppConfig.jsonScore: score,
     };
   }
 }

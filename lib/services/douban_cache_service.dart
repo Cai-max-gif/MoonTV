@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 /// 缓存项数据结构
 class CacheItem<T> {
@@ -21,21 +23,21 @@ class CacheItem<T> {
 
   /// 转换为JSON（用于序列化）
   Map<String, dynamic> toJson() => {
-    'data': data,
-    'timestamp': timestamp.millisecondsSinceEpoch,
-    'expiration': expiration.inMilliseconds,
+    AppConfig.jsonData: data,
+    AppConfig.jsonTimestamp: timestamp.millisecondsSinceEpoch,
+    AppConfig.jsonExpiration: expiration.inMilliseconds,
   };
 
   /// 从JSON创建缓存项
   static CacheItem<T> fromJson<T>(Map<String, dynamic> json, T Function(dynamic) fromJsonFunc) {
     try {
       // 检查必需的字段
-      if (!json.containsKey('data') || !json.containsKey('timestamp') || !json.containsKey('expiration')) {
-        throw FormatException('缓存项缺少必需字段: ${json.keys.toList()}');
+      if (!json.containsKey(AppConfig.jsonData) || !json.containsKey(AppConfig.jsonTimestamp) || !json.containsKey(AppConfig.jsonExpiration)) {
+        throw FormatException('${AppStrings.cacheItemMissingFields}${json.keys.toList()}');
       }
 
-      final timestampValue = json['timestamp'];
-      final expirationValue = json['expiration'];
+      final timestampValue = json[AppConfig.jsonTimestamp];
+      final expirationValue = json[AppConfig.jsonExpiration];
       
       int timestamp;
       if (timestampValue is int) {
@@ -43,7 +45,7 @@ class CacheItem<T> {
       } else if (timestampValue is String) {
         timestamp = int.parse(timestampValue);
       } else {
-        throw FormatException('timestamp 字段类型错误: ${timestampValue.runtimeType}');
+        throw FormatException('${AppStrings.cacheTimestampTypeError}${timestampValue.runtimeType}');
       }
       
       int expiration;
@@ -52,11 +54,11 @@ class CacheItem<T> {
       } else if (expirationValue is String) {
         expiration = int.parse(expirationValue);
       } else {
-        throw FormatException('expiration 字段类型错误: ${expirationValue.runtimeType}');
+        throw FormatException('${AppStrings.cacheExpirationTypeError}${expirationValue.runtimeType}');
       }
 
       return CacheItem<T>(
-        data: fromJsonFunc(json['data']),
+        data: fromJsonFunc(json[AppConfig.jsonData]),
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestamp),
         expiration: Duration(milliseconds: expiration),
       );
@@ -85,7 +87,7 @@ class DoubanCacheService {
   Future<void> init() async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      _cacheDir = Directory('${appDir.path}/douban_cache');
+      _cacheDir = Directory('${appDir.path}/${AppConfig.cacheDirectoryDouban}');
       
       if (!await _cacheDir!.exists()) {
         await _cacheDir!.create(recursive: true);
@@ -115,7 +117,7 @@ class DoubanCacheService {
         if (!cacheItem.isExpired) {
           // 发现旧格式（Map 且含 items），直接清除并视为未命中
           final raw = cacheItem.data;
-            if (raw is Map && raw.containsKey('items')) {
+            if (raw is Map && raw.containsKey(AppConfig.jsonItems)) {
               _memoryCache.remove(key);
               if (_cacheDir != null) {
                 final file = File('${_cacheDir!.path}/$key.json');
@@ -164,7 +166,7 @@ class DoubanCacheService {
             if (!cacheItem.isExpired) {
               // 发现旧格式（Map 且含 items），直接删除并视为未命中
               final raw = cacheItem.data;
-              if (raw is Map && raw.containsKey('items')) {
+              if (raw is Map && raw.containsKey(AppConfig.jsonItems)) {
                 await file.delete();
               } else {
                 // 重新加载到内存缓存
@@ -253,12 +255,12 @@ class DoubanCacheService {
       if (_cacheDir != null && await _cacheDir!.exists()) {
         final files = await _cacheDir!.list().toList();
         for (final file in files) {
-          if (file is File && file.path.endsWith('.json')) {
+          if (file is File && file.path.endsWith(AppConfig.fileExtensionJson)) {
             try {
               final jsonString = await file.readAsString();
               final jsonData = json.decode(jsonString) as Map<String, dynamic>;
-              final timestamp = DateTime.fromMillisecondsSinceEpoch(jsonData['timestamp']);
-              final expiration = Duration(milliseconds: jsonData['expiration']);
+              final timestamp = DateTime.fromMillisecondsSinceEpoch(jsonData[AppConfig.jsonTimestamp]);
+              final expiration = Duration(milliseconds: jsonData[AppConfig.jsonExpiration]);
               
               if (DateTime.now().difference(timestamp) > expiration) {
                 await file.delete();
@@ -319,12 +321,12 @@ class DoubanCacheService {
     required int pageLimit,
     required int page,
   }) {
-    return _generateCacheKey('douban_category', {
-      'kind': kind,
-      'category': category,
-      'type': type,
-      'pageLimit': pageLimit,
-      'page': page,
+    return _generateCacheKey(AppConfig.cacheKeyDoubanCategory, {
+      AppConfig.queryKind: kind,
+      AppConfig.queryCategory: category,
+      AppConfig.queryType: type,
+      AppConfig.queryPageLimit: pageLimit,
+      AppConfig.queryPage: page,
     });
   }
 
@@ -341,17 +343,17 @@ class DoubanCacheService {
     required int pageLimit,
     required int page,
   }) {
-    return _generateCacheKey('douban_recommends', {
-      'kind': kind,
-      'category': category,
-      'format': format,
-      'region': region,
-      'year': year,
-      'platform': platform,
-      'sort': sort,
-      'label': label,
-      'pageLimit': pageLimit,
-      'page': page,
+    return _generateCacheKey(AppConfig.cacheKeyDoubanRecommends, {
+      AppConfig.queryKind: kind,
+      AppConfig.queryCategory: category,
+      AppConfig.queryFormat: format,
+      AppConfig.queryRegion: region,
+      AppConfig.queryYear: year,
+      AppConfig.queryPlatform: platform,
+      AppConfig.querySort: sort,
+      AppConfig.queryLabel: label,
+      AppConfig.queryPageLimit: pageLimit,
+      AppConfig.queryPage: page,
     });
   }
 
@@ -359,8 +361,8 @@ class DoubanCacheService {
   String generateDoubanDetailsCacheKey({
     required String doubanId,
   }) {
-    return _generateCacheKey('douban_details', {
-      'doubanId': doubanId,
+    return _generateCacheKey(AppConfig.cacheKeyDoubanDetails, {
+      AppConfig.queryDoubanId: doubanId,
     });
   }
 
@@ -368,8 +370,8 @@ class DoubanCacheService {
   String generateBangumiDetailsCacheKey({
     required String bangumiId,
   }) {
-    return _generateCacheKey('bangumi_details', {
-      'bangumiId': bangumiId,
+    return _generateCacheKey(AppConfig.cacheKeyBangumiDetails, {
+      AppConfig.queryBangumiId: bangumiId,
     });
   }
 

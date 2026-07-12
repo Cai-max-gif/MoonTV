@@ -1,7 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
 import 'package:dlna_dart/dlna.dart';
 import 'package:dlna_dart/xmlParser.dart';
@@ -111,7 +112,7 @@ class _DLNAPlayerState extends State<DLNAPlayer> {
     final transportStr = await widget.device.getTransportInfo();
     final t = TransportInfoParser(transportStr);
 
-    _isPlaying = t.CurrentTransportState == "PLAYING";
+    _isPlaying = t.CurrentTransportState == AppConfig.dlnaStatePlaying;
 
     // 检查进度是否发生变化
     final positionChanged = newPosition != _position;

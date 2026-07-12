@@ -1,4 +1,5 @@
 import 'video_info.dart';
+import '../constants/app_config.dart';
 import '../constants/app_strings.dart';
 
 /// 搜索结果数据模型
@@ -34,40 +35,40 @@ class SearchResult {
   /// 从JSON创建SearchResult
   factory SearchResult.fromJson(Map<String, dynamic> json) {
     return SearchResult(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      poster: json['poster'] ?? '',
-      episodes: json['episodes'] != null 
-          ? List<String>.from(json['episodes'])
+      id: json[AppConfig.jsonId] ?? '',
+      title: json[AppConfig.jsonTitle] ?? '',
+      poster: json[AppConfig.jsonPoster] ?? '',
+      episodes: json[AppConfig.jsonEpisodes] != null 
+          ? List<String>.from(json[AppConfig.jsonEpisodes])
           : [],
-      episodesTitles: json['episodes_titles'] != null 
-          ? List<String>.from(json['episodes_titles'])
+      episodesTitles: json[AppConfig.jsonEpisodesTitles] != null 
+          ? List<String>.from(json[AppConfig.jsonEpisodesTitles])
           : [],
-      source: json['source'] ?? '',
-      sourceName: json['source_name'] ?? '',
-      class_: json['class'],
-      year: json['year'] ?? '',
-      desc: json['desc'],
-      typeName: json['type_name'],
-      doubanId: json['douban_id'],
+      source: json[AppConfig.jsonSource] ?? '',
+      sourceName: json[AppConfig.jsonSourceName] ?? '',
+      class_: json[AppConfig.jsonClass],
+      year: json[AppConfig.jsonYear] ?? '',
+      desc: json[AppConfig.jsonDesc],
+      typeName: json[AppConfig.jsonTypeName],
+      doubanId: json[AppConfig.jsonDoubanId],
     );
   }
 
   /// 转换为JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'poster': poster,
-      'episodes': episodes,
-      'episodes_titles': episodesTitles,
-      'source': source,
-      'source_name': sourceName,
-      'class': class_,
-      'year': year,
-      'desc': desc,
-      'type_name': typeName,
-      'douban_id': doubanId,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonPoster: poster,
+      AppConfig.jsonEpisodes: episodes,
+      AppConfig.jsonEpisodesTitles: episodesTitles,
+      AppConfig.jsonSource: source,
+      AppConfig.jsonSourceName: sourceName,
+      AppConfig.jsonClass: class_,
+      AppConfig.jsonYear: year,
+      AppConfig.jsonDesc: desc,
+      AppConfig.jsonTypeName: typeName,
+      AppConfig.jsonDoubanId: doubanId,
     };
   }
 
@@ -84,7 +85,7 @@ class SearchResult {
 
   /// 获取年份信息
   String get yearInfo {
-    return year.isNotEmpty ? year : '${AppStrings.unknown}年份';
+    return year.isNotEmpty ? year : AppStrings.unknownYear;
   }
 
   /// 转换为VideoInfo
@@ -100,7 +101,7 @@ class SearchResult {
       totalEpisodes: episodes.length,
       playTime: 0, // 搜索结果默认未播放
       totalTime: 0, // 搜索结果默认未知总时长
-      saveTime: DateTime.now().millisecondsSinceEpoch ~/ 1000, // 当前时间戳
+      saveTime: DateTime.now().millisecondsSinceEpoch,
       searchTitle: title, // 使用标题作为搜索标题
       doubanId: doubanId?.toString(), // 传递豆瓣ID，转换为字符串
     );
@@ -126,19 +127,19 @@ abstract class SearchEvent {
   });
 
   factory SearchEvent.fromJson(Map<String, dynamic> json) {
-    final typeString = json['type'] as String?;
+    final typeString = json[AppConfig.jsonType] as String?;
     
     switch (typeString) {
-      case 'start':
+      case AppConfig.searchEventStart:
         return SearchStartEvent.fromJson(json);
-      case 'source_result':
+      case AppConfig.searchEventSourceResult:
         return SearchSourceResultEvent.fromJson(json);
-      case 'source_error':
+      case AppConfig.searchEventSourceError:
         return SearchSourceErrorEvent.fromJson(json);
-      case 'complete':
+      case AppConfig.searchEventComplete:
         return SearchCompleteEvent.fromJson(json);
       default:
-        throw Exception('${AppStrings.unknown}的搜索事件类型: $typeString');
+        throw Exception('${AppStrings.unknown}${AppStrings.unknownSearchEventType}: $typeString');
     }
   }
 }
@@ -158,9 +159,9 @@ class SearchStartEvent extends SearchEvent {
 
   factory SearchStartEvent.fromJson(Map<String, dynamic> json) {
     return SearchStartEvent(
-      query: json['query'] ?? '',
-      totalSources: json['totalSources'] ?? 0,
-      timestamp: json['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
+      query: json[AppConfig.jsonQuery] ?? '',
+      totalSources: json[AppConfig.jsonTotalSources] ?? 0,
+      timestamp: json[AppConfig.jsonTimestamp] ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 }
@@ -181,16 +182,16 @@ class SearchSourceResultEvent extends SearchEvent {
         );
 
   factory SearchSourceResultEvent.fromJson(Map<String, dynamic> json) {
-    final resultsData = json['results'] as List<dynamic>? ?? [];
+    final resultsData = json[AppConfig.jsonResults] as List<dynamic>? ?? json[AppConfig.jsonItems] as List<dynamic>? ?? [];
     final results = resultsData
         .map((item) => SearchResult.fromJson(item as Map<String, dynamic>))
         .toList();
 
     return SearchSourceResultEvent(
-      source: json['source'] ?? '',
-      sourceName: json['sourceName'] ?? '',
+      source: json[AppConfig.jsonSource] ?? '',
+      sourceName: json[AppConfig.jsonSourceName] ?? '',
       results: results,
-      timestamp: json['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
+      timestamp: json[AppConfig.jsonTimestamp] ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 }
@@ -212,10 +213,10 @@ class SearchSourceErrorEvent extends SearchEvent {
 
   factory SearchSourceErrorEvent.fromJson(Map<String, dynamic> json) {
     return SearchSourceErrorEvent(
-      source: json['source'] ?? '',
-      sourceName: json['sourceName'] ?? '',
-      error: json['error'] ?? AppStrings.msgUnknownError,
-      timestamp: json['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
+      source: json[AppConfig.jsonSource] ?? '',
+      sourceName: json[AppConfig.jsonSourceName] ?? '',
+      error: json[AppConfig.jsonError] ?? AppStrings.msgUnknownError,
+      timestamp: json[AppConfig.jsonTimestamp] ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 }
@@ -235,9 +236,9 @@ class SearchCompleteEvent extends SearchEvent {
 
   factory SearchCompleteEvent.fromJson(Map<String, dynamic> json) {
     return SearchCompleteEvent(
-      totalResults: json['totalResults'] ?? 0,
-      completedSources: json['completedSources'] ?? 0,
-      timestamp: json['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
+      totalResults: json[AppConfig.jsonTotalResults] ?? 0,
+      completedSources: json[AppConfig.jsonCompletedSources] ?? 0,
+      timestamp: json[AppConfig.jsonTimestamp] ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 }

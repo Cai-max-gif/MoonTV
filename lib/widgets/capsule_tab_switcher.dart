@@ -69,7 +69,7 @@ class _CapsuleTabSwitcherState extends State<CapsuleTabSwitcher>
         maxLines: 1,
         textDirection: TextDirection.ltr,
       )..layout(minWidth: 0, maxWidth: double.infinity);
-      _tabWidths.add(textPainter.size.width + 24); // 12 padding on each side
+      _tabWidths.add(textPainter.size.width + AppDimens.tabHorizontalPadding * 2);
     }
 
     _tabOffsets.add(0.0);
@@ -139,59 +139,117 @@ class _CapsuleTabSwitcherState extends State<CapsuleTabSwitcher>
         final totalWidth =
             _tabWidths.isNotEmpty ? _tabWidths.reduce((a, b) => a + b) : 0.0;
 
-        return Center(
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            width: totalWidth,
-            height: 32,
-            decoration: BoxDecoration(
-              color: themeService.isDarkMode
-                  ? AppColors.darkDivider
-                  : AppColors.grayBorder,
-              borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
-            ),
-            child: Stack(
-              children: [
-                AnimatedBuilder(
-                  animation: _progressAnimation,
-                  builder: (context, child) {
-                    return Positioned(
-                      left: _leftAnimation.value,
-                      top: 0,
-                      child: Container(
-                        width: _widthAnimation.value,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: themeService.isDarkMode
-                              ? AppColors.cardDark
-                              : AppColors.white,
-                          borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
-                          boxShadow: [
-                            BoxShadow(
-                              color: themeService.isDarkMode
-                                  ? AppColors.black30
-                                  : AppColors.black30,
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final maxWidth = constraints.maxWidth == double.infinity
+                ? MediaQuery.of(context).size.width
+                : constraints.maxWidth;
+            final isScrollable = totalWidth > maxWidth;
+
+            return Container(
+              margin: AppDimens.marginVertical4,
+              width: isScrollable ? maxWidth : totalWidth,
+              height: AppDimens.capsuleTabHeight,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: themeService.isDarkMode
+                    ? AppColors.borderDark
+                    : AppColors.gray200,
+                borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
+              ),
+              child: isScrollable
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: totalWidth,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            AnimatedBuilder(
+                              animation: _progressAnimation,
+                              builder: (context, child) {
+                                return Positioned(
+                                  left: _leftAnimation.value,
+                                  top: 0,
+                                  child: Container(
+                                    width: _widthAnimation.value,
+                                    height: AppDimens.capsuleTabHeight,
+                                    decoration: BoxDecoration(
+                                      color: themeService.isDarkMode
+                                          ? AppColors.cardDark
+                                          : AppColors.white,
+                                      borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: themeService.isDarkMode
+                                              ? AppColors.black30
+                                              : AppColors.black30,
+                                          blurRadius: AppDimens.shadowBlur3,
+                                          offset: AppDimens.offset01,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            Row(
+                              children: widget.tabs.map((tab) {
+                                final index = widget.tabs.indexOf(tab);
+                                return SizedBox(
+                                  width: _tabWidths[index],
+                                  child: _buildTabButton(tab, index, themeService),
+                                );
+                              }).toList(),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
-                Row(
-                  children: widget.tabs.map((tab) {
-                    final index = widget.tabs.indexOf(tab);
-                    return SizedBox(
-                      width: _tabWidths[index],
-                      child: _buildTabButton(tab, index, themeService),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
+                    )
+                  : Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        AnimatedBuilder(
+                          animation: _progressAnimation,
+                          builder: (context, child) {
+                            return Positioned(
+                              left: _leftAnimation.value,
+                              top: 0,
+                              child: Container(
+                                width: _widthAnimation.value,
+                                height: AppDimens.capsuleTabHeight,
+                                decoration: BoxDecoration(
+                                  color: themeService.isDarkMode
+                                      ? AppColors.cardDark
+                                      : AppColors.white,
+                                  borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: themeService.isDarkMode
+                                          ? AppColors.black30
+                                          : AppColors.black30,
+                                      blurRadius: AppDimens.shadowBlur3,
+                                      offset: AppDimens.offset01,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Row(
+                          children: widget.tabs.map((tab) {
+                            final index = widget.tabs.indexOf(tab);
+                            return SizedBox(
+                              width: _tabWidths[index],
+                              child: _buildTabButton(tab, index, themeService),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+            );
+          },
         );
       },
     );

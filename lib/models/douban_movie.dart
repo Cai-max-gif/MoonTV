@@ -1,5 +1,6 @@
 import 'video_info.dart';
 import '../constants/app_config.dart';
+import '../constants/app_regex.dart';
 import '../constants/app_strings.dart';
 
 /// 豆瓣推荐项目数据模型
@@ -19,20 +20,20 @@ class DoubanRecommendItem {
   /// 从JSON创建DoubanRecommendItem实例
   factory DoubanRecommendItem.fromJson(Map<String, dynamic> json) {
     return DoubanRecommendItem(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      poster: json['poster']?.toString() ?? '',
-      rate: json['rate']?.toString(),
+      id: json[AppConfig.jsonId]?.toString() ?? '',
+      title: json[AppConfig.jsonTitle]?.toString() ?? '',
+      poster: json[AppConfig.jsonPoster]?.toString() ?? '',
+      rate: json[AppConfig.jsonRate]?.toString(),
     );
   }
 
   /// 转换为JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'poster': poster,
-      'rate': rate,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonPoster: poster,
+      AppConfig.jsonRate: rate,
     };
   }
 
@@ -40,7 +41,7 @@ class DoubanRecommendItem {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: id,
-      source: AppConfig.sourceIdDouban,
+      source: AppConfig.sourceDouban,
       title: title,
       sourceName: AppStrings.doubanSourceName,
       year: '', // 推荐项目没有年份信息
@@ -103,7 +104,7 @@ class DoubanMovieDetails {
   factory DoubanMovieDetails.fromJson(Map<String, dynamic> json) {
     String? nonEmptyString(dynamic value) {
       final stringValue = value?.toString().trim();
-      if (stringValue == null || stringValue.isEmpty || stringValue == 'null') {
+      if (stringValue == null || stringValue.isEmpty || stringValue == AppConfig.jsonNullValue) {
         return null;
       }
       return stringValue;
@@ -128,7 +129,7 @@ class DoubanMovieDetails {
       return value
           .map((item) {
             if (item is Map<String, dynamic>) {
-              return nonEmptyString(item['name']);
+              return nonEmptyString(item[AppConfig.jsonName]);
             }
             return nonEmptyString(item);
           })
@@ -145,28 +146,28 @@ class DoubanMovieDetails {
 
     // 处理poster字段
     String poster = '';
-    if (json['poster'] != null) {
-      poster = json['poster']?.toString() ?? '';
-    } else if (json['cover_url'] != null) {
-      poster = json['cover_url']?.toString() ?? '';
-    } else if (json['images'] != null) {
-      final images = json['images'] as Map<String, dynamic>?;
-      poster = images?['large']?.toString() ?? 
-               images?['medium']?.toString() ?? 
-               images?['small']?.toString() ?? '';
-    } else if (json['pic'] != null) {
-      final pic = json['pic'] as Map<String, dynamic>?;
-      poster = pic?['large']?.toString() ??
-               pic?['normal']?.toString() ??
-               pic?['medium']?.toString() ??
-               pic?['small']?.toString() ?? '';
+    if (json[AppConfig.jsonPoster] != null) {
+      poster = json[AppConfig.jsonPoster]?.toString() ?? '';
+    } else if (json[AppConfig.jsonCoverUrl] != null) {
+      poster = json[AppConfig.jsonCoverUrl]?.toString() ?? '';
+    } else if (json[AppConfig.jsonImages] != null) {
+      final images = json[AppConfig.jsonImages] as Map<String, dynamic>?;
+      poster = images?[AppConfig.jsonLarge]?.toString() ?? 
+               images?[AppConfig.jsonMedium]?.toString() ?? 
+               images?[AppConfig.jsonSmall]?.toString() ?? '';
+    } else if (json[AppConfig.jsonPic] != null) {
+      final pic = json[AppConfig.jsonPic] as Map<String, dynamic>?;
+      poster = pic?[AppConfig.jsonLarge]?.toString() ??
+               pic?[AppConfig.jsonNormal]?.toString() ??
+               pic?[AppConfig.jsonMedium]?.toString() ??
+               pic?[AppConfig.jsonSmall]?.toString() ?? '';
     }
     
     // 处理rating字段
-    String? rate = nonEmptyString(json['rate']);
-    if (rate == null && json['rating'] != null) {
-      final rating = json['rating'] as Map<String, dynamic>?;
-      final value = rating?['average'] ?? rating?['value'];
+    String? rate = nonEmptyString(json[AppConfig.jsonRate]);
+    if (rate == null && json[AppConfig.jsonRating] != null) {
+      final rating = json[AppConfig.jsonRating] as Map<String, dynamic>?;
+      final value = rating?[AppConfig.jsonAverage] ?? rating?[AppConfig.jsonValue];
       if (value != null) {
         if (value is num) {
           rate = value.toStringAsFixed(1);
@@ -180,73 +181,73 @@ class DoubanMovieDetails {
     }
     
     // 处理年份
-    String year = json['year']?.toString() ?? '';
-    if (year.isEmpty && json['pubdate'] != null) {
-      final pubdate = stringList(json['pubdate']).join(' ');
-      final yearMatch = RegExp(r'(\d{4})').firstMatch(pubdate);
+    String year = json[AppConfig.jsonYear]?.toString() ?? '';
+    if (year.isEmpty && json[AppConfig.jsonPubdate] != null) {
+      final pubdate = stringList(json[AppConfig.jsonPubdate]).join(' ');
+      final yearMatch = RegExp(AppRegex.yearPattern).firstMatch(pubdate);
       year = yearMatch?.group(1) ?? '';
     }
     
     // 处理导演列表
-    final directors = json['directors'] is List &&
-            (json['directors'] as List).any((item) => item is Map)
-        ? nameList(json['directors'])
-        : stringList(json['directors']);
+    final directors = json[AppConfig.jsonDirectors] is List &&
+            (json[AppConfig.jsonDirectors] as List).any((item) => item is Map)
+        ? nameList(json[AppConfig.jsonDirectors])
+        : stringList(json[AppConfig.jsonDirectors]);
     
     // 处理编剧列表
-    final screenwriters = json['screenwriters'] is List &&
-            (json['screenwriters'] as List).any((item) => item is Map)
-        ? nameList(json['screenwriters'])
-        : stringList(json['screenwriters']);
+    final screenwriters = json[AppConfig.jsonScreenwriters] is List &&
+            (json[AppConfig.jsonScreenwriters] as List).any((item) => item is Map)
+        ? nameList(json[AppConfig.jsonScreenwriters])
+        : stringList(json[AppConfig.jsonScreenwriters]);
     
     // 处理演员列表
-    final actorsSource = json['actors'] ?? json['casts'];
+    final actorsSource = json[AppConfig.jsonActors] ?? json[AppConfig.jsonCasts];
     final actors = actorsSource is List && actorsSource.any((item) => item is Map)
         ? nameList(actorsSource)
         : stringList(actorsSource);
     
     // 处理类型列表
-    final genres = stringList(json['genres']);
+    final genres = stringList(json[AppConfig.jsonGenres]);
     
     // 处理国家列表
-    final countries = stringList(json['countries']);
+    final countries = stringList(json[AppConfig.jsonCountries]);
     
     // 处理语言列表
-    final languages = stringList(json['languages']);
+    final languages = stringList(json[AppConfig.jsonLanguages]);
     
     // 处理推荐列表
     List<DoubanRecommendItem> recommends = [];
-    if (json['recommends'] != null) {
-      final recommendsData = json['recommends'] as List<dynamic>? ?? [];
+    if (json[AppConfig.jsonRecommends] != null) {
+      final recommendsData = json[AppConfig.jsonRecommends] as List<dynamic>? ?? [];
       recommends = recommendsData.map((r) => DoubanRecommendItem.fromJson(r as Map<String, dynamic>)).toList();
     }
     
     // 处理总集数
     final totalEpisodes = parseInt(
-      json['episodes_count'] ?? json['totalEpisodes'] ?? json['total_episodes'],
+      json[AppConfig.jsonEpisodeCount] ?? json[AppConfig.jsonTotalEpisodesCamel] ?? json[AppConfig.jsonTotalEpisodes],
     );
-    final pubdates = stringList(json['pubdate']);
-    final durations = stringList(json['durations']);
+    final pubdates = stringList(json[AppConfig.jsonPubdate]);
+    final durations = stringList(json[AppConfig.jsonDurations]);
     
     return DoubanMovieDetails(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
+      id: json[AppConfig.jsonId]?.toString() ?? '',
+      title: json[AppConfig.jsonTitle]?.toString() ?? '',
       poster: poster,
       rate: rate,
       year: year,
-      summary: nonEmptyString(json['summary'] ?? json['intro']),
+      summary: nonEmptyString(json[AppConfig.jsonSummary] ?? json[AppConfig.jsonIntro]),
       genres: genres,
       directors: directors,
       screenwriters: screenwriters,
       actors: actors,
-      duration: nonEmptyString(json['duration']) ??
+      duration: nonEmptyString(json[AppConfig.jsonDuration]) ??
           (durations.isNotEmpty ? durations.first : null),
       countries: countries,
       languages: languages,
-      releaseDate: nonEmptyString(json['releaseDate']) ??
+      releaseDate: nonEmptyString(json[AppConfig.jsonReleaseDateCamel]) ??
           (pubdates.isNotEmpty ? pubdates.first : null),
-      originalTitle: nonEmptyString(json['originalTitle'] ?? json['original_title']),
-      imdbId: nonEmptyString(json['imdbId'] ?? json['imdb']),
+      originalTitle: nonEmptyString(json[AppConfig.jsonOriginalTitleCamel] ?? json[AppConfig.jsonOriginalTitle]),
+      imdbId: nonEmptyString(json[AppConfig.jsonImdbId] ?? json[AppConfig.jsonImdb]),
       totalEpisodes: totalEpisodes,
       recommends: recommends,
     );
@@ -255,24 +256,24 @@ class DoubanMovieDetails {
   /// 转换为JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'poster': poster,
-      'rate': rate,
-      'year': year,
-      'summary': summary,
-      'genres': genres,
-      'directors': directors,
-      'screenwriters': screenwriters,
-      'actors': actors,
-      'duration': duration,
-      'countries': countries,
-      'languages': languages,
-      'releaseDate': releaseDate,
-      'originalTitle': originalTitle,
-      'imdbId': imdbId,
-      'totalEpisodes': totalEpisodes,
-      'recommends': recommends.map((r) => r.toJson()).toList(),
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonPoster: poster,
+      AppConfig.jsonRate: rate,
+      AppConfig.jsonYear: year,
+      AppConfig.jsonSummary: summary,
+      AppConfig.jsonGenres: genres,
+      AppConfig.jsonDirectors: directors,
+      AppConfig.jsonScreenwriters: screenwriters,
+      AppConfig.jsonActors: actors,
+      AppConfig.jsonDuration: duration,
+      AppConfig.jsonCountries: countries,
+      AppConfig.jsonLanguages: languages,
+      AppConfig.jsonReleaseDateCamel: releaseDate,
+      AppConfig.jsonOriginalTitleCamel: originalTitle,
+      AppConfig.jsonImdbId: imdbId,
+      AppConfig.jsonTotalEpisodesCamel: totalEpisodes,
+      AppConfig.jsonRecommends: recommends.map((r) => r.toJson()).toList(),
     };
   }
 }
@@ -297,17 +298,17 @@ class DoubanMovie {
   factory DoubanMovie.fromJson(Map<String, dynamic> json) {
     // 处理poster字段，优先使用normal，其次large
     String poster = '';
-    if (json['pic'] != null) {
-      final pic = json['pic'] as Map<String, dynamic>?;
-      poster = pic?['normal']?.toString() ?? 
-               pic?['large']?.toString() ?? '';
+    if (json[AppConfig.jsonPic] != null) {
+      final pic = json[AppConfig.jsonPic] as Map<String, dynamic>?;
+      poster = pic?[AppConfig.jsonNormal]?.toString() ?? 
+               pic?[AppConfig.jsonLarge]?.toString() ?? '';
     }
     
     // 处理rating字段
     String? rate;
-    if (json['rating'] != null) {
-      final rating = json['rating'] as Map<String, dynamic>?;
-      final value = rating?['value'];
+    if (json[AppConfig.jsonRating] != null) {
+      final rating = json[AppConfig.jsonRating] as Map<String, dynamic>?;
+      final value = rating?[AppConfig.jsonValue];
       if (value != null) {
         rate = (value as num).toStringAsFixed(1);
       }
@@ -315,15 +316,15 @@ class DoubanMovie {
     
     // 处理年份，从card_subtitle中提取
     String year = '';
-    if (json['card_subtitle'] != null) {
-      final cardSubtitle = json['card_subtitle']?.toString() ?? '';
-      final yearMatch = RegExp(r'(\d{4})').firstMatch(cardSubtitle);
+    if (json[AppConfig.jsonCardSubtitle] != null) {
+      final cardSubtitle = json[AppConfig.jsonCardSubtitle]?.toString() ?? '';
+      final yearMatch = RegExp(AppRegex.yearPattern).firstMatch(cardSubtitle);
       year = yearMatch?.group(1) ?? '';
     }
     
     return DoubanMovie(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
+      id: json[AppConfig.jsonId]?.toString() ?? '',
+      title: json[AppConfig.jsonTitle]?.toString() ?? '',
       poster: poster,
       rate: rate,
       year: year,
@@ -333,11 +334,11 @@ class DoubanMovie {
   /// 转换为JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'poster': poster,
-      'rate': rate,
-      'year': year,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonPoster: poster,
+      AppConfig.jsonRate: rate,
+      AppConfig.jsonYear: year,
     };
   }
 
@@ -345,7 +346,7 @@ class DoubanMovie {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: id,
-      source: AppConfig.sourceIdDouban,
+      source: AppConfig.sourceDouban,
       title: title,
       sourceName: AppStrings.doubanSourceName,
       year: year,
@@ -373,7 +374,7 @@ class DoubanResponse {
 
   /// 从JSON创建DoubanResponse实例
   factory DoubanResponse.fromJson(Map<String, dynamic> json) {
-    final itemsData = json['items'] as List<dynamic>? ?? [];
+    final itemsData = json[AppConfig.jsonItems] as List<dynamic>? ?? [];
     
     return DoubanResponse(
       items: itemsData.map((item) {

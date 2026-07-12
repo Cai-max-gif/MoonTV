@@ -64,13 +64,13 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
         : widget.currentEpisodeIndex;
 
     final crossAxisCount = widget.crossAxisCount;
-    const mainAxisSpacing = 12.0;
+    final mainAxisSpacing = AppDimens.gridSpacingMd;
     final childAspectRatio = widget.crossAxisCount == 4 
         ? 2.2 
         : (widget.crossAxisCount == 3 ? 2.0 : 3.0);
 
     final itemWidth =
-        (gridBox.size.width - (crossAxisCount - 1) * 12) / crossAxisCount;
+        (gridBox.size.width - (crossAxisCount - 1) * AppDimens.gridSpacingMd) / crossAxisCount;
     final itemHeight = itemWidth / childAspectRatio;
 
     final row = (targetIndex / crossAxisCount).floor();
@@ -95,7 +95,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
         children: [
           // 标题和关闭按钮
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: AppDimens.paddingLeft16Right16Top16Bottom8,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -122,8 +122,8 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
               padding: AppDimens.contentPadding,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: widget.crossAxisCount,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+                crossAxisSpacing: AppDimens.gridSpacingMd,
+                mainAxisSpacing: AppDimens.gridSpacingMd,
                 childAspectRatio: widget.crossAxisCount == 4 
                     ? 2.2 
                     : (widget.crossAxisCount == 3 ? 2.0 : 3.0),
@@ -141,7 +141,7 @@ class _PlayerEpisodesPanelState extends State<PlayerEpisodesPanel> {
                     episodeIndex < widget.episodesTitles.length) {
                   episodeTitle = widget.episodesTitles[episodeIndex];
                 } else {
-                  episodeTitle = AppStrings.playerEpisodeFormat.replaceAll('%d', '${episodeIndex + 1}');
+                  episodeTitle = AppStrings.formatEpisodeTitle(episodeIndex + 1);
                 }
 
                 return _EpisodePanelItemWithHover(
@@ -207,15 +207,15 @@ class _EpisodePanelItemWithHoverState extends State<_EpisodePanelItemWithHover> 
                     ? (widget.isDarkMode 
                         ? AppColors.darkGreen  // 深色模式下的浅绿色
                         : AppColors.greenBg)  // 浅色模式下的浅绿色
-                    : (widget.isDarkMode ? AppColors.gray800 : AppColors.gray200)),
+                    : (widget.isDarkMode ? AppColors.darkBg3 : AppColors.gray200)),
             borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             border: widget.isCurrentEpisode
-                ? Border.all(color: AppColors.green, width: 2)
+                ? Border.all(color: AppColors.green, width: AppDimens.borderWidth2)
                 : null,
           ),
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: AppDimens.paddingHorizontal8Vertical6,
               child: Text(
                 widget.episodeTitle,
                 textAlign: TextAlign.center,

@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _parseCookies(http.Response response) {
     List<String> cookies = [];
-    final setCookieHeaders = response.headers['set-cookie'];
+    final setCookieHeaders = response.headers[AppConfig.headerSetCookie];
     if (setCookieHeaders != null) {
       final cookieParts = setCookieHeaders.split(';');
       if (cookieParts.isNotEmpty) {
@@ -140,15 +140,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       // 确保使用HTTPS
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), AppConfig.httpsProtocol);
       String sendCodeUrl = '$secureBaseUrl${AppConfig.sendVerificationCodeEndpoint}';
 
       final response = await http.post(
         Uri.parse(sendCodeUrl),
         headers: {
-          'Content-Type': AppStrings.contentTypeJson,
+          AppConfig.headerContentType: AppConfig.headerAcceptJson,
         },
-        body: json.encode({'email': email}),
+        body: json.encode({AppConfig.jsonEmail: email}),
       ).timeout(AppConfig.authRequestTimeout);
 
       if (!mounted) return;
@@ -160,16 +160,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         try {
           final responseData = json.decode(response.body);
           // 检查多种可能的成功标志
-          bool isSuccess = responseData['ok'] == true ||
-              responseData['success'] == true ||
-              responseData['status'] == 'success';
+          bool isSuccess = responseData[AppConfig.jsonOk] == true ||
+              responseData[AppConfig.jsonSuccess] == true ||
+              responseData[AppConfig.jsonStatus] == AppConfig.jsonSuccess;
 
           if (isSuccess) {
             _showToast(AppStrings.regSendCodeSuccess, AppColors.accent);
             _startCountdown();
           } else {
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+                responseData[AppConfig.jsonError] ?? responseData[AppConfig.jsonMessage] ?? AppStrings.regSendCodeFailed,
                 AppColors.error);
           }
         } catch (e) {
@@ -181,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         try {
           final responseData = json.decode(response.body);
           _showToast(
-              responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+              responseData[AppConfig.jsonError] ?? responseData[AppConfig.jsonMessage] ?? AppStrings.regSendCodeFailed,
               AppColors.error);
         } catch (e) {
           _showToast(
@@ -245,20 +245,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       // 确保使用HTTPS
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), AppConfig.httpsProtocol);
       String registerUrl = '$secureBaseUrl${AppConfig.registerEndpoint}';
 
       final response = await http.post(
         Uri.parse(registerUrl),
         headers: {
-          'Content-Type': AppStrings.contentTypeJson,
+          AppConfig.headerContentType: AppConfig.headerAcceptJson,
         },
         body: json.encode({
-          'username': username,
-          'email': email,
-          'password': password,
-          'confirmPassword': confirmPassword,
-          'verificationCode': verificationCode,
+          AppConfig.jsonUsername: username,
+          AppConfig.jsonEmail: email,
+          AppConfig.jsonPassword: password,
+          AppConfig.jsonConfirmPassword: confirmPassword,
+          AppConfig.jsonVerificationCode: verificationCode,
         }),
       ).timeout(AppConfig.authRequestTimeout);
 
@@ -271,7 +271,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         case 200:
           try {
             final responseData = json.decode(response.body);
-            final token = responseData['token'] as String?;
+            final token = responseData[AppConfig.jsonToken] as String?;
             String cookies = _parseCookies(response);
 
             await UserDataService.saveUserData(
@@ -304,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? AppStrings.authRegisterFailed, AppColors.error);
+                responseData[AppConfig.jsonError] ?? AppStrings.authRegisterFailed, AppColors.error);
           } catch (e) {
             _showToast(AppStrings.authRegisterFailed, AppColors.error);
           }
@@ -313,7 +313,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? AppStrings.authRegisterDisabled, AppColors.error);
+                responseData[AppConfig.jsonError] ?? AppStrings.authRegisterDisabled, AppColors.error);
           } catch (e) {
             _showToast(AppStrings.authRegisterDisabled, AppColors.error);
           }
@@ -322,7 +322,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? AppStrings.authTooFrequent, AppColors.error);
+                responseData[AppConfig.jsonError] ?? AppStrings.authTooFrequent, AppColors.error);
           } catch (e) {
             _showToast(AppStrings.authTooFrequent, AppColors.error);
           }
@@ -363,7 +363,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       prefixIcon: Icon(
         prefixIcon,
         color: AppColors.textSecondary,
-        size: 20,
+        size: AppDimens.iconSize20,
       ),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
@@ -393,7 +393,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         color: AppColors.primary,
       ),
       decoration: InputDecoration(
-        labelText: '验证码',
+        labelText: AppStrings.regVerificationCode,
         labelStyle: FontUtils.poppins(
           color: AppColors.textSecondary,
           fontSize: AppDimens.fontSizeMd,
@@ -406,7 +406,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         prefixIcon: const Icon(
           Icons.verified_user,
           color: AppColors.textSecondary,
-          size: 20,
+          size: AppDimens.iconSize20,
         ),
         suffixIcon: Material(
           color: AppColors.transparent,
@@ -414,17 +414,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             onPressed:
                 (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+              padding: AppDimens.paddingHorizontal8Vertical18,
               backgroundColor: AppColors.transparent,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               minimumSize: Size.zero,
             ),
             child: _isSendingCode
                 ? const SizedBox(
-                    height: 18,
-                    width: 18,
+                    height: AppDimens.iconMd,
+                    width: AppDimens.iconMd,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                      strokeWidth: AppDimens.dividerThicknessMd,
                       valueColor:
                           AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
@@ -471,7 +471,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           return AppStrings.regValidCode;
         }
         if (!RegExp(AppRegex.verificationCode).hasMatch(value)) {
-          return '验证码必须为6位数字';
+          return AppStrings.regValidCodeFormat;
         }
         return null;
       },
@@ -506,10 +506,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isTablet ? 0 : 32.0,
-                      vertical: 24.0,
-                    ),
+                    padding: isTablet
+                          ? AppDimens.paddingVertical24
+                          : AppDimens.paddingHorizontal32Vertical24,
                     child:
                         isTablet ? _buildTabletLayout() : _buildMobileLayout(),
                   ),
@@ -527,13 +526,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Image.asset(
-          'assets/images/logo/logo.png',
-          width: 100,
-          height: 100,
+          AppConfig.logoImageAsset,
+          width: AppDimens.logoSize,
+          height: AppDimens.logoSize,
         ),
         Gap.h20,
         Text(
-          'MoonTV',
+          AppConfig.appName,
           style: FontUtils.sourceCodePro(
             fontSize: AppDimens.fontSizeHero,
             fontWeight: FontWeight.w400,
@@ -543,7 +542,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         Gap.h8,
         Text(
-          '创建您的新账户',
+          AppStrings.regTitle,
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeMd,
             color: AppColors.textSecondary,
@@ -562,8 +561,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   color: AppColors.primary,
                 ),
                 decoration: _buildInputDecoration(
-                  labelText: '用户名',
-                  hintText: '请输入用户名',
+                  labelText: AppStrings.regUsername,
+                  hintText: AppStrings.regHintUsername,
                   prefixIcon: Icons.person,
                 ),
                 onChanged: (value) {
@@ -623,26 +622,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (!RegExp(AppRegex.email).hasMatch(value)) {
                       return AppStrings.regValidEmailFormat;
                     }
-                    final allowedDomains = [
-                      'gmail.com',
-                      'qq.com',
-                      '163.com',
-                      '126.com',
-                      'outlook.com',
-                      'hotmail.com',
-                      'foxmail.com',
-                      'sina.com',
-                      'sohu.com',
-                      'yahoo.com',
-                      'aliyun.com',
-                      'icloud.com',
-                      'live.com',
-                      'msn.com',
-                      '139.com',
-                      'yeah.net'
-                    ];
                     final domain = value.split('@').last.toLowerCase();
-                    if (!allowedDomains.contains(domain)) {
+                    if (!AppStrings.allowedEmailDomains.contains(domain)) {
                       return AppStrings.regValidEmailDomain;
                     }
                     return null;
@@ -659,7 +640,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   color: AppColors.primary,
                 ),
                 decoration: _buildInputDecoration(
-                  labelText: '密码',
+                  labelText: AppStrings.authPassword,
                   hintText: AppStrings.regHintPassword,
                   prefixIcon: Icons.lock,
                   suffixIcon: IconButton(
@@ -668,7 +649,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? Icons.visibility
                           : Icons.visibility_off,
                       color: AppColors.textSecondary,
-                      size: 20,
+                      size: AppDimens.iconSize20,
                     ),
                     onPressed: () {
                       setState(() {
@@ -715,7 +696,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? Icons.visibility
                           : Icons.visibility_off,
                       color: AppColors.textSecondary,
-                      size: 20,
+                      size: AppDimens.iconSize20,
                     ),
                     onPressed: () {
                       setState(() {
@@ -753,7 +734,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       : AppColors.primary,
                   foregroundColor:
                       _isLoading ? AppColors.textSecondary : AppColors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: AppDimens.paddingVertical18,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                   ),
@@ -765,10 +746,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(
-                            height: 18,
-                            width: 18,
+                            height: AppDimens.iconMd,
+                            width: AppDimens.iconMd,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: AppDimens.dividerThicknessMd,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 AppColors.white,
                               ),
@@ -829,19 +810,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildTabletLayout() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 480),
+      constraints: const BoxConstraints(maxWidth: AppDimens.filterDialogWidth),
       padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingXxl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'assets/images/logo/logo.png',
-            width: 100,
-            height: 100,
+            AppConfig.logoImageAsset,
+            width: AppDimens.logoSize,
+            height: AppDimens.logoSize,
           ),
           Gap.h20,
           Text(
-            'MoonTV',
+            AppConfig.appName,
             style: FontUtils.sourceCodePro(
               fontSize: AppDimens.fontSizeHero,
               fontWeight: FontWeight.w400,
@@ -851,7 +832,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           Gap.h8,
           Text(
-            '创建您的新账户',
+            AppStrings.regTitle,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: AppColors.textSecondary,
@@ -931,26 +912,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (!RegExp(AppRegex.email).hasMatch(value)) {
                       return AppStrings.regValidEmailFormat;
                     }
-                    final allowedDomains = [
-                      'gmail.com',
-                      'qq.com',
-                      '163.com',
-                      '126.com',
-                      'outlook.com',
-                      'hotmail.com',
-                      'foxmail.com',
-                      'sina.com',
-                      'sohu.com',
-                      'yahoo.com',
-                      'aliyun.com',
-                      'icloud.com',
-                      'live.com',
-                      'msn.com',
-                      '139.com',
-                      'yeah.net'
-                    ];
                     final domain = value.split('@').last.toLowerCase();
-                    if (!allowedDomains.contains(domain)) {
+                    if (!AppStrings.allowedEmailDomains.contains(domain)) {
                       return AppStrings.regValidEmailDomain;
                     }
                     return null;
@@ -974,7 +937,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         color: AppColors.textSecondary,
-                        size: 20,
+                        size: AppDimens.iconSize20,
                       ),
                       onPressed: () {
                         setState(() {
@@ -1021,7 +984,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         color: AppColors.textSecondary,
-                        size: 20,
+                        size: AppDimens.iconSize20,
                       ),
                       onPressed: () {
                         setState(() {
@@ -1061,7 +1024,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         : AppColors.primary,
                     foregroundColor:
                         _isLoading ? AppColors.textSecondary : AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    padding: AppDimens.paddingVertical18,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
@@ -1073,10 +1036,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SizedBox(
-                              height: 18,
-                              width: 18,
+                              height: AppDimens.iconMd,
+                              width: AppDimens.iconMd,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: AppDimens.dividerThicknessMd,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   AppColors.white,
                                 ),

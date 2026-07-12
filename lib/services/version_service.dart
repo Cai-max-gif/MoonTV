@@ -27,8 +27,8 @@ enum UpdateDownloadStatus {
 }
 
 class VersionService {
-  static const String _lastCheckKey = 'last_version_check';
-  static const String _dismissedVersionKey = 'dismissed_version';
+  static const String _lastCheckKey = AppConfig.storageKeyLastVersionCheck;
+  static const String _dismissedVersionKey = AppConfig.storageKeyDismissedVersion;
 
   static bool _isBackgroundDownloading = false;
   static double _backgroundDownloadProgress = 0.0;
@@ -89,20 +89,20 @@ class VersionService {
     if (Platform.isAndroid) {
       switch (arch) {
         case AndroidArch.v7:
-          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-v7.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-${AppConfig.androidArchV7}${AppConfig.fileExtensionApk}';
         case AndroidArch.v8:
-          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-v8.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-${AppConfig.androidArchV8}${AppConfig.fileExtensionApk}';
         case AndroidArch.x86_64:
-          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-x86_64.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-${AppConfig.androidArchX86_64}${AppConfig.fileExtensionApk}';
         case AndroidArch.universal:
-          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-universal.apk';
+          return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-${AppConfig.androidArchUniversal}${AppConfig.fileExtensionApk}';
       }
     } else if (Platform.isWindows) {
-      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-Setup.exe';
+      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}-Setup${AppConfig.fileExtensionExe}';
     } else if (Platform.isMacOS) {
-      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}.dmg';
+      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}${AppConfig.fileExtensionDmg}';
     } else if (Platform.isIOS) {
-      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}.ipa';
+      return '${AppConfig.githubDownloadBase}/$tag/${AppConfig.appName}${AppConfig.fileExtensionIpa}';
     }
 
     return getReleaseUrl(version);
@@ -114,20 +114,20 @@ class VersionService {
     if (Platform.isAndroid) {
       switch (arch) {
         case AndroidArch.v7:
-          return Future.value('${AppConfig.appName}-v7.apk');
+          return Future.value('${AppConfig.appName}-${AppConfig.androidArchV7}${AppConfig.fileExtensionApk}');
         case AndroidArch.v8:
-          return Future.value('${AppConfig.appName}-v8.apk');
+          return Future.value('${AppConfig.appName}-${AppConfig.androidArchV8}${AppConfig.fileExtensionApk}');
         case AndroidArch.x86_64:
-          return Future.value('${AppConfig.appName}-x86_64.apk');
+          return Future.value('${AppConfig.appName}-${AppConfig.androidArchX86_64}${AppConfig.fileExtensionApk}');
         case AndroidArch.universal:
-          return Future.value('${AppConfig.appName}-universal.apk');
+          return Future.value('${AppConfig.appName}-${AppConfig.androidArchUniversal}${AppConfig.fileExtensionApk}');
       }
     } else if (Platform.isWindows) {
-      return Future.value('${AppConfig.appName}-Setup.exe');
+      return Future.value('${AppConfig.appName}-Setup${AppConfig.fileExtensionExe}');
     } else if (Platform.isMacOS) {
-      return Future.value('${AppConfig.appName}.dmg');
+      return Future.value('${AppConfig.appName}${AppConfig.fileExtensionDmg}');
     } else if (Platform.isIOS) {
-      return Future.value('${AppConfig.appName}.ipa');
+      return Future.value('${AppConfig.appName}${AppConfig.fileExtensionIpa}');
     }
 
     return Future.value('${AppConfig.appName}-$tag');
@@ -219,15 +219,15 @@ class VersionService {
 
       final response = await http.get(
         Uri.parse(AppConfig.githubApiReleases),
-        headers: {'Accept': 'application/vnd.github.v3+json'},
+        headers: {AppConfig.headerAccept: AppConfig.headerGithubApi},
       ).timeout(AppDurations.shortTimeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final tagName = data['tag_name'] as String;
+        final tagName = data[AppConfig.jsonTagName] as String;
         final latestVersion =
             tagName.startsWith('v') ? tagName.substring(1) : tagName;
-        final releaseNotes = data['body'] as String? ?? '';
+        final releaseNotes = data[AppConfig.jsonBody] as String? ?? '';
 
         if (_isNewerVersion(currentVersion, latestVersion)) {
           // 如果是手动检查，不检查是否被忽略
@@ -271,7 +271,7 @@ class VersionService {
     final currentParts = current.split('.').map(int.parse).toList();
     final latestParts = latest.split('.').map(int.parse).toList();
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < AppConfig.versionSegmentCount; i++) {
       final currentPart = i < currentParts.length ? currentParts[i] : 0;
       final latestPart = i < latestParts.length ? latestParts[i] : 0;
 

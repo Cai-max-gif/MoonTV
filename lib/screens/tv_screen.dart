@@ -27,21 +27,21 @@ class TvScreen extends StatefulWidget {
   State<TvScreen> createState() => _TvScreenState();
 }
 
-class _TvScreenState extends State<TvScreen> {
+class _TvScreenState extends State<TvScreen> with AutomaticKeepAliveClientMixin {
   // 电视剧一级选择器选项
   final List<SelectorOption> _tvPrimaryOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: '全部'),
-    SelectorOption(label: AppStrings.catRecentHot, value: '最近热门'),
+    SelectorOption(label: AppStrings.all, value: AppStrings.all),
+    SelectorOption(label: AppStrings.filterValueRecentHot, value: AppStrings.filterValueRecentHot),
   ];
 
   // 电视剧二级选择器选项
   final List<SelectorOption> _tvSecondaryOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: 'tv'),
+    SelectorOption(label: AppStrings.all, value: AppConfig.stypeTv),
     SelectorOption(label: AppStrings.regionDomestic, value: 'tv_domestic'),
-    SelectorOption(label: AppStrings.regionWestern, value: 'tv_american'),
-    SelectorOption(label: AppStrings.regionJapanese, value: 'tv_japanese'),
-    SelectorOption(label: AppStrings.regionKorean, value: 'tv_korean'),
-    SelectorOption(label: AppStrings.typeAnimation, value: 'tv_animation'),
+    SelectorOption(label: AppStrings.filterValueWestern, value: 'tv_american'),
+    SelectorOption(label: AppStrings.filterValueJapanese, value: 'tv_japanese'),
+    SelectorOption(label: AppStrings.filterValueKorean, value: 'tv_korean'),
+    SelectorOption(label: AppStrings.navAnime, value: 'tv_animation'),
     SelectorOption(label: AppStrings.typeDocumentary, value: 'tv_documentary'),
   ];
 
@@ -72,11 +72,11 @@ class _TvScreenState extends State<TvScreen> {
 
   final List<SelectorOption> _tvRegionOptions = const [
     SelectorOption(label: AppStrings.all, value: 'all'),
-    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
-    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
+    SelectorOption(label: AppStrings.filterValueChinese, value: 'chinese'),
+    SelectorOption(label: AppStrings.filterValueWestern, value: 'western'),
     SelectorOption(label: AppStrings.regionForeign, value: 'foreign'),
-    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
-    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
+    SelectorOption(label: AppStrings.filterValueKorean, value: 'korean'),
+    SelectorOption(label: AppStrings.filterValueJapanese, value: 'japanese'),
     SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
     SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
     SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
@@ -98,22 +98,22 @@ class _TvScreenState extends State<TvScreen> {
   ];
 
   final List<SelectorOption> _tvYearOptions = const [
-    SelectorOption(label: '全部', value: 'all'),
-    SelectorOption(label: '2020年代', value: '2020s'),
-    SelectorOption(label: '2025', value: '2025'),
-    SelectorOption(label: '2024', value: '2024'),
-    SelectorOption(label: '2023', value: '2023'),
-    SelectorOption(label: '2022', value: '2022'),
-    SelectorOption(label: '2021', value: '2021'),
-    SelectorOption(label: '2020', value: '2020'),
-    SelectorOption(label: '2019', value: '2019'),
-    SelectorOption(label: '2010年代', value: '2010s'),
-    SelectorOption(label: '2000年代', value: '2000s'),
-    SelectorOption(label: '90年代', value: '1990s'),
-    SelectorOption(label: '80年代', value: '1980s'),
-    SelectorOption(label: '70年代', value: '1970s'),
-    SelectorOption(label: '60年代', value: '1960s'),
-    SelectorOption(label: '更早', value: 'earlier'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.year2020s, value: '2020s'),
+    SelectorOption(label: AppStrings.year2025, value: '2025'),
+    SelectorOption(label: AppStrings.year2024, value: '2024'),
+    SelectorOption(label: AppStrings.year2023, value: '2023'),
+    SelectorOption(label: AppStrings.year2022, value: '2022'),
+    SelectorOption(label: AppStrings.year2021, value: '2021'),
+    SelectorOption(label: AppStrings.year2020, value: '2020'),
+    SelectorOption(label: AppStrings.year2019, value: '2019'),
+    SelectorOption(label: AppStrings.year2010s, value: '2010s'),
+    SelectorOption(label: AppStrings.year2000s, value: '2000s'),
+    SelectorOption(label: AppStrings.year1990s, value: '1990s'),
+    SelectorOption(label: AppStrings.year1980s, value: '1980s'),
+    SelectorOption(label: AppStrings.year1970s, value: '1970s'),
+    SelectorOption(label: AppStrings.year1960s, value: '1960s'),
+    SelectorOption(label: AppStrings.yearEarlier, value: 'earlier'),
   ];
 
   final List<SelectorOption> _tvPlatformOptions = const [
@@ -122,13 +122,13 @@ class _TvScreenState extends State<TvScreen> {
     SelectorOption(label: AppStrings.platformIqiyi, value: 'iqiyi'),
     SelectorOption(label: AppStrings.platformYouku, value: 'youku'),
     SelectorOption(label: AppStrings.platformHunanTv, value: 'hunan_tv'),
-    SelectorOption(label: 'Netflix', value: 'netflix'),
-    SelectorOption(label: 'HBO', value: 'hbo'),
-    SelectorOption(label: 'BBC', value: 'bbc'),
-    SelectorOption(label: 'NHK', value: 'nhk'),
-    SelectorOption(label: 'CBS', value: 'cbs'),
-    SelectorOption(label: 'NBC', value: 'nbc'),
-    SelectorOption(label: 'tvN', value: 'tvn'),
+    SelectorOption(label: AppStrings.platformNetflix, value: 'netflix'),
+    SelectorOption(label: AppStrings.platformHBO, value: 'hbo'),
+    SelectorOption(label: AppStrings.platformBBC, value: 'bbc'),
+    SelectorOption(label: AppStrings.platformNHK, value: 'nhk'),
+    SelectorOption(label: AppStrings.platformCBS, value: 'cbs'),
+    SelectorOption(label: AppStrings.platformNBC, value: 'nbc'),
+    SelectorOption(label: AppStrings.platformTvN, value: 'tvn'),
   ];
 
   final List<SelectorOption> _tvSortOptions = const [
@@ -138,8 +138,8 @@ class _TvScreenState extends State<TvScreen> {
     SelectorOption(label: AppStrings.sortRating, value: 'S'),
   ];
 
-  String _selectedCategoryValue = '最近热门'; // 默认选中最近热门
-  String _selectedRegionValue = 'tv'; // 二级筛选默认选中全部
+  String _selectedCategoryValue = AppStrings.filterValueRecentHot;
+  String _selectedRegionValue = AppConfig.stypeTv; // 二级筛选默认选中全部
 
   // 新版筛选状态
   String _selectedTvType = 'all';
@@ -230,7 +230,7 @@ class _TvScreenState extends State<TvScreen> {
       _errorMessage = null;
     });
 
-    if (_selectedCategoryValue == '全部') {
+    if (_selectedCategoryValue == AppStrings.all) {
       // 将界面选项转换为豆瓣API参数
       String categoryValue = _selectedTvType;
       String regionValue = _selectedTvRegion;
@@ -262,9 +262,9 @@ class _TvScreenState extends State<TvScreen> {
       }
 
       final params = DoubanRecommendsParams(
-        kind: 'tv',
+        kind: AppConfig.stypeTv,
         category: categoryValue,
-        format: '电视剧',
+        format: AppStrings.navTv,
         region: regionValue,
         year: yearValue,
         platform: platformValue,
@@ -308,7 +308,7 @@ class _TvScreenState extends State<TvScreen> {
     } else {
       final result = await DoubanService.getCategoryData(
         context,
-        kind: 'tv',
+        kind: AppConfig.stypeTv,
         category: _selectedCategoryValue,
         type: _selectedRegionValue,
         page: _page,
@@ -356,7 +356,7 @@ class _TvScreenState extends State<TvScreen> {
       _isLoadingMore = true;
     });
 
-    if (_selectedCategoryValue == '全部') {
+    if (_selectedCategoryValue == AppStrings.all) {
       // 将界面选项转换为豆瓣API参数
       String categoryValue = _selectedTvType;
       String regionValue = _selectedTvRegion;
@@ -388,9 +388,9 @@ class _TvScreenState extends State<TvScreen> {
       }
 
       final params = DoubanRecommendsParams(
-        kind: 'tv',
+        kind: AppConfig.stypeTv,
         category: categoryValue,
-        format: '电视剧',
+        format: AppStrings.navTv,
         region: regionValue,
         year: yearValue,
         platform: platformValue,
@@ -427,7 +427,7 @@ class _TvScreenState extends State<TvScreen> {
     } else {
       final result = await DoubanService.getCategoryData(
         context,
-        kind: 'tv',
+        kind: AppConfig.stypeTv,
         category: _selectedCategoryValue,
         type: _selectedRegionValue,
         page: _page,
@@ -494,7 +494,7 @@ class _TvScreenState extends State<TvScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not launch $url')),
+          SnackBar(content: Text(AppStrings.couldNotLaunchUrl(url))),
         );
       }
     }
@@ -502,6 +502,7 @@ class _TvScreenState extends State<TvScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return StyledRefreshIndicator(
       onRefresh: _refreshTvShowsData,
       refreshText: AppStrings.refreshTv,
@@ -522,12 +523,12 @@ class _TvScreenState extends State<TvScreen> {
               onGlobalMenuAction: (videoInfo, action) {
                 _handleMenuAction(videoInfo, action);
               },
-              contentType: 'tv',
+              contentType: AppConfig.stypeTv,
             ),
             // 底部指示器 - 加载更多或到底提示
             if (_isLoadingMore)
               const Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: AppDimens.contentPadding,
                 child: PulsingDotsIndicator(),
               )
             else if (!_hasMore && _tvShows.isNotEmpty && !_isLoading)
@@ -563,13 +564,14 @@ class _TvScreenState extends State<TvScreen> {
   Widget _buildFilterSection() {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
-      width: double.infinity, // 设置为100%宽度
+      width: double.infinity,
       margin: const EdgeInsets.all(AppDimens.spacingLg),
       padding: AppDimens.listTilePadding,
+      clipBehavior: Clip.none,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.8),
+            ? AppColors.white10
+            : AppColors.white80,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
@@ -583,7 +585,7 @@ class _TvScreenState extends State<TvScreen> {
               setState(() {
                 _selectedCategoryValue = newValue;
                 // 重置二级筛选为默认值
-                _selectedRegionValue = 'tv'; // 胶囊筛选默认值
+                _selectedRegionValue = AppConfig.stypeTv; // 胶囊筛选默认值
                 _selectedTvType = 'all'; // 多级筛选默认值
                 _selectedTvRegion = 'all';
                 _selectedTvYear = 'all';
@@ -596,8 +598,8 @@ class _TvScreenState extends State<TvScreen> {
           Gap.h16,
           // 使用固定高度的容器来避免高度跳跃
           SizedBox(
-            height: 66, // 增加高度以避免Column底部溢出
-            child: _selectedCategoryValue == '全部'
+            height: AppDimens.filterSectionHeight, // 增加高度以避免Column底部溢出
+            child: _selectedCategoryValue == AppStrings.all
                 ? _buildAdvancedFilterSection()
                 : _buildSimpleFilterSection(),
           ),
@@ -666,24 +668,21 @@ class _TvScreenState extends State<TvScreen> {
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        Gap.h6, // 减少间距，与高级筛选保持一致
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: CapsuleTabSwitcher(
-            tabs: _tvSecondaryOptions.map((e) => e.label).toList(),
-            selectedTab: _tvSecondaryOptions
-                .firstWhere((e) => e.value == _selectedRegionValue)
-                .label,
-            onTabChanged: (newLabel) {
-              final newValue = _tvSecondaryOptions
-                  .firstWhere((e) => e.label == newLabel)
-                  .value;
-              setState(() {
-                _selectedRegionValue = newValue;
-              });
-              _fetchTvShows(isRefresh: true);
-            },
-          ),
+        Gap.h6,
+        CapsuleTabSwitcher(
+          tabs: _tvSecondaryOptions.map((e) => e.label).toList(),
+          selectedTab: _tvSecondaryOptions
+              .firstWhere((e) => e.value == _selectedRegionValue)
+              .label,
+          onTabChanged: (newLabel) {
+            final newValue = _tvSecondaryOptions
+                .firstWhere((e) => e.label == newLabel)
+                .value;
+            setState(() {
+              _selectedRegionValue = newValue;
+            });
+            _fetchTvShows(isRefresh: true);
+          },
         ),
       ],
     );
@@ -740,18 +739,15 @@ class _TvScreenState extends State<TvScreen> {
           ),
         ),
         Gap.h8,
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: CapsuleTabSwitcher(
-            tabs: items.map((e) => e.label).toList(),
-            selectedTab:
-                items.firstWhere((e) => e.value == selectedValue).label,
-            onTabChanged: (newLabel) {
-              final newValue =
-                  items.firstWhere((e) => e.label == newLabel).value;
-              onItemSelected(newValue);
-            },
-          ),
+        CapsuleTabSwitcher(
+          tabs: items.map((e) => e.label).toList(),
+          selectedTab:
+              items.firstWhere((e) => e.value == selectedValue).label,
+          onTabChanged: (newLabel) {
+            final newValue =
+                items.firstWhere((e) => e.label == newLabel).value;
+            onItemSelected(newValue);
+          },
         ),
       ],
     );
@@ -761,17 +757,16 @@ class _TvScreenState extends State<TvScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-          16, 8, 16, 16), // 减少顶部padding，保持底部padding与加载指示器一致
+      padding: AppDimens.paddingFromLTRB1681616,
       child: Column(
         children: [
           Container(
-            width: 60,
-            height: 2,
+            width: AppDimens.videoCardCoverWidth,
+            height: AppDimens.dividerThicknessMd,
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.grey.withValues(alpha: 0.4),
+                  ? AppColors.white30
+                  : AppColors.grey40,
               borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
@@ -781,7 +776,7 @@ class _TvScreenState extends State<TvScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.6)
+                  ? AppColors.white60
                   : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
@@ -792,7 +787,7 @@ class _TvScreenState extends State<TvScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.4)
+                  ? AppColors.white60
                   : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
@@ -801,4 +796,7 @@ class _TvScreenState extends State<TvScreen> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

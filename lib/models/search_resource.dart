@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 /// 搜索资源模型
 class SearchResource {
   final String key;
@@ -18,23 +20,23 @@ class SearchResource {
 
   factory SearchResource.fromJson(Map<String, dynamic> json) {
     return SearchResource(
-      key: json['key'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      api: json['api'] as String? ?? '',
-      detail: json['detail'] as String? ?? '',
-      from: json['from'] as String? ?? '',
-      disabled: json['disabled'] as bool? ?? false,
+      key: json[AppConfig.jsonKey] as String? ?? '',
+      name: json[AppConfig.jsonName] as String? ?? '',
+      api: json[AppConfig.jsonApi] as String? ?? '',
+      detail: json[AppConfig.jsonDetail] as String? ?? '',
+      from: json[AppConfig.jsonFrom] as String? ?? '',
+      disabled: json[AppConfig.jsonDisabled] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'key': key,
-      'name': name,
-      'api': api,
-      'detail': detail,
-      'from': from,
-      'disabled': disabled,
+      AppConfig.jsonKey: key,
+      AppConfig.jsonName: name,
+      AppConfig.jsonApi: api,
+      AppConfig.jsonDetail: detail,
+      AppConfig.jsonFrom: from,
+      AppConfig.jsonDisabled: disabled,
     };
   }
 }

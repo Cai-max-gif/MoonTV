@@ -3,6 +3,7 @@ import '../utils/device_utils.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_durations.dart';
 
 class PlayerDownloadPanel extends StatefulWidget {
   final ThemeData theme;
@@ -76,7 +77,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
 
     _scrollController.animateTo(
       offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 1),
+      duration: AppDurations.minimalTransition,
       curve: Curves.linear,
     );
   }
@@ -130,7 +131,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
         children: [
           // 标题、关闭按钮和批量操作
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: AppDimens.paddingLeft16Right16Top16Bottom8,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -193,7 +194,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
                     episodeIndex < widget.episodesTitles.length) {
                   episodeTitle = widget.episodesTitles[episodeIndex];
                 } else {
-                  episodeTitle = AppStrings.playerEpisodeFormat.replaceAll('%d', '${episodeIndex + 1}');
+                  episodeTitle = AppStrings.formatEpisodeTitle(episodeIndex + 1);
                 }
 
                 return _DownloadEpisodeItem(
@@ -209,7 +210,7 @@ class _PlayerDownloadPanelState extends State<PlayerDownloadPanel> {
 
           // 底部下载按钮
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: AppDimens.contentPadding,
             child: ElevatedButton(
               onPressed: _downloadSelected,
               style: ElevatedButton.styleFrom(
@@ -284,13 +285,13 @@ class _DownloadEpisodeItemState extends State<_DownloadEpisodeItem> {
                             ? AppColors.darkGreen
                             : AppColors.greenBg)
                         : (widget.isDarkMode
-                            ? AppColors.gray800
+                            ? AppColors.darkBg3
                             : AppColors.gray200))),
             borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             border: widget.isSelected
-                ? Border.all(color: AppColors.green, width: 2)
+                ? Border.all(color: AppColors.green, width: AppDimens.borderWidth2)
                 : (widget.isCurrentEpisode
-                    ? Border.all(color: AppColors.blue, width: 2)
+                    ? Border.all(color: AppColors.blue, width: AppDimens.borderWidth2)
                     : null),
           ),
           child: Stack(
@@ -298,8 +299,7 @@ class _DownloadEpisodeItemState extends State<_DownloadEpisodeItem> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: AppDimens.marginHorizontal16Vertical4,
                   child: Text(
                     widget.episodeTitle,
                     textAlign: TextAlign.left,

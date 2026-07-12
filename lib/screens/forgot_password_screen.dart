@@ -116,15 +116,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), AppConfig.httpsProtocol);
       String sendCodeUrl = '$secureBaseUrl${AppConfig.sendVerificationCodeEndpoint}';
 
       final response = await http.post(
         Uri.parse(sendCodeUrl),
         headers: {
-          'Content-Type': AppStrings.contentTypeJson,
+          AppConfig.headerContentType: AppConfig.headerAcceptJson,
         },
-        body: json.encode({'email': email, 'type': 'reset'}),
+        body: json.encode({AppConfig.jsonEmail: email, AppConfig.jsonType: AppConfig.resetType}),
       ).timeout(AppConfig.authRequestTimeout);
 
       if (!mounted) return;
@@ -135,16 +135,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (response.statusCode == 200) {
         try {
           final responseData = json.decode(response.body);
-          bool isSuccess = responseData['ok'] == true ||
-              responseData['success'] == true ||
-              responseData['status'] == 'success';
+          bool isSuccess = responseData[AppConfig.jsonOk] == true ||
+              responseData[AppConfig.jsonSuccess] == true ||
+              responseData[AppConfig.jsonStatus] == AppConfig.jsonSuccess;
 
           if (isSuccess) {
             _showToast(AppStrings.regSendCodeSuccess, AppColors.accent);
             _startCountdown();
           } else {
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+                responseData[AppConfig.jsonError] ?? responseData[AppConfig.jsonMessage] ?? AppStrings.regSendCodeFailed,
                 AppColors.error);
           }
         } catch (e) {
@@ -154,7 +154,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         try {
           final responseData = json.decode(response.body);
           _showToast(
-              responseData['error'] ?? responseData['message'] ?? AppStrings.regSendCodeFailed,
+              responseData[AppConfig.jsonError] ?? responseData[AppConfig.jsonMessage] ?? AppStrings.regSendCodeFailed,
               AppColors.error);
         } catch (e) {
           _showToast(
@@ -203,18 +203,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), AppConfig.httpsProtocol);
       String resetUrl = '$secureBaseUrl${AppConfig.resetPasswordEndpoint}';
 
       final response = await http.post(
         Uri.parse(resetUrl),
         headers: {
-          'Content-Type': AppStrings.contentTypeJson,
+          AppConfig.headerContentType: AppConfig.headerAcceptJson,
         },
         body: json.encode({
-          'email': email,
-          'verificationCode': verificationCode,
-          'newPassword': newPassword,
+          AppConfig.jsonEmail: email,
+          AppConfig.jsonVerificationCode: verificationCode,
+          AppConfig.jsonNewPassword: newPassword,
         }),
       ).timeout(AppConfig.authRequestTimeout);
 
@@ -238,7 +238,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? AppStrings.forgotResetFailed,
+                responseData[AppConfig.jsonError] ?? responseData[AppConfig.jsonMessage] ?? AppStrings.forgotResetFailed,
                 AppColors.error);
           } catch (e) {
             _showToast(AppStrings.forgotResetFailed, AppColors.error);
@@ -248,7 +248,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           try {
             final responseData = json.decode(response.body);
             _showToast(
-                responseData['error'] ?? responseData['message'] ?? AppStrings.forgotEmailNotRegistered,
+                responseData[AppConfig.jsonError] ?? responseData[AppConfig.jsonMessage] ?? AppStrings.forgotEmailNotRegistered,
                 AppColors.error);
           } catch (e) {
             _showToast(AppStrings.forgotEmailNotRegistered, AppColors.error);
@@ -290,7 +290,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       prefixIcon: Icon(
         prefixIcon,
         color: AppColors.textSecondary,
-        size: 20,
+        size: AppDimens.iconSize20,
       ),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
@@ -333,7 +333,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         prefixIcon: const Icon(
           Icons.verified_user,
           color: AppColors.textSecondary,
-          size: 20,
+          size: AppDimens.iconSize20,
         ),
         suffixIcon: Material(
           color: AppColors.transparent,
@@ -341,17 +341,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             onPressed:
                 (_isSendingCode || _countdown > 0) ? null : _handleSendCode,
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+              padding: AppDimens.paddingHorizontal8Vertical18,
               backgroundColor: AppColors.transparent,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               minimumSize: Size.zero,
             ),
             child: _isSendingCode
                 ? const SizedBox(
-                    height: 18,
-                    width: 18,
+                    height: AppDimens.iconMd,
+                    width: AppDimens.iconMd,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                      strokeWidth: AppDimens.dividerThicknessMd,
                       valueColor:
                           AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
@@ -431,10 +431,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               child: SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32.0,
-                      vertical: 24.0,
-                    ),
+                    padding: AppDimens.paddingHorizontal32Vertical24,
                     child: _buildContent(),
                   ),
                 ),
@@ -448,18 +445,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget _buildContent() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 480),
+      constraints: const BoxConstraints(maxWidth: AppDimens.filterDialogWidth),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'assets/images/logo/logo.png',
-            width: 100,
-            height: 100,
+            AppConfig.logoImageAsset,
+            width: AppDimens.logoSize,
+            height: AppDimens.logoSize,
           ),
           Gap.h20,
           Text(
-            'MoonTV',
+            AppConfig.appName,
             style: FontUtils.sourceCodePro(
               fontSize: AppDimens.fontSizeHero,
               fontWeight: FontWeight.w400,
@@ -536,7 +533,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         color: AppColors.textSecondary,
-                        size: 20,
+                        size: AppDimens.iconSize20,
                       ),
                       onPressed: () {
                         setState(() {
@@ -608,7 +605,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         : AppColors.primary,
                     foregroundColor:
                         _isLoading ? AppColors.textSecondary : AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    padding: AppDimens.paddingVertical18,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
@@ -620,10 +617,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SizedBox(
-                              height: 18,
-                              width: 18,
+                              height: AppDimens.iconMd,
+                              width: AppDimens.iconMd,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: AppDimens.dividerThicknessMd,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   AppColors.white,
                                 ),

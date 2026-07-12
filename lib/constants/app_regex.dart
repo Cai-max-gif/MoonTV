@@ -39,7 +39,6 @@ class AppRegex {
   static const String generalM3u8 = r'\$(https?://[^"\x27\s]+?\.m3u8)';
 
   // ── 文件名 ──
-  static const String invalidFilenameChars = r'[\\/:*?"<>|]';
   static const String tsFilePattern = r'^(.+)_第(\d+)集_(\d+)\.ts$';
   static const String tsFilePatternAlt = r'^(.+)_(\d+)\.ts$';
 
@@ -60,7 +59,7 @@ class AppRegex {
   // ── HTML 清理 ──
   static const String htmlTag = r'<[^>]+>';
   static const String newlines = r'\n+';
-  static const String trimNewlines = r'^\n+|\n+$';
+  static const String trimNewlines = r'\n\s*\n';
   static const String whitespace = r'[ \t]+';
 
   // ── 中文字符 ──
@@ -74,4 +73,12 @@ class AppRegex {
 
   // ── 字符集 ──
   static const String charset = r'charset=([^;]+)';
+
+  // ── M3U8 属性提取 ──
+  static const String m3u8Attr = r'(\w+)=("([^"]*)"|([^,]*))';
+  static const String m3u8TvgUrl = r'(?:x-tvg-url|url-tvg)="([^"]*)"';
+  static const String m3u8TvgId = r'tvg-id="([^"]*)"';
+  static const String m3u8TvgName = r'tvg-name="([^"]*)"';
+  static const String m3u8TvgLogo = r'tvg-logo="([^"]*)"';
+  static const String m3u8GroupTitle = r'group-title="([^"]*)"';
 }

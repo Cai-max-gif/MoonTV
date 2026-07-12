@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/bangumi.dart';
 import '../models/play_record.dart';
 import '../models/video_info.dart';
 import '../services/bangumi_service.dart';
+import '../constants/app_strings.dart';
 import 'recommendation_section.dart';
 import 'video_menu_bottom_sheet.dart';
 
@@ -65,14 +66,12 @@ class _BangumiSectionState extends State<BangumiSection> {
         });
       } else {
         setState(() {
-          _hasError = true;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _hasError = true;
         _isLoading = false;
       });
     }
@@ -108,8 +107,8 @@ class _BangumiSectionState extends State<BangumiSection> {
     }
 
     return RecommendationSection(
-      title: '新番放送',
-      moreText: '查看更多 >',
+      title: AppStrings.homeBangumiSchedule,
+      moreText: AppStrings.homeViewMore,
       onMoreTap: widget.onMoreTap,
       videoInfos: _convertToVideoInfos(),
       onItemTap: (videoInfo) {

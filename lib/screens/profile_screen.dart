@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../constants/app_dimensions.dart';
+import '../constants/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -22,7 +23,6 @@ import '../widgets/update_dialog.dart';
 import '../widgets/announcement_dialog.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
-import '../constants/app_config.dart';
 import '../constants/app_strings.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -34,7 +34,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String? _username;
-  String _role = 'user';
+  String _role = AppConfig.userRoleUser;
   String _version = '';
   bool _isLoading = false;
 
@@ -68,7 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _parseRoleFromCookies(String? cookies) {
     if (cookies == null || cookies.isEmpty) {
-      return 'user';
+      return AppConfig.userRoleUser;
     }
 
     try {
@@ -88,9 +88,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
 
-      final authCookie = cookieMap['user_auth'] ?? cookieMap['auth'];
+      final authCookie = cookieMap[AppConfig.jsonUserAuth] ?? cookieMap[AppConfig.jsonAuth];
       if (authCookie == null) {
-        return 'user';
+        return AppConfig.userRoleUser;
       }
 
       String decoded = Uri.decodeComponent(authCookie);
@@ -100,11 +100,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       final authData = json.decode(decoded);
-      final role = authData['role'] as String?;
+      final role = authData[AppConfig.jsonRole] as String?;
 
-      return role ?? 'user';
+      return role ?? AppConfig.userRoleUser;
     } catch (e) {
-      return 'user';
+      return AppConfig.userRoleUser;
     }
   }
 
@@ -152,15 +152,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: FontUtils.poppins(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? AppColors.white
-                    : Colors.black,
+                    : AppColors.black,
               ),
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.black
+                ? AppColors.black
                 : AppColors.white,
             duration: AppDurations.twoSeconds,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+            margin: AppDimens.marginLeft16Right16Bottom100,
           ),
         );
       }
@@ -182,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+            margin: AppDimens.marginLeft16Right16Bottom100,
           ),
         );
       }
@@ -198,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+            margin: AppDimens.marginLeft16Right16Bottom100,
           ),
         );
       }
@@ -227,15 +227,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: FontUtils.poppins(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? AppColors.white
-                    : Colors.black,
+                    : AppColors.black,
               ),
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.black
+                ? AppColors.black
                 : AppColors.white,
             duration: AppDurations.twoSeconds,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+            margin: AppDimens.marginLeft16Right16Bottom100,
           ),
         );
       }
@@ -257,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+            margin: AppDimens.marginLeft16Right16Bottom100,
           ),
         );
       }
@@ -273,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             backgroundColor: AppColors.red,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+            margin: AppDimens.marginLeft16Right16Bottom100,
           ),
         );
       }
@@ -291,15 +291,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color color;
 
     switch (_role) {
-      case 'admin':
+      case AppConfig.userRoleAdmin:
         label = AppStrings.profileRoleAdmin;
         color = AppColors.amber;
         break;
-      case 'owner':
+      case AppConfig.userRoleOwner:
         label = AppStrings.profileRoleOwner;
         color = AppColors.violet;
         break;
-      case 'user':
+      case AppConfig.userRoleUser:
       default:
         label = AppStrings.profileRoleUser;
         color = AppColors.emerald;
@@ -307,7 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: AppDimens.paddingHorizontal8Vertical2,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -325,11 +325,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildDivider() {
     return Container(
-      height: 1,
+      height: AppDimens.dividerThicknessThin,
       margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLg),
       color: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.borderDarkGray
-          : AppColors.borderLightGray,
+          ? AppColors.gray700
+          : AppColors.gray200,
     );
   }
 
@@ -345,15 +345,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 10,
-          ),
+          padding: AppDimens.paddingHorizontal16Vertical10,
           child: Row(
             children: [
               Icon(
                 icon,
-                size: 20,
+                size: AppDimens.iconSize20,
                 color: iconColor,
               ),
               Gap.w12,
@@ -370,7 +367,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Spacer(),
               trailing ?? Icon(
                 LucideIcons.chevronRight,
-                size: 20,
+                size: AppDimens.iconSize20,
                 color: Theme.of(context).brightness == Brightness.dark
                     ? AppColors.textDarkHint
                     : AppColors.gray400,
@@ -395,13 +392,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: ListView(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
-            margin: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: DeviceUtils.isPC() ? 16 : -10,
-              bottom: 32,
-            ),
+            padding: AppDimens.paddingAll20,
+            margin: DeviceUtils.isPC()
+                ? AppDimens.paddingHorizontal16Top16Bottom32
+                : AppDimens.paddingHorizontal16TopNegative10Bottom32,
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.cardDark
@@ -409,9 +403,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: AppColors.black10,
                   blurRadius: AppDimens.shadowBlurSm,
-                  offset: const Offset(0, 2),
+                  offset: AppDimens.offset02,
                 ),
               ],
             ),
@@ -458,9 +452,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: AppColors.black10,
                   blurRadius: AppDimens.shadowBlurSm,
-                  offset: const Offset(0, 2),
+                  offset: AppDimens.offset02,
                 ),
               ],
             ),
@@ -564,15 +558,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: InkWell(
                     onTap: _handleCheckUpdate,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
+                      padding: AppDimens.paddingHorizontal16Vertical10,
                       child: Row(
                         children: [
                           const Icon(
                             LucideIcons.download,
-                            size: 20,
+                            size: AppDimens.iconSize20,
                             color: AppColors.blue,
                           ),
                           Gap.w12,
@@ -626,15 +617,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: InkWell(
                     onTap: _handleLogout,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
+                      padding: AppDimens.paddingHorizontal16Vertical10,
                       child: Row(
                         children: [
                           const Icon(
                             LucideIcons.logOut,
-                            size: 20,
+                            size: AppDimens.iconSize20,
                             color: AppColors.red,
                           ),
                           Gap.w12,

@@ -1,6 +1,7 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../constants/app_strings.dart';
 import '../models/douban_movie.dart';
 import '../utils/device_utils.dart';
@@ -54,16 +55,16 @@ class DoubanMoviesGrid extends StatelessWidget {
         final isTablet = DeviceUtils.isTablet(context);
         
         final double screenWidth = constraints.maxWidth;
-        const double padding = 16.0;
-        const double spacing = 12.0;
+        final double padding = AppDimens.gridPaddingHorizontal;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-        const double minItemWidth = 80.0;
+        final double minItemWidth = AppDimens.gridMinItemWidth;
         final double calculatedItemWidth = availableWidth / crossAxisCount;
         final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
         final double itemHeight = itemWidth * 2.0;
         
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: AppDimens.gridContentPadding,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -114,7 +115,7 @@ class DoubanMoviesGrid extends StatelessWidget {
         children: [
           const Icon(
             Icons.error_outline,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -141,7 +142,7 @@ class DoubanMoviesGrid extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    final bool isMovie = contentType == 'movie';
+    final bool isMovie = contentType == AppConfig.stypeMovie;
     final String contentName = isMovie ? AppStrings.movie : AppStrings.tvShow;
     
     return Center(
@@ -150,7 +151,7 @@ class DoubanMoviesGrid extends StatelessWidget {
         children: [
           Icon(
             isMovie ? Icons.movie_filter_outlined : Icons.tv_outlined,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -183,16 +184,16 @@ class DoubanMoviesGrid extends StatelessWidget {
         final isTablet = DeviceUtils.isTablet(context);
         
         final double screenWidth = constraints.maxWidth;
-        const double padding = 16.0;
-        const double spacing = 12.0;
+        final double padding = AppDimens.gridPaddingHorizontal;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-        const double minItemWidth = 80.0;
+        final double minItemWidth = AppDimens.gridMinItemWidth;
         final double calculatedItemWidth = availableWidth / crossAxisCount;
         final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
         final double itemHeight = itemWidth * 2.0;
         
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: AppDimens.gridContentPadding,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -209,7 +210,7 @@ class DoubanMoviesGrid extends StatelessWidget {
             return VideoCard(
               videoInfo: videoInfo,
               onTap: () => onVideoTap(videoInfo),
-              from: 'douban',
+              from: AppConfig.sourceDouban,
               cardWidth: itemWidth,
               onGlobalMenuAction: onGlobalMenuAction != null ? (action) => onGlobalMenuAction!(videoInfo, action) : null,
               isFavorited: false, 

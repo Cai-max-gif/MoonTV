@@ -1,4 +1,4 @@
-import '../constants/app_config.dart';
+﻿import '../constants/app_config.dart';
 
 /// 播放记录数据模型
 class PlayRecord {
@@ -40,32 +40,32 @@ class PlayRecord {
     return PlayRecord(
       id: id,
       source: source,
-      title: json['title'] ?? '',
-      sourceName: json['source_name'] ?? '',
-      year: json['year'] ?? '',
-      cover: json['cover'] ?? '',
-      index: json['index'] ?? 0,
-      totalEpisodes: json['total_episodes'] ?? 0,
-      playTime: json['play_time'] ?? 0,
-      totalTime: json['total_time'] ?? 0,
-      saveTime: json['save_time'] ?? 0,
-      searchTitle: json['search_title'] ?? '',
+      title: json[AppConfig.jsonTitle] ?? '',
+      sourceName: json[AppConfig.jsonSourceName] ?? '',
+      year: json[AppConfig.jsonYear] ?? '',
+      cover: json[AppConfig.jsonCover] ?? '',
+      index: json[AppConfig.jsonIndex] ?? 0,
+      totalEpisodes: json[AppConfig.jsonTotalEpisodes] ?? 0,
+      playTime: json[AppConfig.jsonPlayTime] ?? 0,
+      totalTime: json[AppConfig.jsonTotalTime] ?? 0,
+      saveTime: json[AppConfig.jsonSaveTime] ?? 0,
+      searchTitle: json[AppConfig.jsonSearchTitle] ?? '',
     );
   }
 
   /// 转换为JSON
   Map<String, dynamic> toJson() {
     return {
-      'title': title,
-      'source_name': sourceName,
-      'year': year,
-      'cover': cover,
-      'index': index,
-      'total_episodes': totalEpisodes,
-      'play_time': playTime,
-      'total_time': totalTime,
-      'save_time': saveTime,
-      'search_title': searchTitle,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonSourceName: sourceName,
+      AppConfig.jsonYear: year,
+      AppConfig.jsonCover: cover,
+      AppConfig.jsonIndex: index,
+      AppConfig.jsonTotalEpisodes: totalEpisodes,
+      AppConfig.jsonPlayTime: playTime,
+      AppConfig.jsonTotalTime: totalTime,
+      AppConfig.jsonSaveTime: saveTime,
+      AppConfig.jsonSearchTitle: searchTitle,
     };
   }
 

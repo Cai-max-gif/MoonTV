@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:gbk_codec/gbk_codec.dart';
 import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import '../models/search_resource.dart';
+import '../utils/html_utils.dart';
 import '../models/search_result.dart';
 import 'content_filter_service.dart';
 import 'local_search_cache_service.dart';
@@ -31,7 +33,7 @@ class DownstreamService {
     try {
       final apiBaseUrl = resource.api;
       final apiUrl =
-          '$apiBaseUrl?ac=videolist&wd=${Uri.encodeComponent(query)}';
+          '$apiBaseUrl?${AppConfig.apiParamAc}=${AppConfig.apiValueVideolist}&${AppConfig.apiParamWd}=${Uri.encodeComponent(query)}';
 
       final firstPageResult = await searchPage(
         resource: resource,
@@ -58,7 +60,7 @@ class DownstreamService {
 
         for (int page = 2; page <= pagesToFetch + 1; page++) {
           final pageUrl =
-              '$apiBaseUrl?ac=videolist&wd=${Uri.encodeComponent(query)}&pg=$page';
+              '$apiBaseUrl?${AppConfig.apiParamAc}=${AppConfig.apiValueVideolist}&${AppConfig.apiParamWd}=${Uri.encodeComponent(query)}&${AppConfig.apiParamPg}=$page';
 
           final pageFuture = searchPage(
             resource: resource,
@@ -120,18 +122,7 @@ class DownstreamService {
         .replaceAll(RegExp(r'^\n+|\n+$'), '')
         .trim();
 
-    return _decodeHtmlEntities(cleanedText);
-  }
-
-  /// 解码 HTML 实体
-  static String _decodeHtmlEntities(String text) {
-    return text
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'")
-        .replaceAll('&nbsp;', ' ');
+    return HtmlUtils.decodeEntities(cleanedText);
   }
 
   /// 分页搜索
@@ -160,8 +151,8 @@ class DownstreamService {
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'User-Agent': AppConfig.defaultUserAgent,
-          'Accept': 'application/json',
+          AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+          AppConfig.headerAccept: AppConfig.headerAcceptJson,
         },
       ).timeout(AppDurations.shortTimeout);
 
@@ -219,30 +210,30 @@ class DownstreamService {
       final data = json.decode(responseBody);
 
       if (data == null ||
-          data['list'] == null ||
-          data['list'] is! List ||
-          (data['list'] as List).isEmpty) {
+          data[AppConfig.jsonList] == null ||
+          data[AppConfig.jsonList] is! List ||
+          (data[AppConfig.jsonList] as List).isEmpty) {
         return SearchPageResult(results: [], pageCount: 1);
       }
 
-      final list = data['list'] as List;
+      final list = data[AppConfig.jsonList] as List;
 
       final allResults = list.map((item) {
         List<String> episodes = [];
         List<String> titles = [];
 
-        if (item['vod_play_url'] != null) {
+        if (item[AppConfig.jsonVodPlayUrl] != null) {
           final vodPlayUrlArray =
-              (item['vod_play_url'] as String).split('\$\$\$');
+              (item[AppConfig.jsonVodPlayUrl] as String).split(AppConfig.urlSeparatorTripleDollar);
 
           for (final url in vodPlayUrlArray) {
             List<String> matchEpisodes = [];
             List<String> matchTitles = [];
 
-            final titleUrlArray = url.split('#');
+            final titleUrlArray = url.split(AppConfig.urlSeparatorHash);
 
             for (final titleUrl in titleUrlArray) {
-              final episodeTitleUrl = titleUrl.split('\$');
+              final episodeTitleUrl = titleUrl.split(AppConfig.urlSeparatorDollar);
               if (episodeTitleUrl.length == 2 &&
                   episodeTitleUrl[1].endsWith('.m3u8')) {
                 matchTitles.add(episodeTitleUrl[0]);
@@ -257,39 +248,39 @@ class DownstreamService {
           }
         }
 
-        String year = 'unknown';
-        if (item['vod_year'] != null && item['vod_year'] != '') {
+        String year = AppStrings.playerUnknown;
+        if (item[AppConfig.jsonVodYear] != null && item[AppConfig.jsonVodYear] != '') {
           final yearMatch =
-              RegExp(r'\d{4}').firstMatch(item['vod_year'] as String);
+              RegExp(r'\d{4}').firstMatch(item[AppConfig.jsonVodYear] as String);
           if (yearMatch != null) {
             year = yearMatch.group(0)!;
           }
         }
 
         return {
-          'id': item['vod_id'].toString(),
-          'title': (item['vod_name'] as String)
+          AppConfig.jsonId: item[AppConfig.jsonVodId].toString(),
+          AppConfig.jsonTitle: (item[AppConfig.jsonVodName] as String)
               .trim()
               .replaceAll(RegExp(r'\s+'), ' '),
-          'poster': item['vod_pic'],
-          'episodes': episodes,
-          'episodes_titles': titles,
-          'source': resource.key,
-          'source_name': resource.name,
-          'class': item['vod_class'],
-          'year': year,
-          'desc': _cleanHtmlTags(item['vod_content'] ?? ''),
-          'type_name': item['type_name'],
-          'douban_id': item['vod_douban_id'],
+          AppConfig.jsonPoster: item[AppConfig.jsonVodPic],
+          AppConfig.jsonEpisodes: episodes,
+          AppConfig.jsonEpisodesTitles: titles,
+          AppConfig.jsonSource: resource.key,
+          AppConfig.jsonSourceName: resource.name,
+          AppConfig.jsonClass: item[AppConfig.jsonVodClass],
+          AppConfig.jsonYear: year,
+          AppConfig.jsonDesc: _cleanHtmlTags(item[AppConfig.jsonVodContent] ?? ''),
+          AppConfig.jsonTypeName: item[AppConfig.jsonTypeName],
+          AppConfig.jsonDoubanId: item[AppConfig.jsonVodDoubanId],
         };
       }).toList();
 
       final results = allResults
-          .where((result) => (result['episodes'] as List).isNotEmpty)
+          .where((result) => (result[AppConfig.jsonEpisodes] as List).isNotEmpty)
           .map((result) => SearchResult.fromJson(result))
           .toList();
 
-      final pageCount = page == 1 ? (data['pagecount'] as int? ?? 1) : 1;
+      final pageCount = page == 1 ? (data[AppConfig.jsonPageCount] as int? ?? 1) : 1;
 
       // 缓存成功的搜索结果
       cache.setCachedSearchPage(

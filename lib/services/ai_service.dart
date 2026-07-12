@@ -12,40 +12,40 @@ class AISettings {
   String baseUrl;
 
   AISettings({
-    this.provider = 'openai',
+    this.provider = AppConfig.aiDefaultProvider,
     this.apiKey = '',
-    this.model = 'gpt-4o',
+    this.model = AppConfig.aiDefaultModel,
     this.baseUrl = '',
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'provider': provider,
-      'model': model,
-      'baseUrl': baseUrl,
+      AppConfig.jsonProvider: provider,
+      AppConfig.jsonModel: model,
+      AppConfig.jsonBaseUrl: baseUrl,
     };
   }
 
   static AISettings fromJson(Map<String, dynamic> json) {
     return AISettings(
-      provider: json['provider'] as String? ?? 'openai',
-      model: json['model'] as String? ?? 'gpt-4o',
-      baseUrl: json['baseUrl'] as String? ?? '',
+      provider: json[AppConfig.jsonProvider] as String? ?? AppConfig.aiDefaultProvider,
+      model: json[AppConfig.jsonModel] as String? ?? AppConfig.aiDefaultModel,
+      baseUrl: json[AppConfig.jsonBaseUrl] as String? ?? '',
     );
   }
 
   String get effectiveBaseUrl {
     if (baseUrl.isNotEmpty) return baseUrl;
     switch (provider) {
-      case 'openai':
+      case AppConfig.aiProviderOpenai:
         return AppConfig.aiOpenaiBaseUrl;
-      case 'deepseek':
+      case AppConfig.aiProviderDeepseek:
         return AppConfig.aiDeepseekBaseUrl;
-      case 'zhipu':
+      case AppConfig.aiProviderZhipu:
         return AppConfig.aiZhipuBaseUrl;
-      case 'moonshot':
+      case AppConfig.aiProviderMoonshot:
         return AppConfig.aiMoonshotBaseUrl;
-      case 'mimo':
+      case AppConfig.aiProviderMimo:
         return AppConfig.aiMimoBaseUrl;
       default:
         return AppConfig.aiOpenaiBaseUrl;
@@ -57,9 +57,9 @@ class AISettings {
 
 class AIService {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  static const String _apiKeyPrefix = 'ai_api_key_';
-  static const String _settingsKey = 'ai_settings';
-  static const String _chatHistoryKey = 'ai_chat_history';
+  static const String _apiKeyPrefix = AppConfig.aiApiKeyPrefix;
+  static const String _settingsKey = AppConfig.aiSettingsKey;
+  static const String _chatHistoryKey = AppConfig.aiChatHistoryKey;
 
   static Duration get _timeout => AppConfig.aiRequestTimeout;
 
@@ -148,13 +148,13 @@ class AIService {
 
     try {
       final baseUrl = settings.effectiveBaseUrl;
-      final url = '$baseUrl/chat/completions';
+      final url = '$baseUrl${AppConfig.aiChatCompletionsEndpoint}';
       final uri = Uri.parse(url);
 
       final body = json.encode({
-        'model': settings.model,
-        'messages': [
-          {'role': 'user', 'content': 'Hi'},
+        AppConfig.jsonModel: settings.model,
+        AppConfig.jsonMessages: [
+          {AppConfig.jsonRole: AppConfig.aiRoleUser, AppConfig.jsonContent: 'Hi'},
         ],
       });
 
@@ -162,8 +162,8 @@ class AIService {
           .post(
             uri,
             headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'Authorization': 'Bearer ${settings.apiKey}',
+              AppConfig.headerContentType: AppStrings.contentTypeJsonUtf8,
+              AppConfig.headerAuthorization: '${AppStrings.authorizationBearer}${settings.apiKey}',
             },
             body: utf8.encode(body),
           )
@@ -190,10 +190,10 @@ class AIService {
 
     try {
       String url;
-      if (settings.provider == 'deepseek') {
-        url = '${settings.effectiveBaseUrl}/user/balance';
-      } else if (settings.provider == 'moonshot') {
-        url = '${settings.effectiveBaseUrl}/users/me/balance';
+      if (settings.provider == AppConfig.aiProviderDeepseek) {
+        url = '${settings.effectiveBaseUrl}${AppConfig.aiDeepseekBalanceEndpoint}';
+      } else if (settings.provider == AppConfig.aiProviderMoonshot) {
+        url = '${settings.effectiveBaseUrl}${AppConfig.aiMoonshotBalanceEndpoint}';
       } else {
         return null;
       }
@@ -204,8 +204,8 @@ class AIService {
           .get(
             uri,
             headers: {
-              'Accept': 'application/json',
-              'Authorization': 'Bearer ${settings.apiKey}',
+              AppConfig.headerAccept: AppConfig.headerAcceptJson,
+              AppConfig.headerAuthorization: '${AppStrings.authorizationBearer}${settings.apiKey}',
             },
           )
           .timeout(_timeout);
@@ -232,13 +232,13 @@ class AIService {
     }
 
     final baseUrl = settings.effectiveBaseUrl;
-    final url = '$baseUrl/chat/completions';
+    final url = '$baseUrl${AppConfig.aiChatCompletionsEndpoint}';
     final uri = Uri.parse(url);
 
     final messages = _buildMessages(userMessage, conversationHistory, systemPrompt);
 
     final body = json.encode({
-      'model': settings.model,
+      AppConfig.jsonModel: settings.model,
       'messages': messages,
     });
 
@@ -246,8 +246,8 @@ class AIService {
         .post(
           uri,
           headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer ${settings.apiKey}',
+            AppConfig.headerContentType: AppStrings.contentTypeJsonUtf8,
+            AppConfig.headerAuthorization: '${AppStrings.authorizationBearer}${settings.apiKey}',
           },
           body: utf8.encode(body),
         )
@@ -257,14 +257,14 @@ class AIService {
       try {
         final responseBody = utf8.decode(response.bodyBytes);
         final data = json.decode(responseBody);
-        final choices = data['choices'] as List<dynamic>;
+        final choices = data[AppConfig.jsonChoices] as List<dynamic>;
         if (choices.isNotEmpty) {
-          final message = choices.first['message'] as Map<String, dynamic>;
-          return message['content'] as String? ?? '';
+          final message = choices.first[AppConfig.jsonMessage] as Map<String, dynamic>;
+          return message[AppConfig.jsonContent] as String? ?? '';
         }
-        throw Exception('AI没有返回有效回复');
+        throw Exception(AppStrings.aiNoValidReply);
       } catch (e) {
-        throw Exception('解析响应失败');
+        throw Exception(AppStrings.aiParseFailed);
       }
     }
 
@@ -272,12 +272,12 @@ class AIService {
     try {
       final responseBody = utf8.decode(response.bodyBytes);
       final errorData = json.decode(responseBody);
-      if (errorData['error'] is Map) {
-        errorMessage = errorData['error']['message'] ?? errorMessage;
-      } else if (errorData['error'] is String) {
-        errorMessage = errorData['error'];
-      } else if (errorData['message'] != null) {
-        errorMessage = errorData['message'].toString();
+      if (errorData[AppConfig.jsonError] is Map) {
+        errorMessage = errorData[AppConfig.jsonError][AppConfig.jsonMessage] ?? errorMessage;
+      } else if (errorData[AppConfig.jsonError] is String) {
+        errorMessage = errorData[AppConfig.jsonError];
+      } else if (errorData[AppConfig.jsonMessage] != null) {
+        errorMessage = errorData[AppConfig.jsonMessage].toString();
       }
     } catch (e) {
       // JSON 解析失败时使用默认错误消息
@@ -306,20 +306,20 @@ class AIService {
     // 如果有系统提示，添加到消息列表开头
     if (systemPrompt != null && systemPrompt.isNotEmpty) {
       messages.add({
-        'role': 'system',
-        'content': systemPrompt,
+        AppConfig.jsonRole: AppConfig.aiRoleSystem,
+        AppConfig.jsonContent: systemPrompt,
       });
     }
 
     for (final msg in conversationHistory) {
       messages.add({
-        'role': msg['role']!,
-        'content': msg['content']!,
+        AppConfig.jsonRole: msg[AppConfig.jsonRole]!,
+        AppConfig.jsonContent: msg[AppConfig.jsonContent]!,
       });
     }
     messages.add({
-      'role': 'user',
-      'content': userMessage,
+      AppConfig.jsonRole: AppConfig.aiRoleUser,
+      AppConfig.jsonContent: userMessage,
     });
     return messages;
   }

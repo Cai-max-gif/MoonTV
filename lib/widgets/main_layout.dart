@@ -225,7 +225,7 @@ class _MainLayoutState extends State<MainLayout> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 320),
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: AppDimens.marginVertical4,
                 shrinkWrap: true,
                 itemCount: _searchSuggestions.length,
                 itemBuilder: (context, index) {
@@ -237,10 +237,7 @@ class _MainLayoutState extends State<MainLayout> {
                       _removeOverlay();
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      padding: AppDimens.horizontalMdVerticalMdPadding,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -377,7 +374,7 @@ class _MainLayoutState extends State<MainLayout> {
             : MediaQuery.of(context).padding.top + 8;
 
     return Container(
-      padding: EdgeInsets.only(top: topPadding, left: 16, right: 16, bottom: 8),
+      padding: EdgeInsets.only(top: topPadding, left: AppDimens.spacingLg, right: AppDimens.spacingLg, bottom: AppDimens.spacingSm),
       decoration: BoxDecoration(
         color: widget.isSearchMode
             ? themeService.isDarkMode
@@ -448,8 +445,8 @@ class _MainLayoutState extends State<MainLayout> {
                     shape: BoxShape.circle,
                     color: DeviceUtils.isPC() && _isSearchButtonHovered
                         ? (themeService.isDarkMode
-                            ? AppColors.darkDivider
-                            : AppColors.grayBorder)
+                            ? AppColors.borderDark
+                            : AppColors.gray200)
                         : AppColors.transparent,
                   ),
                   child: Center(
@@ -571,7 +568,7 @@ class _MainLayoutState extends State<MainLayout> {
                                     : null,
                             behavior: HitTestBehavior.opaque,
                             child: Container(
-                              padding: EdgeInsets.all(isTablet ? 6 : 8),
+                              padding: isTablet ? AppDimens.searchButtonPaddingTablet : AppDimens.searchButtonPadding,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: DeviceUtils.isPC() &&
@@ -581,8 +578,8 @@ class _MainLayoutState extends State<MainLayout> {
                                                 .isNotEmpty ??
                                             false)
                                     ? (themeService.isDarkMode
-                                        ? AppColors.darkDivider
-                                        : AppColors.grayBorder)
+                                        ? AppColors.borderDark
+                                        : AppColors.gray200)
                                     : AppColors.transparent,
                               ),
                               child: Icon(
@@ -632,14 +629,14 @@ class _MainLayoutState extends State<MainLayout> {
                               },
                               behavior: HitTestBehavior.opaque,
                               child: Container(
-                                padding: EdgeInsets.all(isTablet ? 6 : 8),
+                                padding: isTablet ? AppDimens.searchButtonPaddingTablet : AppDimens.searchButtonPadding,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: DeviceUtils.isPC() &&
                                           _isClearButtonHovered
                                       ? (themeService.isDarkMode
-                                          ? AppColors.darkDivider
-                                          : AppColors.grayBorder)
+                                          ? AppColors.borderDark
+                                          : AppColors.gray200)
                                       : AppColors.transparent,
                                 ),
                                 child: Icon(
@@ -658,10 +655,7 @@ class _MainLayoutState extends State<MainLayout> {
                   ),
                 ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
+                contentPadding: AppDimens.searchContentPadding,
                 isDense: true,
               ),
               style: FontUtils.poppins(
@@ -669,7 +663,7 @@ class _MainLayoutState extends State<MainLayout> {
                 color: themeService.isDarkMode
                     ? AppColors.white
                     : AppColors.primary,
-                height: 1.2,
+                height: AppDimens.lineHeightTight,
               ),
               onSubmitted: (value) {
                 _removeOverlay();
@@ -723,8 +717,8 @@ class _MainLayoutState extends State<MainLayout> {
                       shape: BoxShape.circle,
                       color: DeviceUtils.isPC() && _isBackButtonHovered
                           ? (themeService.isDarkMode
-                              ? AppColors.darkDivider
-                              : AppColors.grayBorder)
+                              ? AppColors.borderDark
+                              : AppColors.gray200)
                           : AppColors.transparent,
                     ),
                     child: Center(
@@ -815,8 +809,8 @@ class _MainLayoutState extends State<MainLayout> {
                 shape: BoxShape.circle,
                 color: DeviceUtils.isPC() && _isThemeButtonHovered
                     ? (themeService.isDarkMode
-                        ? AppColors.darkDivider
-                        : AppColors.grayBorder)
+                        ? AppColors.borderDark
+                        : AppColors.gray200)
                     : AppColors.transparent,
               ),
               child: Center(
@@ -829,7 +823,7 @@ class _MainLayoutState extends State<MainLayout> {
                         size: AppDimens.iconLg,
                       )
                     : Text(
-                        'AI',
+                        AppStrings.aiLabel,
                         style: TextStyle(
                           color: themeService.isDarkMode
                               ? AppColors.white
@@ -848,10 +842,10 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildBottomNavBar(ThemeService themeService) {
     final List<Map<String, dynamic>> navItems = [
-      {'icon': LucideIcons.house, 'label': AppStrings.navHome},
-      {'icon': LucideIcons.history, 'label': AppStrings.navHistory},
-      {'icon': LucideIcons.star, 'label': AppStrings.navFavorites},
-      {'icon': LucideIcons.user, 'label': AppStrings.navProfile},
+      {AppStrings.icon: LucideIcons.house, AppStrings.label: AppStrings.navHome},
+      {AppStrings.icon: LucideIcons.history, AppStrings.label: AppStrings.navHistory},
+      {AppStrings.icon: LucideIcons.star, AppStrings.label: AppStrings.navFavorites},
+      {AppStrings.icon: LucideIcons.user, AppStrings.label: AppStrings.navProfile},
     ];
 
     final isTablet = DeviceUtils.isTablet(context);
@@ -859,12 +853,12 @@ class _MainLayoutState extends State<MainLayout> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      width: screenWidth - 40, // 缩小整个底部导航栏的长度40
+      width: screenWidth - AppDimens.bottomNavBarWidthReduction,
       margin: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        bottom: 20 + bottomPadding, // 考虑底部安全区域的高度
-      ), // 向上移动20
+        left: AppDimens.bottomNavBarMarginHorizontal,
+        right: AppDimens.bottomNavBarMarginHorizontal,
+        bottom: AppDimens.bottomNavBarMarginBottom + bottomPadding,
+      ),
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? AppColors.cardDark.withValues(alpha: 0.9)
@@ -873,18 +867,13 @@ class _MainLayoutState extends State<MainLayout> {
         border: Border(
           top: BorderSide(
             color: themeService.isDarkMode
-                ? AppColors.darkDivider.withValues(alpha: 0.3)
+                ? AppColors.borderDark.withValues(alpha: 0.3)
                 : AppColors.white20,
-            width: 1,
+            width: AppDimens.dividerThicknessThin,
           ),
         ),
       ),
-      padding: const EdgeInsets.only(
-        left: 0,
-        right: 0,
-        top: 4,
-        bottom: 4, // 固定底部padding，不再添加安全区域高度
-      ),
+      padding: AppDimens.bottomNavBarPadding,
       child: Row(
         mainAxisAlignment:
             isTablet ? MainAxisAlignment.center : MainAxisAlignment.spaceEvenly,
@@ -926,15 +915,12 @@ class _MainLayoutState extends State<MainLayout> {
                   },
                   behavior: HitTestBehavior.opaque, // 确保整个区域都可以点击
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isTablet ? 16 : 12,
-                      vertical: 2,
-                    ),
+                    padding: isTablet ? AppDimens.navItemPaddingTablet : AppDimens.navItemPadding,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          item['icon'],
+                          item[AppStrings.icon],
                           color: isSelected
                               ? AppColors.accent
                               : isHovered
@@ -946,7 +932,7 @@ class _MainLayoutState extends State<MainLayout> {
                         ),
                         Gap.h2,
                         Text(
-                          item['label'],
+                          item[AppStrings.label],
                           style: FontUtils.poppins(
                             fontSize: AppDimens.fontSizeMd,
                             fontWeight:
@@ -967,7 +953,7 @@ class _MainLayoutState extends State<MainLayout> {
               ),
               // 平板模式下在按钮之间添加间距
               if (isTablet && index < navItems.length - 1)
-                const SizedBox(width: 36),
+                Gap.w36,
             ];
           }),
 
@@ -995,8 +981,8 @@ class _MainLayoutState extends State<MainLayout> {
     if (isMobile && !isTablet) {
       // 移动端：使用可水平滑动的ListView，设置固定宽度
       return SizedBox(
-        height: 32, // 固定高度，确保导航链接可见
-        width: 240, // 设置固定宽度为240
+        height: AppDimens.spacingXxl,
+        width: AppDimens.navBarWidthMobile,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: navItems.length,
@@ -1030,10 +1016,7 @@ class _MainLayoutState extends State<MainLayout> {
                 },
                 behavior: HitTestBehavior.opaque,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
+                  padding: AppDimens.navItemLabelPadding,
                   child: Center(
                     child: Text(
                       item['label'],
@@ -1095,10 +1078,7 @@ class _MainLayoutState extends State<MainLayout> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
+                    padding: AppDimens.navItemLabelPaddingTablet,
                     child: Text(
                       item['label'],
                       style: FontUtils.poppins(
@@ -1117,7 +1097,7 @@ class _MainLayoutState extends State<MainLayout> {
                   ),
                 ),
               ),
-              if (index < navItems.length - 1) const SizedBox(width: 24),
+              if (index < navItems.length - 1) Gap.w24,
             ];
           }),
         ],

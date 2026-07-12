@@ -37,39 +37,40 @@ class ReleaseCalendarItem {
 
   factory ReleaseCalendarItem.fromJson(Map<String, dynamic> json) {
     return ReleaseCalendarItem(
-      id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      type: json['type'] as String? ?? 'movie',
-      director: json['director'] as String? ?? '',
-      actors: json['actors'] as String? ?? '',
-      region: json['region'] as String? ?? '',
-      genre: json['genre'] as String? ?? '',
-      releaseDate: json['releaseDate'] as String? ?? '',
-      cover: json['cover'] as String?,
-      description: json['description'] as String?,
-      episodes: json['episodes'] as int?,
-      source: json['source'] as String? ?? AppConfig.sourceIdManmankan,
-      createdAt: json['createdAt'] as int? ?? 0,
-      updatedAt: json['updatedAt'] as int? ?? 0,
+      id: json[AppConfig.jsonId] as String? ?? '',
+      title: json[AppConfig.jsonTitle] as String? ?? '',
+      type: json[AppConfig.jsonType] as String? ?? AppConfig.stypeMovie,
+      director: json[AppConfig.jsonDirector] as String? ?? '',
+      actors: json[AppConfig.jsonActors] as String? ?? '',
+      region: json[AppConfig.jsonRegion] as String? ?? '',
+      genre: json[AppConfig.jsonGenre] as String? ?? '',
+      releaseDate: json[AppConfig.jsonReleaseDateCamel] as String? ?? json[AppConfig.jsonReleaseDate] as String? ?? '',
+      cover: json[AppConfig.jsonCover] as String?,
+      description: json[AppConfig.jsonDescription] as String?,
+      episodes: json[AppConfig.jsonEpisodes] as int?,
+      source: json[AppConfig.jsonSource] as String? ?? AppConfig.sourceIdManmankan,
+      createdAt: json[AppConfig.jsonCreatedAt] as int? ?? 0,
+      updatedAt: json[AppConfig.jsonUpdatedAt] as int? ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'type': type,
-      'director': director,
-      'actors': actors,
-      'region': region,
-      'genre': genre,
-      'releaseDate': releaseDate,
-      'cover': cover,
-      'description': description,
-      'episodes': episodes,
-      'source': source,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonType: type,
+      AppConfig.jsonDirector: director,
+      AppConfig.jsonActors: actors,
+      AppConfig.jsonRegion: region,
+      AppConfig.jsonGenre: genre,
+      AppConfig.jsonReleaseDate: releaseDate,
+      AppConfig.jsonReleaseDateCamel: releaseDate,
+      AppConfig.jsonCover: cover,
+      AppConfig.jsonDescription: description,
+      AppConfig.jsonEpisodes: episodes,
+      AppConfig.jsonSource: source,
+      AppConfig.jsonCreatedAt: createdAt,
+      AppConfig.jsonUpdatedAt: updatedAt,
     };
   }
 
@@ -95,7 +96,7 @@ class ReleaseCalendarItem {
   String getReleaseStatusText() {
     final days = getDaysUntilRelease();
     if (days < 0) {
-      return '${AppStrings.releaseAlready}${-days}天';
+      return '${AppStrings.releaseAlready}${-days}${AppStrings.daysSuffix}';
     } else if (days == 0) {
       return AppStrings.releaseToday;
     } else {

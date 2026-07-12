@@ -6,6 +6,7 @@ import 'api_service.dart';
 import 'douban_cache_service.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 /// Bangumi 数据服务（函数级缓存，一天过期）
 class BangumiService {
@@ -36,7 +37,7 @@ class BangumiService {
     await _initCache();
 
     // 接口级缓存：缓存原始 API 数组，固定键，不含参数
-    const cacheKey = 'bangumi_calendar_raw_v1';
+    const cacheKey = AppConfig.cacheKeyBangumiCalendarRaw;
 
     // 先尝试读取原始数组缓存
     final cachedRaw = await _cache.get<List<dynamic>>(
@@ -63,8 +64,8 @@ class BangumiService {
     try {
       const apiUrl = '${AppConfig.bgmApiBase}/calendar';
       final headers = {
-        'User-Agent': _userAgent,
-        'Accept': 'application/json',
+        AppConfig.headerUserAgent: _userAgent,
+        AppConfig.headerAccept: AppConfig.headerAcceptJson,
       };
 
       final response = await http
@@ -93,18 +94,18 @@ class BangumiService {
         await _cache.set(
           cacheKey,
           responseData,
-          const Duration(days: 1),
+          AppConfig.bangumiCalendarCache,
         );
 
         return ApiResponse.success(items, statusCode: response.statusCode);
       } else {
         return ApiResponse.error(
-          '获取 Bangumi 日历失败: ${response.statusCode}',
+          '${AppStrings.bangumiCalendarFetchFailed}: ${response.statusCode}',
           statusCode: response.statusCode,
         );
       }
     } catch (e) {
-      return ApiResponse.error('Bangumi 数据请求异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.bangumiRequestException}: ${e.toString()}');
     }
   }
 
@@ -129,7 +130,7 @@ class BangumiService {
         cacheKey,
         (raw) {
           if (raw is! Map<String, dynamic>) {
-            throw FormatException('Bangumi 缓存数据格式错误: ${raw.runtimeType}');
+            throw FormatException('${AppStrings.bangumiCacheFormatError}: ${raw.runtimeType}');
           }
           return BangumiDetails.fromJson(raw);
         },
@@ -146,8 +147,8 @@ class BangumiService {
     try {
       final apiUrl = '${AppConfig.bgmApiBase}/v0/subjects/$bangumiId';
       final headers = {
-        'User-Agent': _userAgent,
-        'Accept': 'application/json',
+        AppConfig.headerUserAgent: _userAgent,
+        AppConfig.headerAccept: AppConfig.headerAcceptJson,
       };
 
       final response = await http
@@ -176,16 +177,16 @@ class BangumiService {
           return ApiResponse.success(details, statusCode: response.statusCode);
         } catch (parseError) {
           return ApiResponse.error(
-              'Bangumi 详情数据解析失败: ${parseError.toString()}');
+              '${AppStrings.bangumiDetailParseFailed}: ${parseError.toString()}');
         }
       } else {
         return ApiResponse.error(
-          '获取 Bangumi 详情数据失败: ${response.statusCode}',
+          '${AppStrings.bangumiDetailFetchFailed}: ${response.statusCode}',
           statusCode: response.statusCode,
         );
       }
     } catch (e) {
-      return ApiResponse.error('Bangumi 详情数据请求异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.bangumiRequestException}: ${e.toString()}');
     }
   }
 }

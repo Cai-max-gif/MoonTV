@@ -144,7 +144,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   @override
   void didUpdateWidget(covariant MobilePlayerControls oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // �?PIP 模式停止时，显示控制�?
+    // 当 PIP 模式停止时，显示控制栏
     if (oldWidget.isPipMode && !widget.isPipMode) {
       setState(() => _controlsVisible = true);
       widget.onControlsVisibilityChanged(true);
@@ -168,45 +168,36 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
 
   void _listenPlayerStreams() {
     if (widget.player != null) {
-      try {
-        _subscriptions.add(widget.player.stream.playing.listen((playing) {
-          if (!mounted) return;
-          if (playing && _controlsVisible) {
-            _startHideTimer();
+      _subscriptions.add(widget.player.stream.playing.listen((playing) {
+        if (!mounted) return;
+        if (playing && _controlsVisible) {
+          _startHideTimer();
+        }
+        if (!playing) {
+          _hideTimer?.cancel();
+          if (!_controlsVisible) {
+            setState(() => _controlsVisible = true);
+            widget.onControlsVisibilityChanged(true);
           }
-          if (!playing) {
-            _hideTimer?.cancel();
-            if (!_controlsVisible) {
-              setState(() => _controlsVisible = true);
-              widget.onControlsVisibilityChanged(true);
-            }
-          }
-        }));
+        }
+      }));
 
-        _subscriptions.add(widget.player.stream.position.listen((_) {
-          if (!mounted) return;
-          if (_controlsVisible && !_isSeekingViaSwipe) {
-            setState(() {});
-          }
-        }));
-
-        _subscriptions.add(widget.player.stream.completed.listen((_) {
-          if (!mounted) return;
+      _subscriptions.add(widget.player.stream.position.listen((_) {
+        if (!mounted) return;
+        if (_controlsVisible && !_isSeekingViaSwipe) {
           setState(() {});
-        }));
-      } catch (e) {
-      }
+        }
+      }));
+
+      _subscriptions.add(widget.player.stream.completed.listen((_) {
+        if (!mounted) return;
+        setState(() {});
+      }));
     }
   }
 
-  void _openDanmakuSettings() async {
+  void _openDanmakuSettings() {
     _onUserInteraction();
-    // 如果在全屏模式，先退出全�?
-    if (_isFullscreen && widget.state != null) {
-      _exitFullscreen();
-      // 等待退出全屏动画完�?
-      await Future.delayed(const Duration(milliseconds: 250));
-    }
     widget.onDanmakuSettings?.call();
   }
 
@@ -332,10 +323,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   void _onSwipeEnd(DragEndDetails details) {
     if (_isLocked || !_isSeekingViaSwipe || widget.live) return;
     if (_dragPosition != null && widget.player != null) {
-      try {
-        widget.player.seek(_dragPosition!);
-      } catch (e) {
-      }
+      widget.player.seek(_dragPosition!);
     }
     setState(() {
       _isSeekingViaSwipe = false;
@@ -433,62 +421,47 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     _onUserInteraction();
     if (widget.player != null) {
       if (_isPlaying) {
-        try {
-          await widget.player.pause();
-          widget.onPause?.call();
-        } catch (e) {
-        }
+        await widget.player.pause();
+        widget.onPause?.call();
       } else {
-        try {
-          await widget.player.play();
-        } catch (e) {
-        }
+        await widget.player.play();
       }
     }
   }
 
   void _enterFullscreen() {
     if (widget.state != null) {
-      try {
-        widget.state.enterFullscreen();
-        widget.onFullscreenChange(true);
-        _onUserInteraction();
-      } catch (e) {
-      }
+      widget.state.enterFullscreen();
+      widget.onFullscreenChange(true);
+      _onUserInteraction();
     }
   }
 
   void _exitFullscreen() {
     if (widget.state != null) {
-      try {
-        widget.state.exitFullscreen();
-        widget.onFullscreenChange(false);
-        // 触发退出全屏回�?
-        widget.onExitFullScreen?.call();
-        // 确保控制栏可见并重新启动隐藏计时�?
-        setState(() {
-          _controlsVisible = true;
-          _isLocked = false;
-        });
-        widget.onControlsVisibilityChanged(true);
-        _startHideTimer();
-      } catch (e) {
-      }
+      widget.state.exitFullscreen();
+      widget.onFullscreenChange(false);
+      // 触发退出全屏回调
+      widget.onExitFullScreen?.call();
+      // 确保控制栏可见并重新启动隐藏计时器
+      setState(() {
+        _controlsVisible = true;
+        _isLocked = false;
+      });
+      widget.onControlsVisibilityChanged(true);
+      _startHideTimer();
     }
   }
 
   Future<void> _showDLNADialog() async {
     if (widget.player != null) {
       if (_isPlaying) {
-        try {
-          await widget.player.pause();
-          widget.onPause?.call();
-        } catch (e) {
-        }
+        await widget.player.pause();
+        widget.onPause?.call();
       }
       if (_isFullscreen) {
         _exitFullscreen();
-        await Future.delayed(const Duration(milliseconds: 250));
+        await Future.delayed(AppDurations.playerControlHideDelay);
       }
       final resumePos = widget.player.state?.position ?? Duration.zero;
       if (!mounted) return;
@@ -508,47 +481,35 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   }
 
   Future<void> _showSpeedDialog() async {
-    final speeds = [0.5, 0.75, 1.0, 1.5, 2.0];
+    final speeds = AppConfig.playbackSpeedValues;
     final currentSpeed = widget.playbackSpeedListenable.value;
-
-    final result = await showDialog<double>(
+    final screenHeight = MediaQuery.of(context).size.height;
+    final result = await showModalBottomSheet<double>(
       context: context,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Dialog(
-          backgroundColor: isDark ? AppColors.darkCard : AppColors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-          ),
+        return SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: _isFullscreen ? 120 : 140,
+              maxHeight: screenHeight * 0.75,
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: speeds.map((speed) {
                   final selected = (speed - currentSpeed).abs() < 0.01;
-                  return InkWell(
-                    onTap: () => Navigator.of(context).pop(speed),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      child: Text(
-                        '${speed}x',
-                        style: TextStyle(
-                          color: selected
-                              ? AppColors.red
-                              : (isDark
-                                  ? AppColors.white
-                                  : AppColors.black87),
-                          fontWeight:
-                              selected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: _isFullscreen ? 14 : 15,
-                        ),
+                  return ListTile(
+                    title: Text(
+                      '${speed}x',
+                      style: TextStyle(
+                        color: selected
+                            ? AppColors.red
+                            : (isDark ? AppColors.white : AppColors.black87),
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
+                    onTap: () => Navigator.of(context).pop(speed),
                   );
                 }).toList(),
               ),
@@ -563,11 +524,11 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   }
 
   Future<void> _enterPipMode() async {
-    // 隐藏控制�?
+    // 隐藏控制栏
     setState(() => _controlsVisible = false);
     widget.onControlsVisibilityChanged(false);
     _hideTimer?.cancel();
-    // 调用父层�?PIP 逻辑
+    // 调用父层的 PIP 逻辑
     await widget.onEnterPipMode();
   }
 
@@ -582,14 +543,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     return '${twoDigits(minutes)}:${twoDigits(seconds)}';
   }
 
-  void _showDownloadPanel() async {
-    // 如果在全屏模式，先退出全�?
-    if (_isFullscreen && widget.state != null) {
-      _exitFullscreen();
-      // 等待退出全屏动画完�?
-      await Future.delayed(const Duration(milliseconds: 250));
-    }
-
+  void _showDownloadPanel() {
     final theme = Theme.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -603,7 +557,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       barrierDismissible: true,
       barrierLabel: '',
       barrierColor: AppColors.transparent,
-      transitionDuration: const Duration(milliseconds: 0),
+      transitionDuration: AppDurations.instantTransition,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Align(
           alignment: Alignment.bottomCenter,
@@ -637,7 +591,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   Future<void> _takeScreenshot() async {
     try {
       // 使用media_kit的screenshot方法获取真实的视频帧
-      final screenshot = await widget.player.screenshot(format: 'image/png');
+      final screenshot = await widget.player.screenshot(format: AppStrings.screenshotFormatPng);
 
       if (screenshot != null && screenshot.isNotEmpty) {
         await _saveScreenshot(screenshot);
@@ -653,7 +607,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   Future<void> _saveScreenshot(Uint8List imageData) async {
     try {
       if (DeviceUtils.isMobile()) {
-        // 移动端：保存到相�?
+        // 移动端：保存到相册
         await _saveToGallery(imageData);
       } else {
         // PC端：保存到截图文件夹
@@ -664,10 +618,10 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     }
   }
 
-  // 保存到相�?
+  // 保存到相册
   Future<void> _saveToGallery(Uint8List imageData) async {
     try {
-      // 检查权�?
+      // 检查权限
       if (Platform.isAndroid || Platform.isIOS) {
         final status = await Permission.photos.request();
         if (!status.isGranted) {
@@ -676,7 +630,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         }
       }
 
-      // 保存到相�?
+      // 保存到相册
       await Gal.putImageBytes(imageData);
       _showScreenshotToastMessage(AppStrings.screenshotSaved);
     } catch (e) {
@@ -687,48 +641,48 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
   // 保存到截图文件夹
   Future<void> _saveToScreenshotsFolder(Uint8List imageData) async {
     try {
-      // 获取截图文件夹路�?
+      // 获取截图文件夹路径
       Directory screenshotsDir;
 
       if (Platform.isWindows) {
         // Windows平台：C:\Users\用户名\Pictures\Screenshots
         final userProfile = Platform.environment[AppConfig.envUserProfile];
         if (userProfile != null) {
-          // 使用path包构建路径，避免反斜杠问�?
-          final picturesDir = path.join(userProfile, 'Pictures');
-          screenshotsDir = Directory(path.join(picturesDir, 'Screenshots'));
+          // 使用path包构建路径，避免反斜杠问题
+          final picturesDir = path.join(userProfile, AppStrings.directoryPictures);
+          screenshotsDir = Directory(path.join(picturesDir, AppStrings.directoryScreenshots));
         } else {
           //  fallback to documents directory if USERPROFILE is not available
           final documentsDir = await getApplicationDocumentsDirectory();
           screenshotsDir =
-              Directory(path.join(documentsDir.path, 'Screenshots'));
+              Directory(path.join(documentsDir.path, AppStrings.directoryScreenshots));
         }
       } else if (Platform.isMacOS) {
         // macOS平台：~/Pictures/Screenshots
         final homeDir = Platform.environment[AppConfig.envHome];
         if (homeDir != null) {
           screenshotsDir =
-              Directory(path.join(homeDir, 'Pictures', 'Screenshots'));
+              Directory(path.join(homeDir, AppStrings.directoryPictures, AppStrings.directoryScreenshots));
         } else {
           //  fallback to documents directory if HOME is not available
           final documentsDir = await getApplicationDocumentsDirectory();
           screenshotsDir =
-              Directory(path.join(documentsDir.path, 'Screenshots'));
+              Directory(path.join(documentsDir.path, AppStrings.directoryScreenshots));
         }
       } else {
-        // 其他平台：文档目录下的Screenshots文件�?
+        // 其他平台：文档目录下的Screenshots文件夹
         final documentsDir = await getApplicationDocumentsDirectory();
-        screenshotsDir = Directory(path.join(documentsDir.path, 'Screenshots'));
+        screenshotsDir = Directory(path.join(documentsDir.path, AppStrings.directoryScreenshots));
       }
 
-      // 创建文件�?
+      // 创建文件夹
       if (!await screenshotsDir.exists()) {
         await screenshotsDir.create(recursive: true);
       }
 
-      // 生成文件�?
+      // 生成文件名
       final fileName =
-          'screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+          '${AppStrings.screenshotFileNameTemplate}${DateTime.now().millisecondsSinceEpoch}.png';
       final file = File(path.join(screenshotsDir.path, fileName));
 
       // 保存文件
@@ -745,12 +699,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       try {
         final appSupportDir = await getApplicationSupportDirectory();
         final fallbackDir =
-            Directory(path.join(appSupportDir.path, 'Screenshots'));
+            Directory(path.join(appSupportDir.path, AppStrings.directoryScreenshots));
         if (!await fallbackDir.exists()) {
           await fallbackDir.create(recursive: true);
         }
         final fileName =
-            'screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+            '${AppStrings.screenshotFileNameTemplate}${DateTime.now().millisecondsSinceEpoch}.png';
         final file = File(path.join(fallbackDir.path, fileName));
         await file.writeAsBytes(imageData);
         if (await file.exists()) {
@@ -794,7 +748,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
           padding: AppDimens.buttonMdPadding,
           decoration: BoxDecoration(
             color: AppColors.overlayHeavy,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppDimens.radiusCircle8,
           ),
           child: Text(
             _screenshotToastMessage,
@@ -1061,14 +1015,8 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         child: IgnorePointer(
           ignoring: !_controlsVisible || _isLocked,
           child: GestureDetector(
-            onTap: () async {
+            onTap: () {
               _onUserInteraction();
-              // 如果在全屏模式，先退出全�?
-              if (_isFullscreen && widget.state != null) {
-                _exitFullscreen();
-                // 等待退出全屏动画完�?
-                await Future.delayed(const Duration(milliseconds: 250));
-              }
               widget.onNetdiskSearch?.call();
             },
             behavior: HitTestBehavior.opaque,
@@ -1102,10 +1050,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
             onTap: () async {
               _onUserInteraction();
               if (!widget.live && widget.player != null) {
-                try {
-                  widget.player.pause();
-                } catch (e) {
-                }
+                widget.player.pause();
               }
               await _showDLNADialog();
             },
@@ -1158,7 +1103,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         child: IgnorePointer(
           ignoring: !_controlsVisible || _isLocked,
           child: Container(
-            height: 24,
+            height: AppDimens.playerProgressBarHeight,
             margin: AppDimens.horizontalLgPadding,
             child: _MobileVideoProgressBar(
               player: widget.player,
@@ -1193,7 +1138,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
     final position = _dragPosition ?? _position;
     final duration = _duration;
     return Positioned(
-      bottom: _isFullscreen ? 4.0 : -6.0,
+      bottom: _isFullscreen ? AppDimens.bottomControlsFullscreenBottom : AppDimens.bottomControlsNonFullscreenBottom,
       left: 0,
       right: 0,
       child: AnimatedOpacity(
@@ -1202,23 +1147,18 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         child: IgnorePointer(
           ignoring: !_controlsVisible || _isLocked,
           child: Padding(
-            padding: EdgeInsets.only(
-              left: _isFullscreen ? 16.0 : 8.0,
-              right: _isFullscreen ? 16.0 : 8.0,
-              bottom: _isFullscreen ? 8.0 : 8.0,
-            ),
+            padding: _isFullscreen ? AppDimens.bottomControlsPaddingFullscreen : AppDimens.bottomControlsPaddingNonFullscreen,
             child: Row(
               children: [
                 GestureDetector(
                   onTap: _togglePlayPause,
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding:
-                        EdgeInsets.fromLTRB(_isFullscreen ? 8 : 6, 8, 0, 8),
+                    padding: _isFullscreen ? AppDimens.playerControlPlayButtonPadding : AppDimens.playerControlPlayButtonPaddingNarrow,
                     child: Icon(
                       _isPlaying ? Icons.pause : Icons.play_arrow,
                       color: AppColors.white,
-                      size: _isFullscreen ? 24 : 22,
+                      size: _isFullscreen ? AppDimens.iconLg : AppDimens.iconSize22,
                     ),
                   ),
                 ),
@@ -1230,19 +1170,18 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                      padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                       child: Icon(
                         Icons.skip_next,
                         color: AppColors.white,
-                        size: _isFullscreen ? 24 : 22,
+                        size: _isFullscreen ? AppDimens.iconLg : AppDimens.iconSize22,
                       ),
                     ),
                   ),
                 if (!widget.live)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                      padding: AppDimens.playerTimePadding,
                       child: Text(
                         '${_formatDuration(position)} / ${_formatDuration(duration)}',
                         style:
@@ -1260,12 +1199,11 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                      padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                       child: Icon(
                         Icons.download,
                         color: AppColors.white,
-                        size: _isFullscreen ? 20 : 18,
+                        size: _isFullscreen ? AppDimens.iconSize20 : AppDimens.iconMd,
                       ),
                     ),
                   ),
@@ -1277,14 +1215,13 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                         onTap: _openDanmakuSettings,
                         behavior: HitTestBehavior.opaque,
                         child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                          padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                           child: Opacity(
                             opacity: enabled ? 1.0 : 0.4,
                             child: SvgPicture.asset(
                               'assets/images/danmu.svg',
-                              width: _isFullscreen ? 20 : 18,
-                              height: _isFullscreen ? 20 : 18,
+                              width: _isFullscreen ? AppDimens.iconSize20 : AppDimens.iconMd,
+                              height: _isFullscreen ? AppDimens.iconSize20 : AppDimens.iconMd,
                               colorFilter: const ColorFilter.mode(
                                   AppColors.white, BlendMode.srcIn),
                             ),
@@ -1302,12 +1239,11 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                      padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                       child: Icon(
                         Icons.camera_alt,
                         color: AppColors.white,
-                        size: _isFullscreen ? 20 : 18,
+                        size: _isFullscreen ? AppDimens.iconSize20 : AppDimens.iconMd,
                       ),
                     ),
                   ),
@@ -1319,12 +1255,11 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                      padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                       child: Icon(
                         Icons.speed,
                         color: AppColors.white,
-                        size: _isFullscreen ? 20 : 18,
+                        size: _isFullscreen ? AppDimens.iconSize20 : AppDimens.iconMd,
                       ),
                     ),
                   ),
@@ -1336,12 +1271,11 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                      padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                       child: Icon(
                         Icons.picture_in_picture_alt,
                         color: AppColors.white,
-                        size: _isFullscreen ? 20 : 18,
+                        size: _isFullscreen ? AppDimens.iconSize20 : AppDimens.iconMd,
                       ),
                     ),
                   ),
@@ -1356,12 +1290,11 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                   },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: _isFullscreen ? 8 : 6, vertical: 8),
+                    padding: _isFullscreen ? AppDimens.playerControlButtonPadding : AppDimens.playerControlButtonPaddingNarrow,
                     child: Icon(
                       _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                       color: AppColors.white,
-                      size: _isFullscreen ? 24 : 22,
+                      size: _isFullscreen ? AppDimens.iconLg : AppDimens.iconSize22,
                     ),
                   ),
                 ),
@@ -1381,12 +1314,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('2x',
+          Text(AppStrings.playbackSpeed2x,
               style: TextStyle(
                   color: AppColors.white,
                   fontSize: AppDimens.fontSizeXxl,
                   fontWeight: FontWeight.bold)),
-          SizedBox(width: 6),
+          Gap.w6,
           Icon(Icons.fast_forward, color: AppColors.white, size: 32),
         ],
       ),
@@ -1400,10 +1333,10 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       bottom: 0,
       child: Center(
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: AppDimens.cardPadding,
           decoration: BoxDecoration(
             color: AppColors.overlayHeavy,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: AppDimens.radiusCircle24,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1413,18 +1346,18 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                     ? Icons.brightness_low
                     : Icons.brightness_high,
                 color: AppColors.white,
-                size: 24,
+                size: AppDimens.iconLg,
               ),
               Gap.h8,
               SizedBox(
                 height: 100,
-                width: 4,
+                width: AppDimens.spacingXs,
                 child: Stack(
                   children: [
                     Container(
                       decoration: BoxDecoration(
                         color: AppColors.white.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: AppDimens.radiusCircle2,
                       ),
                     ),
                     Align(
@@ -1434,7 +1367,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: AppColors.white,
-                            borderRadius: BorderRadius.circular(2),
+                            borderRadius: AppDimens.radiusCircle2,
                           ),
                         ),
                       ),
@@ -1468,7 +1401,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
             padding: AppDimens.cardPadding,
             decoration: BoxDecoration(
               color: AppColors.overlayHeavy,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppDimens.radiusCircle24,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1480,18 +1413,18 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                           ? Icons.volume_down
                           : Icons.volume_up,
                   color: AppColors.white,
-                  size: 24,
+                  size: AppDimens.iconLg,
                 ),
                 Gap.h8,
                 SizedBox(
                   height: 100,
-                  width: 4,
+                  width: AppDimens.spacingXs,
                   child: Stack(
                     children: [
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: AppDimens.radiusCircle2,
                         ),
                       ),
                       Align(
@@ -1501,7 +1434,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                           child: Container(
                             decoration: BoxDecoration(
                               color: AppColors.white,
-                              borderRadius: BorderRadius.circular(2),
+                              borderRadius: AppDimens.radiusCircle2,
                             ),
                           ),
                         ),
@@ -1547,12 +1480,12 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
                 padding: AppDimens.cardPadding,
                 decoration: BoxDecoration(
                   color: AppColors.overlayMedium,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: AppDimens.radiusCircle24,
                 ),
                 child: Icon(
                   _isLocked ? Icons.lock : Icons.lock_open,
                   color: AppColors.white,
-                  size: 24,
+                  size: AppDimens.iconLg,
                 ),
               ),
             ),
@@ -1592,21 +1525,18 @@ class _MobileVideoProgressBar extends StatefulWidget {
 class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
-  bool _isSeeking = false; // 新增：标记是否正�?seek
+  bool _isSeeking = false; // 新增：标记是否正在 seek
   StreamSubscription<Duration>? _positionSubscription;
 
   @override
   void initState() {
     super.initState();
     if (widget.player != null) {
-      try {
-        _positionSubscription = widget.player.stream.position.listen((_) {
+      _positionSubscription = widget.player.stream.position.listen((_) {
           if (mounted && !_isDragging && !_isSeeking) {
             setState(() {});
           }
         });
-      } catch (e) {
-      }
     }
   }
 
@@ -1665,10 +1595,7 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                   _isSeeking = true; // 标记开始 seek
                 });
 
-                try {
-                  await widget.player.seek(seekPosition);
-                } catch (e) {
-                }
+                await widget.player.seek(seekPosition);
 
                 // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
                 await Future.delayed(AppDurations.fastest);
@@ -1693,13 +1620,10 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                 );
 
                 setState(() {
-                  _isSeeking = true; // 标记开�?seek
+                  _isSeeking = true; // 标记开始 seek
                 });
 
-                try {
-                  await widget.player.seek(seekPosition);
-                } catch (e) {
-                }
+                await widget.player.seek(seekPosition);
 
                 // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
                 await Future.delayed(AppDurations.fastest);
@@ -1714,7 +1638,7 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
               }
             },
       child: Container(
-        height: 24,
+        height: AppDimens.playerProgressBarHeight,
         color: AppColors.transparent,
         child: Center(
           child: LayoutBuilder(
@@ -1731,9 +1655,9 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                     right: 0,
                     top: 9,
                     child: Container(
-                      height: 6,
+                      height: AppDimens.iconHeightSm,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: AppDimens.radiusCircle3,
                         color: AppColors.white.withValues(alpha: 0.3),
                       ),
                     ),
@@ -1743,9 +1667,9 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                     top: 9,
                     child: Container(
                       width: progressValue * progressWidth,
-                      height: 6,
+                      height: AppDimens.iconHeightSm,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: AppDimens.radiusCircle3,
                         color: AppColors.red,
                       ),
                     ),
@@ -1758,16 +1682,16 @@ class _MobileVideoProgressBarState extends State<_MobileVideoProgressBar> {
                         scale: widget.isSeekingViaSwipe ? 1.25 : 1.0,
                         duration: AppDurations.fast,
                         child: Container(
-                          width: 16,
-                          height: 16,
+                          width: AppDimens.spacingLg,
+                          height: AppDimens.spacingLg,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppColors.red,
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.black30,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                                blurRadius: AppDimens.shadowBlur4,
+                                offset: AppDimens.offset02,
                               ),
                             ],
                           ),

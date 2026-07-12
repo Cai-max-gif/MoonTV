@@ -3,6 +3,7 @@ import '../constants/app_dimensions.dart';
 import 'dart:io' show Platform;
 import 'package:macos_window_utils/macos_window_utils.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 
 class ThemeService extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -72,32 +73,32 @@ class ThemeService extends ChangeNotifier {
               bodyLarge: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w400,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               bodyMedium: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w400,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               bodySmall: const TextStyle(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w400,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               titleLarge: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               titleMedium: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               titleSmall: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
             )
         : const TextTheme(
@@ -127,7 +128,7 @@ class ThemeService extends ChangeNotifier {
         elevation: AppDimens.elevationSm,
       ),
       textTheme: textTheme,
-      fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
+      fontFamily: Platform.isWindows ? AppConfig.fontFamilyWindows : null,
     );
   }
 
@@ -138,32 +139,32 @@ class ThemeService extends ChangeNotifier {
               bodyLarge: const TextStyle(
                 color: AppColors.white,
                 fontWeight: FontWeight.w400,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               bodyMedium: const TextStyle(
                 color: AppColors.white,
                 fontWeight: FontWeight.w400,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               bodySmall: const TextStyle(
                 color: AppColors.textDarkSecondary,
                 fontWeight: FontWeight.w400,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               titleLarge: const TextStyle(
                 color: AppColors.white,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               titleMedium: const TextStyle(
                 color: AppColors.white,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
               titleSmall: const TextStyle(
                 color: AppColors.white,
                 fontWeight: FontWeight.w500,
-                fontFamily: 'Microsoft YaHei',
+                fontFamily: AppConfig.fontFamilyWindows,
               ),
             )
         : const TextTheme(
@@ -193,7 +194,7 @@ class ThemeService extends ChangeNotifier {
         elevation: AppDimens.elevationSm,
       ),
       textTheme: textTheme,
-      fontFamily: Platform.isWindows ? 'Microsoft YaHei' : null,
+      fontFamily: Platform.isWindows ? AppConfig.fontFamilyWindows : null,
     );
   }
 }

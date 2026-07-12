@@ -23,9 +23,8 @@ class SimpleTabSwitcher extends StatelessWidget {
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
         return Container(
-          height: 32, // 与 CapsuleTabSwitcher 相同的高度
-          margin: const EdgeInsets.symmetric(
-              vertical: 4), // 与 CapsuleTabSwitcher 相同的 margin
+          height: AppDimens.capsuleTabHeight, // 与 CapsuleTabSwitcher 相同的高度
+          margin: AppDimens.marginVertical4,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -97,8 +96,8 @@ class _SimpleTabHoverState extends State<_SimpleTabHover> {
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          height: 32, // 确保与容器高度一致
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          height: AppDimens.capsuleTabHeight, // 确保与容器高度一致
+          padding: AppDimens.paddingHorizontal8,
           alignment: Alignment.center, // 垂直居中
           child: Text(
             widget.label,

@@ -31,7 +31,7 @@ class UserMenu extends StatefulWidget {
 
 class _UserMenuState extends State<UserMenu> {
   String? _username;
-  String _role = 'user';
+  String _role = AppConfig.userRoleUser;
   String _version = '';
   bool _localSearch = false;
 
@@ -67,11 +67,10 @@ class _UserMenuState extends State<UserMenu> {
 
   String _parseRoleFromCookies(String? cookies) {
     if (cookies == null || cookies.isEmpty) {
-      return 'user';
+      return AppConfig.userRoleUser;
     }
 
     try {
-      // 解析cookies字符串
       final cookieMap = <String, String>{};
       final cookiePairs = cookies.split(';');
 
@@ -88,26 +87,23 @@ class _UserMenuState extends State<UserMenu> {
         }
       }
 
-      final authCookie = cookieMap['user_auth'] ?? cookieMap['auth'];
+      final authCookie = cookieMap[AppConfig.jsonUserAuth] ?? cookieMap[AppConfig.jsonAuth];
       if (authCookie == null) {
-        return 'user';
+        return AppConfig.userRoleUser;
       }
 
-      // 处理可能的双重编码
       String decoded = Uri.decodeComponent(authCookie);
 
-      // 如果解码后仍然包含 %，说明是双重编码，需要再次解码
       if (decoded.contains('%')) {
         decoded = Uri.decodeComponent(decoded);
       }
 
       final authData = json.decode(decoded);
-      final role = authData['role'] as String?;
+      final role = authData[AppConfig.jsonRole] as String?;
 
-      return role ?? 'user';
+      return role ?? AppConfig.userRoleUser;
     } catch (e) {
-      // 解析失败时默认为user
-      return 'user';
+      return AppConfig.userRoleUser;
     }
   }
 
@@ -133,7 +129,7 @@ class _UserMenuState extends State<UserMenu> {
     try {
       await DoubanCacheService().clearAll();
       // 同时清空 Bangumi 的函数级与内存级缓存
-      PageCacheService().clearCache('bangumi_calendar');
+      PageCacheService().clearCache(AppConfig.cacheKeyBangumiCalendar);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -207,15 +203,15 @@ class _UserMenuState extends State<UserMenu> {
     Color color;
 
     switch (_role) {
-      case 'admin':
+      case AppConfig.userRoleAdmin:
         label = AppStrings.profileRoleAdmin;
-        color = AppColors.orange; // 橙黄色
+        color = AppColors.orange;
         break;
-      case 'owner':
+      case AppConfig.userRoleOwner:
         label = AppStrings.profileRoleOwner;
-        color = AppColors.violet; // 紫色
+        color = AppColors.violet;
         break;
-      case 'user':
+      case AppConfig.userRoleUser:
       default:
         label = AppStrings.profileRoleUser;
         color = AppColors.emerald; // 绿色
@@ -223,7 +219,7 @@ class _UserMenuState extends State<UserMenu> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: AppDimens.paddingHorizontal8Vertical2,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -250,12 +246,12 @@ class _UserMenuState extends State<UserMenu> {
     return Material(
       color: AppColors.transparent,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: AppDimens.paddingHorizontal16Vertical10,
         child: Row(
           children: [
             Icon(
               icon,
-              size: 20,
+              size: AppDimens.iconSize20,
               color: widget.isDarkMode
                   ? AppColors.gray400
                   : AppColors.gray500,
@@ -280,24 +276,24 @@ class _UserMenuState extends State<UserMenu> {
               },
               child: AnimatedContainer(
                 duration: AppDurations.normal,
-                width: 44,
-                height: 24,
+                width: AppDimens.switchWidth,
+                height: AppDimens.switchHeight,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                   color: value
                       ? AppColors.emerald
                       : (widget.isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray),
+                          ? AppColors.gray700
+                          : AppColors.gray200),
                 ),
                 child: AnimatedAlign(
                   duration: AppDurations.normal,
                   alignment:
                       value ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    width: 20,
-                    height: 20,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    width: AppDimens.iconSize20,
+                    height: AppDimens.iconSize20,
+                    margin: AppDimens.marginHorizontal2,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
           color: AppColors.white,
@@ -324,8 +320,8 @@ class _UserMenuState extends State<UserMenu> {
             child: GestureDetector(
               onTap: () {}, // 阻止点击菜单内容时关闭
               child: Container(
-                width: 280,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
+                width: AppDimens.userMenuWidth,
+                margin: AppDimens.marginHorizontal20,
                 decoration: BoxDecoration(
                   color: widget.isDarkMode
                       ? AppColors.inputBgDark
@@ -335,7 +331,7 @@ class _UserMenuState extends State<UserMenu> {
                     BoxShadow(
                       color: AppColors.black30,
                       blurRadius: AppDimens.shadowBlurLg,
-                      offset: const Offset(0, 8),
+                      offset: AppDimens.offset08,
                     ),
                   ],
                 ),
@@ -344,7 +340,7 @@ class _UserMenuState extends State<UserMenu> {
                   children: [
                     // 用户信息区域
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: AppDimens.paddingAll20,
                       child: Column(
                         children: [
                           Text(
@@ -383,10 +379,10 @@ class _UserMenuState extends State<UserMenu> {
                     ),
                     // 分割线
                     Container(
-                      height: 1,
+                      height: AppDimens.dividerThicknessThin,
                       color: widget.isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray,
+                          ? AppColors.gray700
+                          : AppColors.gray200,
                     ),
                     // 本地搜索选项
                     _buildToggleOption(
@@ -402,10 +398,10 @@ class _UserMenuState extends State<UserMenu> {
                     ),
                     // 分割线
                     Container(
-                      height: 1,
+                      height: AppDimens.dividerThicknessThin,
                       color: widget.isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray,
+                          ? AppColors.gray700
+                          : AppColors.gray200,
                     ),
                     // 清除豆瓣缓存按钮
                     Material(
@@ -413,15 +409,12 @@ class _UserMenuState extends State<UserMenu> {
                       child: InkWell(
                         onTap: _handleClearDoubanCache,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+                          padding: AppDimens.paddingHorizontal16Vertical10,
                           child: Row(
                             children: [
                               const Icon(
                                 LucideIcons.trash2,
-                                size: 20,
+                                size: AppDimens.iconSize20,
                                 color: AppColors.orange,
                               ),
                               Gap.w12,
@@ -442,10 +435,10 @@ class _UserMenuState extends State<UserMenu> {
                     ),
                     // 分割线
                     Container(
-                      height: 1,
+                      height: AppDimens.dividerThicknessThin,
                       color: widget.isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray,
+                          ? AppColors.gray700
+                          : AppColors.gray200,
                     ),
                     // 检查更新按钮
                     Material(
@@ -453,15 +446,12 @@ class _UserMenuState extends State<UserMenu> {
                       child: InkWell(
                         onTap: _handleCheckUpdate,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+                          padding: AppDimens.paddingHorizontal16Vertical10,
                           child: Row(
                             children: [
                               const Icon(
                                 LucideIcons.download,
-                                size: 20,
+                                size: AppDimens.iconSize20,
                                 color: AppColors.blue,
                               ),
                               Gap.w12,
@@ -482,10 +472,10 @@ class _UserMenuState extends State<UserMenu> {
                     ),
                     // 分割线
                     Container(
-                      height: 1,
+                      height: AppDimens.dividerThicknessThin,
                       color: widget.isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray,
+                          ? AppColors.gray700
+                          : AppColors.gray200,
                     ),
                     // 登出按钮
                     Material(
@@ -493,15 +483,12 @@ class _UserMenuState extends State<UserMenu> {
                       child: InkWell(
                         onTap: _handleLogout,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+                          padding: AppDimens.paddingHorizontal16Vertical10,
                           child: Row(
                             children: [
                               const Icon(
                                 LucideIcons.logOut,
-                                size: 20,
+                                size: AppDimens.iconSize20,
                                 color: AppColors.red,
                               ),
                               Gap.w12,
@@ -520,10 +507,10 @@ class _UserMenuState extends State<UserMenu> {
                     ),
                     // 分割线
                     Container(
-                      height: 1,
+                      height: AppDimens.dividerThicknessThin,
                       color: widget.isDarkMode
-                          ? AppColors.borderDarkGray
-                          : AppColors.borderLightGray,
+                          ? AppColors.gray700
+                          : AppColors.gray200,
                     ),
                     // 版本号
                     MouseRegion(
@@ -543,10 +530,7 @@ class _UserMenuState extends State<UserMenu> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
+                          padding: AppDimens.paddingHorizontal20Vertical12,
                           child: Center(
                             child: Text(
                               _version.isEmpty ? AppConfig.defaultVersion : _version,

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../models/bangumi.dart';
 import '../utils/device_utils.dart';
 import '../utils/font_utils.dart';
@@ -17,7 +18,7 @@ class BangumiGrid extends StatelessWidget {
   final String? errorMessage;
   final Function(VideoInfo) onVideoTap;
   final Function(VideoInfo, VideoMenuAction)? onGlobalMenuAction;
-  final String contentType; // 'anime' 或其他
+  final String contentType;
 
   const BangumiGrid({
     super.key,
@@ -26,7 +27,7 @@ class BangumiGrid extends StatelessWidget {
     this.errorMessage,
     required this.onVideoTap,
     this.onGlobalMenuAction,
-    this.contentType = 'anime', // 默认为动漫
+    this.contentType = AppConfig.stypeAnime,
   });
 
   @override
@@ -54,16 +55,16 @@ class BangumiGrid extends StatelessWidget {
         final isTablet = DeviceUtils.isTablet(context);
         
         final double screenWidth = constraints.maxWidth;
-        const double padding = 16.0;
-        const double spacing = 12.0;
+        final double padding = AppDimens.gridPaddingHorizontal;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-        const double minItemWidth = 80.0;
+        final double minItemWidth = AppDimens.gridMinItemWidth;
         final double calculatedItemWidth = availableWidth / crossAxisCount;
         final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
         final double itemHeight = itemWidth * 2.0;
         
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: AppDimens.gridContentPadding,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -114,7 +115,7 @@ class BangumiGrid extends StatelessWidget {
         children: [
           const Icon(
             Icons.error_outline,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -128,7 +129,7 @@ class BangumiGrid extends StatelessWidget {
           ),
           Gap.h12,
           Text(
-            errorMessage ?? '未知错误',
+            errorMessage ?? AppStrings.msgUnknownError,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: AppColors.gray475,
@@ -141,8 +142,8 @@ class BangumiGrid extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    final bool isAnime = contentType == 'anime';
-    final String contentName = isAnime ? '番剧' : '内容';
+    final bool isAnime = contentType == AppConfig.stypeAnime;
+    final String contentName = isAnime ? AppStrings.animeSeries : AppStrings.content;
     
     return Center(
       child: Column(
@@ -150,12 +151,12 @@ class BangumiGrid extends StatelessWidget {
         children: [
           Icon(
             isAnime ? Icons.tv_outlined : Icons.movie_filter_outlined,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
           Text(
-            '暂无$contentName',
+            AppStrings.noContentWithName(contentName),
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeXxl,
               fontWeight: FontWeight.w500,
@@ -164,7 +165,7 @@ class BangumiGrid extends StatelessWidget {
           ),
           Gap.h12,
           Text(
-            '今日暂无新番放送',
+            AppStrings.animeDailyBroadcast,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: AppColors.gray475,
@@ -183,16 +184,16 @@ class BangumiGrid extends StatelessWidget {
         final isTablet = DeviceUtils.isTablet(context);
         
         final double screenWidth = constraints.maxWidth;
-        const double padding = 16.0;
-        const double spacing = 12.0;
+        final double padding = AppDimens.gridPaddingHorizontal;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-        const double minItemWidth = 80.0;
+        final double minItemWidth = AppDimens.gridMinItemWidth;
         final double calculatedItemWidth = availableWidth / crossAxisCount;
         final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
         final double itemHeight = itemWidth * 2.0;
         
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: AppDimens.gridContentPadding,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -209,7 +210,7 @@ class BangumiGrid extends StatelessWidget {
             return VideoCard(
               videoInfo: videoInfo,
               onTap: () => onVideoTap(videoInfo),
-              from: 'bangumi',
+              from: AppConfig.sourceBangumi,
               cardWidth: itemWidth,
               onGlobalMenuAction: onGlobalMenuAction != null ? (action) => onGlobalMenuAction!(videoInfo, action) : null,
               isFavorited: false, 

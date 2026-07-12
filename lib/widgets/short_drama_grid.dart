@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../utils/device_utils.dart';
 import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
@@ -50,7 +51,7 @@ class ShortDramaGrid extends StatelessWidget {
         final int skeletonCount = params.isTablet ? params.crossAxisCount * 2 : 6;
 
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: AppDimens.gridContentPadding,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -98,7 +99,7 @@ class ShortDramaGrid extends StatelessWidget {
         children: [
           const Icon(
             Icons.error_outline,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -131,7 +132,7 @@ class ShortDramaGrid extends StatelessWidget {
         children: [
           const Icon(
             Icons.tv_outlined,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -145,7 +146,7 @@ class ShortDramaGrid extends StatelessWidget {
           ),
           Gap.h12,
           Text(
-            '敬请期待更多精彩内容',
+            AppStrings.comingSoonMore,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: AppColors.textSecondary,
@@ -162,7 +163,7 @@ class ShortDramaGrid extends StatelessWidget {
         final params = _computeGridParams(context, constraints.maxWidth);
 
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: AppDimens.gridContentPadding,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -179,7 +180,7 @@ class ShortDramaGrid extends StatelessWidget {
             return VideoCard(
               videoInfo: videoInfo,
               onTap: () => onVideoTap(shortDrama),
-              from: 'shortdrama',
+              from: AppConfig.sourceShortDrama,
               cardWidth: params.itemWidth,
               onGlobalMenuAction: onGlobalMenuAction != null
                   ? (action) => onGlobalMenuAction!(shortDrama, action)
@@ -206,7 +207,7 @@ class ShortDramaGrid extends StatelessWidget {
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: AppDimens.gridContentPadding,
       sliver: SliverLayoutBuilder(
         builder: (context, constraints) {
           // SliverPadding 已减去 padding，此处加回以匹配 _computeGridParams 的 padding 计算
@@ -226,7 +227,7 @@ class ShortDramaGrid extends StatelessWidget {
                 return VideoCard(
                   videoInfo: videoInfo,
                   onTap: () => onVideoTap(shortDrama),
-                  from: 'shortdrama',
+                  from: AppConfig.sourceShortDrama,
                   cardWidth: params.itemWidth,
                   onGlobalMenuAction: onGlobalMenuAction != null
                       ? (action) => onGlobalMenuAction!(shortDrama, action)
@@ -243,14 +244,14 @@ class ShortDramaGrid extends StatelessWidget {
   }
 
   static _GridParams _computeGridParams(BuildContext context, double screenWidth) {
-    const double padding = 16.0;
-    const double spacing = 12.0;
+    final double padding = AppDimens.gridPaddingHorizontal;
+    final double spacing = AppDimens.gridSpacingMd;
     // 使用 DeviceUtils.getTabletColumnCount(context) 与电影页面保持一致，
     // 基于 MediaQuery.of(context).size.width 判断列数
     final int crossAxisCount = DeviceUtils.getTabletColumnCount(context);
     final bool isTablet = screenWidth >= 600;
     final double availableWidth = screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-    const double minItemWidth = 80.0;
+    final double minItemWidth = AppDimens.gridMinItemWidth;
     final double calculatedItemWidth = availableWidth / crossAxisCount;
     final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
     final double itemHeight = itemWidth * 2.0;
@@ -267,7 +268,7 @@ class ShortDramaGrid extends StatelessWidget {
           return SizedBox(
             height: (params.itemHeight + 6) * (skeletonCount / params.crossAxisCount).ceil(),
             child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: AppDimens.gridContentPadding,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -289,20 +290,20 @@ class ShortDramaGrid extends StatelessWidget {
 
   VideoInfo _convertToVideoInfo(Map<String, dynamic> shortDrama) {
     return VideoInfo(
-      id: shortDrama['id'].toString(),
-      title: shortDrama['name'] ?? '',
-      year: shortDrama['update_time']?.toString().substring(0, 4) ?? '',
-      cover: shortDrama['cover'] ?? shortDrama['backdrop'] ?? '',
-      source: 'shortdrama',
-      sourceName: AppStrings.sourceShortDrama,
+      id: shortDrama[AppConfig.jsonId].toString(),
+      title: shortDrama[AppConfig.jsonName] ?? '',
+      year: shortDrama[AppConfig.jsonUpdateTime]?.toString().substring(0, 4) ?? '',
+      cover: shortDrama[AppConfig.jsonCover] ?? shortDrama[AppConfig.jsonBackdrop] ?? '',
+      source: AppConfig.sourceShortDrama,
+      sourceName: AppStrings.shortDramaName,
       index: 1,
       totalEpisodes:
-          int.tryParse(shortDrama['episode_count']?.toString() ?? '0') ?? 0,
+          int.tryParse(shortDrama[AppConfig.jsonEpisodeCount]?.toString() ?? '0') ?? 0,
       playTime: 0,
       totalTime: 0,
       saveTime: DateTime.now().millisecondsSinceEpoch,
-      searchTitle: shortDrama['name'] ?? '',
-      rate: shortDrama['score']?.toString() ?? shortDrama['vote_average']?.toString() ?? '',
+      searchTitle: shortDrama[AppConfig.jsonName] ?? '',
+      rate: shortDrama[AppConfig.jsonScore]?.toString() ?? shortDrama[AppConfig.jsonVoteAverage]?.toString() ?? '',
     );
   }
 }

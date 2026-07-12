@@ -1,3 +1,5 @@
+﻿import '../constants/app_config.dart';
+
 class EpgProgram {
   final String channelId;
   final String title;
@@ -38,11 +40,11 @@ class EpgProgram {
 
   factory EpgProgram.fromXml(Map<String, dynamic> data) {
     return EpgProgram(
-      channelId: data['channel'] ?? '',
-      title: data['title'] ?? '',
-      startTime: DateTime.parse(data['start']),
-      endTime: DateTime.parse(data['stop']),
-      description: data['desc'],
+      channelId: data[AppConfig.jsonChannel] ?? '',
+      title: data[AppConfig.jsonTitle] ?? '',
+      startTime: DateTime.parse(data[AppConfig.jsonStart]),
+      endTime: DateTime.parse(data[AppConfig.jsonStop]),
+      description: data[AppConfig.jsonDesc],
     );
   }
 
@@ -51,10 +53,10 @@ class EpgProgram {
       Map<String, dynamic> json, String channelId) {
     return EpgProgram(
       channelId: channelId,
-      title: json['title'] as String? ?? '',
-      startTime: _parseDateTime(json['start'] as String? ?? ''),
-      endTime: _parseDateTime(json['end'] as String? ?? ''),
-      description: json['description'] as String?,
+      title: json[AppConfig.jsonTitle] as String? ?? '',
+      startTime: _parseDateTime(json[AppConfig.jsonStart] as String? ?? ''),
+      endTime: _parseDateTime(json[AppConfig.jsonEnd] as String? ?? ''),
+      description: json[AppConfig.jsonDescription] as String?,
     );
   }
 
@@ -98,13 +100,13 @@ class EpgData {
   });
 
   factory EpgData.fromJson(Map<String, dynamic> json) {
-    final tvgId = json['tvgId'] as String? ?? '';
-    final programsList = json['programs'] as List<dynamic>? ?? [];
+    final tvgId = json[AppConfig.jsonTvgId] as String? ?? '';
+    final programsList = json[AppConfig.jsonPrograms] as List<dynamic>? ?? [];
 
     return EpgData(
       tvgId: tvgId,
-      source: json['source'] as String? ?? '',
-      epgUrl: json['epgUrl'] as String? ?? '',
+      source: json[AppConfig.jsonSource] as String? ?? '',
+      epgUrl: json[AppConfig.jsonEpgUrl] as String? ?? '',
       programs: programsList
           .map((item) =>
               EpgProgram.fromApiJson(item as Map<String, dynamic>, tvgId))

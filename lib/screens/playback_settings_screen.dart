@@ -2,6 +2,7 @@ import 'dart:io';
 import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/user_data_service.dart';
@@ -27,7 +28,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
   late TextEditingController _skipEndingDurationController;
 
   // 倍速列表
-  final List<double> _playbackSpeeds = [0.5, 0.75, 1.0, 1.5, 2.0];
+  final List<double> _playbackSpeeds = AppConfig.playbackSpeedValues;
   // 当前选中的倍速索引
   late int _selectedSpeedIndex;
 
@@ -122,12 +123,12 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
       backgroundColor:
           isDarkMode ? AppColors.black : AppColors.grayBg,
       appBar: AppBar(
-        backgroundColor: isDarkMode ? AppColors.cardDark : Colors.white,
+        backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.white,
         elevation: AppDimens.elevationNone,
         leading: IconButton(
           icon: Icon(
             LucideIcons.arrowLeft,
-            color: isDarkMode ? Colors.white : AppColors.textDarkGray,
+            color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -136,7 +137,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : AppColors.textDarkGray,
+            color: isDarkMode ? AppColors.white : AppColors.textDarkGray,
           ),
         ),
       ),
@@ -147,13 +148,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           Container(
             padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              color: isDarkMode ? AppColors.cardDark : AppColors.white,
               borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.098),
+                  color: AppColors.black10,
                   blurRadius: AppDimens.shadowBlurSm,
-                  offset: const Offset(0, 2),
+                  offset: AppDimens.offset02,
                 ),
               ],
             ),
@@ -174,7 +175,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : AppColors.textDarkGray,
+                            isDarkMode ? AppColors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -189,8 +190,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   },
                   activeThumbColor: AppColors.accent,
                   inactiveTrackColor: isDarkMode
-                      ? AppColors.borderDarkGray
-                      : AppColors.borderLightGray,
+                      ? AppColors.gray700
+                      : AppColors.gray200,
                 ),
               ],
             ),
@@ -202,13 +203,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           Container(
             padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              color: isDarkMode ? AppColors.cardDark : AppColors.white,
               borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.098),
+                  color: AppColors.black10,
                   blurRadius: AppDimens.shadowBlurSm,
-                  offset: const Offset(0, 2),
+                  offset: AppDimens.offset02,
                 ),
               ],
             ),
@@ -229,7 +230,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : AppColors.textDarkGray,
+                            isDarkMode ? AppColors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -244,8 +245,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   },
                   activeThumbColor: AppColors.violet,
                   inactiveTrackColor: isDarkMode
-                      ? AppColors.borderDarkGray
-                      : AppColors.borderLightGray,
+                      ? AppColors.gray700
+                      : AppColors.gray200,
                 ),
               ],
             ),
@@ -258,13 +259,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
             Container(
               padding: AppDimens.listTilePadding,
               decoration: BoxDecoration(
-                color: isDarkMode ? AppColors.cardDark : Colors.white,
+                color: isDarkMode ? AppColors.cardDark : AppColors.white,
                 borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.098),
+                    color: AppColors.black10,
                     blurRadius: AppDimens.shadowBlurSm,
-                    offset: const Offset(0, 2),
+                    offset: AppDimens.offset02,
                   ),
                 ],
               ),
@@ -285,7 +286,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w600,
                           color: isDarkMode
-                              ? Colors.white
+                              ? AppColors.white
                               : AppColors.textDarkGray,
                         ),
                       ),
@@ -301,8 +302,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                     },
                     activeThumbColor: AppColors.blue,
                     inactiveTrackColor: isDarkMode
-                        ? AppColors.borderDarkGray
-                        : AppColors.borderLightGray,
+                        ? AppColors.gray700
+                        : AppColors.gray200,
                   ),
                 ],
               ),
@@ -314,13 +315,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           Container(
             padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              color: isDarkMode ? AppColors.cardDark : AppColors.white,
               borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.098),
+                  color: AppColors.black10,
                   blurRadius: AppDimens.shadowBlurSm,
-                  offset: const Offset(0, 2),
+                  offset: AppDimens.offset02,
                 ),
               ],
             ),
@@ -341,7 +342,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : AppColors.textDarkGray,
+                            isDarkMode ? AppColors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -350,7 +351,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                 Row(
                   children: [
                     Text(
-                      '0.5x',
+                      AppStrings.playbackSpeedLabelSlowest,
                       style: FontUtils.poppins(
                         fontSize: AppDimens.fontSizeMd,
                         color: isDarkMode
@@ -368,8 +369,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           thumbColor: AppColors.amber,
                           activeTrackColor: AppColors.amber,
                           inactiveTrackColor: isDarkMode
-                              ? AppColors.borderDarkGray
-                              : AppColors.borderLightGray,
+                              ? AppColors.gray700
+                              : AppColors.gray200,
                         ),
                         child: Slider(
                           value: _selectedSpeedIndex.toDouble(),
@@ -393,7 +394,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                       ),
                     ),
                     Text(
-                      '2.0x',
+                      AppStrings.playbackSpeedLabelFastest,
                       style: FontUtils.poppins(
                         fontSize: AppDimens.fontSizeMd,
                         color: isDarkMode
@@ -413,13 +414,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           Container(
             padding: AppDimens.listTilePadding,
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.cardDark : Colors.white,
+              color: isDarkMode ? AppColors.cardDark : AppColors.white,
               borderRadius: BorderRadius.circular(AppDimens.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.098),
+                  color: AppColors.black10,
                   blurRadius: AppDimens.shadowBlurSm,
-                  offset: const Offset(0, 2),
+                  offset: AppDimens.offset02,
                 ),
               ],
             ),
@@ -440,7 +441,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         fontSize: AppDimens.fontSizeXl,
                         fontWeight: FontWeight.w600,
                         color:
-                            isDarkMode ? Colors.white : AppColors.textDarkGray,
+                            isDarkMode ? AppColors.white : AppColors.textDarkGray,
                       ),
                     ),
                   ],
@@ -455,8 +456,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   },
                   activeThumbColor: AppColors.blue,
                   inactiveTrackColor: isDarkMode
-                      ? AppColors.borderDarkGray
-                      : AppColors.borderLightGray,
+                      ? AppColors.gray700
+                      : AppColors.gray200,
                 ),
               ],
             ),
@@ -469,13 +470,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
             Container(
               padding: AppDimens.listTilePadding,
               decoration: BoxDecoration(
-                color: isDarkMode ? AppColors.cardDark : Colors.white,
+                color: isDarkMode ? AppColors.cardDark : AppColors.white,
                 borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.098),
+                    color: AppColors.black10,
                     blurRadius: AppDimens.shadowBlurSm,
-                    offset: const Offset(0, 2),
+                    offset: AppDimens.offset02,
                   ),
                 ],
               ),
@@ -496,7 +497,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w600,
                           color: isDarkMode
-                              ? Colors.white
+                              ? AppColors.white
                               : AppColors.textDarkGray,
                         ),
                       ),
@@ -505,16 +506,16 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   Row(
                     children: [
                       SizedBox(
-                        width: 80,
+                        width: AppDimens.iconSize80,
                         child: TextField(
                           controller: _skipOpeningDurationController,
                           onChanged: (value) {
                             setState(() {
                               // 检查输入长度，超过三位自动改为180
                               if (value.length > 3) {
-                                _skipOpeningDuration = 180;
-                                _skipOpeningDurationController.text = '180';
-                                UserDataService.saveSkipOpeningDuration(180);
+                                _skipOpeningDuration = AppConfig.defaultSkipOpeningDuration;
+                                _skipOpeningDurationController.text = '${AppConfig.defaultSkipOpeningDuration}';
+                                UserDataService.saveSkipOpeningDuration(AppConfig.defaultSkipOpeningDuration);
                                 return;
                               }
 
@@ -524,10 +525,10 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                                   _skipOpeningDuration = 0;
                                   _skipOpeningDurationController.text = '0';
                                   UserDataService.saveSkipOpeningDuration(0);
-                                } else if (parsedValue > 180) {
-                                  _skipOpeningDuration = 180;
-                                  _skipOpeningDurationController.text = '180';
-                                  UserDataService.saveSkipOpeningDuration(180);
+                                } else if (parsedValue > AppConfig.defaultSkipOpeningDuration) {
+                                  _skipOpeningDuration = AppConfig.defaultSkipOpeningDuration;
+                                  _skipOpeningDurationController.text = '${AppConfig.defaultSkipOpeningDuration}';
+                                  UserDataService.saveSkipOpeningDuration(AppConfig.defaultSkipOpeningDuration);
                                 } else {
                                   _skipOpeningDuration = parsedValue;
                                   UserDataService.saveSkipOpeningDuration(
@@ -545,7 +546,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           style: FontUtils.poppins(
                             fontSize: AppDimens.fontSizeXl,
                             color: isDarkMode
-                                ? Colors.white
+                                ? AppColors.white
                                 : AppColors.textDarkGray,
                           ),
                           decoration: InputDecoration(
@@ -553,8 +554,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               borderSide: BorderSide(
                                 color: isDarkMode
-                                    ? AppColors.borderDarkGray
-                                    : AppColors.borderLightGray,
+                                    ? AppColors.gray700
+                                    : AppColors.gray200,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -563,8 +564,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                                 color: AppColors.emerald,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 8),
+                            contentPadding: AppDimens.paddingHorizontal8Vertical8,
                           ),
                         ),
                       ),
@@ -574,7 +574,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         style: FontUtils.poppins(
                           fontSize: AppDimens.fontSizeXl,
                           color: isDarkMode
-                              ? Colors.white
+                              ? AppColors.white
                               : AppColors.textDarkGray,
                         ),
                       ),
@@ -590,13 +590,13 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
             Container(
               padding: AppDimens.listTilePadding,
               decoration: BoxDecoration(
-                color: isDarkMode ? AppColors.cardDark : Colors.white,
+                color: isDarkMode ? AppColors.cardDark : AppColors.white,
                 borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.098),
+                    color: AppColors.black10,
                     blurRadius: AppDimens.shadowBlurSm,
-                    offset: const Offset(0, 2),
+                    offset: AppDimens.offset02,
                   ),
                 ],
               ),
@@ -617,7 +617,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           fontSize: AppDimens.fontSizeXl,
                           fontWeight: FontWeight.w600,
                           color: isDarkMode
-                              ? Colors.white
+                              ? AppColors.white
                               : AppColors.textDarkGray,
                         ),
                       ),
@@ -626,16 +626,16 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                   Row(
                     children: [
                       SizedBox(
-                        width: 80,
+                        width: AppDimens.iconSize80,
                         child: TextField(
                           controller: _skipEndingDurationController,
                           onChanged: (value) {
                             setState(() {
                               // 检查输入长度，超过三位自动改为180
                               if (value.length > 3) {
-                                _skipEndingDuration = 180;
-                                _skipEndingDurationController.text = '180';
-                                UserDataService.saveSkipEndingDuration(180);
+                                _skipEndingDuration = AppConfig.defaultSkipEndingDuration;
+                                _skipEndingDurationController.text = '${AppConfig.defaultSkipEndingDuration}';
+                                UserDataService.saveSkipEndingDuration(AppConfig.defaultSkipEndingDuration);
                                 return;
                               }
 
@@ -645,10 +645,10 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                                   _skipEndingDuration = 0;
                                   _skipEndingDurationController.text = '0';
                                   UserDataService.saveSkipEndingDuration(0);
-                                } else if (parsedValue > 180) {
-                                  _skipEndingDuration = 180;
-                                  _skipEndingDurationController.text = '180';
-                                  UserDataService.saveSkipEndingDuration(180);
+                                } else if (parsedValue > AppConfig.defaultSkipEndingDuration) {
+                                  _skipEndingDuration = AppConfig.defaultSkipEndingDuration;
+                                  _skipEndingDurationController.text = '${AppConfig.defaultSkipEndingDuration}';
+                                  UserDataService.saveSkipEndingDuration(AppConfig.defaultSkipEndingDuration);
                                 } else {
                                   _skipEndingDuration = parsedValue;
                                   UserDataService.saveSkipEndingDuration(
@@ -666,7 +666,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                           style: FontUtils.poppins(
                             fontSize: AppDimens.fontSizeXl,
                             color: isDarkMode
-                                ? Colors.white
+                                ? AppColors.white
                                 : AppColors.textDarkGray,
                           ),
                           decoration: InputDecoration(
@@ -674,8 +674,8 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               borderSide: BorderSide(
                                 color: isDarkMode
-                                    ? AppColors.borderDarkGray
-                                    : AppColors.borderLightGray,
+                                    ? AppColors.gray700
+                                    : AppColors.gray200,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -684,8 +684,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                                 color: AppColors.blue,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 8),
+                            contentPadding: AppDimens.paddingHorizontal8Vertical8,
                           ),
                         ),
                       ),
@@ -695,7 +694,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
                         style: FontUtils.poppins(
                           fontSize: AppDimens.fontSizeXl,
                           color: isDarkMode
-                              ? Colors.white
+                              ? AppColors.white
                               : AppColors.textDarkGray,
                         ),
                       ),
@@ -723,7 +722,7 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
               children: [
                 const Icon(
                   LucideIcons.info,
-                  size: 20,
+                  size: AppDimens.iconSize20,
                   color: AppColors.amber,
                 ),
                 Gap.w12,

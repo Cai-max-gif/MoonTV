@@ -15,6 +15,7 @@ import 'shimmer_effect.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 
 /// 继续观看组件
 class ContinueWatchingSection extends StatefulWidget {
@@ -125,8 +126,8 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
     final double visibleCards =
         DeviceUtils.getHorizontalVisibleCards(context, 2.75);
     final double screenWidth = MediaQuery.of(context).size.width;
-    const double padding = 32.0;
-    const double spacing = 12.0;
+    final double padding = AppDimens.gridPaddingHorizontalDouble;
+    final double spacing = AppDimens.gridSpacingMd;
     final double availableWidth = screenWidth - padding;
     final double cardWidth =
         (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
@@ -147,8 +148,8 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
     final double visibleCards =
         DeviceUtils.getHorizontalVisibleCards(context, 2.75);
     final double screenWidth = MediaQuery.of(context).size.width;
-    const double padding = 32.0;
-    const double spacing = 12.0;
+    final double padding = AppDimens.gridPaddingHorizontalDouble;
+    final double spacing = AppDimens.gridSpacingMd;
     final double availableWidth = screenWidth - padding;
     final double cardWidth =
         (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
@@ -242,14 +243,14 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDimens.radiusXxxl),
               ),
-              contentPadding: const EdgeInsets.all(24),
+              contentPadding: AppDimens.paddingAll24,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // 图标
                   Container(
-                    width: 64,
-                    height: 64,
+                    width: AppDimens.iconButtonSizeLarge,
+                    height: AppDimens.iconButtonSizeLarge,
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
@@ -257,7 +258,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                     child: const Icon(
                       Icons.delete_outline,
                       color: AppColors.error,
-                      size: 32,
+                      size: AppDimens.iconSize32,
                     ),
                   ),
                   Gap.h20,
@@ -281,7 +282,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                       color: themeService.isDarkMode
                           ? AppColors.textDarkSecondary
                           : AppColors.textSecondary,
-                      height: 1.4,
+                      height: AppDimens.lineHeightNormal,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -293,7 +294,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                         child: TextButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: AppDimens.verticalMdPadding,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
@@ -320,7 +321,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.error,
                             foregroundColor: AppColors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: AppDimens.verticalMdPadding,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
@@ -422,13 +423,13 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
     final isPC = DeviceUtils.isPC();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: AppDimens.marginBottom24,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 标题、清空按钮和查看更多按钮
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: AppDimens.horizontalLgPadding,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -474,8 +475,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                         child: TextButton(
                           onPressed: _showClearConfirmation,
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 0),
+                            padding: AppDimens.paddingHorizontal8,
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             overlayColor: AppColors.transparent,
@@ -517,8 +517,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                     child: TextButton(
                       onPressed: widget.onViewAll,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                        padding: AppDimens.viewMoreButtonPadding,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         overlayColor: AppColors.transparent,
@@ -571,7 +570,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Container(
-                  width: 80,
+                  width: AppDimens.iconSize80,
                   color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
@@ -598,7 +597,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Container(
-                  width: 80,
+                  width: AppDimens.iconSize80,
                   color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
@@ -634,30 +633,30 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
             onTap: onPressed,
             customBorder: const CircleBorder(),
             child: Container(
-              width: 64,
-              height: 64,
+              width: AppDimens.iconButtonSizeLarge,
+              height: AppDimens.iconButtonSizeLarge,
               decoration: BoxDecoration(
                 color: themeService.isDarkMode
-                    ? const Color(0xE61F2937)
-                    : const Color(0xF2FFFFFF),
+                    ? AppColors.overlayCardDark
+                    : AppColors.overlayCardLight,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: themeService.isDarkMode
                       ? AppColors.gray600
-                      : AppColors.borderLightGray,
-                  width: 1,
+                      : AppColors.gray200,
+                  width: AppDimens.dividerThicknessThin,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.black30,
                     blurRadius: AppDimens.shadowBlurSm,
-                    offset: const Offset(0, 2),
+                    offset: AppDimens.offset02,
                   ),
                 ],
               ),
               child: Icon(
                 icon,
-                size: 32,
+                size: AppDimens.iconSize32,
                 color: themeService.isDarkMode
                     ? AppColors.gray300
                     : AppColors.gray600,
@@ -679,22 +678,21 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
 
         // 计算卡片宽度
         final double screenWidth = constraints.maxWidth;
-        const double padding = 32.0; // 左右padding (16 * 2)
-        const double spacing = 12.0; // 卡片间距
+        final double padding = AppDimens.gridPaddingHorizontalDouble;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - padding;
-        // 确保最小宽度，防止负宽度约束
-        const double minCardWidth = 120.0; // 最小卡片宽度
+        final double minCardWidth = AppDimens.gridMinCardWidth;
         final double calculatedCardWidth =
             (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
         final double cardWidth = math.max(calculatedCardWidth, minCardWidth);
-        final double cardHeight = (cardWidth * 1.5) + 50; // 缓存高度计算
+        final double cardHeight = (cardWidth * 1.5) + 46;
 
         return SizedBox(
           height: cardHeight, // 使用缓存的高度
           child: ListView.builder(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: AppDimens.horizontalLgPadding,
             itemCount: _playRecords.length,
             itemBuilder: (context, index) {
               final playRecord = _playRecords[index];
@@ -706,7 +704,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
                 child: VideoCard(
                   videoInfo: VideoInfo.fromPlayRecord(playRecord),
                   onTap: () => widget.onVideoTap?.call(playRecord),
-                  from: 'playrecord',
+                  from: AppConfig.sourcePlayrecord,
                   cardWidth: cardWidth, // 使用动态计算的宽度
                   onGlobalMenuAction: (action) =>
                       widget.onGlobalMenuAction?.call(playRecord, action),
@@ -733,19 +731,18 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
 
         // 计算卡片宽度
         final double screenWidth = constraints.maxWidth;
-        const double padding = 32.0; // 左右padding (16 * 2)
-        const double spacing = 12.0; // 卡片间距
+        final double padding = AppDimens.gridPaddingHorizontalDouble;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - padding;
-        // 确保最小宽度，防止负宽度约束
-        const double minCardWidth = 120.0; // 最小卡片宽度
+        final double minCardWidth = AppDimens.gridMinCardWidth;
         final double calculatedCardWidth =
             (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
         final double cardWidth = math.max(calculatedCardWidth, minCardWidth);
-        final double cardHeight = (cardWidth * 1.5) + 50; // 缓存高度计算
+        final double cardHeight = (cardWidth * 1.5) + 46;
 
         return Container(
           height: cardHeight, // 使用缓存的高度
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: AppDimens.horizontalLgPadding,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: skeletonCount,
@@ -786,15 +783,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
             borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
-        Gap.h4,
-        // 源名称骨架
-        Center(
-          child: ShimmerEffect(
-            width: width * 0.6,
-            height: 10,
-            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-          ),
-        ),
+        
       ],
     );
   }
@@ -803,7 +792,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
   Widget _buildErrorState() {
     return Container(
       height: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: AppDimens.horizontalLgPadding,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -811,7 +800,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
             Icon(
               Icons.error_outline,
               color: AppColors.gray400,
-              size: 32,
+              size: AppDimens.iconSize32,
             ),
             Gap.h8,
             Text(

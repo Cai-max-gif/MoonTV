@@ -53,7 +53,7 @@ class _FilterPillHoverState extends State<FilterPillHover> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: AppDimens.paddingHorizontal8Vertical6,
           decoration: BoxDecoration(
             color: AppColors.transparent,
             borderRadius: BorderRadius.circular(AppDimens.radiusRound),
@@ -132,7 +132,7 @@ class _FilterOptionHoverState extends State<FilterOptionHover> {
         child: Container(
           alignment: Alignment.center,
           padding: shouldUseCompactLayout
-              ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+              ? AppDimens.paddingHorizontal8Vertical4
               : null,
           decoration: BoxDecoration(
             color: widget.isSelected
@@ -147,7 +147,7 @@ class _FilterOptionHoverState extends State<FilterOptionHover> {
             overflow: shouldUseCompactLayout ? TextOverflow.ellipsis : null,
             style: TextStyle(
               color: textColor,
-              fontSize: shouldUseCompactLayout ? 12 : null,
+              fontSize: shouldUseCompactLayout ? AppDimens.filterOptionCompactFontSize : null,
             ),
           ),
         ),

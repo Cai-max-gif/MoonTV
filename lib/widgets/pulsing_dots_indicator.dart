@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_dimensions.dart';
 
 class PulsingDotsIndicator extends StatefulWidget {
   const PulsingDotsIndicator({super.key});
@@ -55,12 +56,12 @@ class _PulsingDotsIndicatorState extends State<PulsingDotsIndicator>
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(3, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                padding: AppDimens.paddingHorizontal4,
                 child: Transform.scale(
                   scale: _animations[index].value,
                   child: Container(
-                    width: 10.0,
-                    height: 10.0,
+                    width: AppDimens.pulsingDotSize,
+                    height: AppDimens.pulsingDotSize,
                     decoration: const BoxDecoration(
                       color: AppColors.accent,
                       shape: BoxShape.circle,

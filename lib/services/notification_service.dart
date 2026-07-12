@@ -72,15 +72,15 @@ class NotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    if (response.payload == 'update') {
+    if (response.payload == AppConfig.notificationPayloadUpdate) {
       _handleUpdateNotificationTap();
-    } else if (response.payload != null && response.payload!.startsWith('download_')) {
+    } else if (response.payload != null && response.payload!.startsWith(AppConfig.notificationPayloadDownloadPrefix)) {
       _handleDownloadNotificationTap(response.payload!);
     }
   }
 
   Future<void> _handleDownloadNotificationTap(String payload) async {
-    final taskIdStr = payload.replaceFirst('download_', '');
+    final taskIdStr = payload.replaceFirst(AppConfig.notificationPayloadDownloadPrefix, '');
     final taskIdHash = int.tryParse(taskIdStr);
     
     if (taskIdHash == null) {
@@ -236,7 +236,7 @@ class NotificationService {
     if (!_initialized || Platform.isWindows || Platform.isLinux) return;
     _ensurePermissions();
 
-    final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
+    final notificationId = downloadNotificationIdBase + (taskId.hashCode % AppConfig.notificationIdModulo);
 
     final androidDetails = AndroidNotificationDetails(
       AppConfig.downloadChannelId,
@@ -271,7 +271,7 @@ class NotificationService {
       contentTitle,
       contentText,
       details,
-      payload: 'download_$taskId',
+      payload: '${AppConfig.notificationPayloadDownloadPrefix}$taskId',
     );
   }
 
@@ -283,7 +283,7 @@ class NotificationService {
     if (!_initialized || Platform.isWindows || Platform.isLinux) return;
     _ensurePermissions();
 
-    final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
+    final notificationId = downloadNotificationIdBase + (taskId.hashCode % AppConfig.notificationIdModulo);
 
     const androidDetails = AndroidNotificationDetails(
       AppConfig.downloadChannelId,
@@ -315,7 +315,7 @@ class NotificationService {
       contentTitle,
       contentText,
       details,
-      payload: 'download_$taskId',
+      payload: '${AppConfig.notificationPayloadDownloadPrefix}$taskId',
     );
   }
 
@@ -327,7 +327,7 @@ class NotificationService {
     if (!_initialized || Platform.isWindows || Platform.isLinux) return;
     _ensurePermissions();
 
-    final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
+    final notificationId = downloadNotificationIdBase + (taskId.hashCode % AppConfig.notificationIdModulo);
 
     const androidDetails = AndroidNotificationDetails(
       AppConfig.downloadChannelId,
@@ -359,12 +359,12 @@ class NotificationService {
       contentTitle,
       contentText,
       details,
-      payload: 'download_$taskId',
+      payload: '${AppConfig.notificationPayloadDownloadPrefix}$taskId',
     );
   }
 
   Future<void> cancelDownloadNotification(int taskId) async {
-    final notificationId = downloadNotificationIdBase + (taskId.hashCode % 1000);
+    final notificationId = downloadNotificationIdBase + (taskId.hashCode % AppConfig.notificationIdModulo);
     await _notifications.cancel(notificationId);
   }
 
@@ -409,7 +409,7 @@ class NotificationService {
       contentTitle,
       contentText,
       details,
-      payload: 'update',
+      payload: AppConfig.notificationPayloadUpdate,
     );
   }
 
@@ -447,7 +447,7 @@ class NotificationService {
       contentTitle,
       contentText,
       details,
-      payload: 'update',
+      payload: AppConfig.notificationPayloadUpdate,
     );
   }
 
@@ -485,7 +485,7 @@ class NotificationService {
       contentTitle,
       contentText,
       details,
-      payload: 'update',
+      payload: AppConfig.notificationPayloadUpdate,
     );
   }
 

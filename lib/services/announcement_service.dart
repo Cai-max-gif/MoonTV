@@ -7,8 +7,8 @@ import 'api_service.dart';
 
 class AnnouncementService {
   static String get announcementApiUrl => AppConfig.announcementEndpoint;
-  static const String _cacheKey = 'announcement_cache';
-  static const String _cacheTimeKey = 'announcement_cache_time';
+  static const String _cacheKey = AppConfig.cacheKeyAnnouncement;
+  static const String _cacheTimeKey = AppConfig.cacheKeyAnnouncementTime;
   static Duration get _cacheDuration => AppConfig.announcementCacheDuration;
 
   static Announcement? _cachedAnnouncement;
@@ -47,10 +47,10 @@ class AnnouncementService {
           Announcement? announcement;
 
           // 检查API返回的格式
-          if (data.containsKey('announcement') &&
-              data['announcement'] is String) {
+          if (data.containsKey(AppConfig.jsonAnnouncement) &&
+              data[AppConfig.jsonAnnouncement] is String) {
             // API返回的是简单格式，只有一个公告字符串
-            final announcementContent = data['announcement'] as String;
+            final announcementContent = data[AppConfig.jsonAnnouncement] as String;
             // 检查内容是否为空
             if (announcementContent.trim().isNotEmpty) {
               announcement = Announcement(
@@ -61,9 +61,9 @@ class AnnouncementService {
                 isActive: true,
               );
             }
-          } else if (data.containsKey('id') &&
-              data.containsKey('title') &&
-              data.containsKey('content')) {
+          } else if (data.containsKey(AppConfig.jsonId) &&
+              data.containsKey(AppConfig.jsonTitle) &&
+              data.containsKey(AppConfig.jsonContent)) {
             // API返回的是完整格式
             announcement = Announcement.fromJson(data);
             // 检查内容是否为空

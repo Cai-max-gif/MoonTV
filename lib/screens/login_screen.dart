@@ -49,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     bool hasData = false;
 
-    if (userData['username'] != null) {
-      _usernameController.text = userData['username']!;
+    if (userData[AppConfig.jsonUsername] != null) {
+      _usernameController.text = userData[AppConfig.jsonUsername]!;
       hasData = true;
     }
     // 不再自动填充密码，提高安全性
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final remainingTime = await UserDataService.getAccountLockRemainingTime();
       if (remainingTime != null) {
         final minutes = remainingTime.inMinutes;
-        _showToast(AppStrings.formatLockedMinutes.replaceAll('%d', '$minutes'), AppColors.error);
+        _showToast(AppStrings.formatLockedMinutesTitle(minutes), AppColors.error);
       } else {
         _showToast(AppStrings.formatLockedLater, AppColors.error);
       }
@@ -130,14 +130,14 @@ class _LoginScreenState extends State<LoginScreen> {
         final remainingTime = await UserDataService.getAccountLockRemainingTime();
         if (remainingTime != null) {
           final minutes = remainingTime.inMinutes;
-          _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，账户已被锁定，请$minutes分钟后再试', AppColors.error);
+          _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，${AppStrings.authAccountLockedMinutes.replaceAll('%d', '$minutes')}', AppColors.error);
         } else {
-          _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，账户已被锁定，请稍后再试', AppColors.error);
+          _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，${AppStrings.formatLockedLater}', AppColors.error);
         }
       } else {
         final attempts = await UserDataService.getLoginAttempts();
         final remainingAttempts = 5 - attempts;
-        _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，还有$remainingAttempts次尝试机会', AppColors.error);
+        _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，${AppStrings.authRemainingAttempts.replaceAll('%d', '$remainingAttempts')}', AppColors.error);
       }
     }
   }
@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
     List<String> cookies = [];
 
     // 获取所有 Set-Cookie 头部
-    final setCookieHeaders = response.headers['set-cookie'];
+    final setCookieHeaders = response.headers[AppConfig.headerSetCookie];
     if (setCookieHeaders != null) {
       // HTTP 头部通常是 String 类型
       final cookieParts = setCookieHeaders.split(';');
@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final remainingTime = await UserDataService.getAccountLockRemainingTime();
       if (remainingTime != null) {
         final minutes = remainingTime.inMinutes;
-        _showToast(AppStrings.formatLockedMinutes.replaceAll('%d', '$minutes'), AppColors.error);
+        _showToast(AppStrings.formatLockedMinutesTitle(minutes), AppColors.error);
       } else {
         _showToast(AppStrings.authAccountLockedLater, AppColors.error);
       }
@@ -230,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
       String baseUrl = await UserDataService.getServerUrlWithDefault();
       // 确保使用HTTPS
       String secureBaseUrl =
-          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+          baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), AppConfig.httpsProtocol);
       String loginUrl = '$secureBaseUrl${AppConfig.loginEndpoint}';
 
       // 判断是否为邮箱登录
@@ -240,12 +240,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await http.post(
         Uri.parse(loginUrl),
         headers: {
-          'Content-Type': AppStrings.contentTypeJson,
+          AppConfig.headerContentType: AppConfig.headerAcceptJson,
         },
         body: json.encode({
-          'username': _usernameController.text,
-          'password': _passwordController.text,
-          'isEmail': isEmailLogin,
+          AppConfig.jsonUsername: _usernameController.text,
+          AppConfig.jsonPassword: _passwordController.text,
+          AppConfig.jsonType: isEmailLogin,
         }),
       ).timeout(AppConfig.authRequestTimeout);
 
@@ -260,10 +260,10 @@ class _LoginScreenState extends State<LoginScreen> {
           try {
             // 尝试解析响应获取令牌和真实用户名
             final responseData = json.decode(response.body);
-            final token = responseData['token'] as String?;
+            final token = responseData[AppConfig.jsonToken] as String?;
 
             // 使用后端返回的真实用户名，如果没有返回则使用用户输入的
-            final String realUsername = (responseData['username'] as String?) ??
+            final String realUsername = (responseData[AppConfig.jsonUsername] as String?) ??
                 _usernameController.text;
 
             // 解析 cookies
@@ -302,22 +302,22 @@ class _LoginScreenState extends State<LoginScreen> {
           bool isBanned = false;
           try {
             final responseData = json.decode(response.body);
-            if (responseData.containsKey('message')) {
-              errorMessage = responseData['message'] as String;
+            if (responseData.containsKey(AppConfig.jsonMessage)) {
+              errorMessage = responseData[AppConfig.jsonMessage] as String;
               // 检查是否为账号封禁
-              if (errorMessage.contains('账号已被封禁') ||
-                  errorMessage.contains('封禁') ||
-                  errorMessage.contains('banned') ||
-                  errorMessage.contains('ban')) {
+              if (errorMessage.contains(AppStrings.authBannedAccount) ||
+                  errorMessage.contains(AppStrings.bannedKeyword) ||
+                  errorMessage.contains(AppConfig.errorKeywordBanned) ||
+                  errorMessage.contains(AppConfig.errorKeywordBan)) {
                 isBanned = true;
               }
-            } else if (responseData.containsKey('error')) {
-              errorMessage = responseData['error'] as String;
+            } else if (responseData.containsKey(AppConfig.jsonError)) {
+              errorMessage = responseData[AppConfig.jsonError] as String;
               // 检查是否为账号封禁
-              if (errorMessage.contains('账号已被封禁') ||
-                  errorMessage.contains('封禁') ||
-                  errorMessage.contains('banned') ||
-                  errorMessage.contains('ban')) {
+              if (errorMessage.contains(AppStrings.authBannedAccount) ||
+                  errorMessage.contains(AppStrings.bannedKeyword) ||
+                  errorMessage.contains(AppConfig.errorKeywordBanned) ||
+                  errorMessage.contains(AppConfig.errorKeywordBan)) {
                 isBanned = true;
               }
             }
@@ -340,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 await UserDataService.getAccountLockRemainingTime();
             if (remainingTime != null) {
               final minutes = remainingTime.inMinutes;
-              _showToast('$errorMessage，账户已被锁定，请$minutes分钟后再试',
+              _showToast('$errorMessage，${AppStrings.authAccountLockedMinutes.replaceAll('%d', '$minutes')}',
                   AppColors.error);
             } else {
               _showToast('$errorMessage，${AppStrings.authAccountLocked}', AppColors.error);
@@ -348,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             final attempts = await UserDataService.getLoginAttempts();
         final remainingAttempts = AppConfig.maxLoginAttempts - attempts;
-            _showToast('$errorMessage，还有$remainingAttempts次尝试机会',
+            _showToast('$errorMessage，${AppStrings.authRemainingAttempts.replaceAll('%d', '$remainingAttempts')}',
                 AppColors.error);
           }
           break;
@@ -380,7 +380,7 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.gradStart, // #e6f3fb 0%
+              AppColors.lightBlueBg, // #e6f3fb 0%
               AppColors.gradMid1, // #eaf3f7 18%
               AppColors.gradMid2, // #f7f7f3 38%
               AppColors.gradMid3, // #e9ecef 60%
@@ -399,10 +399,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isTablet ? 0 : 32.0,
-                      vertical: 24.0,
-                    ),
+                    padding: isTablet
+                          ? AppDimens.paddingVertical24
+                          : AppDimens.paddingHorizontal32Vertical24,
                     child:
                         isTablet ? _buildTabletLayout() : _buildMobileLayout(),
                   ),
@@ -422,14 +421,14 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         // Logo 图标
         Image.asset(
-          'assets/images/logo/logo.png',
+          AppConfig.logoImageAsset,
           width: AppDimens.logoSize,
           height: AppDimens.logoSize,
         ),
         Gap.h20,
         // MoonTV 标题
         Text(
-          'MoonTV',
+          AppConfig.appName,
           style: FontUtils.sourceCodePro(
             fontSize: AppDimens.fontSizeHero,
             fontWeight: FontWeight.w400,
@@ -466,7 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icon(
                     _isEmailInput ? Icons.email : Icons.person,
                     color: AppColors.textSecondary,
-                    size: 20,
+                    size: AppDimens.iconSize20,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -543,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(
                     Icons.lock,
                     color: AppColors.textSecondary,
-                    size: 20,
+                    size: AppDimens.iconSize20,
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -551,7 +550,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? Icons.visibility
                           : Icons.visibility_off,
                       color: AppColors.textSecondary,
-                      size: 20,
+                      size: AppDimens.iconSize20,
                     ),
                     onPressed: () {
                       setState(() {
@@ -648,22 +647,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       : AppColors.primary,
                   foregroundColor:
                       _isLoading ? AppColors.textSecondary : AppColors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: AppDimens.paddingVertical18,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                   ),
                   elevation: AppDimens.elevationNone,
-                  shadowColor: Colors.transparent,
+                  shadowColor: AppColors.transparent,
                 ),
                 child: _isLoading
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(
-                            height: 18,
-                            width: 18,
+                            height: AppDimens.iconMd,
+                            width: AppDimens.iconMd,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: AppDimens.dividerThicknessMd,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 AppColors.white,
                               ),
@@ -698,8 +697,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: _isTelegramLoading ? null : _handleTelegramLogin,
                       child: _isTelegramLoading
                           ? const SizedBox(
-                              width: 40,
-                              height: 40,
+                              width: AppDimens.spacingXxxl,
+                              height: AppDimens.spacingXxxl,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
                                 color: AppColors.linkBlue,
@@ -708,7 +707,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           : const Icon(
                               Icons.telegram,
                               color: AppColors.linkBlue,
-                              size: 40,
+                              size: AppDimens.iconSize40,
                             ),
                     ),
                     if (_telegramStatus != null) ...[
@@ -734,21 +733,21 @@ class _LoginScreenState extends State<LoginScreen> {
   // 平板端布局（与手机端风格一致，只是限制宽度）
   Widget _buildTabletLayout() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 480),
+      constraints: const BoxConstraints(maxWidth: AppDimens.filterDialogWidth),
       padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingXxl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Logo 图标
           Image.asset(
-            'assets/images/logo/logo.png',
+            AppConfig.logoImageAsset,
             width: AppDimens.logoSize,
             height: AppDimens.logoSize,
           ),
           Gap.h20,
           // MoonTV 标题
           Text(
-            'MoonTV',
+            AppConfig.appName,
             style: FontUtils.sourceCodePro(
               fontSize: AppDimens.fontSizeHero,
               fontWeight: FontWeight.w400,
@@ -785,7 +784,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icon(
                       _isEmailInput ? Icons.email : Icons.person,
                       color: AppColors.textSecondary,
-                      size: 20,
+                      size: AppDimens.iconSize20,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -851,7 +850,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: AppColors.primary,
                   ),
                   decoration: InputDecoration(
-                    labelText: '密码',
+                    labelText: AppStrings.authPassword,
                     labelStyle: FontUtils.poppins(
                       color: AppColors.textSecondary,
                       fontSize: AppDimens.fontSizeMd,
@@ -864,7 +863,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: const Icon(
                       Icons.lock,
                       color: AppColors.textSecondary,
-                      size: 20,
+                      size: AppDimens.iconSize20,
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -872,7 +871,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                         color: AppColors.textSecondary,
-                        size: 20,
+                        size: AppDimens.iconSize20,
                       ),
                       onPressed: () {
                         setState(() {
@@ -970,22 +969,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         : AppColors.primary,
                     foregroundColor:
                         _isLoading ? AppColors.textSecondary : AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    padding: AppDimens.paddingVertical18,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     ),
                     elevation: AppDimens.elevationNone,
-                    shadowColor: Colors.transparent,
+                    shadowColor: AppColors.transparent,
                   ),
                   child: _isLoading
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SizedBox(
-                              height: 18,
-                              width: 18,
+                              height: AppDimens.iconMd,
+                              width: AppDimens.iconMd,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: AppDimens.dividerThicknessMd,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   AppColors.white,
                                 ),
@@ -1020,8 +1019,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: _isTelegramLoading ? null : _handleTelegramLogin,
                         child: _isTelegramLoading
                             ? const SizedBox(
-                                width: 40,
-                                height: 40,
+                                width: AppDimens.spacingXxxl,
+                                height: AppDimens.spacingXxxl,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
                                   color: AppColors.linkBlue,
@@ -1030,7 +1029,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             : const Icon(
                                 Icons.telegram,
                                 color: AppColors.linkBlue,
-                                size: 40,
+                                size: AppDimens.iconSize40,
                               ),
                       ),
                       if (_telegramStatus != null) ...[

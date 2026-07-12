@@ -76,7 +76,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
-        '下载管理',
+        AppStrings.downloadManagement,
         style: FontUtils.poppins(
           fontSize: AppDimens.fontSizeXxl,
           fontWeight: FontWeight.w600,
@@ -156,7 +156,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
             !hasDownloading && (hasPaused || hasFailed || hasRetrying);
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: AppDimens.horizontalMdVerticalSmPadding,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -172,7 +172,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                   isPausedMode ? LucideIcons.play : LucideIcons.pause,
                   size: AppDimens.iconMd,
                 ),
-                label: Text(isPausedMode ? '全部继续' : '全部暂停'),
+                label: Text(isPausedMode ? AppStrings.downloadResumeAll : AppStrings.downloadPauseAll),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: isPausedMode
                       ? AppColors.accent
@@ -181,8 +181,8 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
                     color: isPausedMode
                         ? AppColors.accent
                         : (isDarkMode
-                            ? AppColors.borderDarkGray
-                            : AppColors.borderLightGray),
+                            ? AppColors.gray700
+                            : AppColors.gray200),
                   ),
                 ),
               ),
@@ -211,7 +211,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
 
   Widget _buildCompletedBatchActionBar(bool isDarkMode) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: AppDimens.horizontalMdVerticalSmPadding,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -242,7 +242,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
               }
             },
             icon: const Icon(LucideIcons.trash2, size: AppDimens.iconMd),
-            label: Text(_isDeleteMode ? '删除全部' : '批量删除'),
+            label: Text(_isDeleteMode ? AppStrings.delete : AppStrings.downloadBatchDelete),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.red,
               side: const BorderSide(color: AppColors.red),
@@ -262,7 +262,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
             : AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusXl)),
         title: Text(
-          '批量删除',
+          AppStrings.downloadBatchDelete,
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
@@ -272,7 +272,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           ),
         ),
         content: Text(
-          '确定要删除所有已完成的下载任务吗？',
+          AppStrings.downloadConfirmDeleteAll,
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeMd,
             color: Theme.of(context).brightness == Brightness.dark
@@ -346,7 +346,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
     final titles = groupedTasks.keys.toList();
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: AppDimens.verticalMdPadding,
       itemCount: titles.length,
       itemBuilder: (context, index) {
         final title = titles[index];
@@ -356,7 +356,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-          padding: AppDimens.horizontalSmVerticalMdPadding,
+          padding: AppDimens.paddingHorizontal8Vertical12,
               child: Row(
                 children: [
                   Expanded(
@@ -417,7 +417,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
             : AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusXl)),
         title: Text(
-          '删除分组',
+          AppStrings.downloadDeleteGroup,
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
@@ -427,7 +427,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
           ),
         ),
         content: Text(
-          '确定要删除"$title"的${episodes.length}个任务吗？',
+          AppStrings.downloadConfirmDeleteGroup.replaceAll('%s', title).replaceAll('%d', '${episodes.length}'),
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeMd,
             color: Theme.of(context).brightness == Brightness.dark
@@ -476,7 +476,7 @@ class _DownloadManagementScreenState extends State<DownloadManagementScreen>
         children: [
           Icon(
             LucideIcons.download,
-            size: 64,
+            size: AppDimens.iconSize64,
             color:
                 isDarkMode ? AppColors.textDarkHint : AppColors.gray300,
           ),

@@ -1,4 +1,4 @@
-import '../constants/app_config.dart';
+﻿import '../constants/app_config.dart';
 
 class FavoriteItem {
   final String id;
@@ -32,25 +32,25 @@ class FavoriteItem {
     return FavoriteItem(
       id: id,
       source: source,
-      title: json['title'] ?? '',
-      sourceName: json['source_name'] ?? '',
-      year: json['year'] ?? '',
-      cover: json['cover'] ?? '',
-      totalEpisodes: json['total_episodes'] ?? 0,
-      saveTime: json['save_time'] ?? 0,
-      origin: json['origin'] ?? '',
+      title: json[AppConfig.jsonTitle] ?? '',
+      sourceName: json[AppConfig.jsonSourceName] ?? '',
+      year: json[AppConfig.jsonYear] ?? '',
+      cover: json[AppConfig.jsonCover] ?? '',
+      totalEpisodes: json[AppConfig.jsonTotalEpisodes] ?? 0,
+      saveTime: json[AppConfig.jsonSaveTime] ?? 0,
+      origin: json[AppConfig.jsonOrigin] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'title': title,
-      'source_name': sourceName,
-      'year': year,
-      'cover': cover,
-      'total_episodes': totalEpisodes,
-      'save_time': saveTime,
-      'origin': origin,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonSourceName: sourceName,
+      AppConfig.jsonYear: year,
+      AppConfig.jsonCover: cover,
+      AppConfig.jsonTotalEpisodes: totalEpisodes,
+      AppConfig.jsonSaveTime: saveTime,
+      AppConfig.jsonOrigin: origin,
     };
   }
 }

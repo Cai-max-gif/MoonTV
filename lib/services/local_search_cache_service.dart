@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../constants/app_config.dart';
 
 // 缓存状态类型
 enum CachedPageStatus {
@@ -23,9 +24,9 @@ class CachedPageEntry {
 }
 
 // 缓存配置
-const int _searchCacheTtlMs = 10 * 60 * 1000; // 10分钟
-const int _cacheCleanupIntervalMs = 5 * 60 * 1000; // 5分钟清理一次
-const int _maxCacheSize = 1000; // 最大缓存条目数量
+const int _searchCacheTtlMs = AppConfig.localSearchCacheTtlMs;
+const int _cacheCleanupIntervalMs = AppConfig.localSearchCleanupIntervalMs;
+const int _maxCacheSize = AppConfig.localSearchMaxEntries;
 
 class LocalSearchCacheService {
   // 单例模式
@@ -130,9 +131,9 @@ class LocalSearchCacheService {
     _lastCleanupTime = now;
 
     return {
-      'expired': expiredCount,
-      'total': _searchCache.length,
-      'sizeLimited': sizeLimitedDeleted,
+      AppConfig.jsonExpired: expiredCount,
+      AppConfig.jsonTotal: _searchCache.length,
+      AppConfig.jsonSizeLimited: sizeLimitedDeleted,
     };
   }
 

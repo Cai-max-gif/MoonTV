@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_dimensions.dart';
 
 class CustomSwitch extends StatefulWidget {
   final bool value;
@@ -18,8 +19,8 @@ class CustomSwitch extends StatefulWidget {
     this.activeColor = AppColors.green,
     this.inactiveColor = AppColors.gray500,
     this.thumbColor = AppColors.white,
-    this.width = 50.0,
-    this.height = 30.0,
+    this.width = AppDimens.customSwitchWidth,
+    this.height = AppDimens.customSwitchHeight,
   });
 
   @override
@@ -97,7 +98,7 @@ class _CustomSwitchState extends State<CustomSwitch>
               child: Container(
                 width: widget.height - 4,
                 height: widget.height - 4,
-                margin: const EdgeInsets.all(2.0),
+                margin: AppDimens.paddingAll2,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: widget.thumbColor,

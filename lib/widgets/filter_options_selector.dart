@@ -30,7 +30,7 @@ void showFilterOptionsSelector({
             borderRadius: BorderRadius.circular(AppDimens.radiusXl),
           ),
           child: Container(
-            width: 480,
+            width: AppDimens.filterDialogWidth,
             constraints: const BoxConstraints(maxHeight: 450),
             decoration: BoxDecoration(
               color: isDark
@@ -44,14 +44,14 @@ void showFilterOptionsSelector({
               children: [
                 // 标题栏
                 Container(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                  padding: AppDimens.paddingFromLTRB16141610,
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
                         color: Theme.of(context)
                             .dividerColor
                             .withValues(alpha: 0.1),
-                        width: 1,
+                        width: AppDimens.dividerThicknessThin,
                       ),
                     ),
                   ),
@@ -112,9 +112,9 @@ void showFilterOptionsSelector({
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+            borderRadius: BorderRadius.only(
+              topLeft: AppDimens.radius20,
+              topRight: AppDimens.radius20,
             ),
           ),
           child: Column(
@@ -127,7 +127,7 @@ void showFilterOptionsSelector({
               ),
               Container(
                 height: gridHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: AppDimens.horizontalLgPadding,
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

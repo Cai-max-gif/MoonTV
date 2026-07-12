@@ -3,6 +3,7 @@ import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/video_player_surface.dart';
@@ -304,7 +305,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       // 滚动到目标位置
       _programScrollController.animateTo(
         clampedOffset,
-        duration: const Duration(milliseconds: 500),
+        duration: AppDurations.playerScrollAnimation,
         curve: Curves.easeInOut,
       );
     });
@@ -330,7 +331,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
       // 估算每个项目的高度（包括 margin）
       // padding: 12, margin: 4*2 = 8, 总高度约 80
-      const estimatedItemHeight = 80.0;
+      final estimatedItemHeight = AppDimens.verticalProgramItemHeight;
       final targetOffset = currentIndex * estimatedItemHeight;
 
       // 获取可视区域高度
@@ -347,7 +348,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
       _verticalProgramScrollController.animateTo(
         clampedOffset,
-        duration: const Duration(milliseconds: 500),
+        duration: AppDurations.playerScrollAnimation,
         curve: Curves.easeInOut,
       );
     });
@@ -371,10 +372,10 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       if (!mounted || !_channelScrollController.hasClients) return;
 
       // ListTile 的固定高度（通过 SizedBox 设置）
-      const itemHeight = 68.0;
+      final itemHeight = AppDimens.liveCardHeightSm;
 
       // ListView 的 padding: EdgeInsets.symmetric(vertical: 4)
-      const listPadding = 4.0;
+      final listPadding = AppDimens.spacingXs;
 
       // 计算目标位置：列表顶部 padding + 前面所有 item 的高度
       final targetPosition = listPadding + (currentIndex * itemHeight);
@@ -392,7 +393,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
       _channelScrollController.animateTo(
         clampedOffset,
-        duration: const Duration(milliseconds: 500),
+        duration: AppDurations.playerScrollAnimation,
         curve: Curves.easeInOut,
       );
     }
@@ -497,7 +498,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   /// 构建播放器层
   Widget _buildPlayerLayer(ThemeData theme) {
     final statusBarHeight = MediaQuery.maybeOf(context)?.padding.top ?? 0;
-    final macOSPadding = DeviceUtils.isMacOS() ? 32.0 : 0.0;
+    final macOSPadding = DeviceUtils.isMacOS() ? AppDimens.macOSPadding : 0.0;
     final topOffset = statusBarHeight + macOSPadding;
 
     if (_isWebFullscreen) {
@@ -536,8 +537,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       if (_isTablet && !_isPortraitTablet) {
         // 平板横屏模式：播放器在左侧65%区域
         final screenWidth = MediaQuery.of(context).size.width;
-        final leftWidth = screenWidth * 0.65;
-        final playerHeight = leftWidth / (16 / 9);
+        final leftWidth = screenWidth * AppDimens.tabletLandscapePlayerWidthRatio;
+        final playerHeight = leftWidth / AppDimens.playerAspectRatio16x9;
 
         return Positioned(
           top: topOffset,
@@ -559,7 +560,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       } else if (_isPortraitTablet) {
         // 平板竖屏模式：播放器占50%高度
         final screenHeight = MediaQuery.of(context).size.height;
-        final playerHeight = (screenHeight - topOffset) * 0.5;
+        final playerHeight = (screenHeight - topOffset) * AppDimens.tabletPortraitPlayerHeightRatio;
 
         return Positioned(
           top: topOffset,
@@ -581,7 +582,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       } else {
         // 手机模式：16:9 比例
         final screenWidth = MediaQuery.of(context).size.width;
-        final playerHeight = screenWidth / (16 / 9);
+        final playerHeight = screenWidth / AppDimens.playerAspectRatio16x9;
 
         return Positioned(
           top: topOffset,
@@ -614,9 +615,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
       key: ValueKey(_currentChannel.id),
       url: videoUrl,
       headers: <String, String>{
-        'User-Agent': _currentSource.ua.isNotEmpty
+        AppConfig.headerUserAgent: _currentSource.ua.isNotEmpty
             ? _currentSource.ua
-            : 'AptvPlayer/1.4.10',
+            : AppConfig.liveDefaultUserAgent,
       },
       videoTitle: _currentChannel.name,
       onBackPressed:
@@ -651,9 +652,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   /// 构建手机模式布局
   Widget _buildPhoneLayout(ThemeData theme, ThemeService themeService) {
     final statusBarHeight = MediaQuery.maybeOf(context)?.padding.top ?? 0;
-    final macOSPadding = DeviceUtils.isMacOS() ? 32.0 : 0.0;
+    final macOSPadding = DeviceUtils.isMacOS() ? AppDimens.macOSPadding : 0.0;
     final screenWidth = MediaQuery.of(context).size.width;
-    final playerHeight = screenWidth / (16 / 9);
+        final playerHeight = screenWidth / AppDimens.playerAspectRatio16x9;
 
     return Column(
       children: [
@@ -682,10 +683,10 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   Widget _buildTabletLandscapeLayout(
       ThemeData theme, ThemeService themeService) {
     final statusBarHeight = MediaQuery.maybeOf(context)?.padding.top ?? 0;
-    final macOSPadding = DeviceUtils.isMacOS() ? 32.0 : 0.0;
+    final macOSPadding = DeviceUtils.isMacOS() ? AppDimens.macOSPadding : 0.0;
     final screenWidth = MediaQuery.of(context).size.width;
-    final leftWidth = screenWidth * 0.65;
-    final playerHeight = leftWidth / (16 / 9);
+    final leftWidth = screenWidth * AppDimens.tabletLandscapePlayerWidthRatio;
+    final playerHeight = leftWidth / AppDimens.playerAspectRatio16x9;
 
     return Column(
       children: [
@@ -726,14 +727,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     children: [
                       // 顶部栏
                       Container(
-                        padding: const EdgeInsets.only(top: 16),
+                        padding: AppDimens.paddingTop16,
                         child: Text(
                           AppStrings.liveChannelList,
                           style: FontUtils.poppins(
                             fontSize: AppDimens.fontSizeXxl,
                             fontWeight: FontWeight.w600,
                             color: themeService.isDarkMode
-                                ? Colors.white
+                                ? AppColors.white
                                 : AppColors.primary,
                           ),
                         ),
@@ -766,7 +767,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   Widget _buildPortraitTabletLayout(
       ThemeData theme, ThemeService themeService) {
     final statusBarHeight = MediaQuery.maybeOf(context)?.padding.top ?? 0;
-    final macOSPadding = DeviceUtils.isMacOS() ? 32.0 : 0.0;
+    final macOSPadding = DeviceUtils.isMacOS() ? AppDimens.macOSPadding : 0.0;
     final screenHeight = MediaQuery.of(context).size.height;
     final playerHeight = (screenHeight - statusBarHeight - macOSPadding) * 0.5;
 
@@ -796,7 +797,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
   /// 构建频道信息
   Widget _buildChannelInfo(ThemeData theme, ThemeService themeService) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: AppDimens.paddingLeft16Right16Top16Bottom8,
       decoration: const BoxDecoration(
         color: AppColors.transparent,
       ),
@@ -805,7 +806,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           // 台标 - 2:1 长方形，高度充满容器
           if (_currentChannel.logo.isNotEmpty)
             SizedBox(
-              height: 56,
+              height: AppDimens.buttonHeightLarge,
               child: AspectRatio(
                 aspectRatio: 2.0,
                 child: Container(
@@ -846,8 +847,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                           fontSize: AppDimens.fontSizeXxl,
                           fontWeight: FontWeight.w600,
                           color: themeService.isDarkMode
-                              ? Colors.white
-                              : AppColors.primary,
+                              ? AppColors.white
+                                : AppColors.primary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -875,7 +876,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
   Widget _buildDefaultLogo(ThemeService themeService) {
     return SizedBox(
-      height: 56,
+      height: AppDimens.buttonHeightLarge,
       child: AspectRatio(
         aspectRatio: 2.0,
         child: Container(
@@ -926,7 +927,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
     return ListView.builder(
       controller: _channelScrollController,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: AppDimens.marginVertical4,
       itemCount: filteredChannels.length,
       itemBuilder: (context, index) {
         final channel = filteredChannels[index];
@@ -937,7 +938,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             isSelected ? _currentChannelKey : ValueKey('channel_${channel.id}');
 
         return SizedBox(
-          height: 68.0, // 固定高度，从 72 减小到 68
+          height: AppDimens.liveCardHeightSm,
           child: ListTile(
             key: itemKey,
             selected: isSelected,
@@ -947,12 +948,12 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 ? AspectRatio(
                     aspectRatio: 2.0,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
+                      padding: AppDimens.paddingAll2,
                       decoration: BoxDecoration(
                         color: themeService.isDarkMode
                             ? AppColors.darkBg2
                             : AppColors.gray350,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: AppDimens.radiusCircle6,
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(AppDimens.radiusSm),
@@ -977,7 +978,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                         color: themeService.isDarkMode
                             ? AppColors.darkBg2
                             : AppColors.gray350,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: AppDimens.radiusCircle6,
                       ),
                       child: const Icon(
                         Icons.tv,
@@ -994,7 +995,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 color: isSelected
                     ? AppColors.accent
                     : themeService.isDarkMode
-                        ? Colors.white
+                        ? AppColors.white
                         : AppColors.primary,
               ),
               maxLines: 1,
@@ -1041,13 +1042,13 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     final showSourceFilter = _allSources.length > 1;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: AppDimens.paddingFromLTRB164160,
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: themeService.isDarkMode
-                ? AppColors.darkDivider
-                : AppColors.grayBorder,
+                ? AppColors.borderDark
+                : AppColors.gray200,
           ),
         ),
       ),
@@ -1091,7 +1092,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           const Spacer(),
           // 滚动到当前频道按钮
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: AppDimens.paddingBottom8,
             child: _buildScrollToCurrentChannelButton(themeService),
           ),
         ],
@@ -1104,24 +1105,24 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     return _HoverButton(
       onTap: _scrollToCurrentChannel,
       child: Container(
-        width: 18,
-        height: 18,
+        width: AppDimens.iconMd,
+        height: AppDimens.iconMd,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
             color:
-                themeService.isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,
-            width: 1,
+                themeService.isDarkMode ? AppColors.gray400 : AppColors.gray600,
+            width: AppDimens.dividerThicknessThin,
           ),
         ),
         child: Center(
           child: Container(
-            width: 6,
-            height: 6,
+            width: AppDimens.iconHeightSm,
+            height: AppDimens.iconHeightSm,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color:
-                  themeService.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  themeService.isDarkMode ? AppColors.gray400 : AppColors.gray600,
             ),
           ),
         ),
@@ -1179,8 +1180,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
           final screenWidth = MediaQuery.of(context).size.width;
           final modalWidth =
               DeviceUtils.isTablet(context) ? screenWidth * 0.5 : screenWidth;
-          const horizontalPadding = 16.0;
-          const spacing = 10.0;
+          final horizontalPadding = AppDimens.spacingLg;
+          const spacing = AppDimens.spacingMdAlt;
           final itemWidth =
               (modalWidth - horizontalPadding * 2 - spacing * 2) / 3;
 
@@ -1190,9 +1191,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 : double.infinity, // 设置宽度为100%
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              borderRadius: BorderRadius.only(
+                topLeft: AppDimens.radius20,
+                topRight: AppDimens.radius20,
               ),
             ),
             child: Column(
@@ -1215,8 +1216,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                   ),
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalPadding, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding, vertical: AppDimens.spacingSm),
                       child: Wrap(
                         alignment: WrapAlignment.start, // 左对齐
                         spacing: spacing,
@@ -1232,8 +1233,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                               },
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                padding: AppDimens.paddingHorizontal12Vertical8,
                                 alignment: Alignment.centerLeft, // 内容左对齐
                                 decoration: BoxDecoration(
                                   color: isSelected
@@ -1247,7 +1247,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                                   option.label,
                                   textAlign: TextAlign.left, // 文字左对齐
                                   style: TextStyle(
-                                    color: isSelected ? Colors.white : null,
+                                    color: isSelected ? AppColors.white : null,
                                   ),
                                 ),
                               ),
@@ -1315,7 +1315,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                             fontSize: AppDimens.fontSizeMd,
                             fontWeight: FontWeight.w500,
                             color: themeService.isDarkMode
-                                ? Colors.white
+                                ? AppColors.white
                                 : AppColors.primary,
                           ),
                           maxLines: 1,
@@ -1328,7 +1328,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                                 fontSize: AppDimens.fontSizeMd,
                                 fontWeight: FontWeight.w500,
                                 color: themeService.isDarkMode
-                                    ? Colors.white
+                                    ? AppColors.white
                                     : AppColors.primary,
                               ),
                               maxLines: 1,
@@ -1363,8 +1363,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     AppStrings.liveViewSchedule,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: themeService.isDarkMode
-                          ? Colors.grey[400]
-                          : Colors.grey[600],
+                          ? AppColors.gray400
+                          : AppColors.gray600,
                       fontWeight: FontWeight.w300,
                     ),
                   ),
@@ -1372,10 +1372,10 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 Gap.w4,
                 Icon(
                   Icons.arrow_forward_ios,
-                  size: 14,
+                  size: AppDimens.iconSize14,
                   color: themeService.isDarkMode
-                      ? Colors.grey[400]
-                      : Colors.grey[600],
+                      ? AppColors.gray400
+                      : AppColors.gray600,
                 ),
               ],
             ),
@@ -1414,8 +1414,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                   border: Border(
                     bottom: BorderSide(
                       color: themeService.isDarkMode
-                          ? AppColors.darkDivider
-                          : AppColors.grayBorder,
+                          ? AppColors.borderDark
+                          : AppColors.gray200,
                     ),
                   ),
                 ),
@@ -1427,7 +1427,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                         fontSize: AppDimens.fontSizeXxl,
                         fontWeight: FontWeight.w600,
                         color: themeService.isDarkMode
-                            ? Colors.white
+                            ? AppColors.white
                             : AppColors.primary,
                       ),
                     ),
@@ -1436,7 +1436,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                       icon: Icon(
                         Icons.close,
                         color: themeService.isDarkMode
-                            ? Colors.white
+                            ? AppColors.white
                             : AppColors.primary,
                       ),
                       onPressed: () => Navigator.pop(context),
@@ -1463,7 +1463,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (_isLoadingEpg) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: AppDimens.paddingVertical24,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1487,13 +1487,13 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (_programs == null || _programs!.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: AppDimens.paddingVertical24,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.calendar_today_outlined,
-                size: 64,
+                size: AppDimens.iconSize64,
                 color: themeService.isDarkMode
                     ? AppColors.textDarkHint
                     : AppColors.textHint,
@@ -1516,7 +1516,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
     return ListView.builder(
       controller: _verticalProgramScrollController,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: AppDimens.verticalSmPadding,
       itemCount: _programs!.length,
       itemBuilder: (context, index) {
         final program = _programs![index];
@@ -1569,8 +1569,8 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
     return Container(
       key: key,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+      margin: AppDimens.marginHorizontal16Vertical4,
+      padding: AppDimens.paddingFromLTRB0121212,
       child: Row(
         children: [
           // 时间
@@ -1613,7 +1613,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
         children: [
           // 节目单标题栏
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: AppDimens.paddingFromLTRB1612168,
             child: Row(
               children: [
                 Text(
@@ -1622,7 +1622,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                     fontSize: AppDimens.fontSizeXl,
                     fontWeight: FontWeight.w600,
                     color: themeService.isDarkMode
-                        ? Colors.white
+                        ? AppColors.white
                         : AppColors.primary,
                   ),
                 ),
@@ -1644,24 +1644,24 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     return _HoverButton(
       onTap: _scrollToCurrentProgram,
       child: Container(
-        width: 18,
-        height: 18,
+        width: AppDimens.iconMd,
+        height: AppDimens.iconMd,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
             color:
-                themeService.isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,
-            width: 1,
+                themeService.isDarkMode ? AppColors.gray400 : AppColors.gray600,
+            width: AppDimens.dividerThicknessThin,
           ),
         ),
         child: Center(
           child: Container(
-            width: 6,
-            height: 6,
+            width: AppDimens.iconHeightSm,
+            height: AppDimens.iconHeightSm,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color:
-                  themeService.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  themeService.isDarkMode ? AppColors.gray400 : AppColors.gray600,
             ),
           ),
         ),
@@ -1674,7 +1674,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (_isLoadingEpg) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: AppDimens.paddingVertical24,
           child: Text(
             AppStrings.liveLoadingSchedule,
             style: FontUtils.poppins(
@@ -1691,13 +1691,13 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     if (_programs == null || _programs!.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: AppDimens.paddingVertical24,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.calendar_today_outlined,
-                size: 48,
+                size: AppDimens.iconButtonSize,
                 color: themeService.isDarkMode
                     ? AppColors.textDarkHint
                     : AppColors.textHint,
@@ -1719,11 +1719,11 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     }
 
     return SizedBox(
-      height: 88,
+      height: AppDimens.liveCardHeightLg,
       child: ListView.builder(
         controller: _programScrollController,
         scrollDirection: Axis.horizontal,
-        padding: AppDimens.horizontalSmVerticalMdPadding,
+        padding: AppDimens.paddingHorizontal8Vertical12,
         itemCount: _programs!.length,
         itemBuilder: (context, index) {
           final program = _programs![index];
@@ -1767,7 +1767,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
     } else if (isPast) {
       // 过去的节目 - 灰色背景 + 灰色边框
       backgroundColor = themeService.isDarkMode
-          ? AppColors.borderDarkGray.withValues(alpha: 0.5)
+          ? AppColors.gray700.withValues(alpha: 0.5)
           : AppColors.gray300.withValues(alpha: 0.5);
       borderColor = themeService.isDarkMode
           ? AppColors.gray600
@@ -1794,16 +1794,16 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
 
     return Container(
       key: key,
-      width: 120,
-      height: 72,
-      margin: const EdgeInsets.only(right: 8),
+      width: AppDimens.cardCoverWidth,
+      height: AppDimens.liveCardHeightMd,
+      margin: AppDimens.marginRight8,
       padding: const EdgeInsets.all(AppDimens.spacingSm),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppDimens.radiusCircle6,
         border: Border.all(
           color: borderColor,
-          width: 1,
+          width: AppDimens.dividerThicknessThin,
         ),
       ),
       child: Column(
@@ -1825,14 +1825,14 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
                 Row(
                   children: [
                     Container(
-                      width: 4,
-                      height: 4,
+                      width: AppDimens.spacingXs,
+                      height: AppDimens.spacingXs,
                       decoration: const BoxDecoration(
                         color: AppColors.accent,
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 2),
+                    Gap.w2,
                     Text(
                       AppStrings.navLive,
                       style: FontUtils.poppins(
@@ -1906,11 +1906,11 @@ class _HoverButtonState extends State<_HoverButton> {
           child: ColorFiltered(
             colorFilter: (isPC && _isHovered)
                 ? const ColorFilter.mode(
-                    Colors.green,
+                    AppColors.green,
                     BlendMode.modulate,
                   )
                 : const ColorFilter.mode(
-                    Colors.white,
+                    AppColors.white,
                     BlendMode.modulate,
                   ),
             child: widget.child,

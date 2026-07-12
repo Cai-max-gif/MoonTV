@@ -1,12 +1,10 @@
-import '../models/search_result.dart';
+﻿import '../models/search_result.dart';
 import '../models/aggregated_search_result.dart';
 import '../constants/app_content_filter.dart';
+import '../constants/app_config.dart';
 
 /// 内容过滤服务
 class ContentFilterService {
-  /// 黄色内容关键词列表
-  static const List<String> yellowWords = AppContentFilter.yellowWords;
-
   /// 黄色内容过滤（基于 type_name，仅在家庭模式下生效）
   static bool isYellowContent(String? typeName, {bool familyMode = false}) {
     if (!familyMode) return false;
@@ -14,7 +12,7 @@ class ContentFilterService {
       return false;
     }
     final lowerTypeName = typeName.toLowerCase();
-    return yellowWords
+    return blockedKeywords
         .any((word) => lowerTypeName.contains(word.toLowerCase()));
   }
 
@@ -81,20 +79,20 @@ class ContentFilterService {
       // 检查结果类型
       if (result is Map<String, dynamic>) {
         // 检查标题
-        final title = result['title'] as String?;
+        final title = result[AppConfig.jsonTitle] as String?;
         if (containsBlockedKeyword(title)) {
           return false;
         }
 
         // 检查播放源
-        if (result.containsKey('sourceName')) {
-          final sourceName = result['sourceName'] as String?;
+        if (result.containsKey(AppConfig.jsonSourceName)) {
+          final sourceName = result[AppConfig.jsonSourceName] as String?;
           if (isSourceBlocked(sourceName)) {
             return false;
           }
-        } else if (result.containsKey('sourceNames')) {
+        } else if (result.containsKey(AppConfig.jsonSourceNames)) {
           // 聚合结果，检查所有源
-          final sourceNames = result['sourceNames'] as List<dynamic>?;
+          final sourceNames = result[AppConfig.jsonSourceNames] as List<dynamic>?;
           if (sourceNames != null) {
             // 如果所有源都被屏蔽，则过滤掉
             final allSourcesBlocked = sourceNames

@@ -1,6 +1,7 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../models/search_result.dart';
 import '../models/video_info.dart';
 import '../services/page_cache_service.dart';
@@ -58,22 +59,22 @@ class _SearchResultsGridState extends State<SearchResultsGrid>
         // 平板模式根据宽度动态展示6～9列，手机模式3列
         final int crossAxisCount = DeviceUtils.getTabletColumnCount(context);
         final bool isTablet = DeviceUtils.isTablet(context);
-        final double mainAxisSpacing = isTablet ? 0.0 : 16.0; // 平板行间距为0
+        final double mainAxisSpacing = isTablet ? AppDimens.gridMainAxisSpacingTablet : AppDimens.gridMainAxisSpacingMobile;
         
         // 计算每列的宽度
         final double screenWidth = constraints.maxWidth;
-        const double padding = 16.0; // 左右padding
-        const double spacing = 12.0; // 列间距
-        final double availableWidth =
-            screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1)); // 减去padding和间距
-        // 确保最小宽度，防止负宽度约束
-        const double minItemWidth = 80.0; // 最小项目宽度
+        final double padding = AppDimens.gridPaddingHorizontal;
+        final double spacing = AppDimens.gridSpacingMd;
+        final double availableWidth = screenWidth -
+            (padding * 2) -
+            (spacing * (crossAxisCount - 1));
+        final double minItemWidth = AppDimens.gridMinItemWidth;
         final double calculatedItemWidth = availableWidth / crossAxisCount;
         final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
         final double itemHeight = itemWidth * 2.0; // 增加高度比例，确保有足够空间避免溢出
 
         return GridView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: AppDimens.horizontalMdVerticalLgPadding,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             childAspectRatio: itemWidth / itemHeight, // 精确计算宽高比
@@ -95,7 +96,7 @@ class _SearchResultsGridState extends State<SearchResultsGrid>
                 onTap: widget.onVideoTap != null
                     ? () => widget.onVideoTap!(videoInfo)
                     : null,
-                from: 'search',
+                from: AppConfig.sourceSearch,
                 cardWidth: itemWidth, // 传递计算出的宽度
                 onGlobalMenuAction: widget.onGlobalMenuAction != null
                     ? (action) => widget.onGlobalMenuAction!(videoInfo, action)
@@ -117,7 +118,7 @@ class _SearchResultsGridState extends State<SearchResultsGrid>
         children: [
           const Icon(
             Icons.search_off,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,

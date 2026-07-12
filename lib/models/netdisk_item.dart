@@ -1,3 +1,4 @@
+﻿import '../constants/app_config.dart';
 import '../constants/app_strings.dart';
 
 /// 单个网盘资源链接
@@ -21,12 +22,12 @@ class NetDiskLink {
   /// 从 JSON 构造
   factory NetDiskLink.fromJson(Map<String, dynamic> json) {
     return NetDiskLink(
-      url: json['url'] as String? ?? '',
-      password: json['password'] as String? ?? '',
-      note: json['note'] as String? ?? '',
-      datetime: json['datetime'] as String? ?? '',
-      source: json['source'] as String? ?? '',
-      images: (json['images'] as List<dynamic>?)
+      url: json[AppConfig.jsonUrl] as String? ?? '',
+      password: json[AppConfig.jsonPassword] as String? ?? '',
+      note: json[AppConfig.jsonNote] as String? ?? '',
+      datetime: json[AppConfig.jsonDatetime] as String? ?? '',
+      source: json[AppConfig.jsonSource] as String? ?? '',
+      images: (json[AppConfig.jsonImages] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -63,16 +64,16 @@ class NetDiskSearchResult {
   /// 从 JSON 构造
   factory NetDiskSearchResult.fromJson(Map<String, dynamic> json) {
     // 失败响应
-    if (json['success'] != true) {
+    if (json[AppConfig.jsonSuccess] != true) {
       return NetDiskSearchResult(
         success: false,
-        error: json['error'] as String? ?? AppStrings.msgUnknownError,
+        error: json[AppConfig.jsonError] as String? ?? AppStrings.msgUnknownError,
       );
     }
 
     // 成功响应
-    final data = json['data'] as Map<String, dynamic>? ?? {};
-    final rawMerged = data['merged_by_type'] as Map<String, dynamic>? ?? {};
+    final data = json[AppConfig.jsonData] as Map<String, dynamic>? ?? {};
+    final rawMerged = data[AppConfig.jsonMergedByType] as Map<String, dynamic>? ?? {};
 
     final mergedByType = <String, List<NetDiskLink>>{};
     rawMerged.forEach((key, value) {
@@ -85,11 +86,11 @@ class NetDiskSearchResult {
 
     return NetDiskSearchResult(
       success: true,
-      total: data['total'] as int? ?? 0,
+      total: data[AppConfig.jsonTotal] as int? ?? 0,
       mergedByType: mergedByType,
-      source: data['source'] as String? ?? '',
-      query: data['query'] as String? ?? '',
-      timestamp: data['timestamp'] as String?,
+      source: data[AppConfig.jsonSource] as String? ?? '',
+      query: data[AppConfig.jsonQuery] as String? ?? '',
+      timestamp: data[AppConfig.jsonTimestamp] as String?,
     );
   }
 }

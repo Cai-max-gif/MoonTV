@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 // 直播频道数据模型
 class LiveChannel {
   final String id; // 频道ID
@@ -20,25 +22,25 @@ class LiveChannel {
 
   factory LiveChannel.fromJson(Map<String, dynamic> json) {
     return LiveChannel(
-      id: json['id'] as String? ?? '',
-      tvgId: json['tvgId'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      logo: json['logo'] as String? ?? '',
-      group: json['group'] as String? ?? '',
-      url: json['url'] as String? ?? '',
-      isFavorite: json['isFavorite'] as bool? ?? false,
+      id: json[AppConfig.jsonId] as String? ?? '',
+      tvgId: json[AppConfig.jsonTvgId] as String? ?? '',
+      name: json[AppConfig.jsonName] as String? ?? '',
+      logo: json[AppConfig.jsonLogo] as String? ?? '',
+      group: json[AppConfig.jsonGroup] as String? ?? '',
+      url: json[AppConfig.jsonUrl] as String? ?? '',
+      isFavorite: json[AppConfig.jsonIsFavorite] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'tvgId': tvgId,
-      'name': name,
-      'logo': logo,
-      'group': group,
-      'url': url,
-      'isFavorite': isFavorite,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTvgId: tvgId,
+      AppConfig.jsonName: name,
+      AppConfig.jsonLogo: logo,
+      AppConfig.jsonGroup: group,
+      AppConfig.jsonUrl: url,
+      AppConfig.jsonIsFavorite: isFavorite,
     };
   }
 

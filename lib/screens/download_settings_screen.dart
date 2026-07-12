@@ -2,6 +2,7 @@ import 'dart:io';
 import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -19,8 +20,8 @@ class DownloadSettingsScreen extends StatefulWidget {
 
 class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
   final DownloadService _downloadService = DownloadService();
-  double _maxConcurrentDownloads = 1;
-  double _concurrentThreads = 4;
+  double _maxConcurrentDownloads = AppConfig.downloadMinConcurrent.toDouble();
+  double _concurrentThreads = AppConfig.downloadDefaultThreads.toDouble();
   String _savePath = '';
 
   @override
@@ -47,7 +48,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '有正在下载的任务，无法修改保存路径',
+              AppStrings.downloadHasActiveTasks,
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.red,
@@ -131,7 +132,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '下载设置',
+          AppStrings.downloadSettings,
           style: FontUtils.poppins(
             fontSize: AppDimens.fontSizeXxl,
             fontWeight: FontWeight.w600,
@@ -154,9 +155,9 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.098),
+                        color: AppColors.black10,
                         blurRadius: AppDimens.shadowBlurSm,
-                        offset: const Offset(0, 2),
+                        offset: AppDimens.offset02,
                       ),
                     ],
                   ),
@@ -172,7 +173,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                           ),
                           Gap.w12,
                           Text(
-                            '同时下载任务数',
+                            AppStrings.downloadConcurrentTasks,
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
@@ -187,7 +188,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                       Row(
                         children: [
                           Text(
-                            '1',
+                            '${AppConfig.downloadMinConcurrent}',
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
@@ -205,14 +206,14 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                                 thumbColor: AppColors.emerald,
                                 activeTrackColor: AppColors.emerald,
                                 inactiveTrackColor: isDarkMode
-                                    ? AppColors.borderDarkGray
-                                    : AppColors.borderLightGray,
+                                    ? AppColors.gray700
+                                    : AppColors.gray200,
                               ),
                               child: Slider(
                                 value: _maxConcurrentDownloads,
-                                min: 1,
-                                max: 3,
-                                divisions: 2,
+                                min: AppConfig.downloadMinConcurrent.toDouble(),
+                                max: AppConfig.downloadMaxConcurrent.toDouble(),
+                                divisions: AppConfig.downloadMaxConcurrent - AppConfig.downloadMinConcurrent,
                                 onChanged: (value) async {
                                   setState(() {
                                     _maxConcurrentDownloads = value;
@@ -225,7 +226,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                             ),
                           ),
                           Text(
-                            '3',
+                            '${AppConfig.downloadMaxConcurrent}',
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
@@ -247,9 +248,9 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.098),
+                        color: AppColors.black10,
                         blurRadius: AppDimens.shadowBlurSm,
-                        offset: const Offset(0, 2),
+                        offset: AppDimens.offset02,
                       ),
                     ],
                   ),
@@ -265,7 +266,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                           ),
                           Gap.w12,
                           Text(
-                            '并发线程数',
+                            AppStrings.downloadConcurrentThreads,
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
@@ -280,7 +281,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                       Row(
                         children: [
                           Text(
-                            '1',
+                            '${AppConfig.downloadMinThreads}',
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
@@ -298,14 +299,14 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                                 thumbColor: AppColors.violet,
                                 activeTrackColor: AppColors.violet,
                                 inactiveTrackColor: isDarkMode
-                                    ? AppColors.borderDarkGray
-                                    : AppColors.borderLightGray,
+                                    ? AppColors.gray700
+                                    : AppColors.gray200,
                               ),
                               child: Slider(
                                 value: _concurrentThreads,
-                                min: 1,
-                                max: 16,
-                                divisions: 15,
+                                min: AppConfig.downloadMinThreads.toDouble(),
+                                max: AppConfig.downloadMaxThreads.toDouble(),
+                                divisions: AppConfig.downloadMaxThreads - AppConfig.downloadMinThreads,
                                 onChanged: (value) async {
                                   setState(() {
                                     _concurrentThreads = value;
@@ -318,7 +319,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                             ),
                           ),
                           Text(
-                            '16',
+                            '${AppConfig.downloadMaxThreads}',
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeMd,
                               color: isDarkMode
@@ -340,9 +341,9 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.098),
+                        color: AppColors.black10,
                         blurRadius: AppDimens.shadowBlurSm,
-                        offset: const Offset(0, 2),
+                        offset: AppDimens.offset02,
                       ),
                     ],
                   ),
@@ -381,8 +382,8 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                             borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             border: Border.all(
                               color: isDarkMode
-                                  ? AppColors.borderDarkGray
-                                  : AppColors.borderLightGray,
+                                  ? AppColors.gray700
+                                  : AppColors.gray200,
                             ),
                           ),
                           child: Text(
@@ -407,13 +408,13 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                               : _selectPath,
                           icon: Icon(
                             LucideIcons.folderOpen,
-                            size: 20,
+                            size: AppDimens.iconSize20,
                             color: downloadService.downloadingTasks.isNotEmpty
                                 ? AppColors.gray400
                                 : AppColors.white,
                           ),
                           label: Text(
-                            '选择路径',
+                            AppStrings.downloadSelectPath,
                             style: FontUtils.poppins(
                               fontSize: AppDimens.fontSizeXl,
                               fontWeight: FontWeight.w600,
@@ -424,7 +425,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.blue,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: AppDimens.paddingVertical10,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
@@ -450,7 +451,7 @@ class _DownloadSettingsScreenState extends State<DownloadSettingsScreen> {
                     children: [
                       const Icon(
                         LucideIcons.info,
-                        size: 20,
+                        size: AppDimens.iconSize20,
                         color: AppColors.amber,
                       ),
                       Gap.w12,

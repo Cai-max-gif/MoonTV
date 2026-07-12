@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
 import 'package:provider/provider.dart';
@@ -65,9 +65,9 @@ class _ShimmerEffectState extends State<ShimmerEffect>
                   end: Alignment.centerRight,
                   colors: themeService.isDarkMode
                       ? [
-                          AppColors.darkDivider,
+                          AppColors.borderDark,
                           AppColors.darkBg3,
-                          AppColors.darkDivider,
+                          AppColors.borderDark,
                         ]
                       : [
                           AppColors.gray300,

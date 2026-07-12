@@ -138,12 +138,12 @@ class _PlayerSourcesPanelState extends State<PlayerSourcesPanel>
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            padding: AppDimens.paddingLeft16Right16Top16Bottom0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '换源 (${widget.sources.length})',
+                  '${AppStrings.panelSwitchSource} (${widget.sources.length})',
                   style: widget.theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -252,20 +252,20 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: AppDimens.marginBottom12,
           decoration: BoxDecoration(
             color: widget.isCurrent
-                ? (widget.isDarkMode ? AppColors.gray850 : AppColors.gray200)
+                ? (widget.isDarkMode ? AppColors.darkBg4 : AppColors.gray200)
                 : (_isHovering && DeviceUtils.isPC()
                     ? (widget.isDarkMode
                         ? AppColors.darkGreen // 深色模式下的浅绿色
                         : AppColors.greenBg) // 浅色模式下的浅绿色
                     : (widget.isDarkMode
-                        ? AppColors.gray850
+                        ? AppColors.darkBg4
                         : AppColors.gray200)),
             borderRadius: BorderRadius.circular(AppDimens.radiusXl),
             border: widget.isCurrent
-                ? Border.all(color: AppColors.green, width: 2)
+                ? Border.all(color: AppColors.green, width: AppDimens.borderWidth2)
                 : null,
           ),
           child: Padding(
@@ -304,7 +304,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                 color: widget.isDarkMode
                                     ? AppColors.textDarkHint
                                     : AppColors.gray500,
-                                size: 40,
+                                size: AppDimens.iconSize40,
                               ),
                             ),
                             fadeInDuration: AppDurations.normal,
@@ -312,7 +312,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      Gap.w12,
                       // Right side: Info
                       Expanded(
                         child: Column(
@@ -330,8 +330,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                             Gap.h8,
                             // Source Name
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 3),
+                              padding: AppDimens.paddingHorizontal6Vertical3,
                               decoration: BoxDecoration(
                                 border: Border.all(
                                     color: widget.isDarkMode
@@ -352,7 +351,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                   if (widget.speedInfo!.loadSpeed.isNotEmpty &&
                                       !widget.speedInfo!.loadSpeed
                                           .toLowerCase()
-                                          .contains('超时'))
+                                          .contains(AppStrings.m3u8Timeout))
                                     Text(
                                       widget.speedInfo!.loadSpeed,
                                       style: widget.theme.textTheme.bodyMedium
@@ -361,16 +360,16 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                   if (widget.speedInfo!.loadSpeed.isNotEmpty &&
                                       !widget.speedInfo!.loadSpeed
                                           .toLowerCase()
-                                          .contains('超时') &&
+                                          .contains(AppStrings.m3u8Timeout) &&
                                       widget.speedInfo!.pingTime.isNotEmpty &&
                                       !widget.speedInfo!.pingTime
                                           .toLowerCase()
-                                          .contains('超时'))
-                                    const SizedBox(width: 8),
+                                          .contains(AppStrings.m3u8Timeout))
+                                    Gap.w8,
                                   if (widget.speedInfo!.pingTime.isNotEmpty &&
                                       !widget.speedInfo!.pingTime
                                           .toLowerCase()
-                                          .contains('超时'))
+                                          .contains(AppStrings.m3u8Timeout))
                                     Text(
                                       widget.speedInfo!.pingTime,
                                       style: widget.theme.textTheme.bodyMedium
@@ -380,7 +379,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                                 const Spacer(),
                                 if (widget.source.episodes.length > 1)
                                   Text(
-                                    '${widget.source.episodes.length} 集',
+                                    '${widget.source.episodes.length}${AppStrings.episodeSuffix}',
                                     style: widget.theme.textTheme.bodyMedium,
                                   ),
                               ],
@@ -393,7 +392,7 @@ class _SourcePanelItemWithHoverState extends State<_SourcePanelItemWithHover> {
                   // Resolution tag in top right
                   if (widget.speedInfo != null &&
                       widget.speedInfo!.quality.isNotEmpty &&
-                      widget.speedInfo!.quality.toLowerCase() != AppStrings.m3u8ResolutionUnknown.toLowerCase())
+                      widget.speedInfo!.quality.toLowerCase() != AppStrings.unknown.toLowerCase())
                     Positioned(
                       top: 0,
                       right: 0,

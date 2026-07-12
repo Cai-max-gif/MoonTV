@@ -280,7 +280,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     });
 
     // 1秒后自动隐藏
-    _volumeMenuHideTimer = Timer(const Duration(seconds: 1), () {
+    _volumeMenuHideTimer = Timer(AppDurations.volumeMenuHideDelay, () {
       if (mounted && !_isHoveringVolumeButton && !_isHoveringVolumeMenu) {
         setState(() {
           _showVolumeMenu = false;
@@ -884,8 +884,8 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                 child: IgnorePointer(
                   ignoring: !_controlsVisible,
                   child: Container(
-                    height: 24,
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    height: AppDimens.playerProgressBarHeight,
+                    margin: AppDimens.horizontalLgPadding,
                     child: CustomVideoProgressBar(
                       player: widget.player,
                       onDragStart: _onSeekStart,
@@ -926,10 +926,10 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
                       padding: EdgeInsets.only(
-                        left: effectiveFullscreen ? 16.0 : 8.0,
-                        right: effectiveFullscreen ? 16.0 : 8.0,
+                        left: effectiveFullscreen ? AppDimens.spacingLg : AppDimens.spacingSm,
+                        right: effectiveFullscreen ? AppDimens.spacingLg : AppDimens.spacingSm,
                         top: effectiveFullscreen ? 0.0 : 0.0,
-                        bottom: effectiveFullscreen ? 8.0 : 8.0,
+                        bottom: AppDimens.spacingSm,
                       ),
                       child: Row(
                         children: [
@@ -985,7 +985,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 });
                                 // 延迟检查是否需要隐藏菜单
                                 Future.delayed(
-                                    const Duration(milliseconds: 100), () {
+                                    AppDurations.fastest, () {
                                   if (mounted &&
                                       !_isHoveringVolumeButton &&
                                       !_isHoveringVolumeMenu) {
@@ -1097,7 +1097,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 });
                                 // 延迟检查是否需要隐藏菜单
                                 Future.delayed(
-                                    const Duration(milliseconds: 100), () {
+                                    AppDurations.fastest, () {
                                   if (mounted &&
                                       !_isHoveringSpeedButton &&
                                       !_isHoveringSpeedMenu) {
@@ -1109,7 +1109,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: AppDimens.smallPadding,
                                 decoration: _isHoveringSpeedButton
                                     ? BoxDecoration(
                                         shape: BoxShape.circle,
@@ -1168,7 +1168,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   }
 
   Widget _buildSpeedMenu() {
-    final speeds = [0.5, 0.75, 1.0, 1.5, 2.0];
+    final speeds = AppConfig.playbackSpeedValues;
     final currentSpeed = widget.player.state.rate;
 
     // 获取速度按钮的位置
@@ -1181,15 +1181,15 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
     // 根据全屏状态调整弹窗大小
     final effectiveFullscreen = _isWebFullscreen;
-    final menuWidth = effectiveFullscreen ? 120.0 : 90.0;
-    final itemHeight = effectiveFullscreen ? 48.0 : 36.0;
+    final menuWidth = effectiveFullscreen ? AppDimens.playerMenuWidthFullscreen : AppDimens.playerMenuWidthNonFullscreen;
+    final itemHeight = effectiveFullscreen ? AppDimens.playerMenuHeightFullscreen : AppDimens.playerMenuHeightNonFullscreen;
     final menuHeight = speeds.length * itemHeight;
     // 计算水平居中位置：按钮中心 - 弹框宽度的一半
     final menuLeft =
         buttonPosition.dx + (buttonSize.width / 2) - (menuWidth / 2);
     // 计算垂直位置：按钮顶部 - 弹框高度 - 间距
     final menuTop =
-        buttonPosition.dy - menuHeight - (_isWebFullscreen ? 2 : 36);
+        buttonPosition.dy - menuHeight - (_isWebFullscreen ? AppDimens.playerMenuTopOffsetFullscreen : AppDimens.playerMenuTopOffsetNonFullscreen);
 
     return Positioned(
       left: menuLeft,
@@ -1206,7 +1206,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             _isHoveringSpeedMenu = false;
           });
           // 延迟检查是否需要隐藏菜单
-          Future.delayed(const Duration(milliseconds: 100), () {
+          Future.delayed(AppDurations.fastest, () {
             if (mounted && !_isHoveringSpeedButton && !_isHoveringSpeedMenu) {
               setState(() {
                 _showSpeedMenu = false;
@@ -1221,14 +1221,14 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             width: menuWidth,
             decoration: BoxDecoration(
               color: AppColors.black85,
-              borderRadius: BorderRadius.circular(effectiveFullscreen ? 8 : 6),
+              borderRadius: BorderRadius.circular(effectiveFullscreen ? AppDimens.radiusMd : AppDimens.radiusMdSm),
               border: Border.all(
                 color: AppColors.white10,
-                width: 1,
+                width: AppDimens.borderWidthSm,
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(effectiveFullscreen ? 8 : 6),
+              borderRadius: BorderRadius.circular(effectiveFullscreen ? AppDimens.radiusMd : AppDimens.radiusMdSm),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: speeds.map((speed) {
@@ -1268,15 +1268,15 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
     // 根据全屏状态调整弹窗大小 - 更高更瘦
     final effectiveFullscreen = _isWebFullscreen;
-    final menuWidth = effectiveFullscreen ? 42.0 : 36.0;
-    final menuHeight = effectiveFullscreen ? 200.0 : 150.0;
+    final menuWidth = effectiveFullscreen ? AppDimens.playerMenuSubMenuWidthFullscreen : AppDimens.playerMenuSubMenuWidthNonFullscreen;
+    final menuHeight = effectiveFullscreen ? AppDimens.playerMenuSubMenuHeightFullscreen : AppDimens.playerMenuSubMenuHeightNonFullscreen;
 
     // 计算水平居中位置：按钮中心 - 弹框宽度的一半
     final menuLeft =
         buttonPosition.dx + (buttonSize.width / 2) - (menuWidth / 2);
     // 计算垂直位置：按钮顶部 - 弹框高度 - 间距
     final menuTop =
-        buttonPosition.dy - menuHeight - (_isWebFullscreen ? 2 : 36);
+        buttonPosition.dy - menuHeight - (_isWebFullscreen ? AppDimens.playerMenuTopOffsetFullscreen : AppDimens.playerMenuTopOffsetNonFullscreen);
 
     return Positioned(
       left: menuLeft,
@@ -1293,7 +1293,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             _isHoveringVolumeMenu = false;
           });
           // 延迟检查是否需要隐藏菜单
-          Future.delayed(const Duration(milliseconds: 100), () {
+          Future.delayed(AppDurations.fastest, () {
             if (mounted && !_isHoveringVolumeButton && !_isHoveringVolumeMenu) {
               setState(() {
                 _showVolumeMenu = false;
@@ -1309,20 +1309,20 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
             height: menuHeight,
             decoration: BoxDecoration(
               color: AppColors.black85,
-              borderRadius: BorderRadius.circular(effectiveFullscreen ? 8 : 6),
+              borderRadius: BorderRadius.circular(effectiveFullscreen ? AppDimens.radiusMd : AppDimens.radiusMdSm),
               border: Border.all(
                 color: AppColors.white10,
-                width: 1,
+                width: AppDimens.borderWidthSm,
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(effectiveFullscreen ? 8 : 6),
+              borderRadius: BorderRadius.circular(effectiveFullscreen ? AppDimens.radiusMd : AppDimens.radiusMdSm),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // 音量百分比显示
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    padding: AppDimens.verticalSmPadding,
                     child: Text(
                       '${currentVolume.round()}',
                       style: TextStyle(
@@ -1335,8 +1335,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
                   // 垂直音量滑块
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 12.0),
+                      padding: AppDimens.paddingHorizontal12Vertical8,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           return GestureDetector(
@@ -1413,7 +1412,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     final duration = widget.player.state.duration;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: AppDimens.paddingHorizontal8,
       child: Text(
         '${_formatDuration(position)} / ${_formatDuration(duration)}',
         style: const TextStyle(
@@ -1440,7 +1439,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
   Future<void> _takeScreenshot() async {
     try {
       // 使用media_kit的screenshot方法获取真实的视频帧
-      final screenshot = await widget.player.screenshot(format: 'image/png');
+      final screenshot = await widget.player.screenshot(format: AppStrings.screenshotFormatPng);
 
       if (screenshot != null && screenshot.isNotEmpty) {
         await _saveScreenshot(screenshot);
@@ -1498,30 +1497,30 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         final userProfile = Platform.environment[AppConfig.envUserProfile];
         if (userProfile != null) {
           // 使用path包构建路径，避免反斜杠问题
-          final picturesDir = path.join(userProfile, 'Pictures');
-          screenshotsDir = Directory(path.join(picturesDir, 'Screenshots'));
+          final picturesDir = path.join(userProfile, AppStrings.directoryPictures);
+          screenshotsDir = Directory(path.join(picturesDir, AppStrings.directoryScreenshots));
         } else {
           //  fallback to documents directory if USERPROFILE is not available
           final documentsDir = await getApplicationDocumentsDirectory();
           screenshotsDir =
-              Directory(path.join(documentsDir.path, 'Screenshots'));
+              Directory(path.join(documentsDir.path, AppStrings.directoryScreenshots));
         }
       } else if (Platform.isMacOS) {
         // macOS平台：~/Pictures/Screenshots
         final homeDir = Platform.environment[AppConfig.envHome];
         if (homeDir != null) {
           screenshotsDir =
-              Directory(path.join(homeDir, 'Pictures', 'Screenshots'));
+              Directory(path.join(homeDir, AppStrings.directoryPictures, AppStrings.directoryScreenshots));
         } else {
           //  fallback to documents directory if HOME is not available
           final documentsDir = await getApplicationDocumentsDirectory();
           screenshotsDir =
-              Directory(path.join(documentsDir.path, 'Screenshots'));
+              Directory(path.join(documentsDir.path, AppStrings.directoryScreenshots));
         }
       } else {
         // 其他平台：文档目录下的Screenshots文件夹
         final documentsDir = await getApplicationDocumentsDirectory();
-        screenshotsDir = Directory(path.join(documentsDir.path, 'Screenshots'));
+        screenshotsDir = Directory(path.join(documentsDir.path, AppStrings.directoryScreenshots));
       }
 
       // 创建文件夹
@@ -1531,7 +1530,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
 
       // 生成文件名
       final fileName =
-          'screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+          '${AppStrings.screenshotFileNameTemplate}${DateTime.now().millisecondsSinceEpoch}.png';
       final file = File(path.join(screenshotsDir.path, fileName));
 
       // 保存文件
@@ -1548,12 +1547,12 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       try {
         final appSupportDir = await getApplicationSupportDirectory();
         final fallbackDir =
-            Directory(path.join(appSupportDir.path, 'Screenshots'));
+            Directory(path.join(appSupportDir.path, AppStrings.directoryScreenshots));
         if (!await fallbackDir.exists()) {
           await fallbackDir.create(recursive: true);
         }
         final fileName =
-            'screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+            '${AppStrings.screenshotFileNameTemplate}${DateTime.now().millisecondsSinceEpoch}.png';
         final file = File(path.join(fallbackDir.path, fileName));
         await file.writeAsBytes(imageData);
         if (await file.exists()) {
@@ -1578,7 +1577,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
     _screenshotToastTimer?.cancel();
 
     // 3秒后隐藏提示
-    _screenshotToastTimer = Timer(const Duration(seconds: 3), () {
+    _screenshotToastTimer = Timer(AppDurations.toastDuration, () {
       if (mounted) {
         setState(() {
           _showScreenshotToast = false;
@@ -1597,7 +1596,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
           padding: AppDimens.buttonMdPadding,
           decoration: BoxDecoration(
             color: AppColors.overlayHeavy,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppDimens.radiusCircle8,
           ),
           child: Text(
             _screenshotToastMessage,
@@ -1765,7 +1764,7 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                   await widget.player.seek(seekPosition);
 
                   // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
-                  await Future.delayed(const Duration(milliseconds: 100));
+                  await Future.delayed(AppDurations.fastest);
 
                   if (mounted) {
                     setState(() {
@@ -1792,7 +1791,7 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                 await widget.player.seek(seekPosition);
 
                 // seek 完成后，延迟一小段时间再允许位置更新，确保播放器状态已同步
-                await Future.delayed(const Duration(milliseconds: 100));
+                await Future.delayed(AppDurations.fastest);
 
                 if (mounted) {
                   setState(() {
@@ -1803,7 +1802,7 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                 widget.onDragEnd?.call();
               },
         child: Container(
-          height: 24,
+          height: AppDimens.playerProgressBarHeight,
           color: AppColors.transparent,
           child: Center(
             child: LayoutBuilder(
@@ -1822,9 +1821,9 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                       right: 0,
                       top: 9,
                       child: Container(
-                        height: 6,
+                        height: AppDimens.iconHeightSm,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: AppDimens.radiusCircle3,
                           color: AppColors.white30,
                         ),
                       ),
@@ -1835,9 +1834,9 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                       top: 9,
                       child: Container(
                         width: progressValue * progressWidth,
-                        height: 6,
+                        height: AppDimens.iconHeightSm,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: AppDimens.radiusCircle3,
                           color: AppColors.red,
                         ),
                       ),
@@ -1855,18 +1854,18 @@ class _CustomVideoProgressBarState extends State<CustomVideoProgressBar> {
                                   widget.isSeekingViaSwipe)
                               ? 1.25
                               : 1.0,
-                          duration: const Duration(milliseconds: 150),
+                          duration: AppDurations.fast,
                           child: Container(
-                            width: 16,
-                            height: 16,
+                            width: AppDimens.spacingLg,
+                            height: AppDimens.spacingLg,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: AppColors.red,
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.black30,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: AppDimens.shadowBlur4,
+                                  offset: AppDimens.offset02,
                                 ),
                               ],
                             ),

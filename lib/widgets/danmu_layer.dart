@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../models/danmu_item.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 
 class _RunningDanmu {
   final DanmuItem item;
@@ -50,10 +51,10 @@ class DanmuLayer extends StatefulWidget {
     super.key,
     required this.danmuList,
     required this.currentTime,
-    this.fontSize = 1.0,
-    this.speedLevel = 2,
-    this.opacity = 100,
-    this.displayArea = 1.0,
+    this.fontSize = AppConfig.danmakuDefaultFontSize,
+    this.speedLevel = AppConfig.danmakuDefaultSpeed,
+    this.opacity = AppConfig.danmakuDefaultOpacity,
+    this.displayArea = AppConfig.danmakuDefaultDisplayArea,
     this.antiOverlap = true,
     this.visible = true,
     this.syncVideoSpeed = true,
@@ -308,7 +309,7 @@ class _DanmuLayerState extends State<DanmuLayer> with TickerProviderStateMixin {
   }
 
   void _updateRunningDanmu(double deltaSeconds) {
-    final speedFactors = [0.5, 0.75, 1.0, 1.5, 2.0];
+    final speedFactors = AppConfig.danmakuSpeedValues;
     final speed = speedFactors[widget.speedLevel.clamp(0, 4)];
     final videoSpeedMultiplier =
         widget.syncVideoSpeed ? widget.videoPlaybackSpeed : 1.0;

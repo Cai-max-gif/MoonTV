@@ -269,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _navigateToPlayer(
                   PlayerScreen(
                     title: videoInfo.title,
-                    stype: 'movie',
+                    stype: AppConfig.stypeMovie,
                     year: videoInfo.year,
                   ),
                 );
@@ -399,16 +399,24 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: _refreshHomeData,
       refreshText: AppStrings.refreshDot,
       primaryColor: AppColors.accent,
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Gap.h4,
-            HistoryGrid(
-              onVideoTap: _onVideoTap,
-              onGlobalMenuAction: _onGlobalMenuAction,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Gap.h4,
+                  HistoryGrid(
+                    onVideoTap: _onVideoTap,
+                    onGlobalMenuAction: _onGlobalMenuAction,
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -419,34 +427,42 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: _refreshHomeData,
       refreshText: AppStrings.refreshDot,
       primaryColor: AppColors.accent,
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Gap.h4,
-            FavoritesGrid(
-              onVideoTap: _onVideoTap,
-              onGlobalMenuAction:
-                  (VideoInfo videoInfo, VideoMenuAction action) {
-                // 将VideoInfo转换为PlayRecord用于统一处理
-                final playRecord = PlayRecord(
-                  id: videoInfo.id,
-                  source: videoInfo.source,
-                  title: videoInfo.title,
-                  sourceName: videoInfo.sourceName,
-                  year: videoInfo.year,
-                  cover: videoInfo.cover,
-                  index: videoInfo.index,
-                  totalEpisodes: videoInfo.totalEpisodes,
-                  playTime: videoInfo.playTime,
-                  totalTime: videoInfo.totalTime,
-                  saveTime: videoInfo.saveTime,
-                  searchTitle: videoInfo.searchTitle,
-                );
-                _onGlobalMenuAction(playRecord, action);
-              },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Gap.h4,
+                  FavoritesGrid(
+                    onVideoTap: _onVideoTap,
+                    onGlobalMenuAction:
+                        (VideoInfo videoInfo, VideoMenuAction action) {
+                      // 将VideoInfo转换为PlayRecord用于统一处理
+                      final playRecord = PlayRecord(
+                        id: videoInfo.id,
+                        source: videoInfo.source,
+                        title: videoInfo.title,
+                        sourceName: videoInfo.sourceName,
+                        year: videoInfo.year,
+                        cover: videoInfo.cover,
+                        index: videoInfo.index,
+                        totalEpisodes: videoInfo.totalEpisodes,
+                        playTime: videoInfo.playTime,
+                        totalTime: videoInfo.totalTime,
+                        saveTime: videoInfo.saveTime,
+                        searchTitle: videoInfo.searchTitle,
+                      );
+                      _onGlobalMenuAction(playRecord, action);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -466,70 +482,66 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 构建底栏内容，根据当前页面类型显示不同的PageView
-  Widget _buildBottomNavContent() {
-    // 如果当前在顶部导航栏的页面范围内，显示顶部导航栏的PageView
+  int _getIndexedStackIndex() {
     if (_currentPageIndex < 7) {
-      return PageView(
-        controller: _bottomNavPageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentPageIndex = index;
-            _currentTopNavIndex = index;
-          });
-        },
-        physics: CustomPageViewPhysics(
-          currentIndex: _currentPageIndex,
-        ), // 顶部导航栏的页面使用自定义滑动限制
-        children: [
-          _buildHomeContentWithPageView(),
-          const MovieScreen(),
-          const TvScreen(),
-          const AnimeScreen(),
-          const ShowScreen(),
-          const ShortDramaScreen(),
-          const LiveScreen(),
-        ],
-      );
-    } else {
-      // 如果当前在播放历史、收藏夹或个人中心页面，显示相应的内容
-      return AnimatedSwitcher(
-        duration: AppDurations.slow,
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: ScaleTransition(
-              scale: animation,
-              child: child,
-            ),
-          );
-        },
-        key: ValueKey<int>(_currentPageIndex),
-        child: _currentPageIndex == 7
-            ? _buildHistoryTabContent()
-            : _currentPageIndex == 8
-                ? _buildFavoritesTabContent()
-                : const ProfileScreen(),
-      );
+      return 0;
     }
+    switch (_currentPageIndex) {
+      case 7:
+        return 1;
+      case 8:
+        return 2;
+      case 9:
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  Widget _buildBottomNavContent() {
+    return IndexedStack(
+      index: _getIndexedStackIndex(),
+      children: [
+        PageView(
+          controller: _bottomNavPageController,
+          onPageChanged: (index) {
+            if (_currentPageIndex < 7) {
+              setState(() {
+                _currentPageIndex = index;
+                _currentTopNavIndex = index;
+              });
+            }
+          },
+          physics: CustomPageViewPhysics(
+            currentIndex: _currentPageIndex < 7 ? _currentPageIndex : 0,
+          ),
+          children: [
+            _buildHomeContentWithPageView(),
+            const MovieScreen(),
+            const TvScreen(),
+            const AnimeScreen(),
+            const ShowScreen(),
+            const ShortDramaScreen(),
+            const LiveScreen(),
+          ],
+        ),
+        _buildHistoryTabContent(),
+        _buildFavoritesTabContent(),
+        const ProfileScreen(),
+      ],
+    );
   }
 
   /// 处理底部导航栏切换
   void _onBottomNavChanged(int index) {
-    // 防止重复点击同一个标签
     if (_currentBottomNavIndex == index) {
       return;
     }
 
-    // 底部导航栏索引映射到对应的页面索引
-    // 0: 首页 -> 0
-    // 1: 播放历史 -> 7
-    // 2: 收藏夹 -> 8
-    // 3: 我的 -> 9
     int pageIndex;
     switch (index) {
       case 0:
-        pageIndex = _lastTopNavIndex; // 恢复到之前点击的顶部导航栏标签
+        pageIndex = _lastTopNavIndex;
         break;
       case 1:
         pageIndex = 7;
@@ -541,23 +553,18 @@ class _HomeScreenState extends State<HomeScreen> {
         pageIndex = 9;
         break;
       default:
-        pageIndex = _lastTopNavIndex; // 恢复到之前点击的顶部导航栏标签
+        pageIndex = _lastTopNavIndex;
+    }
+
+    if (pageIndex < 7 && _bottomNavPageController.hasClients) {
+      _bottomNavPageController.jumpToPage(pageIndex);
     }
 
     setState(() {
       _currentBottomNavIndex = index;
       _currentPageIndex = pageIndex;
-      // 只有在顶部导航栏的页面范围内才更新顶部导航栏索引
       if (pageIndex < 7) {
         _currentTopNavIndex = pageIndex;
-      }
-    });
-
-    // 延迟执行跳转，确保状态更新后页面已重建
-    Future.delayed(AppDurations.fastest, () {
-      // 跳转到顶部导航栏的对应页面
-      if (pageIndex < 7) {
-        _bottomNavPageController.jumpToPage(pageIndex);
       }
     });
   }
@@ -791,7 +798,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (!result.success) {
-        throw Exception(result.errorMessage ?? AppStrings.favDeleteFailed);
+        throw Exception(result.errorMessage ?? AppStrings.errorDeleteFailed);
       }
     } catch (e) {
       // 删除失败时显示错误提示
@@ -799,7 +806,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                '${AppStrings.favDeleteFailed}: ${e.toString()}',
+                '${AppStrings.errorDeleteFailed}: ${e.toString()}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,
@@ -858,12 +865,12 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       // 构建收藏数据
       final favoriteData = {
-        'cover': playRecord.cover,
-        'save_time': DateTime.now().millisecondsSinceEpoch,
-        'source_name': playRecord.sourceName,
-        'title': playRecord.title,
-        'total_episodes': playRecord.totalEpisodes,
-        'year': playRecord.year,
+        AppConfig.jsonCover: playRecord.cover,
+        AppConfig.jsonSaveTime: DateTime.now().millisecondsSinceEpoch,
+        AppConfig.jsonSourceName: playRecord.sourceName,
+        AppConfig.jsonTitle: playRecord.title,
+        AppConfig.jsonTotalEpisodes: playRecord.totalEpisodes,
+        AppConfig.jsonYear: playRecord.year,
       };
 
       // 使用统一的收藏方法（包含缓存操作和API调用）
@@ -902,7 +909,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '收藏失败: ${e.toString()}',
+              '${AppStrings.favFailed}: ${e.toString()}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,

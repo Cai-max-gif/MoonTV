@@ -46,13 +46,13 @@ class TelegramAuthService {
         final body = json.decode(requestResponse.body);
         return TelegramAuthResult(
           success: false,
-          error: body['error'] ?? '请求 Telegram 认证失败',
+          error: body[AppConfig.jsonError] ?? AppStrings.telegramRequestFailed,
         );
       }
 
       final requestData = json.decode(requestResponse.body);
-      final token = requestData['token'] as String;
-      final deepLink = requestData['deepLink'] as String;
+      final token = requestData[AppConfig.jsonToken] as String;
+      final deepLink = requestData[AppConfig.jsonDeepLink] as String;
 
       onStatusChanged?.call(AppStrings.telegramOpening);
       final uri = Uri.parse(deepLink);
@@ -63,7 +63,7 @@ class TelegramAuthService {
 
       if (!launched) {
         final tgUri = Uri.parse(
-            'tg://resolve?domain=${requestData['botUsername']}&start=$token');
+            'tg://resolve?domain=${requestData[AppConfig.jsonBotUsername]}&start=$token');
         final tgLaunched = await canLaunchUrl(tgUri)
             ? await launchUrl(tgUri, mode: LaunchMode.externalApplication)
             : false;
@@ -101,9 +101,9 @@ class TelegramAuthService {
             final pollData = json.decode(pollResponse.body);
             return TelegramAuthResult(
               success: true,
-              username: pollData['username'] as String?,
-              token: pollData['token'] as String?,
-              isNewUser: pollData['isNewUser'] as bool? ?? false,
+              username: pollData[AppConfig.jsonUsername] as String?,
+              token: pollData[AppConfig.jsonToken] as String?,
+              isNewUser: pollData[AppConfig.jsonIsNewUser] as bool? ?? false,
             );
           }
         } catch (_) {

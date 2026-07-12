@@ -21,7 +21,7 @@ import '../constants/app_strings.dart';
 class VideoCard extends StatefulWidget {
   final VideoInfo videoInfo;
   final VoidCallback? onTap;
-  final String from; // 场景值：'favorite', 'playrecord', 'search', 'agg'
+  final String from; // 场景值：AppConfig.sourceFavorite, AppConfig.sourcePlayrecord, AppConfig.sourceSearch, AppConfig.sourceAgg
   final double? cardWidth; // 卡片宽度，用于响应式布局
   final Function(VideoMenuAction)? onGlobalMenuAction; // 视频菜单操作回调
   final bool isFavorited; // 是否已收藏
@@ -32,7 +32,7 @@ class VideoCard extends StatefulWidget {
     super.key,
     required this.videoInfo,
     this.onTap,
-    this.from = 'playrecord',
+    this.from = AppConfig.sourcePlayrecord,
     this.cardWidth,
     this.onGlobalMenuAction,
     this.isFavorited = false,
@@ -102,7 +102,7 @@ class _VideoCardState extends State<VideoCard> {
                             BoxShadow(
                               color: AppColors.black.withValues(alpha: 0.1),
                               blurRadius: AppDimens.shadowBlurSm,
-                              offset: const Offset(0, 2),
+                              offset: AppDimens.offset02,
                             ),
                           ],
                         ),
@@ -142,7 +142,7 @@ class _VideoCardState extends State<VideoCard> {
                                 color: themeService.isDarkMode
                                     ? AppColors.gray600
                                     : AppColors.gray500,
-                                size: 40,
+                                size: AppDimens.iconSize40,
                               ),
                             ),
                             // 图片淡入动画
@@ -174,9 +174,9 @@ class _VideoCardState extends State<VideoCard> {
                           ),
                         ),
                       // 年份徽章（搜索模式和聚合模式）
-                      if ((widget.from == 'search' || widget.from == 'agg') &&
+                      if ((widget.from == AppConfig.sourceSearch || widget.from == AppConfig.sourceAgg) &&
                           widget.videoInfo.year.isNotEmpty &&
-                          widget.videoInfo.year != 'unknown')
+                          widget.videoInfo.year != AppStrings.playerUnknown)
                         Positioned(
                           top: 4,
                           left: 4,
@@ -185,8 +185,7 @@ class _VideoCardState extends State<VideoCard> {
                             duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 4),
+                              padding: AppDimens.paddingHorizontal7Vertical4,
                               decoration: BoxDecoration(
                                 color: AppColors.primary
                                     .withValues(alpha: 0.8),
@@ -204,7 +203,7 @@ class _VideoCardState extends State<VideoCard> {
                           ),
                         ),
                       // 上映状态徽章（即将上映模式）
-                      if (widget.from == 'upcoming' &&
+                      if (widget.from == AppConfig.sourceUpcoming &&
                           widget.videoInfo.releaseStatus != null &&
                           widget.videoInfo.releaseStatus!.isNotEmpty)
                         Positioned(
@@ -215,8 +214,7 @@ class _VideoCardState extends State<VideoCard> {
                             duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 3),
+                              padding: AppDimens.paddingHorizontal6Vertical3,
                               decoration: BoxDecoration(
                                 color: AppColors.gold,
                                 borderRadius: BorderRadius.circular(AppDimens.radiusSm),
@@ -233,8 +231,8 @@ class _VideoCardState extends State<VideoCard> {
                           ),
                         )
                       // 集数指示器或评分指示器
-                      else if ((widget.from == 'douban' ||
-                              widget.from == 'bangumi') &&
+                      else if ((widget.from == AppConfig.sourceDouban ||
+                              widget.from == AppConfig.sourceBangumi) &&
                           _shouldShowRating())
                         Positioned(
                           top: 4,
@@ -244,8 +242,8 @@ class _VideoCardState extends State<VideoCard> {
                             duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
-                              width: 30,
-                              height: 30,
+                              width: AppDimens.videoCardBadgeSize,
+                              height: AppDimens.videoCardBadgeSize,
                               decoration: const BoxDecoration(
                                 color: AppColors.pink, // 粉色圆形背景
                                 shape: BoxShape.circle,
@@ -272,8 +270,7 @@ class _VideoCardState extends State<VideoCard> {
                             duration: AppDurations.normal,
                             curve: Curves.easeInOut,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 4),
+                              padding: AppDimens.paddingHorizontal7Vertical4,
                               decoration: BoxDecoration(
                                 color: AppColors.accent,
                                 borderRadius: BorderRadius.circular(AppDimens.radiusSm),
@@ -299,20 +296,20 @@ class _VideoCardState extends State<VideoCard> {
                             height: 3,
                             decoration: BoxDecoration(
                               color: AppColors.black.withValues(alpha: 0.3),
-                              borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(8),
-                                bottomRight: Radius.circular(8),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: AppDimens.radius8,
+                                bottomRight: AppDimens.radius8,
                               ),
                             ),
                             child: FractionallySizedBox(
                               alignment: Alignment.centerLeft,
                               widthFactor: widget.videoInfo.progressPercentage,
                               child: Container(
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   color: AppColors.accent,
                                   borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(8),
-                                    bottomRight: Radius.circular(8),
+                                    bottomLeft: AppDimens.radius8,
+                                    bottomRight: AppDimens.radius8,
                                   ),
                                 ),
                               ),
@@ -339,29 +336,29 @@ class _VideoCardState extends State<VideoCard> {
                                     curve: Curves.easeInOut,
                                     child: AnimatedContainer(
                                       duration:
-                                          const Duration(milliseconds: 200),
-                                      width: 60,
-                                      height: 60,
+                                          AppDurations.normal,
+                                      width: AppDimens.videoCardCoverWidth,
+                                      height: AppDimens.videoCardCoverWidth,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: _isPlayButtonHovered
-                                            ? (widget.from == 'upcoming'
+                                            ? (widget.from == AppConfig.sourceUpcoming
                                                 ? AppColors.gold
                                                 : AppColors.accent)
                                             : AppColors.transparent,
                                         border: Border.all(
                                           color: AppColors.white,
-                                          width: 2.5,
+                                          width: AppDimens.videoCardBorderWidth,
                                         ),
                                       ),
-                                      child: widget.from == 'upcoming'
+                                      child: widget.from == AppConfig.sourceUpcoming
                                           ? const Icon(
                                               Icons.calendar_today,
                                               color: AppColors.white,
-                                              size: 28,
+                                              size: AppDimens.iconSize28,
                                             )
                                           : CustomPaint(
-                                              size: const Size(42, 42),
+                                              size: Size(AppDimens.videoCardPlayButtonSize, AppDimens.videoCardPlayButtonSize),
                                               painter: _PlayIconPainter(
                                                 color: AppColors.white,
                                                 strokeWidth: 2.0,
@@ -377,8 +374,8 @@ class _VideoCardState extends State<VideoCard> {
                       // Hover 操作徽章（PC平台）
                       if (isPC) ...[
                         // 豆瓣和Bangumi模式：左上角链接徽章（即将上映不显示）
-                        if ((widget.from == 'douban' || widget.from == 'bangumi') &&
-                            widget.from != 'upcoming')
+                        if ((widget.from == AppConfig.sourceDouban || widget.from == AppConfig.sourceBangumi) &&
+                            widget.from != AppConfig.sourceUpcoming)
                           Positioned(
                             top: 4,
                             left: 4,
@@ -397,8 +394,8 @@ class _VideoCardState extends State<VideoCard> {
                                     duration: AppDurations.normal,
                                     curve: Curves.easeInOut,
                                     child: Container(
-                                      width: 33,
-                                      height: 33,
+                                      width: AppDimens.videoCardIconSize,
+                                      height: AppDimens.videoCardIconSize,
                                       decoration: const BoxDecoration(
                                         color: AppColors.accent,
                                         shape: BoxShape.circle,
@@ -406,7 +403,7 @@ class _VideoCardState extends State<VideoCard> {
                                       child: const Icon(
                                         Icons.link,
                                         color: AppColors.white,
-                                        size: 18,
+                                        size: AppDimens.iconMd,
                                       ),
                                     ),
                                   ),
@@ -415,7 +412,7 @@ class _VideoCardState extends State<VideoCard> {
                             ),
                           ),
                         // 聚合模式：右下角源数量徽章
-                        if (widget.from == 'agg' &&
+                        if (widget.from == AppConfig.sourceAgg &&
                             widget.originalResults != null)
                           Positioned(
                             bottom: 10,
@@ -436,8 +433,8 @@ class _VideoCardState extends State<VideoCard> {
                                     duration: AppDurations.normal,
                                     curve: Curves.easeInOut,
                                     child: Container(
-                                      width: 30,
-                                      height: 30,
+                                      width: AppDimens.videoCardIconWidth,
+                                      height: AppDimens.videoCardIconWidth,
                                       decoration: BoxDecoration(
                                         color:
                                             AppColors.gray500.withValues(alpha: 0.8),
@@ -460,7 +457,7 @@ class _VideoCardState extends State<VideoCard> {
                             ),
                           ),
                         // 播放记录模式：右下角垃圾桶和爱心
-                        if (widget.from == 'playrecord')
+                        if (widget.from == AppConfig.sourcePlayrecord)
                           Positioned(
                             bottom: 10,
                             right: 10,
@@ -481,19 +478,19 @@ class _VideoCardState extends State<VideoCard> {
                                         scale:
                                             _isDeleteButtonHovered ? 1.05 : 1.0,
                                         duration:
-                                            const Duration(milliseconds: 200),
+                                            AppDurations.normal,
                                         curve: Curves.easeInOut,
                                         child: Icon(
                                           LucideIcons.trash2,
                                           color: _isDeleteButtonHovered
                                               ? AppColors.error
                                               : AppColors.white,
-                                          size: 24,
+                                          size: AppDimens.iconLg,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  Gap.w12,
                                   MouseRegion(
                                     onEnter: (_) => setState(
                                         () => _isFavoriteButtonHovered = true),
@@ -506,7 +503,7 @@ class _VideoCardState extends State<VideoCard> {
                                             ? 1.05
                                             : 1.0,
                                         duration:
-                                            const Duration(milliseconds: 200),
+                                            AppDurations.normal,
                                         curve: Curves.easeInOut,
                                         child: Icon(
                                           _isFavorited ? Icons.star : Icons.star_border,
@@ -515,7 +512,7 @@ class _VideoCardState extends State<VideoCard> {
                                               : (_isFavoriteButtonHovered
                                                   ? AppColors.gold
                                                   : AppColors.white),
-                                          size: 24,
+                                          size: AppDimens.iconLg,
                                         ),
                                       ),
                                     ),
@@ -525,8 +522,8 @@ class _VideoCardState extends State<VideoCard> {
                             ),
                           ),
                         // 收藏夹、搜索模式：右下角爱心
-                        if (widget.from == 'favorite' ||
-                            widget.from == 'search')
+                        if (widget.from == AppConfig.sourceFavorite ||
+                            widget.from == AppConfig.sourceSearch)
                           Positioned(
                             bottom: 10,
                             right: 10,
@@ -552,7 +549,7 @@ class _VideoCardState extends State<VideoCard> {
                                           : (_isFavoriteButtonHovered
                                               ? AppColors.gold
                                               : AppColors.white),
-                                      size: 24,
+                                      size: AppDimens.iconLg,
                                     ),
                                   ),
                                 ),
@@ -572,7 +569,7 @@ class _VideoCardState extends State<VideoCard> {
                         Text(
                           widget.videoInfo.title,
                           style: FontUtils.poppins(
-                            fontSize: width < 100 ? 12 : 13, // 根据宽度调整字体大小，调大字体
+                            fontSize: width < 100 ? AppDimens.fontSizeXs : AppDimens.fontSizeSm,
                             fontWeight: FontWeight.w500,
                             color: isPC && _isHovered
                                 ? AppColors.accent
@@ -581,46 +578,45 @@ class _VideoCardState extends State<VideoCard> {
                                     : AppColors.primary),
                           ),
                           textAlign: TextAlign.center,
-                          maxLines: widget.from == 'douban'
-                              ? 2
-                              : 1, // 豆瓣模式允许两行，其他模式一行
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        // 豆瓣模式、Bangumi模式和即将上映模式不显示来源信息
-                        if (widget.from != 'douban' &&
-                            widget.from != 'bangumi' &&
-                            widget.from != 'agg' &&
-                            widget.from != 'upcoming') ...[
-                          Gap.h4, // 增加title和sourceName之间的间距
+                        // 豆瓣模式、Bangumi模式、聚合模式、即将上映模式、播放记录模式和短剧模式不显示来源信息
+                        if (widget.from != AppConfig.sourceDouban &&
+                            widget.from != AppConfig.sourceBangumi &&
+                            widget.from != AppConfig.sourceAgg &&
+                            widget.from != AppConfig.sourceUpcoming &&
+                            widget.from != AppConfig.sourcePlayrecord &&
+                            widget.from != AppConfig.sourceShortDrama) ...[
+                          Gap.h4,
                           // 视频源名称
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: width < 100 ? 2 : 4,
-                              vertical: 2.0, // 增加垂直padding，让border不紧贴文字
+                              horizontal: width < 100 ? AppDimens.spacingXs : AppDimens.spacingSm,
+                              vertical: AppDimens.spacingXs,
                             ),
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color: isPC && _isHovered
                                     ? AppColors.accent
                                     : AppColors.textSecondary,
-                                width: 0.8,
+                                width: AppDimens.borderWidth08,
                               ),
-                              borderRadius: BorderRadius.circular(AppDimens.radiusXs),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                             ),
                               child: Text(
-                              widget.from == 'agg'
+                              widget.from == AppConfig.sourceAgg
                                   ? _getAggregatedSourceText(
                                       widget.videoInfo.sourceName)
                                   : widget.videoInfo.sourceName,
                               style: FontUtils.poppins(
-                                fontSize:
-                                    width < 100 ? 11 : 12, // 根据宽度调整字体大小，调大字体
+                                fontSize: width < 100 ? AppDimens.fontSize3xs : AppDimens.fontSizeXs,
                                 color: isPC && _isHovered
                                     ? AppColors.accent
-                                    : (widget.from == 'agg'
-                                        ? AppColors.purple // 聚合模式用紫色文字
-                                        : AppColors.textSecondary), // 其他模式用灰色文字
-                                height: 1.0, // 进一步减少行高
+                                    : (widget.from == AppConfig.sourceAgg
+                                        ? AppColors.purple
+                                        : AppColors.textSecondary),
+                                height: AppDimens.lineHeightTighter,
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 1,
@@ -656,12 +652,12 @@ class _VideoCardState extends State<VideoCard> {
             // 非PC平台，添加GestureDetector
             return GestureDetector(
               onTap: widget.onTap,
-              onLongPress: (widget.from == 'playrecord' ||
-                      widget.from == 'douban' ||
-                      widget.from == 'bangumi' ||
-                      widget.from == 'favorite' ||
-                      widget.from == 'search' ||
-                      widget.from == 'agg')
+              onLongPress: (widget.from == AppConfig.sourcePlayrecord ||
+                      widget.from == AppConfig.sourceDouban ||
+                      widget.from == AppConfig.sourceBangumi ||
+                      widget.from == AppConfig.sourceFavorite ||
+                      widget.from == AppConfig.sourceSearch ||
+                      widget.from == AppConfig.sourceAgg)
                   ? () {
                       // 使用微任务延迟震动反馈，确保动画优先执行
                       Future.microtask(() {
@@ -681,12 +677,12 @@ class _VideoCardState extends State<VideoCard> {
                     }
                   : null,
               // 优化长按响应
-              onLongPressStart: (widget.from == 'playrecord' ||
-                      widget.from == 'douban' ||
-                      widget.from == 'bangumi' ||
-                      widget.from == 'favorite' ||
-                      widget.from == 'search' ||
-                      widget.from == 'agg')
+              onLongPressStart: (widget.from == AppConfig.sourcePlayrecord ||
+                      widget.from == AppConfig.sourceDouban ||
+                      widget.from == AppConfig.sourceBangumi ||
+                      widget.from == AppConfig.sourceFavorite ||
+                      widget.from == AppConfig.sourceSearch ||
+                      widget.from == AppConfig.sourceAgg)
                   ? (_) {
                       // 长按开始时的视觉反馈
                     }
@@ -702,7 +698,7 @@ class _VideoCardState extends State<VideoCard> {
   /// 根据场景判断是否显示集数信息
   bool _shouldShowEpisodeInfo() {
     // 豆瓣模式和Bangumi模式不显示集数信息
-    if (widget.from == 'douban' || widget.from == 'bangumi') {
+    if (widget.from == AppConfig.sourceDouban || widget.from == AppConfig.sourceBangumi) {
       return false;
     }
 
@@ -712,15 +708,15 @@ class _VideoCardState extends State<VideoCard> {
     }
 
     switch (widget.from) {
-      case 'favorite':
+      case AppConfig.sourceFavorite:
         return true; // 收藏夹中显示总集数
-      case 'playrecord':
+      case AppConfig.sourcePlayrecord:
         return true; // 播放记录中显示当前/总集数
-      case 'search':
+      case AppConfig.sourceSearch:
         return true; // 搜索模式中显示总集数
-      case 'agg':
+      case AppConfig.sourceAgg:
         return true; // 聚合模式中显示总集数
-      case 'shortdrama':
+      case AppConfig.sourceShortDrama:
         return true; // 短剧模式中显示总集数
       default:
         return true; // 默认显示当前/总集数
@@ -730,18 +726,18 @@ class _VideoCardState extends State<VideoCard> {
   /// 获取集数显示文本
   String _getEpisodeText() {
     switch (widget.from) {
-      case 'favorite':
+      case AppConfig.sourceFavorite:
         // 收藏夹：如果有播放记录（index > 0）显示 x/y，否则只显示总集数
         return widget.videoInfo.index > 0
             ? '${widget.videoInfo.index}/${widget.videoInfo.totalEpisodes}'
             : '${widget.videoInfo.totalEpisodes}';
-      case 'playrecord':
+      case AppConfig.sourcePlayrecord:
         return '${widget.videoInfo.index}/${widget.videoInfo.totalEpisodes}'; // 播放记录显示当前/总集数
-      case 'search':
+      case AppConfig.sourceSearch:
         return '${widget.videoInfo.totalEpisodes}'; // 搜索模式只显示总集数
-      case 'agg':
+      case AppConfig.sourceAgg:
         return '${widget.videoInfo.totalEpisodes}'; // 聚合模式只显示总集数
-      case 'shortdrama':
+      case AppConfig.sourceShortDrama:
         return '${widget.videoInfo.totalEpisodes}'; // 短剧模式只显示总集数
       default:
         return '${widget.videoInfo.index}/${widget.videoInfo.totalEpisodes}'; // 默认显示当前/总集数
@@ -751,19 +747,19 @@ class _VideoCardState extends State<VideoCard> {
   /// 根据场景判断是否显示进度条
   bool _shouldShowProgress() {
     switch (widget.from) {
-      case 'favorite':
+      case AppConfig.sourceFavorite:
         return false; // 收藏夹中不显示进度条
-      case 'douban':
+      case AppConfig.sourceDouban:
         return false; // 豆瓣模式不显示进度条
-      case 'bangumi':
+      case AppConfig.sourceBangumi:
         return false; // Bangumi模式不显示进度条
-      case 'search':
+      case AppConfig.sourceSearch:
         return false; // 搜索模式不显示进度条
-      case 'agg':
+      case AppConfig.sourceAgg:
         return false; // 聚合模式不显示进度条
-      case 'shortdrama':
+      case AppConfig.sourceShortDrama:
         return false; // 短剧模式不显示进度条
-      case 'playrecord':
+      case AppConfig.sourcePlayrecord:
       default:
         return true; // 播放记录中显示进度条
     }
@@ -792,7 +788,7 @@ class _VideoCardState extends State<VideoCard> {
     if (sources.length <= 2) {
       return sourceNames;
     } else {
-      return '${sources.take(2).join(', ')}等${sources.length}源';
+      return '${sources.take(2).join(', ')}${AppStrings.sourceCountSeparator}${sources.length}${AppStrings.sourceCountSuffix}';
     }
   }
 
@@ -821,9 +817,9 @@ class _VideoCardState extends State<VideoCard> {
   void _handleLinkButtonTap() async {
     try {
       String? url;
-      if (widget.from == 'douban' && widget.videoInfo.doubanId != null) {
+      if (widget.from == AppConfig.sourceDouban && widget.videoInfo.doubanId != null) {
         url = '${AppConfig.doubanSubjectUrl}/${widget.videoInfo.doubanId}';
-      } else if (widget.from == 'bangumi' &&
+      } else if (widget.from == AppConfig.sourceBangumi &&
           widget.videoInfo.bangumiId != null) {
         url = '${AppConfig.bgmSubjectUrl}/${widget.videoInfo.bangumiId}';
       }
@@ -851,7 +847,7 @@ class _VideoCardState extends State<VideoCard> {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: AppColors.transparent,
-          elevation: 0,
+          elevation: AppDimens.elevationNone,
           child: Container(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.5,
@@ -865,8 +861,8 @@ class _VideoCardState extends State<VideoCard> {
               boxShadow: [
                 BoxShadow(
                   color: AppColors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  blurRadius: AppDimens.shadowBlurMd,
+                  offset: AppDimens.offset04,
                 ),
               ],
             ),
@@ -875,7 +871,7 @@ class _VideoCardState extends State<VideoCard> {
               children: [
                 // 标题
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  padding: AppDimens.paddingFromLTRB20202016,
                   child: Text(
                     AppStrings.panelAvailableSources,
                     style: FontUtils.poppins(
@@ -890,7 +886,7 @@ class _VideoCardState extends State<VideoCard> {
                 // 播放源列表
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: AppDimens.horizontalLgPadding,
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: Column(
@@ -905,7 +901,7 @@ class _VideoCardState extends State<VideoCard> {
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    AppDimens.verticalMdPadding,
                                 child: Row(
                                   children: [
                                     Text(

@@ -31,7 +31,7 @@ class SelectorOption {
   const SelectorOption({required this.label, required this.value});
 }
 
-class _ShortDramaScreenState extends State<ShortDramaScreen> {
+class _ShortDramaScreenState extends State<ShortDramaScreen> with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _shortDramas = [];
   int _page = 1;
@@ -42,15 +42,15 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
   String? _errorMessage;
   List<dynamic> _categories = [];
   int _selectedCategoryId = 2;
-  String? _selectedCategoryName = '女频恋爱';
+  String? _selectedCategoryName = AppStrings.shortDramaFemaleLove;
 
   final List<Map<String, dynamic>> _defaultCategories = [
-    {'type_id': 2, 'type_name': '女频恋爱'},
-    {'type_id': 3, 'type_name': '反转爽剧'},
-    {'type_id': 4, 'type_name': '古装仙侠'},
-    {'type_id': 5, 'type_name': '年代穿越'},
-    {'type_id': 6, 'type_name': '脑洞悬疑'},
-    {'type_id': 7, 'type_name': '现代都市'},
+    {AppConfig.jsonTypeId: 2, AppConfig.jsonTypeName: AppStrings.shortDramaFemaleLove},
+    {AppConfig.jsonTypeId: 3, AppConfig.jsonTypeName: AppStrings.shortDramaReverseCool},
+    {AppConfig.jsonTypeId: 4, AppConfig.jsonTypeName: AppStrings.shortDramaCostumeXianxia},
+    {AppConfig.jsonTypeId: 5, AppConfig.jsonTypeName: AppStrings.shortDramaEraTravel},
+    {AppConfig.jsonTypeId: 6, AppConfig.jsonTypeName: AppStrings.shortDramaBrainSuspense},
+    {AppConfig.jsonTypeId: 7, AppConfig.jsonTypeName: AppStrings.shortDramaModernCity},
   ];
 
   @override
@@ -79,15 +79,15 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     if (categoriesResult.success && categoriesResult.data != null) {
       final newCategories = categoriesResult.data!;
       final filtered = newCategories.where((cat) {
-        final typeName = cat['type_name'] as String? ?? '';
-        return typeName != '短剧' && typeName != '擦边短剧';
+        final typeName = cat[AppConfig.jsonTypeName] as String? ?? '';
+        return typeName != AppStrings.shortDramaName && typeName != AppStrings.shortDramaEdge;
       }).toList();
       if (filtered.isNotEmpty) {
         final firstCategory = filtered.first;
         setState(() {
           _categories = filtered;
-          _selectedCategoryId = firstCategory['type_id'] as int? ?? 2;
-          _selectedCategoryName = firstCategory['type_name'] as String? ?? '女频恋爱';
+          _selectedCategoryId = firstCategory[AppConfig.jsonTypeId] as int? ?? 2;
+          _selectedCategoryName = firstCategory[AppConfig.jsonTypeName] as String? ?? AppStrings.shortDramaFemaleLove;
         });
       }
     }
@@ -154,7 +154,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
 
     setState(() {
       if (result.success && result.data != null) {
-        final list = result.data!['list'] as List<dynamic>;
+        final list = result.data![AppConfig.jsonList] as List<dynamic>;
         if (isRefresh) {
           _shortDramas.clear();
         }
@@ -195,7 +195,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     if (mounted) {
       setState(() {
         if (result.success && result.data != null) {
-          final list = result.data!['list'] as List<dynamic>;
+          final list = result.data![AppConfig.jsonList] as List<dynamic>;
           _shortDramas.addAll(list.cast<Map<String, dynamic>>());
           _page++;
           _hasMore = list.length >= _pageLimit;
@@ -214,9 +214,9 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => PlayerScreen(
-          title: shortDrama['name'] ?? '',
+          title: shortDrama[AppConfig.jsonName] ?? '',
           stype: AppConfig.stypeShortDrama,
-          id: shortDrama['id'].toString(),
+          id: shortDrama[AppConfig.jsonId].toString(),
         ),
       ),
     );
@@ -234,12 +234,12 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
 
   void _onCategorySelected(String categoryValue) {
     final category = _categories.firstWhere(
-      (c) => c['type_name'] == categoryValue,
-      orElse: () => {'type_id': 1, 'type_name': '全部'},
+      (c) => c[AppConfig.jsonTypeName] == categoryValue,
+      orElse: () => {AppConfig.jsonTypeId: 1, AppConfig.jsonTypeName: AppStrings.all},
     );
     setState(() {
-      _selectedCategoryId = category['type_id'] as int? ?? 1;
-      _selectedCategoryName = category['type_name'] as String? ?? '全部';
+      _selectedCategoryId = category[AppConfig.jsonTypeId] as int? ?? 1;
+      _selectedCategoryName = category[AppConfig.jsonTypeName] as String? ?? AppStrings.all;
       _shortDramas.clear();
       _isLoading = true;
     });
@@ -248,6 +248,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return StyledRefreshIndicator(
       onRefresh: _refreshShortDramasData,
       refreshText: AppStrings.refreshShortDrama,
@@ -268,14 +269,14 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
           if (_isLoadingMore)
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: AppDimens.contentPadding,
                 child: PulsingDotsIndicator(),
               ),
             )
           else if (!_hasMore && _shortDramas.isNotEmpty && !_isLoading)
             SliverToBoxAdapter(child: _buildEndOfListIndicator())
           else
-            const SliverToBoxAdapter(child: SizedBox(height: 50)),
+            const SliverToBoxAdapter(child: Gap.h50),
         ],
       ),
     );
@@ -283,7 +284,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      padding: AppDimens.pageHeaderPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -307,10 +308,11 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       width: double.infinity,
       margin: const EdgeInsets.all(AppDimens.spacingLg),
       padding: AppDimens.listTilePadding,
+      clipBehavior: Clip.none,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.8),
+            ? AppColors.white10
+            : AppColors.white80,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: _buildFilterRow(
@@ -345,19 +347,16 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
           ),
         ),
         Gap.h8,
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: CapsuleTabSwitcher(
-            tabs: items.map((e) => e.label).toList(),
-            selectedTab: selectedValue.isNotEmpty
-                ? items.firstWhere((e) => e.value == selectedValue).label
-                : items.first.label,
-            onTabChanged: (newLabel) {
-              final newValue =
-                  items.firstWhere((e) => e.label == newLabel).value;
-              onItemSelected(newValue);
-            },
-          ),
+        CapsuleTabSwitcher(
+          tabs: items.map((e) => e.label).toList(),
+          selectedTab: selectedValue.isNotEmpty
+              ? items.firstWhere((e) => e.value == selectedValue).label
+              : items.first.label,
+          onTabChanged: (newLabel) {
+            final newValue =
+                items.firstWhere((e) => e.label == newLabel).value;
+            onItemSelected(newValue);
+          },
         ),
       ],
     );
@@ -367,16 +366,16 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: AppDimens.paddingLeft16Right16Top8Bottom16,
       child: Column(
         children: [
           Container(
-            width: 60,
-            height: 2,
+            width: AppDimens.videoCardCoverWidth,
+            height: AppDimens.dividerThicknessMd,
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.grey.withValues(alpha: 0.4),
+                  ? AppColors.white30
+                  : AppColors.grey40,
               borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
@@ -386,7 +385,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.6)
+                  ? AppColors.white60
                   : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
@@ -397,7 +396,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.4)
+                  ? AppColors.white60
                   : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
@@ -406,4 +405,7 @@ class _ShortDramaScreenState extends State<ShortDramaScreen> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

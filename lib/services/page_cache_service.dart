@@ -45,7 +45,7 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<PlayRecord>>> getPlayRecords(
       BuildContext context) async {
-    const cacheKey = 'play_records';
+    const cacheKey = AppConfig.cacheKeyPlayRecords;
 
     // 先检查缓存
     final cachedData = getCache<List<PlayRecord>>(cacheKey);
@@ -56,7 +56,7 @@ class PageCacheService
 
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 缓存未命中，直接走接口并保存到缓存
@@ -68,10 +68,10 @@ class PageCacheService
       BuildContext context) async {
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
-    const cacheKey = 'play_records';
+    const cacheKey = AppConfig.cacheKeyPlayRecords;
 
     try {
       final response = await ApiService.get<Map<String, dynamic>>(
@@ -106,7 +106,7 @@ class PageCacheService
 
   @override
   Future<void> refreshPlayRecords(BuildContext context) async {
-    const cacheKey = 'play_records';
+    const cacheKey = AppConfig.cacheKeyPlayRecords;
 
     // 检查context是否仍然挂载
     if (!context.mounted) {
@@ -146,7 +146,7 @@ class PageCacheService
       PlayRecord playRecord, BuildContext context) async {
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 优先操作缓存
@@ -169,7 +169,7 @@ class PageCacheService
       String source, String id, BuildContext context) async {
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 优先操作缓存
@@ -192,11 +192,11 @@ class PageCacheService
       BuildContext context) async {
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 优先操作缓存
-    clearCache('play_records');
+    clearCache(AppConfig.cacheKeyPlayRecords);
 
     try {
       final response = await ApiService.clearPlayRecord(context);
@@ -211,7 +211,7 @@ class PageCacheService
   }
 
   void _addPlayRecordToCache(PlayRecord playRecord) {
-    const cacheKey = 'play_records';
+    const cacheKey = AppConfig.cacheKeyPlayRecords;
     final cachedData = getCache<List<PlayRecord>>(cacheKey);
 
     List<PlayRecord> records;
@@ -236,7 +236,7 @@ class PageCacheService
   }
 
   void _removePlayRecordFromCache(String source, String id) {
-    const cacheKey = 'play_records';
+    const cacheKey = AppConfig.cacheKeyPlayRecords;
     final cachedData = getCache<List<PlayRecord>>(cacheKey);
 
     if (cachedData != null) {
@@ -255,7 +255,7 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<FavoriteItem>>> getFavorites(
       BuildContext context) async {
-    const cacheKey = 'favorites';
+    const cacheKey = AppConfig.cacheKeyFavorites;
 
     // 先检查缓存
     final cachedData = getCache<List<FavoriteItem>>(cacheKey);
@@ -263,13 +263,13 @@ class PageCacheService
       // 有缓存数据，直接返回
       // 过滤掉 origin=live 的数据
       final filteredData =
-          cachedData.where((item) => item.origin != 'live').toList();
+          cachedData.where((item) => item.origin != AppConfig.sourceLive).toList();
       return DataOperationResult.success(filteredData);
     }
 
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 缓存未命中，直接走接口并保存到缓存
@@ -279,11 +279,11 @@ class PageCacheService
   /// 直接走接口并保存到缓存
   Future<DataOperationResult<List<FavoriteItem>>> getFavoritesDirect(
       BuildContext context) async {
-    const cacheKey = 'favorites';
+    const cacheKey = AppConfig.cacheKeyFavorites;
 
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     try {
@@ -292,7 +292,7 @@ class PageCacheService
       if (response.success && response.data != null) {
         // 过滤掉 origin=live 的数据
         final filteredData =
-            response.data!.where((item) => item.origin != 'live').toList();
+            response.data!.where((item) => item.origin != AppConfig.sourceLive).toList();
         // 缓存过滤后的数据
         setCache(cacheKey, filteredData);
         return DataOperationResult.success(filteredData);
@@ -306,7 +306,7 @@ class PageCacheService
 
   @override
   Future<void> refreshFavorites(BuildContext context) async {
-    const cacheKey = 'favorites';
+    const cacheKey = AppConfig.cacheKeyFavorites;
 
     // 检查context是否仍然挂载
     if (!context.mounted) {
@@ -319,7 +319,7 @@ class PageCacheService
       if (response.success && response.data != null) {
         // 过滤掉 origin=live 的数据
         final filteredData =
-            response.data!.where((item) => item.origin != 'live').toList();
+            response.data!.where((item) => item.origin != AppConfig.sourceLive).toList();
         // 更新缓存数据
         setCache(cacheKey, filteredData);
       }
@@ -333,7 +333,7 @@ class PageCacheService
       Map<String, dynamic> favoriteData, BuildContext context) async {
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 优先操作缓存
@@ -357,7 +357,7 @@ class PageCacheService
       String source, String id, BuildContext context) async {
     // 检查context是否仍然挂载
     if (!context.mounted) {
-      return DataOperationResult.error('Context not mounted');
+      return DataOperationResult.error(AppStrings.errorContextNotMounted);
     }
 
     // 优先操作缓存
@@ -391,7 +391,7 @@ class PageCacheService
   }
 
   void _removeFavoriteFromCache(String source, String id) {
-    const cacheKey = 'favorites';
+    const cacheKey = AppConfig.cacheKeyFavorites;
     final cachedData = getCache<List<FavoriteItem>>(cacheKey);
 
     if (cachedData != null) {
@@ -408,7 +408,7 @@ class PageCacheService
 
   void _addFavoriteToCache(
       String source, String id, Map<String, dynamic> favoriteData) {
-    const cacheKey = 'favorites';
+    const cacheKey = AppConfig.cacheKeyFavorites;
     final cachedData = getCache<List<FavoriteItem>>(cacheKey);
 
     if (cachedData != null) {
@@ -421,12 +421,12 @@ class PageCacheService
         final newFavorite = FavoriteItem(
           id: id,
           source: source,
-          title: favoriteData['title'] ?? '',
-          sourceName: favoriteData['source_name'] ?? '',
-          year: favoriteData['year'] ?? '',
-          cover: favoriteData['cover'] ?? '',
-          totalEpisodes: favoriteData['total_episodes'] ?? 0,
-          saveTime: favoriteData['save_time'] ??
+          title: favoriteData[AppConfig.jsonTitle] ?? '',
+          sourceName: favoriteData[AppConfig.jsonSourceName] ?? '',
+          year: favoriteData[AppConfig.jsonYear] ?? '',
+          cover: favoriteData[AppConfig.jsonCover] ?? '',
+          totalEpisodes: favoriteData[AppConfig.jsonTotalEpisodes] ?? 0,
+          saveTime: favoriteData[AppConfig.jsonSaveTime] ??
               DateTime.now().millisecondsSinceEpoch,
           origin: '', // 默认为空，表示非直播源
         );
@@ -439,7 +439,7 @@ class PageCacheService
   }
 
   List<FavoriteItem>? _getCachedFavorites() {
-    return getCache<List<FavoriteItem>>('favorites');
+    return getCache<List<FavoriteItem>>(AppConfig.cacheKeyFavorites);
   }
 
   // ==================== SearchRecordOperationInterface 实现 ====================
@@ -447,7 +447,7 @@ class PageCacheService
   @override
   Future<DataOperationResult<List<String>>> getSearchHistory(
       BuildContext context) async {
-    const cacheKey = 'search_history';
+    const cacheKey = AppConfig.cacheKeySearchHistory;
 
     // 先检查缓存
     final cachedData = getCache<List<String>>(cacheKey);
@@ -463,7 +463,7 @@ class PageCacheService
   /// 直接走接口并保存到缓存
   Future<DataOperationResult<List<String>>> getSearchHistoryDirect(
       BuildContext context) async {
-    const cacheKey = 'search_history';
+    const cacheKey = AppConfig.cacheKeySearchHistory;
 
     try {
       final response = await ApiService.getSearchHistory(context);
@@ -482,7 +482,7 @@ class PageCacheService
 
   @override
   Future<void> refreshSearchHistory(BuildContext context) async {
-    const cacheKey = 'search_history';
+    const cacheKey = AppConfig.cacheKeySearchHistory;
 
     try {
       final response = await ApiService.getSearchHistory(context);
@@ -500,7 +500,7 @@ class PageCacheService
   Future<DataOperationResult<void>> addSearchHistory(
       String query, BuildContext context) async {
     // 优先操作缓存
-    const cacheKey = 'search_history';
+    const cacheKey = AppConfig.cacheKeySearchHistory;
     final cachedData = getCache<List<String>>(cacheKey);
 
     if (cachedData != null) {
@@ -541,7 +541,7 @@ class PageCacheService
   Future<DataOperationResult<void>> deleteSearchHistory(
       String query, BuildContext context) async {
     // 优先操作缓存
-    const cacheKey = 'search_history';
+    const cacheKey = AppConfig.cacheKeySearchHistory;
     final cachedData = getCache<List<String>>(cacheKey);
 
     if (cachedData != null) {
@@ -566,7 +566,7 @@ class PageCacheService
   Future<DataOperationResult<void>> clearSearchHistory(
       BuildContext context) async {
     // 优先操作缓存
-    clearCache('search_history');
+    clearCache(AppConfig.cacheKeySearchHistory);
 
     try {
       final response = await ApiService.clearSearchHistory(context);
@@ -584,7 +584,7 @@ class PageCacheService
 
   /// 获取热门电影（优先走缓存并异步刷新）
   Future<List<DoubanMovie>?> getHotMovies(BuildContext context) async {
-    const cacheKey = 'hot_movies';
+    const cacheKey = AppConfig.cacheKeyHotMovies;
 
     // 先检查缓存
     final cachedData = getCache<List<DoubanMovie>>(cacheKey);
@@ -599,7 +599,7 @@ class PageCacheService
 
   /// 直接走接口并保存到缓存
   Future<List<DoubanMovie>?> getHotMoviesDirect(BuildContext context) async {
-    const cacheKey = 'hot_movies';
+    const cacheKey = AppConfig.cacheKeyHotMovies;
 
     try {
       final response = await DoubanService.getHotMovies(context);
@@ -618,7 +618,7 @@ class PageCacheService
 
   /// 获取热门剧集（优先走缓存并异步刷新）
   Future<List<DoubanMovie>?> getHotTvShows(BuildContext context) async {
-    const cacheKey = 'hot_tv_shows';
+    const cacheKey = AppConfig.cacheKeyHotTvShows;
 
     // 先检查缓存
     final cachedData = getCache<List<DoubanMovie>>(cacheKey);
@@ -633,7 +633,7 @@ class PageCacheService
 
   /// 直接走接口并保存到缓存
   Future<List<DoubanMovie>?> getHotTvShowsDirect(BuildContext context) async {
-    const cacheKey = 'hot_tv_shows';
+    const cacheKey = AppConfig.cacheKeyHotTvShows;
 
     try {
       final response = await DoubanService.getHotTvShows(context);
@@ -654,7 +654,7 @@ class PageCacheService
 
   /// 获取热门综艺数据（优先走缓存并异步刷新）
   Future<List<DoubanMovie>?> getHotShows(BuildContext context) async {
-    const cacheKey = 'hot_shows';
+    const cacheKey = AppConfig.cacheKeyHotShows;
 
     // 先检查缓存
     final cachedData = getCache<List<DoubanMovie>>(cacheKey);
@@ -669,7 +669,7 @@ class PageCacheService
 
   /// 直接走接口并保存到缓存
   Future<List<DoubanMovie>?> getHotShowsDirect(BuildContext context) async {
-    const cacheKey = 'hot_shows';
+    const cacheKey = AppConfig.cacheKeyHotShows;
 
     try {
       final response = await DoubanService.getHotShows(context);

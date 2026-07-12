@@ -27,23 +27,23 @@ class MovieScreen extends StatefulWidget {
   State<MovieScreen> createState() => _MovieScreenState();
 }
 
-class _MovieScreenState extends State<MovieScreen> {
+class _MovieScreenState extends State<MovieScreen> with AutomaticKeepAliveClientMixin {
   // 电影的一级选择器选项
   final List<SelectorOption> _moviePrimaryOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: '全部'),
-    SelectorOption(label: AppStrings.catHotMovie, value: '热门'),
-    SelectorOption(label: AppStrings.catLatestMovie, value: '最新'),
-    SelectorOption(label: AppStrings.catDoubanHighRating, value: '豆瓣高分'),
-    SelectorOption(label: AppStrings.catUnpopularGood, value: '冷门佳片'),
+    SelectorOption(label: AppStrings.all, value: AppStrings.all),
+    SelectorOption(label: AppStrings.homeHotMovie, value: AppStrings.filterValueHot),
+    SelectorOption(label: AppStrings.catLatestMovie, value: AppStrings.filterValueLatest),
+    SelectorOption(label: AppStrings.filterValueDoubanHighRating, value: AppStrings.filterValueDoubanHighRating),
+    SelectorOption(label: AppStrings.filterValueUnpopularGood, value: AppStrings.filterValueUnpopularGood),
   ];
 
   // 电影的二级选择器选项 (旧版)
   final List<SelectorOption> _movieSecondaryOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: '全部'),
-    SelectorOption(label: AppStrings.regionChinese, value: '华语'),
-    SelectorOption(label: AppStrings.regionWestern, value: '欧美'),
-    SelectorOption(label: AppStrings.regionKorean, value: '韩国'),
-    SelectorOption(label: AppStrings.regionJapanese, value: '日本'),
+    SelectorOption(label: AppStrings.all, value: AppStrings.all),
+    SelectorOption(label: AppStrings.filterValueChinese, value: AppStrings.filterValueChinese),
+    SelectorOption(label: AppStrings.filterValueWestern, value: AppStrings.filterValueWestern),
+    SelectorOption(label: AppStrings.filterValueKorean, value: AppStrings.filterValueKorean),
+    SelectorOption(label: AppStrings.filterValueJapanese, value: AppStrings.filterValueJapanese),
   ];
 
   // 新的筛选选项
@@ -65,19 +65,19 @@ class _MovieScreenState extends State<MovieScreen> {
     SelectorOption(label: AppStrings.typeBiography, value: 'biography'),
     SelectorOption(label: AppStrings.typeMusical, value: 'musical'),
     SelectorOption(label: AppStrings.typeWuxia, value: 'wuxia'),
-    SelectorOption(label: '情色', value: 'erotic'),
+    SelectorOption(label: AppStrings.typeErotic, value: 'erotic'),
     SelectorOption(label: AppStrings.typeDisaster, value: 'disaster'),
-    SelectorOption(label: '西部', value: 'western'),
+    SelectorOption(label: AppStrings.typeWestern, value: 'western'),
     SelectorOption(label: AppStrings.typeDocumentary, value: 'documentary'),
-    SelectorOption(label: '短片', value: 'short'),
+    SelectorOption(label: AppStrings.typeShort, value: 'short'),
   ];
 
   final List<SelectorOption> _movieRegionOptions = const [
     SelectorOption(label: AppStrings.all, value: 'all'),
-    SelectorOption(label: AppStrings.regionChinese, value: 'chinese'),
-    SelectorOption(label: AppStrings.regionWestern, value: 'western'),
-    SelectorOption(label: AppStrings.regionKorean, value: 'korean'),
-    SelectorOption(label: AppStrings.regionJapanese, value: 'japanese'),
+    SelectorOption(label: AppStrings.filterValueChinese, value: 'chinese'),
+    SelectorOption(label: AppStrings.filterValueWestern, value: 'western'),
+    SelectorOption(label: AppStrings.filterValueKorean, value: 'korean'),
+    SelectorOption(label: AppStrings.filterValueJapanese, value: 'japanese'),
     SelectorOption(label: AppStrings.regionMainlandChina, value: 'mainland_china'),
     SelectorOption(label: AppStrings.regionUSA, value: 'usa'),
     SelectorOption(label: AppStrings.regionHongKong, value: 'hong_kong'),
@@ -99,22 +99,22 @@ class _MovieScreenState extends State<MovieScreen> {
   ];
 
   final List<SelectorOption> _movieYearOptions = const [
-    SelectorOption(label: AppStrings.catAll, value: 'all'),
-    SelectorOption(label: '2020年代', value: '2020s'),
-    SelectorOption(label: '2025', value: '2025'),
-    SelectorOption(label: '2024', value: '2024'),
-    SelectorOption(label: '2023', value: '2023'),
-    SelectorOption(label: '2022', value: '2022'),
-    SelectorOption(label: '2021', value: '2021'),
-    SelectorOption(label: '2020', value: '2020'),
-    SelectorOption(label: '2019', value: '2019'),
-    SelectorOption(label: '2010年代', value: '2010s'),
-    SelectorOption(label: '2000年代', value: '2000s'),
-    SelectorOption(label: '90年代', value: '1990s'),
-    SelectorOption(label: '80年代', value: '1980s'),
-    SelectorOption(label: '70年代', value: '1970s'),
-    SelectorOption(label: '60年代', value: '1960s'),
-    SelectorOption(label: '更早', value: 'earlier'),
+    SelectorOption(label: AppStrings.all, value: 'all'),
+    SelectorOption(label: AppStrings.year2020s, value: '2020s'),
+    SelectorOption(label: AppStrings.year2025, value: '2025'),
+    SelectorOption(label: AppStrings.year2024, value: '2024'),
+    SelectorOption(label: AppStrings.year2023, value: '2023'),
+    SelectorOption(label: AppStrings.year2022, value: '2022'),
+    SelectorOption(label: AppStrings.year2021, value: '2021'),
+    SelectorOption(label: AppStrings.year2020, value: '2020'),
+    SelectorOption(label: AppStrings.year2019, value: '2019'),
+    SelectorOption(label: AppStrings.year2010s, value: '2010s'),
+    SelectorOption(label: AppStrings.year2000s, value: '2000s'),
+    SelectorOption(label: AppStrings.year1990s, value: '1990s'),
+    SelectorOption(label: AppStrings.year1980s, value: '1980s'),
+    SelectorOption(label: AppStrings.year1970s, value: '1970s'),
+    SelectorOption(label: AppStrings.year1960s, value: '1960s'),
+    SelectorOption(label: AppStrings.yearEarlier, value: 'earlier'),
   ];
 
   final List<SelectorOption> _movieSortOptions = const [
@@ -124,8 +124,8 @@ class _MovieScreenState extends State<MovieScreen> {
     SelectorOption(label: AppStrings.sortRating, value: 'S'),
   ];
 
-  String _selectedCategoryValue = '热门';
-  String _selectedRegionValue = '全部'; // 旧版地区筛选
+  String _selectedCategoryValue = AppStrings.categoryHot;
+  String _selectedRegionValue = AppStrings.all;
 
   // 新版筛选状态
   String _selectedMovieType = 'all';
@@ -215,7 +215,7 @@ class _MovieScreenState extends State<MovieScreen> {
       _errorMessage = null;
     });
 
-    if (_selectedCategoryValue == '全部') {
+    if (_selectedCategoryValue == AppStrings.all) {
       // 将界面选项转换为豆瓣API参数
       String categoryValue = _selectedMovieType;
       String regionValue = _selectedMovieRegion;
@@ -240,7 +240,7 @@ class _MovieScreenState extends State<MovieScreen> {
       }
 
       final params = DoubanRecommendsParams(
-        kind: 'movie',
+        kind: AppConfig.stypeMovie,
         category: categoryValue,
         region: regionValue,
         year: yearValue,
@@ -284,7 +284,7 @@ class _MovieScreenState extends State<MovieScreen> {
     } else {
       final result = await DoubanService.getCategoryData(
         context,
-        kind: 'movie',
+        kind: AppConfig.stypeMovie,
         category: _selectedCategoryValue,
         type: _selectedRegionValue,
         page: _page,
@@ -328,7 +328,7 @@ class _MovieScreenState extends State<MovieScreen> {
       _isLoadingMore = true;
     });
 
-    if (_selectedCategoryValue == '全部') {
+    if (_selectedCategoryValue == AppStrings.all) {
       // 将界面选项转换为豆瓣API参数
       String categoryValue = _selectedMovieType;
       String regionValue = _selectedMovieRegion;
@@ -353,7 +353,7 @@ class _MovieScreenState extends State<MovieScreen> {
       }
 
       final params = DoubanRecommendsParams(
-        kind: 'movie',
+        kind: AppConfig.stypeMovie,
         category: categoryValue,
         region: regionValue,
         year: yearValue,
@@ -390,7 +390,7 @@ class _MovieScreenState extends State<MovieScreen> {
     } else {
       final result = await DoubanService.getCategoryData(
         context,
-        kind: 'movie',
+        kind: AppConfig.stypeMovie,
         category: _selectedCategoryValue,
         type: _selectedRegionValue,
         page: _page,
@@ -458,7 +458,7 @@ class _MovieScreenState extends State<MovieScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not launch $url')),
+          SnackBar(content: Text(AppStrings.couldNotLaunchUrl(url))),
         );
       }
     }
@@ -466,6 +466,7 @@ class _MovieScreenState extends State<MovieScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return StyledRefreshIndicator(
       onRefresh: _refreshMoviesData,
       refreshText: AppStrings.refreshMovie,
@@ -486,7 +487,7 @@ class _MovieScreenState extends State<MovieScreen> {
               onGlobalMenuAction: (videoInfo, action) {
                 _handleMenuAction(videoInfo, action);
               },
-              contentType: 'movie',
+              contentType: AppConfig.stypeMovie,
             ),
             // 底部指示器 - 加载更多或到底提示
             if (_isLoadingMore)
@@ -527,13 +528,14 @@ class _MovieScreenState extends State<MovieScreen> {
   Widget _buildFilterSection() {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
-      width: double.infinity, // 设置为100%宽度
+      width: double.infinity,
       margin: const EdgeInsets.all(AppDimens.spacingLg),
       padding: AppDimens.listTilePadding,
+      clipBehavior: Clip.none,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.8),
+            ? AppColors.white10
+            : AppColors.white80,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
       ),
       child: Column(
@@ -547,7 +549,7 @@ class _MovieScreenState extends State<MovieScreen> {
               setState(() {
                 _selectedCategoryValue = newValue;
                 // 重置二级筛选为默认值
-                _selectedRegionValue = '全部'; // 胶囊筛选默认值
+                _selectedRegionValue = AppStrings.all;
                 _selectedMovieType = 'all'; // 多级筛选默认值
                 _selectedMovieRegion = 'all';
                 _selectedMovieYear = 'all';
@@ -559,8 +561,8 @@ class _MovieScreenState extends State<MovieScreen> {
           Gap.h16,
           // 使用固定高度的容器来避免高度跳跃
           SizedBox(
-            height: 66, // 增加高度以避免Column底部溢出
-            child: _selectedCategoryValue == '全部'
+            height: AppDimens.filterSectionHeight, // 增加高度以避免Column底部溢出
+            child: _selectedCategoryValue == AppStrings.all
                 ? _buildAdvancedFilterSection()
                 : _buildSimpleFilterSection(),
           ),
@@ -593,7 +595,7 @@ class _MovieScreenState extends State<MovieScreen> {
                   _fetchMovies(isRefresh: true);
                 }),
                 _buildFilterPill(
-                    '地区', _movieRegionOptions, _selectedMovieRegion, (v) {
+                    AppStrings.filterRegion, _movieRegionOptions, _selectedMovieRegion, (v) {
                   setState(() => _selectedMovieRegion = v);
                   _fetchMovies(isRefresh: true);
                 }),
@@ -627,24 +629,21 @@ class _MovieScreenState extends State<MovieScreen> {
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        Gap.h6, // 减少间距，与高级筛选保持一致
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: CapsuleTabSwitcher(
-            tabs: _movieSecondaryOptions.map((e) => e.label).toList(),
-            selectedTab: _movieSecondaryOptions
-                .firstWhere((e) => e.value == _selectedRegionValue)
-                .label,
-            onTabChanged: (newLabel) {
-              final newValue = _movieSecondaryOptions
-                  .firstWhere((e) => e.label == newLabel)
-                  .value;
-              setState(() {
-                _selectedRegionValue = newValue;
-              });
-              _fetchMovies(isRefresh: true);
-            },
-          ),
+        Gap.h6,
+        CapsuleTabSwitcher(
+          tabs: _movieSecondaryOptions.map((e) => e.label).toList(),
+          selectedTab: _movieSecondaryOptions
+              .firstWhere((e) => e.value == _selectedRegionValue)
+              .label,
+          onTabChanged: (newLabel) {
+            final newValue = _movieSecondaryOptions
+                .firstWhere((e) => e.label == newLabel)
+                .value;
+            setState(() {
+              _selectedRegionValue = newValue;
+            });
+            _fetchMovies(isRefresh: true);
+          },
         ),
       ],
     );
@@ -655,7 +654,7 @@ class _MovieScreenState extends State<MovieScreen> {
     final selectedOption = options.firstWhere((e) => e.value == selectedValue,
         orElse: () => options.first);
     bool isDefault =
-        selectedValue == 'all' || (title == '排序' && selectedValue == 'T');
+        selectedValue == AppStrings.sortAll || (title == AppStrings.filterSort && selectedValue == AppStrings.sortDefault);
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -701,18 +700,15 @@ class _MovieScreenState extends State<MovieScreen> {
           ),
         ),
         Gap.h8,
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: CapsuleTabSwitcher(
-            tabs: items.map((e) => e.label).toList(),
-            selectedTab:
-                items.firstWhere((e) => e.value == selectedValue).label,
-            onTabChanged: (newLabel) {
-              final newValue =
-                  items.firstWhere((e) => e.label == newLabel).value;
-              onItemSelected(newValue);
-            },
-          ),
+        CapsuleTabSwitcher(
+          tabs: items.map((e) => e.label).toList(),
+          selectedTab:
+              items.firstWhere((e) => e.value == selectedValue).label,
+          onTabChanged: (newLabel) {
+            final newValue =
+                items.firstWhere((e) => e.label == newLabel).value;
+            onItemSelected(newValue);
+          },
         ),
       ],
     );
@@ -722,17 +718,16 @@ class _MovieScreenState extends State<MovieScreen> {
     final themeService = Provider.of<ThemeService>(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-          16, 8, 16, 16), // 减少顶部padding，保持底部padding与加载指示器一致
+      padding: AppDimens.paddingFromLTRB1681616,
       child: Column(
         children: [
           Container(
-            width: 60,
-            height: 2,
+            width: AppDimens.videoCardCoverWidth,
+            height: AppDimens.dividerThicknessMd,
             decoration: BoxDecoration(
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.grey.withValues(alpha: 0.4),
+                  ? AppColors.white30
+                  : AppColors.grey40,
               borderRadius: BorderRadius.circular(AppDimens.radiusXxs),
             ),
           ),
@@ -742,7 +737,7 @@ class _MovieScreenState extends State<MovieScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.6)
+                  ? AppColors.white60
                   : AppColors.gray600,
               fontWeight: FontWeight.w400,
             ),
@@ -753,7 +748,7 @@ class _MovieScreenState extends State<MovieScreen> {
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeXs,
               color: themeService.isDarkMode
-                  ? Colors.white.withValues(alpha: 0.4)
+                  ? AppColors.white60
                   : AppColors.gray500,
               fontWeight: FontWeight.w300,
             ),
@@ -762,4 +757,7 @@ class _MovieScreenState extends State<MovieScreen> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

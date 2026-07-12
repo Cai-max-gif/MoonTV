@@ -19,9 +19,9 @@ class AISettingsPage extends StatefulWidget {
 }
 
 class _AISettingsPageState extends State<AISettingsPage> {
-  String _selectedProvider = 'openai';
+  String _selectedProvider = AppConfig.aiProviderOpenai;
   final TextEditingController _apiKeyController = TextEditingController();
-  String _selectedModel = 'gpt-4o';
+  String _selectedModel = AppConfig.aiDefaultModel;
   final TextEditingController _baseUrlController = TextEditingController();
   final TextEditingController _customModelController = TextEditingController();
   bool _obscureApiKey = true;
@@ -35,53 +35,53 @@ class _AISettingsPageState extends State<AISettingsPage> {
 
   static const List<_ProviderInfo> _providers = [
     _ProviderInfo(
-      id: 'openai',
-      name: 'OpenAI',
+      id: AppConfig.aiProviderOpenai,
+      name: AppConfig.aiProviderNameOpenai,
       models: [
-        _ModelInfo('gpt-5.5-pro', 'GPT-5.5 Pro'),
-        _ModelInfo('gpt-5.5', 'GPT-5.5'),
-        _ModelInfo('gpt-5.4', 'GPT-5.4'),
-        _ModelInfo('gpt-5.3-codex', 'GPT-5.3 Codex'),
+        _ModelInfo(AppConfig.aiModelGpt55Pro, AppConfig.aiModelNameGpt55Pro),
+        _ModelInfo(AppConfig.aiModelGpt55, AppConfig.aiModelNameGpt55),
+        _ModelInfo(AppConfig.aiModelGpt54, AppConfig.aiModelNameGpt54),
+        _ModelInfo(AppConfig.aiModelGpt53Codex, AppConfig.aiModelNameGpt53Codex),
       ],
     ),
     _ProviderInfo(
-      id: 'deepseek',
-      name: 'DeepSeek',
+      id: AppConfig.aiProviderDeepseek,
+      name: AppConfig.aiProviderNameDeepseek,
       models: [
-        _ModelInfo('deepseek-v4-pro', 'DeepSeek-V4-Pro'),
-        _ModelInfo('deepseek-v4-flash', 'DeepSeek-V4-Flash'),
+        _ModelInfo(AppConfig.aiModelDeepseekV4Pro, AppConfig.aiModelNameDeepseekV4Pro),
+        _ModelInfo(AppConfig.aiModelDeepseekV4Flash, AppConfig.aiModelNameDeepseekV4Flash),
       ],
     ),
     _ProviderInfo(
-      id: 'zhipu',
-      name: '智谱 AI (GLM)',
+      id: AppConfig.aiProviderZhipu,
+      name: AppConfig.aiProviderNameZhipu,
       models: [
-        _ModelInfo('glm-5.2', 'GLM-5.2'),
-        _ModelInfo('glm-5.1', 'GLM-5.1'),
-        _ModelInfo('glm-4.7', 'GLM-4.7'),
-        _ModelInfo('glm-4.5', 'GLM-4.5'),
+        _ModelInfo(AppConfig.aiModelGlm52, AppConfig.aiModelNameGlm52),
+        _ModelInfo(AppConfig.aiModelGlm51, AppConfig.aiModelNameGlm51),
+        _ModelInfo(AppConfig.aiModelGlm47, AppConfig.aiModelNameGlm47),
+        _ModelInfo(AppConfig.aiModelGlm45, AppConfig.aiModelNameGlm45),
       ],
     ),
     _ProviderInfo(
-      id: 'moonshot',
-      name: 'Moonshot (Kimi)',
+      id: AppConfig.aiProviderMoonshot,
+      name: AppConfig.aiProviderNameMoonshot,
       models: [
-        _ModelInfo('kimi-k2.7-code', 'Kimi K2.7 Code'),
-        _ModelInfo('kimi-k2.6', 'Kimi K2.6'),
-        _ModelInfo('kimi-k2.5', 'Kimi K2.5'),
+        _ModelInfo(AppConfig.aiModelKimiK27Code, AppConfig.aiModelNameKimiK27Code),
+        _ModelInfo(AppConfig.aiModelKimiK26, AppConfig.aiModelNameKimiK26),
+        _ModelInfo(AppConfig.aiModelKimiK25, AppConfig.aiModelNameKimiK25),
       ],
     ),
     _ProviderInfo(
-      id: 'mimo',
-      name: 'MiMo',
+      id: AppConfig.aiProviderMimo,
+      name: AppConfig.aiProviderNameMimo,
       models: [
-        _ModelInfo('mimo-v2.5-pro', 'MiMo V2.5 Pro'),
-        _ModelInfo('mimo-v2.5', 'MiMo V2.5'),
+        _ModelInfo(AppConfig.aiModelMimoV25Pro, AppConfig.aiModelNameMimoV25Pro),
+        _ModelInfo(AppConfig.aiModelMimoV25, AppConfig.aiModelNameMimoV25),
       ],
     ),
     _ProviderInfo(
-      id: 'custom',
-      name: '自定义',
+      id: AppConfig.aiProviderCustom,
+      name: AppStrings.aiCustom,
       models: [],
     ),
   ];
@@ -110,7 +110,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
       _selectedProvider = settings.provider;
       _apiKeyController.text = settings.apiKey;
       _baseUrlController.text = settings.baseUrl;
-      if (settings.provider == 'custom') {
+      if (settings.provider == AppConfig.aiProviderCustom) {
         _customModelController.text = settings.model;
       } else {
         _selectedModel = settings.model;
@@ -125,7 +125,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     return _providers.last.models;
   }
 
-  bool get _supportsBalance => _selectedProvider == 'deepseek' || _selectedProvider == 'moonshot';
+  bool get _supportsBalance => _selectedProvider == AppConfig.aiProviderDeepseek || _selectedProvider == AppConfig.aiProviderMoonshot;
 
   Future<void> _autoCheckBalance() async {
     if (!_supportsBalance) {
@@ -168,7 +168,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     });
   }
 
-  bool get _isCustomProvider => _selectedProvider == 'custom';
+  bool get _isCustomProvider => _selectedProvider == AppConfig.aiProviderCustom;
 
   String get _effectiveModel {
     if (_isCustomProvider) {
@@ -185,7 +185,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.cardDark : AppColors.white,
           title: Text(
-            '清空聊天记录',
+            AppStrings.aiDeleteConversation,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeXl,
               fontWeight: FontWeight.w600,
@@ -193,7 +193,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             ),
           ),
           content: Text(
-            '确定要清空所有聊天记录吗？此操作不可恢复。',
+            AppStrings.confirmClearChatHistory,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: isDark ? AppColors.textDarkSecondary : AppColors.textSecondary,
@@ -231,7 +231,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     if (confirmed == true) {
       await AIService.clearChatHistory();
       if (mounted) {
-        _showSnack('聊天记录已清空', true);
+        _showSnack(AppStrings.chatHistoryCleared, true);
       }
     }
   }
@@ -261,7 +261,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '设置已保存',
+          AppStrings.aiSettingsSaved,
           style: FontUtils.poppins(fontSize: AppDimens.fontSizeMd, color: AppColors.white),
         ),
         backgroundColor: AppColors.accent,
@@ -328,7 +328,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
         final inputBgColor =
             isDark ? AppColors.inputBgDark : AppColors.inputBgLight;
         final borderColor =
-            isDark ? AppColors.darkDivider : AppColors.grayBorder;
+            isDark ? AppColors.borderDark : AppColors.gray200;
 
         return Scaffold(
           backgroundColor:
@@ -387,13 +387,13 @@ class _AISettingsPageState extends State<AISettingsPage> {
             onTap: _isSaving ? null : _saveSettings,
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 16, 8),
+              padding: AppDimens.paddingFromLTRB08168,
               child: _isSaving
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: AppDimens.iconSize20,
+                      height: AppDimens.iconSize20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                        strokeWidth: AppDimens.borderWidthMd,
                         valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
                       ),
                     )
@@ -430,7 +430,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: borderColor, width: AppDimens.borderWidthSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +444,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   setState(() => _isProviderExpanded = !_isProviderExpanded),
               behavior: HitTestBehavior.opaque,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+                padding: AppDimens.paddingLeft16Right12Top16Bottom12,
                 child: Row(
                   children: [
                     const Icon(LucideIcons.building2,
@@ -487,10 +487,9 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   ? [
                       ..._providers.map((p) => _buildProviderTile(
                           p, isDark, textColor, subtitleColor, borderColor)),
-                      if (_selectedProvider == 'custom')
+                      if (_selectedProvider == AppConfig.aiProviderCustom)
                         Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                          padding: AppDimens.paddingLeft12Right12Top8Bottom16,
                           child: _buildTextField(
                             controller: _baseUrlController,
                             hintText: AppConfig.aiOpenaiBaseUrl,
@@ -503,7 +502,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                       else
                         Gap.h12,
                     ]
-                  : [const SizedBox(height: 0)],
+                  : [Gap.h0],
             ),
           ),
         ],
@@ -521,7 +520,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
           if (_selectedProvider == info.id) return;
           setState(() {
             _selectedProvider = info.id;
-            if (info.id == 'custom') {
+            if (info.id == AppConfig.aiProviderCustom) {
               _baseUrlController.clear();
               _customModelController.clear();
             } else if (info.models.isNotEmpty) {
@@ -531,8 +530,8 @@ class _AISettingsPageState extends State<AISettingsPage> {
         },
         behavior: HitTestBehavior.opaque,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          margin: AppDimens.marginHorizontal12Vertical4,
+          padding: AppDimens.paddingHorizontal14Vertical12,
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.accent
@@ -541,7 +540,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             border: Border.all(
               color: isSelected ? AppColors.accent : AppColors.transparent,
-              width: isSelected ? 1.5 : 0,
+              width: isSelected ? AppDimens.borderWidth15 : 0,
             ),
           ),
           child: Row(
@@ -557,14 +556,14 @@ class _AISettingsPageState extends State<AISettingsPage> {
               const Spacer(),
               if (isSelected)
                 Container(
-                  width: 22,
-                  height: 22,
+                  width: AppDimens.iconSize22,
+                  height: AppDimens.iconSize22,
                   decoration: BoxDecoration(
                     color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: AppDimens.radiusCircle11,
                   ),
                   child: const Icon(LucideIcons.check,
-                      size: 14, color: AppColors.white),
+                      size: AppDimens.iconSize14, color: AppColors.white),
                 ),
             ],
           ),
@@ -580,7 +579,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
     if (_isCustomProvider) {
       selectedModelName = _customModelController.text.trim();
       if (selectedModelName.isEmpty) {
-        selectedModelName = '自定义模型';
+        selectedModelName = AppStrings.aiCustomModel;
       }
     } else {
       final selectedModel = models.firstWhere(
@@ -594,7 +593,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: borderColor, width: AppDimens.borderWidthSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,7 +607,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   setState(() => _isModelExpanded = !_isModelExpanded),
               behavior: HitTestBehavior.opaque,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+                padding: AppDimens.paddingLeft16Right12Top16Bottom12,
                 child: Row(
                   children: [
                     const Icon(LucideIcons.brain,
@@ -651,11 +650,10 @@ class _AISettingsPageState extends State<AISettingsPage> {
                   ? [
                       if (_isCustomProvider)
                         Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                          padding: AppDimens.paddingLeft12Right12Top0Bottom16,
                           child: _buildTextField(
                             controller: _customModelController,
-                            hintText: '输入模型名称',
+                            hintText: AppStrings.aiEnterModelName,
                             isDark: isDark,
                             textColor: textColor,
                             subtitleColor: subtitleColor,
@@ -668,7 +666,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                           Gap.h12,
                         ],
                     ]
-                  : [const SizedBox(height: 0)],
+                  : [Gap.h0],
             ),
           ),
         ],
@@ -688,8 +686,8 @@ class _AISettingsPageState extends State<AISettingsPage> {
         },
         behavior: HitTestBehavior.opaque,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          margin: AppDimens.marginHorizontal12Vertical4,
+          padding: AppDimens.paddingHorizontal14Vertical12,
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.accent
@@ -698,7 +696,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             border: Border.all(
               color: isSelected ? AppColors.accent : AppColors.transparent,
-              width: isSelected ? 1.5 : 0,
+              width: isSelected ? AppDimens.borderWidth15 : 0,
             ),
           ),
           child: Row(
@@ -714,14 +712,14 @@ class _AISettingsPageState extends State<AISettingsPage> {
               const Spacer(),
               if (isSelected)
                 Container(
-                  width: 22,
-                  height: 22,
+                  width: AppDimens.iconSize22,
+                  height: AppDimens.iconSize22,
                   decoration: BoxDecoration(
                     color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: AppDimens.radiusCircle11,
                   ),
                   child: const Icon(LucideIcons.check,
-                      size: 14, color: AppColors.white),
+                      size: AppDimens.iconSize14, color: AppColors.white),
                 ),
             ],
           ),
@@ -737,13 +735,13 @@ class _AISettingsPageState extends State<AISettingsPage> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: borderColor, width: AppDimens.borderWidthSm),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+            padding: AppDimens.paddingLeft16Right12Top16Bottom12,
             child: Row(
               children: [
                 const Icon(LucideIcons.key, size: AppDimens.iconMd, color: AppColors.accent),
@@ -759,15 +757,15 @@ class _AISettingsPageState extends State<AISettingsPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: AppDimens.paddingHorizontal12,
             child: Text(
-              '密钥将安全地加密存储在本机',
+              AppStrings.aiApiKeySecureStorage,
               style: FontUtils.poppins(fontSize: AppDimens.fontSizeXs, color: subtitleColor),
             ),
           ),
           Gap.h10,
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+            padding: AppDimens.paddingLeft12Right12Top0Bottom16,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -776,7 +774,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     Expanded(
                       child: _buildTextField(
                         controller: _apiKeyController,
-                        hintText: 'sk-xxxxxxxxxxxxxxxx',
+                        hintText: AppStrings.aiApiKeyHint,
                         obscureText: _obscureApiKey,
                         isDark: isDark,
                         textColor: textColor,
@@ -817,7 +815,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                 ),
                 if (_supportsBalance)
                   Padding(
-                    padding: const EdgeInsets.only(top: 16),
+                    padding: AppDimens.paddingTop16,
                     child: _buildBalanceInfo(isDark, textColor, subtitleColor),
                   ),
               ],
@@ -836,7 +834,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: AppDimens.paddingAll14,
       decoration: BoxDecoration(
         color: isDark ? AppColors.inputBgDark : AppColors.inputBgLight,
         borderRadius: BorderRadius.circular(AppDimens.radiusLg),
@@ -849,7 +847,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
               const Icon(LucideIcons.wallet, size: AppDimens.iconSm, color: AppColors.accent),
               Gap.w6,
               Text(
-                '账户余额',
+                AppStrings.aiBalance,
                 style: FontUtils.poppins(
                   fontSize: AppDimens.fontSizeSm,
                   fontWeight: FontWeight.w600,
@@ -863,17 +861,17 @@ class _AISettingsPageState extends State<AISettingsPage> {
             Row(
               children: [
                 const SizedBox(
-                  width: 16,
-                  height: 16,
+                  width: AppDimens.iconSm,
+                  height: AppDimens.iconSm,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                    strokeWidth: AppDimens.borderWidthMd,
                     valueColor:
                         AlwaysStoppedAnimation<Color>(AppColors.accent),
                   ),
                 ),
                 Gap.w8,
                 Text(
-                  '查询中...',
+                  AppStrings.aiBalanceChecking,
                   style: FontUtils.poppins(fontSize: AppDimens.fontSizeSm, color: subtitleColor),
                 ),
               ],
@@ -888,12 +886,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
               AppStrings.aiBalanceHint,
               style: FontUtils.poppins(fontSize: AppDimens.fontSizeSm, color: subtitleColor),
             )
-          else if (_balanceInfo!['balance_infos'] != null)
-            ...(_balanceInfo!['balance_infos'] as List).map((info) {
+          else if (_balanceInfo![AppConfig.jsonBalanceInfos] != null)
+            ...(_balanceInfo![AppConfig.jsonBalanceInfos] as List).map((info) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: AppDimens.paddingBottom4,
                 child: Text(
-                  '${info['currency'] ?? ''}: ${formatBalance(info['total_balance'])}',
+                  '${info[AppConfig.jsonCurrency] ?? ''}: ${formatBalance(info[AppConfig.jsonTotalBalance])}',
                   style: FontUtils.poppins(
                     fontSize: AppDimens.fontSizeMd,
                     fontWeight: FontWeight.w500,
@@ -902,9 +900,9 @@ class _AISettingsPageState extends State<AISettingsPage> {
                 ),
               );
             })
-          else if (_balanceInfo!['is_available'] != null)
+          else if (_balanceInfo![AppConfig.jsonIsAvailable] != null)
             Text(
-              '可用余额: ${formatBalance(_balanceInfo!['available_balance'])}',
+              AppStrings.aiAvailableBalance.replaceAll('%s', formatBalance(_balanceInfo![AppConfig.jsonAvailableBalance])),
               style: FontUtils.poppins(
                 fontSize: AppDimens.fontSizeMd,
                 fontWeight: FontWeight.w500,
@@ -913,7 +911,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
             )
           else
             Text(
-              '余额信息: ${_balanceInfo.toString()}',
+              AppStrings.aiBalanceInfo.replaceAll('%s', _balanceInfo.toString()),
               style: FontUtils.poppins(
                 fontSize: AppDimens.fontSizeSm,
                 color: subtitleColor,
@@ -933,11 +931,11 @@ class _AISettingsPageState extends State<AISettingsPage> {
         behavior: HitTestBehavior.opaque,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: AppDimens.paddingVertical14,
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(AppDimens.radiusXxl),
-            border: Border.all(color: borderColor, width: 1),
+            border: Border.all(color: borderColor, width: AppDimens.borderWidthSm),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -945,7 +943,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
               const Icon(LucideIcons.trash2, size: AppDimens.iconMd, color: AppColors.redAccent),
               Gap.w8,
               Text(
-                '删除对话',
+                AppStrings.aiDeleteConversation,
                 style: FontUtils.poppins(
                   fontSize: AppDimens.fontSizeMd,
                   fontWeight: FontWeight.w600,
@@ -983,7 +981,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
           borderSide: BorderSide.none,
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            AppDimens.paddingHorizontal14Vertical14,
         suffixIcon: suffixIcon,
       ),
     );
@@ -1004,7 +1002,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: AppDurations.normal,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: AppDimens.paddingHorizontal14Vertical14,
           decoration: BoxDecoration(
             color: isPrimary
                 ? AppColors.accent
@@ -1014,18 +1012,18 @@ class _AISettingsPageState extends State<AISettingsPage> {
               color: isPrimary
                   ? AppColors.accent
                   : (isDark
-                      ? AppColors.darkDivider
-                      : AppColors.grayBorder),
-              width: 1,
+                      ? AppColors.borderDark
+                      : AppColors.gray200),
+              width: AppDimens.borderWidthSm,
             ),
           ),
           child: Center(
             child: isLoading
                 ? SizedBox(
-                    width: 18,
-                    height: 18,
+                    width: AppDimens.iconMd,
+                    height: AppDimens.iconMd,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                      strokeWidth: AppDimens.borderWidthMd,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         isPrimary ? AppColors.white : AppColors.accent,
                       ),

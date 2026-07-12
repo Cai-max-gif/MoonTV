@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_strings.dart';
@@ -17,7 +17,7 @@ class GridErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: AppColors.silver),
+          const Icon(Icons.error_outline, size: AppDimens.iconSize80, color: AppColors.silver),
           Gap.h24,
           Text(
             AppStrings.loadFailed,
@@ -40,7 +40,7 @@ class GridErrorState extends StatelessWidget {
             Gap.h16,
             TextButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 18),
+              icon: const Icon(Icons.refresh, size: AppDimens.iconMd),
               label: Text(AppStrings.retry),
             ),
           ],
@@ -68,7 +68,7 @@ class GridEmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: AppColors.silver),
+          Icon(icon, size: AppDimens.iconSize80, color: AppColors.silver),
           Gap.h24,
           Text(
             message,
@@ -81,7 +81,7 @@ class GridEmptyState extends StatelessWidget {
           if (subtitle != null) ...[
             Gap.h8,
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+              padding: AppDimens.paddingHorizontal32,
               child: Text(
                 subtitle!,
                 style: FontUtils.poppins(

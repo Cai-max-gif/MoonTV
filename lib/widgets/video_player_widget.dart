@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
 import 'package:pip/pip.dart';
 import '../services/user_data_service.dart';
@@ -218,7 +219,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     try {
       _player = Player(
         configuration: PlayerConfiguration(
-          title: 'MoonTV',
+          title: AppConfig.appName,
         ),
       );
       _videoController = VideoController(_player!);

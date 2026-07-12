@@ -11,6 +11,7 @@ import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_regex.dart';
 import '../constants/app_strings.dart';
+import '../utils/html_utils.dart';
 
 /// 搜索服务
 class SearchService {
@@ -18,11 +19,11 @@ class SearchService {
   static List<SearchResource>? _cachedResources;
   static bool _isRefreshing = false;
 
-  /// 获取搜索资源列表（带缓存）
+  /// 获取搜索资源列表（带缓存�?
   static Future<List<SearchResource>> _getSearchResourcesWithCache() async {
     // 如果有缓存，立即返回缓存数据
     if (_cachedResources != null) {
-      // 异步刷新缓存（不等待）
+      // 异步刷新缓存（不等待�?
       if (!_isRefreshing) {
         _refreshCache();
       }
@@ -38,7 +39,7 @@ class SearchService {
 
   static Future<List<SearchResource>> _refreshCache() async {
     if (_isRefreshing) {
-      // 如果正在刷新，等待当前刷新完成
+      // 如果正在刷新，等待当前刷新完�?
       if (_refreshCacheCompleter != null &&
           !_refreshCacheCompleter!.isCompleted) {
         return await _refreshCacheCompleter!.future;
@@ -65,19 +66,19 @@ class SearchService {
     }
   }
 
-  /// 清除缓存（在需要强制刷新时调用）
+  /// 清除缓存（在需要强制刷新时调用�?
   static void clearCache() {
     _cachedResources = null;
   }
 
   /// 搜索推荐（只搜索第一个资源）
-  /// 用于快速获取搜索建议
+  /// 用于快速获取搜索建�?
   static Future<List<String>> searchRecommand(String query) async {
     try {
       // 获取搜索资源列表（使用缓存）
       final allResources = await _getSearchResourcesWithCache();
 
-      // 过滤掉被禁用的资源
+      // 过滤掉被禁用的资�?
       final resources =
           allResources.where((resource) => !resource.disabled).toList();
 
@@ -85,7 +86,7 @@ class SearchService {
         return [];
       }
 
-      // 只搜索第一个资源，设置 5 秒超时
+      // 只搜索第一个资源，设置 5 秒超�?
       final firstResource = resources.first;
       final results =
           await DownstreamService.searchFromApi(firstResource, query)
@@ -95,7 +96,7 @@ class SearchService {
         return <SearchResult>[];
       });
 
-      // 提取标题列表并去重
+      // 提取标题列表并去�?
       final titles = results.map((result) => result.title).toSet().toList();
       return titles;
     } catch (e) {
@@ -104,13 +105,13 @@ class SearchService {
   }
 
   /// 同步搜索（本地搜索）
-  /// 并发调用所有资源的搜索，返回所有结果
+  /// 并发调用所有资源的搜索，返回所有结�?
   static Future<List<SearchResult>> searchSync(String query) async {
     try {
       // 获取搜索资源列表（使用缓存）
       final allResources = await _getSearchResourcesWithCache();
 
-      // 过滤掉被禁用的资源
+      // 过滤掉被禁用的资�?
       final resources =
           allResources.where((resource) => !resource.disabled).toList();
 
@@ -118,7 +119,7 @@ class SearchService {
         return [];
       }
 
-      // 并发调用所有资源的搜索，每个调用增加 20 秒超时
+      // 并发调用所有资源的搜索，每个调用增�?20 秒超�?
       final searchFutures = resources.map((resource) {
         return DownstreamService.searchFromApi(resource, query)
             .timeout(AppDurations.networkTimeout)
@@ -128,7 +129,7 @@ class SearchService {
         });
       }).toList();
 
-      // 等待所有搜索完成
+      // 等待所有搜索完�?
       final allResults = await Future.wait(searchFutures);
 
       // 按照 resources 的顺序合并结果（allResults 的顺序与 resources 一致）
@@ -154,59 +155,59 @@ class SearchService {
     }
   }
 
-  /// 获取视频详情（本地直接调用下游API）
+  /// 获取视频详情（本地直接调用下游API�?
   static Future<List<SearchResult>> getDetailSync(
       String source, String id) async {
     try {
       // 获取搜索资源列表（使用缓存）
       final allResources = await _getSearchResourcesWithCache();
 
-      // 找到对应 source 的资源
+      // 找到对应 source 的资�?
       final apiSite = allResources.firstWhere(
         (resource) => resource.key == source,
         orElse: () => throw Exception('${AppStrings.searchSourceNotFound}$source'),
       );
 
-      // 如果 detail 不为空，使用特殊源处理
+      // 如果 detail 不为空，使用特殊源处�?
       if (apiSite.detail.isNotEmpty) {
         final result = await _handleSpecialSourceDetail(id, apiSite);
         return [result];
       }
 
       // 构建详情请求 URL
-      final detailUrl = '${apiSite.api}?ac=videolist&ids=$id';
+      final detailUrl = '${apiSite.api}?${AppConfig.queryAc}=${AppConfig.apiValueVideolist}&${AppConfig.queryIds}=$id';
 
-      // 发起请求，设置 10 秒超时
+      // 发起请求，设�?10 秒超�?
       final response = await http.get(
         Uri.parse(detailUrl),
         headers: {
-        'User-Agent': AppConfig.defaultUserAgent,
-          'Accept': 'application/json',
+          AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+          AppConfig.headerAccept: AppConfig.headerAcceptJson,
         },
       ).timeout(AppDurations.shortTimeout);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception('详情请求失败: ${response.statusCode}');
+        throw Exception('${AppStrings.detailRequestFailed}${response.statusCode}');
       }
 
       final data = json.decode(response.body);
 
       if (data == null ||
-          data['list'] == null ||
-          data['list'] is! List ||
-          (data['list'] as List).isEmpty) {
-        throw Exception('获取到的详情内容无效');
+          data[AppConfig.jsonList] == null ||
+          data[AppConfig.jsonList] is! List ||
+          (data[AppConfig.jsonList] as List).isEmpty) {
+        throw Exception(AppStrings.searchDetailInvalid);
       }
 
-      final videoDetail = data['list'][0];
+      final videoDetail = data[AppConfig.jsonList][0];
       List<String> episodes = [];
       List<String> titles = [];
 
-      // 处理播放源拆分
-      if (videoDetail['vod_play_url'] != null) {
+      // 处理播放源拆�?
+      if (videoDetail[AppConfig.jsonVodPlayUrl] != null) {
         // 先用 $$$ 分割
         final vodPlayUrlArray =
-            (videoDetail['vod_play_url'] as String).split('\$\$\$');
+            (videoDetail[AppConfig.jsonVodPlayUrl] as String).split('\$\$\$');
 
         // 分集之间 # 分割，标题和播放链接 $ 分割
         for (final url in vodPlayUrlArray) {
@@ -231,19 +232,19 @@ class SearchService {
         }
       }
 
-      // 如果播放源为空，则尝试从内容中解析 m3u8
-      if (episodes.isEmpty && videoDetail['vod_content'] != null) {
+      // 如果播放源为空，则尝试从内容中解�?m3u8
+      if (episodes.isEmpty && videoDetail[AppConfig.jsonVodContent] != null) {
         final m3u8Pattern = RegExp(AppRegex.m3u8Url);
         final matches =
-            m3u8Pattern.allMatches(videoDetail['vod_content'] as String);
+            m3u8Pattern.allMatches(videoDetail[AppConfig.jsonVodContent] as String);
         episodes = matches.map((match) => match.group(0)!).toList();
       }
 
       // 解析年份
       String year = AppStrings.unknown;
-      if (videoDetail['vod_year'] != null && videoDetail['vod_year'] != '') {
+      if (videoDetail[AppConfig.jsonVodYear] != null && videoDetail[AppConfig.jsonVodYear] != '') {
         final yearMatch =
-            RegExp(AppRegex.yearPattern).firstMatch(videoDetail['vod_year'] as String);
+            RegExp(AppRegex.yearPattern).firstMatch(videoDetail[AppConfig.jsonVodYear] as String);
         if (yearMatch != null) {
           year = yearMatch.group(0)!;
         }
@@ -251,17 +252,17 @@ class SearchService {
 
       final result = SearchResult(
         id: id,
-        title: videoDetail['vod_name'] ?? '',
-        poster: videoDetail['vod_pic'] ?? '',
+        title: videoDetail[AppConfig.jsonVodName] ?? '',
+        poster: videoDetail[AppConfig.jsonVodPic] ?? '',
         episodes: episodes,
         episodesTitles: titles,
         source: apiSite.key,
         sourceName: apiSite.name,
-        class_: videoDetail['vod_class'],
+        class_: videoDetail[AppConfig.jsonVodClass],
         year: year,
-        desc: _cleanHtmlTags(videoDetail['vod_content'] ?? ''),
-        typeName: videoDetail['type_name'],
-        doubanId: videoDetail['vod_douban_id'],
+        desc: _cleanHtmlTags(videoDetail[AppConfig.jsonVodContent] ?? ''),
+        typeName: videoDetail[AppConfig.jsonTypeName],
+        doubanId: videoDetail[AppConfig.jsonVodDoubanId],
       );
 
       return [result];
@@ -270,29 +271,29 @@ class SearchService {
     }
   }
 
-  /// 处理特殊源的详情（通过 HTML 页面解析）
+  /// 处理特殊源的详情（通过 HTML 页面解析�?
   static Future<SearchResult> _handleSpecialSourceDetail(
       String id, dynamic apiSite) async {
     final detailUrl = '${apiSite.detail}/index.php/vod/detail/id/$id.html';
 
-    // 发起请求，设置 10 秒超时
+    // 发起请求，设�?10 秒超�?
     final response = await http.get(
       Uri.parse(detailUrl),
       headers: {
-        'User-Agent': AppConfig.defaultUserAgent,
-          'Accept': 'text/html',
+        AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+        AppConfig.headerAccept: AppConfig.headerAcceptTextHtml,
       },
     ).timeout(AppDurations.shortTimeout);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('详情页请求失败: ${response.statusCode}');
+      throw Exception('${AppStrings.detailPageRequestFailed}${response.statusCode}');
     }
 
     final html = response.body;
     List<String> matches = [];
 
-    // 如果是 ffzy 源，使用特殊的正则表达式
-    if (apiSite.key == 'ffzy') {
+    // 如果�?ffzy 源，使用特殊的正则表达式
+    if (apiSite.key == AppConfig.apiSiteKeyFfzy) {
       final ffzyPattern = RegExp(AppRegex.ffzySource);
       matches =
           ffzyPattern.allMatches(html).map((match) => match.group(0)!).toList();
@@ -339,7 +340,7 @@ class SearchService {
 
     // 提取年份
     final yearMatch = RegExp(AppRegex.htmlYear).firstMatch(html);
-    final yearText = yearMatch != null ? yearMatch.group(1)! : 'unknown';
+    final yearText = yearMatch != null ? yearMatch.group(1)! : AppStrings.playerUnknown;
 
     return SearchResult(
       id: id,
@@ -368,17 +369,6 @@ class SearchService {
         .replaceAll(RegExp(AppRegex.trimNewlines), '')
         .trim();
 
-    return _decodeHtmlEntities(cleanedText);
-  }
-
-  /// 解码 HTML 实体
-  static String _decodeHtmlEntities(String text) {
-    return text
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'")
-        .replaceAll('&nbsp;', ' ');
+    return HtmlUtils.decodeEntities(cleanedText);
   }
 }

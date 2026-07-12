@@ -10,6 +10,7 @@ import '../services/notification_service.dart';
 import '../utils/font_utils.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_durations.dart';
 
 class UpdateDialog extends StatefulWidget {
   final VersionInfo versionInfo;
@@ -272,7 +273,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
           margin: const EdgeInsets.all(AppDimens.spacingLg),
-          duration: const Duration(seconds: 3),
+          duration: AppDurations.toastDuration,
         ),
       );
     }
@@ -311,7 +312,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                   BoxShadow(
                     color: AppColors.black30,
                     blurRadius: AppDimens.shadowBlurMd,
-                    offset: const Offset(0, 4),
+                    offset: AppDimens.offset04,
                   ),
                 ],
               ),
@@ -320,14 +321,14 @@ class _UpdateDialogState extends State<UpdateDialog> {
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    padding: AppDimens.paddingAll24,
                     decoration: BoxDecoration(
                       color: themeService.isDarkMode
-                          ? AppColors.darkDivider
+                          ? AppColors.borderDark
                           : AppColors.grayBg,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
+                      borderRadius: BorderRadius.only(
+                        topLeft: AppDimens.radius16,
+                        topRight: AppDimens.radius16,
                       ),
                     ),
                     child: Column(
@@ -344,7 +345,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                             widget.versionInfo.updateType == UpdateType.force
                                 ? Icons.warning_amber_rounded
                                 : Icons.rocket_launch_rounded,
-                            size: 40,
+                            size: AppDimens.iconSize40,
                             color: widget.versionInfo.updateType == UpdateType.force
                                 ? AppColors.error
                                 : AppColors.accent,
@@ -378,7 +379,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: AppDimens.paddingAll20,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -386,7 +387,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           padding: const EdgeInsets.all(AppDimens.spacingLg),
                           decoration: BoxDecoration(
                             color: themeService.isDarkMode
-                                ? AppColors.darkDivider
+                                ? AppColors.borderDark
                                 : AppColors.grayBg,
                             borderRadius: BorderRadius.circular(AppDimens.radiusXl),
                           ),
@@ -404,8 +405,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                     : AppColors.textDarkHint,
                               ),
                               Container(
-                                width: 1,
-                                height: 40,
+                                width: AppDimens.dividerThicknessThin,
+                                height: AppDimens.spacingXxxl,
                                 color: themeService.isDarkMode
                                     ? AppColors.grayDark
                                     : AppColors.gray275,
@@ -453,7 +454,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                             constraints: const BoxConstraints(maxHeight: 200),
                             decoration: BoxDecoration(
                               color: themeService.isDarkMode
-                                  ? AppColors.darkDivider
+                                  ? AppColors.borderDark
                                   : AppColors.grayBg,
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
@@ -464,7 +465,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                   widget.versionInfo.releaseNotes,
                                   style: FontUtils.poppins(
                                     fontSize: AppDimens.fontSizeMd,
-                                    height: 1.6,
+                                    height: AppDimens.lineHeightExtraLoose,
                                     color: themeService.isDarkMode
                                         ? AppColors.gray325
                                         : AppColors.textDarkHint,
@@ -537,13 +538,13 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: AppDimens.paddingFromLTRB2002020,
                     child: Column(
                       children: [
                         if (!_isDownloading && !_isInstalling)
                           SizedBox(
                             width: double.infinity,
-                            height: 44,
+                            height: AppDimens.miniButtonHeight,
                             child: ElevatedButton.icon(
                               onPressed: _hasDownloadedFile ? _startInstall : _startDownload,
                               icon: Icon(_hasDownloadedFile ? Icons.install_desktop_rounded : Icons.download_rounded, size: AppDimens.iconMd),

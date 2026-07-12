@@ -2,6 +2,7 @@ import 'dart:async';
 import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 import 'dart:io';
 import '../constants/app_strings.dart';
 import 'package:flutter/material.dart';
@@ -54,9 +55,9 @@ class _SearchScreenState extends State<SearchScreen>
   final bool _exactSearch = true; // 精确搜索开关，默认开启
 
   // 筛选和排序状态
-  String _selectedSource = 'all';
-  String _selectedYear = 'all';
-  String _selectedTitle = 'all';
+  String _selectedSource = AppConfig.contentTypeAll;
+  String _selectedYear = AppConfig.contentTypeAll;
+  String _selectedTitle = AppConfig.contentTypeAll;
   SortOrder _yearSortOrder = SortOrder.none;
 
   // 长按删除相关状态
@@ -87,17 +88,17 @@ class _SearchScreenState extends State<SearchScreen>
     }
 
     // Source filter
-    if (_selectedSource != 'all') {
+    if (_selectedSource != AppConfig.contentTypeAll) {
       results = results.where((r) => r.sourceName == _selectedSource).toList();
     }
 
     // Year filter
-    if (_selectedYear != 'all') {
+    if (_selectedYear != AppConfig.contentTypeAll) {
       results = results.where((r) => r.year == _selectedYear).toList();
     }
 
     // Title filter
-    if (_selectedTitle != 'all') {
+    if (_selectedTitle != AppConfig.contentTypeAll) {
       results = results.where((r) => r.title == _selectedTitle).toList();
     }
 
@@ -241,9 +242,9 @@ class _SearchScreenState extends State<SearchScreen>
       if (mounted) {
         // 检查是否是连接关闭错误，如果是则忽略
         final errorString = error.toLowerCase();
-        if (errorString.contains('connection closed') ||
-            errorString.contains('clientexception') ||
-            errorString.contains('connection terminated')) {
+        if (errorString.contains(AppConfig.searchErrorConnectionClosed) ||
+            errorString.contains(AppConfig.searchErrorClientException) ||
+            errorString.contains(AppConfig.searchErrorConnectionTerminated)) {
           // 连接被关闭，这是正常情况，不显示错误
           return;
         }
@@ -352,8 +353,8 @@ class _SearchScreenState extends State<SearchScreen>
                 children: [
                   // 图标
                   Container(
-                    width: 64,
-                    height: 64,
+                    width: AppDimens.iconSize64,
+                    height: AppDimens.iconSize64,
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
@@ -361,7 +362,7 @@ class _SearchScreenState extends State<SearchScreen>
                     child: const Icon(
                       Icons.delete_outline,
                       color: AppColors.error,
-                      size: 32,
+                      size: AppDimens.iconSize32,
                     ),
                   ),
                   Gap.h20,
@@ -385,7 +386,7 @@ class _SearchScreenState extends State<SearchScreen>
                       color: themeService.isDarkMode
                           ? AppColors.textDarkSecondary
                           : AppColors.textSecondary,
-                      height: 1.4,
+                      height: AppDimens.lineHeightNormal,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -397,7 +398,7 @@ class _SearchScreenState extends State<SearchScreen>
                         child: TextButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: AppDimens.verticalMdPadding,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
@@ -423,7 +424,7 @@ class _SearchScreenState extends State<SearchScreen>
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.error,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: AppDimens.verticalMdPadding,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                             ),
@@ -527,9 +528,9 @@ class _SearchScreenState extends State<SearchScreen>
       _searchProgress = null; // 清空进度信息
       _useAggregatedView = true; // 默认开启聚合
       // 重置筛选和排序
-      _selectedSource = 'all';
-      _selectedYear = 'all';
-      _selectedTitle = 'all';
+      _selectedSource = AppConfig.contentTypeAll;
+      _selectedYear = AppConfig.contentTypeAll;
+      _selectedTitle = AppConfig.contentTypeAll;
       _yearSortOrder = SortOrder.none;
     });
 
@@ -549,9 +550,9 @@ class _SearchScreenState extends State<SearchScreen>
       if (mounted) {
         // 检查是否是连接关闭错误，如果是则忽略
         final errorString = e.toString().toLowerCase();
-        if (errorString.contains('connection closed') ||
-            errorString.contains('clientexception') ||
-            errorString.contains('connection terminated')) {
+        if (errorString.contains(AppConfig.searchErrorConnectionClosed) ||
+            errorString.contains(AppConfig.searchErrorClientException) ||
+            errorString.contains(AppConfig.searchErrorConnectionTerminated)) {
           // 连接被关闭，这是正常情况，不显示错误
           return;
         }
@@ -652,13 +653,13 @@ class _SearchScreenState extends State<SearchScreen>
     if (_searchHistory.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.only(top: 120.0),
+          padding: AppDimens.paddingTop120,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 LucideIcons.history,
-                size: 80,
+                size: AppDimens.iconSize80,
                 color: themeService.isDarkMode
                     ? AppColors.grayDark
                     : AppColors.silver,
@@ -695,7 +696,7 @@ class _SearchScreenState extends State<SearchScreen>
       children: [
         Gap.h8,
         Padding(
-          padding: const EdgeInsets.only(left: 22.0, right: 16.0),
+          padding: AppDimens.paddingLeft22Right16,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.baseline, // 基线对齐
             textBaseline: TextBaseline.alphabetic, // 使用字母基线
@@ -732,8 +733,7 @@ class _SearchScreenState extends State<SearchScreen>
                 child: TextButton(
                   onPressed: _showClearConfirmation,
                   style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: AppDimens.paddingHorizontal8Vertical4,
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     overlayColor: AppColors.transparent,
@@ -838,7 +838,7 @@ class _SearchScreenState extends State<SearchScreen>
                         // 边框色从正常色渐变到红色
                         borderColor = Color.lerp(
                           themeService.isDarkMode
-                              ? AppColors.darkDivider
+                              ? AppColors.borderDark
                               : AppColors.gradMid3,
                           AppColors.error,
                           animationValue,
@@ -858,7 +858,7 @@ class _SearchScreenState extends State<SearchScreen>
                             ? AppColors.white
                             : AppColors.primary;
                         borderColor = themeService.isDarkMode
-                            ? AppColors.darkDivider
+                            ? AppColors.borderDark
                             : AppColors.gradMid3;
                       }
 
@@ -866,10 +866,7 @@ class _SearchScreenState extends State<SearchScreen>
                         clipBehavior: Clip.none, // 允许子组件超出边界
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
+                            padding: AppDimens.horizontalMdVerticalSmPadding,
                             decoration: BoxDecoration(
                               color: backgroundColor,
                               borderRadius: BorderRadius.circular(AppDimens.radiusRound),
@@ -921,8 +918,8 @@ class _SearchScreenState extends State<SearchScreen>
                                     _deleteSearchHistory(history);
                                   },
                                   child: Container(
-                                    width: 18,
-                                    height: 18,
+                                    width: AppDimens.iconMd,
+                                    height: AppDimens.iconMd,
                                     decoration: BoxDecoration(
                                       color: _hoveredDeleteButton == history
                                           ? AppColors.error // hover 时红色
@@ -932,14 +929,14 @@ class _SearchScreenState extends State<SearchScreen>
                                         BoxShadow(
                                           color: AppColors.black
                                               .withValues(alpha: 0.2),
-                                          blurRadius: 2,
+                                          blurRadius: AppDimens.shadowBlurXs,
                                           offset: const Offset(0, 1),
                                         ),
                                       ],
                                     ),
                                     child: const Icon(
                                       Icons.close,
-                                      size: 12,
+                                      size: AppDimens.iconSize12,
                                       color: AppColors.white,
                                     ),
                                   ),
@@ -965,7 +962,7 @@ class _SearchScreenState extends State<SearchScreen>
     if (error == null) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: AppDimens.marginBottom16,
       padding: const EdgeInsets.all(AppDimens.spacingLg),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.1),
@@ -980,7 +977,7 @@ class _SearchScreenState extends State<SearchScreen>
           const Icon(
             Icons.error_outline,
             color: AppColors.error,
-            size: 20,
+            size: AppDimens.iconSize20,
           ),
           Gap.w12,
           Expanded(
@@ -1029,7 +1026,7 @@ class _SearchScreenState extends State<SearchScreen>
         Gap.h8,
         // 标题行 - 有padding
         Padding(
-          padding: const EdgeInsets.only(left: 22.0, right: 16.0),
+          padding: AppDimens.paddingLeft22Right16,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.baseline, // 基线对齐
             textBaseline: TextBaseline.alphabetic, // 使用字母基线
@@ -1098,8 +1095,8 @@ class _SearchScreenState extends State<SearchScreen>
                           inactiveColor: themeService.isDarkMode
                               ? AppColors.grayDark
                               : AppColors.gray325,
-                          width: 32,
-                          height: 16,
+                          width: AppDimens.spacingXxl,
+                          height: AppDimens.spacingLg,
                         ),
                       ),
                     ),
@@ -1124,7 +1121,7 @@ class _SearchScreenState extends State<SearchScreen>
                 if (_hasSearched && _searchResults.isNotEmpty) ...[
                   Gap.h8,
                   Padding(
-                    padding: const EdgeInsets.only(left: 22.0, right: 16.0),
+                    padding: AppDimens.paddingLeft22Right16,
                     child: _buildFilterSection(themeService),
                   ),
                 ],
@@ -1149,8 +1146,8 @@ class _SearchScreenState extends State<SearchScreen>
                                           title: result.title,
                                           stitle: _searchQuery,
                                           stype: result.episodes.length > 1
-                                              ? 'tv'
-                                              : 'movie',
+                                              ? AppConfig.stypeTv
+                                              : AppConfig.stypeMovie,
                                         )));
                           },
                           hasReceivedStart: _hasReceivedStart,
@@ -1194,7 +1191,7 @@ class _SearchScreenState extends State<SearchScreen>
         children: [
           const Icon(
             LucideIcons.folderSearch,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -1223,7 +1220,7 @@ class _SearchScreenState extends State<SearchScreen>
         children: [
           const Icon(
             LucideIcons.search,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -1278,7 +1275,7 @@ class _SearchScreenState extends State<SearchScreen>
                         id: videoInfo.id,
                         year: videoInfo.year,
                         title: videoInfo.title,
-                        stype: videoInfo.totalEpisodes > 1 ? 'tv' : 'movie',
+                        stype: videoInfo.totalEpisodes > 1 ? AppConfig.stypeTv : AppConfig.stypeMovie,
                         stitle: stitle,
                       )));
         }
@@ -1336,12 +1333,12 @@ class _SearchScreenState extends State<SearchScreen>
     try {
       // 构建收藏数据
       final favoriteData = {
-        'cover': videoInfo.cover,
-        'save_time': DateTime.now().millisecondsSinceEpoch,
-        'source_name': videoInfo.sourceName,
-        'title': videoInfo.title,
-        'total_episodes': videoInfo.totalEpisodes,
-        'year': videoInfo.year,
+        AppConfig.jsonCover: videoInfo.cover,
+        AppConfig.jsonSaveTime: DateTime.now().millisecondsSinceEpoch,
+        AppConfig.jsonSourceName: videoInfo.sourceName,
+        AppConfig.jsonTitle: videoInfo.title,
+        AppConfig.jsonTotalEpisodes: videoInfo.totalEpisodes,
+        AppConfig.jsonYear: videoInfo.year,
       };
 
       // 使用统一的收藏方法（包含缓存操作和API调用）
@@ -1541,7 +1538,7 @@ class _SearchScreenState extends State<SearchScreen>
               context, title, options, selectedValue, onSelected);
         },
         child: Container(
-          padding: EdgeInsets.fromLTRB(isFirst ? 0 : 8, 6, 8, 6),
+          padding: isFirst ? AppDimens.filterChipPaddingFirst : AppDimens.filterChipPadding,
           decoration: BoxDecoration(
             color: AppColors.transparent,
             borderRadius: BorderRadius.circular(AppDimens.radiusRound),
@@ -1612,9 +1609,9 @@ class _SearchScreenState extends State<SearchScreen>
                 : double.infinity, // 设置宽度为100%
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              borderRadius: BorderRadius.only(
+                topLeft: AppDimens.radius20,
+                topRight: AppDimens.radius20,
               ),
             ),
             child: Column(
@@ -1638,7 +1635,7 @@ class _SearchScreenState extends State<SearchScreen>
                   child: SingleChildScrollView(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalPadding, vertical: 8),
+                          horizontal: horizontalPadding, vertical: AppDimens.spacingSm),
                       child: Wrap(
                         alignment: WrapAlignment.start, // 左对齐
                         spacing: spacing,
@@ -1654,8 +1651,7 @@ class _SearchScreenState extends State<SearchScreen>
                               },
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                padding: AppDimens.horizontalSmVerticalMdPaddingAlt,
                                 alignment: Alignment.centerLeft, // 内容左对齐
                                 decoration: BoxDecoration(
                                   color: isSelected
@@ -1738,7 +1734,7 @@ class _SearchScreenState extends State<SearchScreen>
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: AppDimens.paddingHorizontal8Vertical6,
           decoration: BoxDecoration(
             color: AppColors.transparent,
             borderRadius: BorderRadius.circular(AppDimens.radiusRound),

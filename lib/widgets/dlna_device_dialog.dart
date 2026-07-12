@@ -86,7 +86,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
       if (mounted) {
         setState(() {
           _isScanning = false;
-          _scanStatus = '扫描失败: $e';
+          _scanStatus = '${AppStrings.dlnaScanFailed}: $e';
         });
       }
     }
@@ -119,7 +119,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
         child: Container(
         width: dialogWidth,
         height: MediaQuery.of(context).size.height * 0.7,
-        padding: const EdgeInsets.all(20),
+        padding: AppDimens.paddingAll20,
         decoration: BoxDecoration(
           color: Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -132,7 +132,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '选择投屏设备',
+                  AppStrings.dlnaSelectDevice,
                   style: TextStyle(
                     fontSize: AppDimens.fontSizeTitle,
                     fontWeight: FontWeight.bold,
@@ -158,8 +158,8 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                 children: [
                   if (_isScanning)
                     const SizedBox(
-                      width: 16,
-                      height: 16,
+                      width: AppDimens.spacingLg,
+                      height: AppDimens.spacingLg,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   else
@@ -197,7 +197,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                         children: [
                           Icon(
                             Icons.devices_other,
-                            size: 64,
+                            size: AppDimens.iconSize64,
                             color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                           ),
                           Gap.h16,
@@ -230,7 +230,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                             device.info.friendlyName == widget.currentDevice!.info.friendlyName;
                         
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
+                          margin: AppDimens.marginBottom8,
                           decoration: BoxDecoration(
                             color: isCurrentDevice 
                                 ? Theme.of(context).colorScheme.primaryContainer
@@ -239,7 +239,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                             border: isCurrentDevice 
                                 ? Border.all(
                                     color: Theme.of(context).colorScheme.primary,
-                                    width: 2,
+                                    width: AppDimens.dividerThicknessMd,
                                   )
                                 : null,
                           ),
@@ -263,7 +263,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                                 ),
                                 if (isCurrentDevice)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: AppDimens.paddingHorizontal8Vertical2,
                                     decoration: BoxDecoration(
                                       color: Theme.of(context).colorScheme.primary,
                                       borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -280,7 +280,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
                               ],
                             ),
                             subtitle: Text(
-                              '活跃时间: ${_formatTime(device.activeTime)}',
+                              '${AppStrings.dlnaActiveTime}: ${_formatTime(device.activeTime)}',
                               style: TextStyle(
                                 color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
@@ -305,11 +305,11 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
 
   IconData _getDeviceIcon(String deviceName) {
     final name = deviceName.toLowerCase();
-    if (name.contains('tv') || name.contains('电视')) {
+    if (name.contains(AppStrings.dlnaDeviceTv) || name.contains(AppStrings.dlnaDeviceTelevision)) {
       return Icons.tv;
-    } else if (name.contains('box') || name.contains('盒子')) {
+    } else if (name.contains(AppStrings.dlnaDeviceBox)) {
       return Icons.device_hub;
-    } else if (name.contains('player') || name.contains('播放器')) {
+    } else if (name.contains(AppStrings.dlnaDevicePlayer)) {
       return Icons.play_circle_outline;
     } else {
       return Icons.devices_other;
@@ -321,13 +321,13 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
     final difference = now.difference(time);
     
     if (difference.inMinutes < 1) {
-      return '刚刚';
+      return AppStrings.timeJustNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}分钟前';
+      return '${difference.inMinutes}${AppStrings.timeMinutesAgo}';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}小时前';
+      return '${difference.inHours}${AppStrings.timeHoursAgo}';
     } else {
-      return '${difference.inDays}天前';
+      return '${difference.inDays}${AppStrings.timeDaysAgo}';
     }
   }
 
@@ -354,13 +354,13 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
     try {
       // 构建标题：{title} - {第 x 集} - {sourceName}
       // 如果总集数为 1，则不显示集数
-      String formattedTitle = widget.videoTitle ?? '视频';
+      String formattedTitle = widget.videoTitle ?? AppStrings.dlnaVideo;
       if (widget.sourceName != null) {
         if (widget.totalEpisodes != null && widget.totalEpisodes! > 1 && widget.currentEpisodeIndex != null) {
           final episodeNumber = widget.currentEpisodeIndex! + 1;
-          formattedTitle = '${widget.videoTitle} - 第 $episodeNumber 集 - ${widget.sourceName}';
+          formattedTitle = '${widget.videoTitle}${AppStrings.dlnaEpisodeSeparator}${AppStrings.formatEpisodeTitle(episodeNumber)}${AppStrings.dlnaEpisodeSeparator}${widget.sourceName}';
         } else {
-          formattedTitle = '${widget.videoTitle} - ${widget.sourceName}';
+          formattedTitle = '${widget.videoTitle}${AppStrings.dlnaEpisodeSeparator}${widget.sourceName}';
         }
       }
       
@@ -384,7 +384,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
           SnackBar(
             content: Text('${AppStrings.dlnaFailed}: $e'),
             backgroundColor: AppColors.red,
-            duration: const Duration(seconds: 3),
+            duration: AppDurations.toastDuration,
           ),
         );
       }

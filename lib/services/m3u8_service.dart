@@ -14,9 +14,9 @@ class M3U8Service {
     _dio.options.connectTimeout = AppDurations.shortTimeout;
     _dio.options.receiveTimeout = AppDurations.networkTimeout;
     _dio.options.headers = {
-      'User-Agent': AppConfig.defaultUserAgent,
-      'Accept': '*/*',
-      'Accept-Language': AppConfig.headerAcceptLanguage,
+      AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+      AppConfig.headerAccept: AppConfig.headerAcceptAll,
+      AppConfig.headerAcceptLanguage: AppConfig.headerAcceptLanguage,
     };
   }
 
@@ -29,11 +29,11 @@ class M3U8Service {
       
       if (segments.isEmpty) {
         return {
-          'resolution': '未知',
-          'downloadSpeed': 0.0,
-          'latency': 0,
-          'success': false,
-          'error': AppStrings.m3u8NoVideoSegment,
+          AppConfig.jsonResolution: AppStrings.unknown,
+          AppConfig.jsonDownloadSpeed: 0.0,
+          AppConfig.jsonLatency: 0,
+          AppConfig.jsonSuccess: false,
+          AppConfig.jsonError: AppStrings.m3u8NoVideoSegment,
         };
       }
       
@@ -49,20 +49,20 @@ class M3U8Service {
       final downloadSpeedKBps = futures[2] as double;
       
       return {
-        'resolution': resolutionData,
-        'downloadSpeed': downloadSpeedKBps,
-        'latency': latency,
-        'success': true,
-        'error': '',
+        AppConfig.jsonResolution: resolutionData,
+        AppConfig.jsonDownloadSpeed: downloadSpeedKBps,
+        AppConfig.jsonLatency: latency,
+        AppConfig.jsonSuccess: true,
+        AppConfig.jsonError: '',
       };
       
     } catch (e) {
       return {
-        'resolution': {'width': 0, 'height': 0},
-        'downloadSpeed': 0.0,
-        'latency': 0,
-        'success': false,
-        'error': e.toString(),
+        AppConfig.jsonResolution: {AppConfig.jsonWidth: 0, AppConfig.jsonHeight: 0},
+        AppConfig.jsonDownloadSpeed: 0.0,
+        AppConfig.jsonLatency: 0,
+        AppConfig.jsonSuccess: false,
+        AppConfig.jsonError: e.toString(),
       };
     }
   }
@@ -123,8 +123,8 @@ class M3U8Service {
       tempDio.options.connectTimeout = AppDurations.healthCheckTimeout;
       tempDio.options.receiveTimeout = AppDurations.healthCheckTimeout;
       tempDio.options.headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': '*/*',
+        AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+        AppConfig.headerAccept: AppConfig.headerAcceptAll,
       };
       
       // 使用 HEAD 请求测量延迟，减少数据传输
@@ -175,30 +175,30 @@ class M3U8Service {
             }
           }
           
-          if (params.containsKey('RESOLUTION')) {
-            final resolution = params['RESOLUTION']!;
+          if (params.containsKey(AppConfig.m3u8AttrResolution)) {
+            final resolution = params[AppConfig.m3u8AttrResolution]!;
             final dimensions = resolution.split('x');
             if (dimensions.length == 2) {
               return {
-                'width': int.tryParse(dimensions[0]) ?? 0,
-                'height': int.tryParse(dimensions[1]) ?? 0,
+                AppConfig.jsonWidth: int.tryParse(dimensions[0]) ?? 0,
+                AppConfig.jsonHeight: int.tryParse(dimensions[1]) ?? 0,
               };
             }
           }
         }
       }
       
-      return {'width': 0, 'height': 0};
+      return {AppConfig.jsonWidth: 0, AppConfig.jsonHeight: 0};
     } catch (e) {
-      return {'width': 0, 'height': 0};
+      return {AppConfig.jsonWidth: 0, AppConfig.jsonHeight: 0};
     }
   }
 
   /// 测量下载速度
   Future<double> _measureDownloadSpeed(List<String> segments) async {
     try {
-      // 使用前3个片段进行测速
-      final segmentsToTest = segments.take(3).toList();
+      // 使用前 AppConfig.m3u8SpeedTestSamples 个片段进行测速
+      final segmentsToTest = segments.take(AppConfig.m3u8SpeedTestSamples).toList();
       
       final stopwatch = Stopwatch()..start();
       int totalBytes = 0;
@@ -244,17 +244,17 @@ class M3U8Service {
   Future<Map<String, dynamic>> preferBestSource(List<dynamic> allSources) async {
     if (allSources.isEmpty) {
       return {
-        'bestSource': null,
-        'allSourcesSpeed': <String, Map<String, dynamic>>{},
-        'error': AppStrings.m3u8NoAvailableSource,
+        AppConfig.jsonBestSource: null,
+        AppConfig.jsonAllSourcesSpeed: <String, Map<String, dynamic>>{},
+        AppConfig.jsonError: AppStrings.m3u8NoAvailableSource,
       };
     }
     
     if (allSources.length == 1) {
       return {
-        'bestSource': allSources.first,
-        'allSourcesSpeed': <String, Map<String, dynamic>>{},
-        'error': '',
+        AppConfig.jsonBestSource: allSources.first,
+        AppConfig.jsonAllSourcesSpeed: <String, Map<String, dynamic>>{},
+        AppConfig.jsonError: '',
       };
     }
     
@@ -287,22 +287,22 @@ class M3U8Service {
           AppDurations.healthCheckTimeout,
           onTimeout: () {
             return {
-              'resolution': {'width': 0, 'height': 0},
-              'downloadSpeed': 0.0,
-              'latency': 0,
-              'success': false,
-              'error': '获取流信息超时',
+              AppConfig.jsonResolution: {AppConfig.jsonWidth: 0, AppConfig.jsonHeight: 0},
+              AppConfig.jsonDownloadSpeed: 0.0,
+              AppConfig.jsonLatency: 0,
+              AppConfig.jsonSuccess: false,
+              AppConfig.jsonError: AppStrings.m3u8FetchStreamTimeout,
             };
           },
         );
         return MapEntry(sourceId, streamInfo);
       } catch (e) {
         return MapEntry(sourceId, {
-          'resolution': {'width': 0, 'height': 0},
-          'downloadSpeed': 0.0,
-          'latency': 0,
-          'success': false,
-          'error': e.toString(),
+          AppConfig.jsonResolution: {AppConfig.jsonWidth: 0, AppConfig.jsonHeight: 0},
+          AppConfig.jsonDownloadSpeed: 0.0,
+          AppConfig.jsonLatency: 0,
+          AppConfig.jsonSuccess: false,
+          AppConfig.jsonError: e.toString(),
         });
       }
     });
@@ -322,9 +322,9 @@ class M3U8Service {
       final sourceId = '${source.source}_${source.id}';
       final streamInfo = streamInfoResults[sourceId];
       
-      if (streamInfo != null && streamInfo['success']) {
-        final downloadSpeed = streamInfo['downloadSpeed'] as double;
-        final latency = streamInfo['latency'] as int;
+      if (streamInfo != null && streamInfo[AppConfig.jsonSuccess]) {
+        final downloadSpeed = streamInfo[AppConfig.jsonDownloadSpeed] as double;
+        final latency = streamInfo[AppConfig.jsonLatency] as int;
         
         if (downloadSpeed > 0) {
           validSpeeds.add(downloadSpeed);
@@ -348,13 +348,13 @@ class M3U8Service {
       final sourceId = '${source.source}_${source.id}';
       final streamInfo = streamInfoResults[sourceId];
       
-      if (streamInfo == null || !streamInfo['success']) {
+      if (streamInfo == null || !streamInfo[AppConfig.jsonSuccess]) {
         continue; // 跳过获取失败的源
       }
       
-      final downloadSpeed = streamInfo['downloadSpeed'] as double;
-      final latency = streamInfo['latency'] as int;
-      final resolutionData = streamInfo['resolution'] as Map<String, int>;
+      final downloadSpeed = streamInfo[AppConfig.jsonDownloadSpeed] as double;
+      final latency = streamInfo[AppConfig.jsonLatency] as int;
+      final resolutionData = streamInfo[AppConfig.jsonResolution] as Map<String, int>;
       
       // 转换分辨率为标准格式
       final resolution = _convertResolutionToString(resolutionData);
@@ -372,9 +372,9 @@ class M3U8Service {
       sourceScores.add(MapEntry(source, score));
       
       allSourcesSpeed[sourceId] = {
-        'quality': resolution,
-        'loadSpeed': _formatDownloadSpeed(downloadSpeed),
-        'pingTime': '${latency}ms',
+        AppConfig.jsonQuality: resolution,
+        AppConfig.jsonLoadSpeed: _formatDownloadSpeed(downloadSpeed),
+        AppConfig.jsonPingTime: '${latency}ms',
       };
     }
     
@@ -384,9 +384,9 @@ class M3U8Service {
     final bestSource = sourceScores.isNotEmpty ? sourceScores.first.key : allSources.first;
     
     return {
-      'bestSource': bestSource,
-      'allSourcesSpeed': allSourcesSpeed,
-      'error': '',
+      AppConfig.jsonBestSource: bestSource,
+      AppConfig.jsonAllSourcesSpeed: allSourcesSpeed,
+      AppConfig.jsonError: '',
     };
   }
 
@@ -464,25 +464,25 @@ class M3U8Service {
 
   /// 将分辨率数据转换为标准字符串格式
   String _convertResolutionToString(Map<String, int> resolutionData) {
-    final width = resolutionData['width'] ?? 0;
-    final height = resolutionData['height'] ?? 0;
+    final width = resolutionData[AppConfig.jsonWidth] ?? 0;
+    final height = resolutionData[AppConfig.jsonHeight] ?? 0;
     
-    if (width == 0 || height == 0) return '未知';
+    if (width == 0 || height == 0) return AppStrings.unknown;
     
     // 根据经典宽度判断分辨率
-    if (width >= 3840) return '4K';      // 4K: 3840x2160
-    if (width >= 2560) return '2K';      // 2K: 2560x1440
-    if (width >= 1920) return '1080p';   // 1080p: 1920x1080
-    if (width >= 1280) return '720p';    // 720p: 1280x720
-    if (width >= 854) return '480p';     // 480p: 854x480
-    if (width >= 640) return '360p';     // 360p: 640x360
+    if (width >= AppConfig.resolution4k) return '4K';      // 4K: 3840x2160
+    if (width >= AppConfig.resolution2k) return '2K';      // 2K: 2560x1440
+    if (width >= AppConfig.resolution1080p) return '1080p';   // 1080p: 1920x1080
+    if (width >= AppConfig.resolution720p) return '720p';    // 720p: 1280x720
+    if (width >= AppConfig.resolution480p) return '480p';     // 480p: 854x480
+    if (width >= AppConfig.resolution360p) return '360p';     // 360p: 640x360
     
     return 'SD';
   }
 
   /// 格式化下载速度为字符串
   String _formatDownloadSpeed(double speedKBps) {
-    if (speedKBps <= 0) return '超时';
+    if (speedKBps <= 0) return AppStrings.m3u8Timeout;
     
     if (speedKBps >= 1024) {
       // 大于等于1MB/s，显示为MB/s
@@ -532,27 +532,27 @@ class M3U8Service {
           timeout,
           onTimeout: () {
             return {
-              'resolution': {'width': 0, 'height': 0},
-              'downloadSpeed': 0.0,
-              'latency': 0,
-              'success': false,
-              'error': '获取流信息超时',
+              AppConfig.jsonResolution: {AppConfig.jsonWidth: 0, AppConfig.jsonHeight: 0},
+              AppConfig.jsonDownloadSpeed: 0.0,
+              AppConfig.jsonLatency: 0,
+              AppConfig.jsonSuccess: false,
+              AppConfig.jsonError: AppStrings.m3u8FetchStreamTimeout,
             };
           },
         );
         
-        if (streamInfo['success']) {
-          final downloadSpeed = streamInfo['downloadSpeed'] as double;
-          final latency = streamInfo['latency'] as int;
-          final resolutionData = streamInfo['resolution'] as Map<String, int>;
+        if (streamInfo[AppConfig.jsonSuccess]) {
+          final downloadSpeed = streamInfo[AppConfig.jsonDownloadSpeed] as double;
+          final latency = streamInfo[AppConfig.jsonLatency] as int;
+          final resolutionData = streamInfo[AppConfig.jsonResolution] as Map<String, int>;
           
           // 转换分辨率为标准格式
           final resolution = _convertResolutionToString(resolutionData);
           
           final speedData = {
-            'quality': resolution,
-            'loadSpeed': _formatDownloadSpeed(downloadSpeed),
-            'pingTime': '${latency}ms',
+            AppConfig.jsonQuality: resolution,
+            AppConfig.jsonLoadSpeed: _formatDownloadSpeed(downloadSpeed),
+            AppConfig.jsonPingTime: '${latency}ms',
           };
           
           // 实时回调结果
@@ -560,18 +560,18 @@ class M3U8Service {
         } else {
           // 测速失败的情况
           final speedData = {
-            'quality': '未知',
-            'loadSpeed': '超时',
-            'pingTime': '超时',
+            AppConfig.jsonQuality: AppStrings.unknown,
+            AppConfig.jsonLoadSpeed: AppStrings.m3u8Timeout,
+            AppConfig.jsonPingTime: AppStrings.m3u8Timeout,
           };
           onSourceCompleted(sourceId, speedData);
         }
       } catch (e) {
         // 异常情况
         final speedData = {
-          'quality': '未知',
-          'loadSpeed': '超时',
-          'pingTime': '超时',
+          AppConfig.jsonQuality: AppStrings.unknown,
+          AppConfig.jsonLoadSpeed: AppStrings.m3u8Timeout,
+          AppConfig.jsonPingTime: AppStrings.m3u8Timeout,
         };
         onSourceCompleted(sourceId, speedData);
       }

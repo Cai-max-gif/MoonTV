@@ -196,9 +196,12 @@ class SSESearchService {
       final baseUrl = await UserDataService.getServerUrlWithDefault();
       // 确保使用HTTPS
       final secureBaseUrl = baseUrl.replaceAll(RegExp(AppRegex.httpPrefix), 'https://');
+
+      // 优先使用令牌认证
+      final authToken = await UserDataService.getAuthToken();
       final cookies = await UserDataService.getCookies();
 
-      if (cookies == null) {
+      if (authToken == null && cookies == null) {
         throw Exception(AppStrings.sseUserNotLoggedIn);
       }
 
@@ -214,20 +217,28 @@ class SSESearchService {
       // 创建 HTTP 客户端并开始 SSE 连接
       _client = http.Client();
       final request = http.Request('GET', sseUri);
-      request.headers.addAll({
-        'Accept': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Cookie': cookies,
-      });
+      final headers = <String, String>{
+        AppConfig.headerAccept: AppConfig.headerAcceptEventStream,
+        'Cache-Control': AppConfig.headerCacheControlNoCache,
+      };
+
+      if (authToken != null && authToken.isNotEmpty) {
+        headers[AppConfig.headerAuthorization] = '${AppStrings.authorizationBearer}$authToken';
+      }
+      if (cookies != null && cookies.isNotEmpty) {
+        headers[AppConfig.headerCookie] = cookies;
+      }
+
+      request.headers.addAll(headers);
 
       _subscription = _client!.send(request).asStream().listen(
         _handleSSEResponse,
         onError: (error) {
           // 静默处理连接关闭错误，不显示给用户
           final errorString = error.toString().toLowerCase();
-          if (errorString.contains('connection closed') ||
-              errorString.contains('clientexception') ||
-              errorString.contains('connection terminated')) {
+          if (errorString.contains(AppConfig.searchErrorConnectionClosed) ||
+              errorString.contains(AppConfig.searchErrorClientException) ||
+              errorString.contains(AppConfig.searchErrorConnectionTerminated)) {
             // 连接被关闭，这是正常情况，静默处理
             return;
           }
@@ -240,9 +251,9 @@ class SSESearchService {
 
       // 检查是否是连接关闭错误，如果是则静默处理
       final errorString = e.toString().toLowerCase();
-      if (errorString.contains('connection closed') ||
-          errorString.contains('clientexception') ||
-          errorString.contains('connection terminated')) {
+      if (errorString.contains(AppConfig.searchErrorConnectionClosed) ||
+          errorString.contains(AppConfig.searchErrorClientException) ||
+          errorString.contains(AppConfig.searchErrorConnectionTerminated)) {
         // 连接被关闭，这是正常情况，静默处理
         return;
       }
@@ -255,7 +266,7 @@ class SSESearchService {
   /// 处理 SSE 响应
   Future<void> _handleSSEResponse(http.StreamedResponse response) async {
     if (response.statusCode != 200) {
-      _errorController?.add('SSE 连接失败: ${response.statusCode}');
+      _errorController?.add('${AppStrings.sseConnectionFailedStatus}${response.statusCode}');
       return;
     }
 
@@ -428,9 +439,9 @@ class SSESearchService {
 
     // 检查是否是连接关闭错误，如果是则忽略
     final errorString = error.toString().toLowerCase();
-    if (errorString.contains('connection closed') ||
-        errorString.contains('clientexception') ||
-        errorString.contains('connection terminated')) {
+    if (errorString.contains(AppConfig.searchErrorConnectionClosed) ||
+        errorString.contains(AppConfig.searchErrorClientException) ||
+        errorString.contains(AppConfig.searchErrorConnectionTerminated)) {
       // 连接被关闭，这是正常情况，不显示错误
       return;
     }

@@ -3,6 +3,7 @@ import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import '../services/live_service.dart';
 import '../models/live_channel.dart';
 import '../models/live_source.dart';
@@ -22,7 +23,7 @@ class LiveScreen extends StatefulWidget {
 }
 
 class _LiveScreenState extends State<LiveScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   List<LiveChannelGroup> _channelGroups = [];
   List<LiveSource> _liveSources = [];
   LiveSource? _currentSource;
@@ -30,7 +31,7 @@ class _LiveScreenState extends State<LiveScreen>
   bool _isRefreshing = false;
   bool _isInitialLoad = true; // 标记是否是首次加载
   String? _errorMessage;
-  String _selectedGroup = '全部';
+  String _selectedGroup = AppStrings.all;
   final ScrollController _scrollController = ScrollController();
   late AnimationController _refreshIconController;
   bool _isRefreshButtonHovered = false;
@@ -113,7 +114,7 @@ class _LiveScreenState extends State<LiveScreen>
       // 4. 按 group 进行聚类
       final Map<String, List<LiveChannel>> groupedChannels = {};
       for (var channel in channels) {
-        final groupName = channel.group.isEmpty ? AppStrings.liveUngrouped : channel.group;
+        final groupName = channel.group.isEmpty ? AppConfig.liveUngrouped : channel.group;
         if (!groupedChannels.containsKey(groupName)) {
           groupedChannels[groupName] = [];
         }
@@ -208,7 +209,7 @@ class _LiveScreenState extends State<LiveScreen>
       // 4. 按 group 进行聚类
       final Map<String, List<LiveChannel>> groupedChannels = {};
       for (var channel in channels) {
-        final groupName = channel.group.isEmpty ? AppStrings.liveUngrouped : channel.group;
+        final groupName = channel.group.isEmpty ? AppConfig.liveUngrouped : channel.group;
         if (!groupedChannels.containsKey(groupName)) {
           groupedChannels[groupName] = [];
         }
@@ -268,7 +269,7 @@ class _LiveScreenState extends State<LiveScreen>
   }
 
   List<LiveChannel> _getFilteredChannels() {
-    if (_selectedGroup == '全部') {
+    if (_selectedGroup == AppStrings.all) {
       return _channelGroups.expand((g) => g.channels).toList();
     } else {
       return _channelGroups
@@ -280,6 +281,7 @@ class _LiveScreenState extends State<LiveScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
         return Column(
@@ -301,7 +303,7 @@ class _LiveScreenState extends State<LiveScreen>
   }
 
   Widget _buildTopBar(ThemeService themeService) {
-    final allGroups = ['全部', ..._channelGroups.map((g) => g.name)];
+    final allGroups = [AppStrings.all, ..._channelGroups.map((g) => g.name)];
 
     // 构建分组选项
     final groupOptions =
@@ -319,7 +321,7 @@ class _LiveScreenState extends State<LiveScreen>
     final showGroupFilter = !_isInitialLoad && _channelGroups.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      padding: AppDimens.paddingFromLTRB160164,
       decoration: BoxDecoration(
         color: themeService.isDarkMode
             ? AppColors.cardDark.withValues(alpha: 0.9)
@@ -338,7 +340,7 @@ class _LiveScreenState extends State<LiveScreen>
                 // 立即更新选中的源
                 setState(() {
                   _currentSource = source;
-                  _selectedGroup = '全部';
+                  _selectedGroup = AppStrings.all;
                 });
                 _loadChannels(source: source);
                 _scrollToTop();
@@ -364,7 +366,7 @@ class _LiveScreenState extends State<LiveScreen>
           const Spacer(),
           // 刷新按钮
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: AppDimens.paddingRight4,
             child: MouseRegion(
               cursor: DeviceUtils.isPC() && !_isRefreshing
                   ? SystemMouseCursors.click
@@ -387,21 +389,21 @@ class _LiveScreenState extends State<LiveScreen>
                 onTap: _isRefreshing ? null : refreshChannels,
                 behavior: HitTestBehavior.opaque,
                 child: SizedBox(
-                  width: 32,
-                  height: 32,
+                  width: AppDimens.avatarSm,
+                  height: AppDimens.avatarSm,
                   child: Center(
                     child: RotationTransition(
                       turns: _refreshIconController,
                       child: Icon(
                         Icons.refresh,
-                        size: 20,
+                        size: AppDimens.iconSize20,
                         color: _isRefreshing
                             ? AppColors.accent
                             : (DeviceUtils.isPC() && _isRefreshButtonHovered
                                 ? AppColors.accent
                                 : (themeService.isDarkMode
-                                    ? Colors.grey[600]
-                                    : Colors.grey[500])),
+                                    ? AppColors.gray600
+                                    : AppColors.gray500)),
                       ),
                     ),
                   ),
@@ -425,7 +427,7 @@ class _LiveScreenState extends State<LiveScreen>
       (e) => e.value == selectedValue,
       orElse: () => options.first,
     );
-    final isDefault = selectedValue == '全部' || selectedValue.isEmpty;
+    final isDefault = selectedValue == AppStrings.all || selectedValue.isEmpty;
 
     return FilterPillHover(
       isPC: DeviceUtils.isPC(),
@@ -452,20 +454,20 @@ class _LiveScreenState extends State<LiveScreen>
         options: options,
         selectedValue: selectedValue,
         onSelected: onSelected,
-        useCompactLayout: title == '分组', // 只有标题筛选使用紧凑布局
+        useCompactLayout: title == AppStrings.liveGroup,
       );
     } else {
       // 移动端显示底部弹出
       showModalBottomSheet(
         context: context,
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         isScrollControlled: true,
         builder: (context) {
           final screenWidth = MediaQuery.of(context).size.width;
           final modalWidth =
               DeviceUtils.isTablet(context) ? screenWidth * 0.5 : screenWidth;
-          const horizontalPadding = 16.0;
-          const spacing = 10.0;
+          final horizontalPadding = AppDimens.spacingLg;
+          const spacing = AppDimens.spacingMdAlt;
           final itemWidth =
               (modalWidth - horizontalPadding * 2 - spacing * 2) / 3;
 
@@ -475,9 +477,9 @@ class _LiveScreenState extends State<LiveScreen>
                 : double.infinity, // 设置宽度为100%
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              borderRadius: BorderRadius.only(
+                topLeft: AppDimens.radius20,
+                topRight: AppDimens.radius20,
               ),
             ),
             child: Column(
@@ -500,8 +502,8 @@ class _LiveScreenState extends State<LiveScreen>
                   ),
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalPadding, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding, vertical: AppDimens.spacingSm),
                       child: Wrap(
                         alignment: WrapAlignment.start, // 左对齐
                         spacing: spacing,
@@ -517,8 +519,7 @@ class _LiveScreenState extends State<LiveScreen>
                               },
                               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                padding: AppDimens.paddingHorizontal12Vertical8,
                                 alignment: Alignment.centerLeft, // 内容左对齐
                                 decoration: BoxDecoration(
                                   color: isSelected
@@ -584,7 +585,7 @@ class _LiveScreenState extends State<LiveScreen>
           ),
           Gap.h16,
           Text(
-            AppStrings.liveRefreshing,
+            AppStrings.refreshDot,
             style: FontUtils.poppins(
               color: themeService.isDarkMode
                   ? AppColors.textDarkSecondary
@@ -603,7 +604,7 @@ class _LiveScreenState extends State<LiveScreen>
         children: [
           Icon(
             Icons.error_outline,
-            size: 64,
+            size: AppDimens.iconSize64,
             color: themeService.isDarkMode
                 ? AppColors.textDarkHint
                 : AppColors.textHint,
@@ -662,8 +663,8 @@ class _LiveScreenState extends State<LiveScreen>
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: childAspectRatio,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisSpacing: AppDimens.gridSpacingLg,
+        mainAxisSpacing: AppDimens.gridSpacingLg,
       ),
       itemCount: channels.length,
       itemBuilder: (context, index) {
@@ -732,7 +733,7 @@ class _LiveScreenState extends State<LiveScreen>
       child: Center(
         child: Icon(
           Icons.tv,
-          size: 48,
+          size: AppDimens.iconButtonSize,
           color: themeService.isDarkMode
               ? AppColors.textDarkHint
               : AppColors.gray475,
@@ -740,6 +741,9 @@ class _LiveScreenState extends State<LiveScreen>
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class _LiveChannelCard extends StatefulWidget {

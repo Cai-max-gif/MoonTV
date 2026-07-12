@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_strings.dart';
 import '../models/douban_movie.dart';
 import '../models/play_record.dart';

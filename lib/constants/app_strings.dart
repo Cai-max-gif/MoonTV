@@ -112,7 +112,6 @@ class AppStrings {
   static const String forgotResetFailed = '重置失败';
   static const String forgotEmailNotRegistered = '邮箱未注册';
   static const String forgotServerResponseError = '服务器响应格式异常';
-  static const String forgotValidNewPassword = '请输入新密码';
 
   // ── 筛选器 ──
   static const String filterCategory = '分类';
@@ -137,18 +136,9 @@ class AppStrings {
   static const String filterAllTitles = '全部标题';
 
   // 一级分类
-  static const String catAll = '全部';
-  static const String catHotMovie = '热门电影';
   static const String catLatestMovie = '最新电影';
-  static const String catDoubanHighRating = '豆瓣高分';
-  static const String catUnpopularGood = '冷门佳片';
-  static const String catRecentHot = '最近热门';
 
   // 地区
-  static const String regionChinese = '华语';
-  static const String regionWestern = '欧美';
-  static const String regionKorean = '韩国';
-  static const String regionJapanese = '日本';
   static const String regionDomestic = '国产';
   static const String regionForeign = '国外';
   static const String regionMainlandChina = '中国大陆';
@@ -181,7 +171,6 @@ class AppStrings {
   static const String typeFantasy = '奇幻';
   static const String typeThriller = '惊悚';
   static const String typeAdventure = '冒险';
-  static const String typeAnimation = '动漫';
   static const String typeDocumentary = '纪录片';
   static const String typeBiography = '传记';
   static const String typeHistory = '历史';
@@ -265,7 +254,6 @@ class AppStrings {
   static const String panelEpisodes = '选集';
   static const String panelSwitchSource = '换源';
   static const String panelDownload = '下载';
-  static const String panelDetail = '详情';
   static const String panelSelectAll = '全选';
   static const String panelAvailableSources = '可用播放源';
 
@@ -288,18 +276,19 @@ class AppStrings {
   static const String doubanScript = '脚本';
   static const String doubanStoryboard = '分镜';
   static const String doubanPerform = '演出';
+  static const String doubanScreenwriter = '编剧';
+  static const String doubanDirectorColon = '导演: ';
+  static const String doubanScreenwriterColon = '编剧: ';
+  static const String doubanActorColon = '主演: ';
 
   // ── 视频菜单 ──
   static const String menuPlay = '播放';
-  static const String menuFavorite = '收藏';
-  static const String menuUnfavorite = '取消收藏';
   static const String menuDeleteRecord = '删除记录';
   static const String menuComingSoon = '敬请期待';
 
   // ── 收藏 ──
   static const String favFailed = '收藏失败';
   static const String favUnfavoriteFailed = '取消收藏失败';
-  static const String favDeleteFailed = '删除失败';
 
   // ── 个人中心 ──
   static const String profileCurrentUser = '当前用户';
@@ -340,7 +329,6 @@ class AppStrings {
   static const String updateLater = '稍后';
   static const String updatePleaseWait = '请稍候';
   static const String updateNeedPermission = '需要安装权限才能安装应用';
-  static const String updateDownloadFailed = '下载失败';
   static const String updateInstallFailed = '安装失败';
   static const String updateOpenFailed = '打开安装文件失败';
   static const String updateError = '发生错误';
@@ -349,12 +337,9 @@ class AppStrings {
   // ── 直播 ──
   static const String liveChannelLoading = '正在加载频道列表...';
   static const String livePlayError = '播放出错';
-  static const String liveRefreshing = '刷新中...';
   static const String liveSearch = '搜索直播源';
   static const String liveNoSource = '暂无直播源';
   static const String liveNoChannel = '该直播源暂无频道';
-  static const String liveUngrouped = '未分组';
-  static const String liveUngroupedDefault = '无分组';
   static const String liveLoadFailed = '加载失败: ';
   static const String liveSourceSwitched = '当前源已不存在，已切换到 ';
   static const String liveRefreshFailed = '刷新失败: ';
@@ -374,7 +359,6 @@ class AppStrings {
   static const String liveLoadSourcesFailed = '加载直播源失败';
   static const String liveLoadScheduleFailed = '加载节目单失败';
   static const String liveCopySuccess = '已复制';
-  static const String liveCopyLinkFailed = '打开链接失败: ';
   static const String liveCannotOpenLink = '无法打开链接';
 
   // ── 下载管理 ──
@@ -387,20 +371,20 @@ class AppStrings {
   static const String downloadCannotChangePath = '有正在下载的任务，无法修改保存路径';
   static const String downloadPathUpdated = '保存路径已更新';
   static const String downloadSelectPathFailed = '选择路径失败: ';
-  static const String downloadSettingsTitle = '下载设置';
-  static const String downloadConcurrentCount = '同时下载任务数';
+  static const String downloadSettings = '下载设置';
+  static const String downloadConcurrentTasks = '同时下载任务数';
   static const String downloadConcurrentThreads = '并发线程数';
   static const String downloadSavePath = '保存路径';
+  static const String downloadSelectPath = '选择路径';
   static const String downloadNoPath = '未设置保存路径';
   static const String downloadSettingsTip = '提示：增加同时下载任务数和并发线程数可以加快下载速度，但也会消耗更多系统资源。请根据您的设备性能进行调整。';
-  static const String downloadManagementTitle = '下载管理';
+  static const String downloadManagement = '下载管理';
   static const String downloadTabDownloading = '下载中';
   static const String downloadTabCompleted = '已完成';
   static const String downloadResumeAll = '全部继续';
   static const String downloadPauseAll = '全部暂停';
   static const String downloadDeleteAll = '删除全部';
   static const String downloadBatchDelete = '批量删除';
-  static const String downloadBatchDeleteTitle = '批量删除';
   static const String downloadDeleteAllConfirm = '确定要删除所有已完成的下载任务吗？';
   static const String downloadDeleteGroup = '删除分组';
   static const String downloadDeleteGroupConfirm = '确定要删除该分组的任务吗？';
@@ -434,7 +418,10 @@ class AppStrings {
   static const String netdiskLinksCount = '个链接';
   static const String netdiskSource = '来源: ';
   static const String netdiskUnnamedResource = '未命名资源';
-  static const String netdiskStatsFormat = '共找到 ';
+  static const String netdiskStatsTotal = '共找到 ';
+
+  // ── 播放源 ──
+  static const String playerSourcesCountFormat = '共 %d 个播放源';
 
   // ── 播放设置 ──
   static const String playbackAutoPlay = '自动连播';
@@ -478,7 +465,7 @@ class AppStrings {
   // ── 源名称 ──
   static const String doubanSourceName = '豆瓣';
   static const String bangumiSourceName = 'Bangumi';
-  static const String sourceShortDrama = '短剧';
+  static const String shortDramaName = '短剧';
 
   // ── 网盘名称 ──
   static const String cloudBaidu = '百度网盘';
@@ -552,19 +539,31 @@ class AppStrings {
   // ── 搜索服务 ──
   static const String searchSourceNotFound = '未找到对应的源: ';
   static const String searchDetailInvalid = '获取到的详情内容无效';
+  static const String detailRequestFailed = '详情请求失败: ';
+  static const String detailPageRequestFailed = '详情页请求失败: ';
 
   // ── 直播服务 ──
   static const String liveSourceNotFound = '未找到直播源: ';
   static const String liveChannelNotFound = '未找到频道列表: ';
 
-  // ── 下载服务 ──
-  static const String downloadTsExtension = '.ts';
-  static const String downloadEpisodeFormat = '第%d集';
-
   // ── M3U8 服务 ──
   static const String m3u8NoVideoSegment = '未找到视频片段';
   static const String m3u8NoAvailableSource = '没有可用的源';
-  static const String m3u8ResolutionUnknown = '未知';
+  static const String m3u8ParseFailed = '未解析到任何视频片段，可能不是有效的 M3U8 地址';
+  static const String m3u8DownloadKeyFailed = '下载解密密钥失败';
+  static const String m3u8ParseDepthTooDeep = 'M3U8 解析层级过深，可能存在循环引用';
+  static const String m3u8InvalidUrl = '无效的 M3U8 链接';
+  static const String m3u8CannotExtractSubPlaylist = '无法从主播放列表提取子播放列表';
+  static const String m3u8NoSegmentsToMerge = '没有可合并的视频片段';
+  static const String m3u8NoValidSegments = '没有有效的视频片段可合并';
+  static const String m3u8MergeSizeAbnormal = '合并后的文件大小异常，可能下载失败';
+
+  // ── Bangumi 服务 ──
+  static const String bangumiCalendarFetchFailed = '获取 Bangumi 日历失败';
+  static const String bangumiRequestException = 'Bangumi 数据请求异常';
+  static const String bangumiCacheFormatError = 'Bangumi 缓存数据格式错误';
+  static const String bangumiDetailParseFailed = 'Bangumi 详情数据解析失败';
+  static const String bangumiDetailFetchFailed = '获取 Bangumi 详情数据失败';
 
   // ── 业务提示 ──
   static const String msgSaveSuccess = '保存成功';
@@ -572,10 +571,13 @@ class AppStrings {
   static const String msgOperationFailed = '操作失败';
 
   // ── 格式化模板 ──
-  static const String formatEpisode = '第%d集';
   static const String formatRemainingAttempts = '还有%d次尝试机会';
   static const String formatLockedMinutes = '账户已被锁定，请%d分钟后再试';
   static const String formatLockedLater = '账户已被锁定，请稍后再试';
+
+  static String formatEpisodeTitle(int index) => '第$index集';
+  static String formatLockedMinutesTitle(int minutes) => '账户已被锁定，请$minutes分钟后再试';
+  static String formatRemainingAttemptsTitle(int attempts) => '还有$attempts次尝试机会';
 
   // ── 错误消息 ──
   static const String errorGetFailed = '获取失败';
@@ -590,20 +592,91 @@ class AppStrings {
   // ── 预定义类型标签 ──
   static const String movie = '电影';
   static const String tvShow = '剧集';
+  static const String categoryAnimation = '动画';
+
+  // ── 封禁关键词 ──
+  static const String bannedKeyword = '封禁';
+
+  // ── 动漫相关 ──
+  static const String animeDailyBroadcast = '每日放送';
+  static const String animeSeries = '番剧';
+  static const String animeMovie = '剧场版';
+
+  // ── 星期 ──
+  static const String weekMonday = '周一';
+  static const String weekTuesday = '周二';
+  static const String weekWednesday = '周三';
+  static const String weekThursday = '周四';
+  static const String weekFriday = '周五';
+  static const String weekSaturday = '周六';
+  static const String weekSunday = '周日';
+  static const String weekTitle = '星期';
+
+  // ── 更多影片类型 ──
+  static const String typeDarkHumor = '黑色幽默';
+  static const String typeInspirational = '励志';
+  static const String typeParody = '恶搞';
+  static const String typeHealing = '治愈';
+  static const String typeSports = '运动';
+  static const String typeHarem = '后宫';
+  static const String typeErotic = '情色';
+  static const String typeChineseAnime = '国漫';
+  static const String typeHumanNature = '人性';
+  static const String typeLove = '恋爱';
+  static const String typeStopMotion = '定格动画';
+  static const String typeUsAnimation = '美国动画';
+  static const String typeChildren = '儿童';
+  static const String typeAnime = '二次元';
+  static const String typeAnimal = '动物';
+  static const String typeYouth = '青春';
+  static const String typeWestern = '西部';
+  static const String typeShort = '短片';
+
+  // ── 更多平台 ──
+  static const String platformHBO = 'HBO';
+  static const String platformBBC = 'BBC';
+  static const String platformNHK = 'NHK';
+  static const String platformCBS = 'CBS';
+  static const String platformNBC = 'NBC';
+  static const String platformTvN = 'tvN';
+  static const String platformNetflix = 'Netflix';
+
+  // ── 年代 ──
+  static const String year2020s = '2020年代';
+  static const String year2025 = '2025';
+  static const String year2024 = '2024';
+  static const String year2023 = '2023';
+  static const String year2022 = '2022';
+  static const String year2021 = '2021';
+  static const String year2020 = '2020';
+  static const String year2019 = '2019';
+  static const String year2010s = '2010年代';
+  static const String year2000s = '2000年代';
+  static const String year1990s = '90年代';
+  static const String year1980s = '80年代';
+  static const String year1970s = '70年代';
+  static const String year1960s = '60年代';
+  static const String yearEarlier = '更早';
+
+  // ── 时间格式化 ──
+  static const String timeJustNow = '刚刚';
+  static const String timeMinutesAgo = '分钟前';
+  static const String timeHoursAgo = '小时前';
+  static const String timeDaysAgo = '天前';
 
   // ── 通用提示 ──
   static const String noContent = '暂无内容';
   static const String noContentTip = '去看看其他内容吧';
   static const String unknownError = '未知错误';
+  static const String content = '内容';
 
   // ── 格式化方法 ──
   static String noContentWithName(String name) => '暂无$name';
   static String noContentTipWithName(String name) => '去看看其他$name吧';
+  static String totalCountWithName(int count, String name) => '共 $count $name';
 
   // ── HTTP headers ──
-  static const String contentTypeJson = 'application/json';
-  static const String headerCookie = 'Cookie';
-  static const String headerXCsrfToken = 'X-CSRF-Token';
+  static const String contentTypeJsonUtf8 = 'application/json; charset=utf-8';
 
   // ── 截图相关（PC 和移动端共用） ──
   static const String screenshotFailed = '截图失败';
@@ -622,7 +695,6 @@ class AppStrings {
 
   // ── 播放器补充 ──
   static const String playerGetDetailFailed = '获取短剧详情失败';
-  static const String playerEpisodeFormat = '第%d集';
   static const String playerRelatedRecommend = '相关推荐';
   static const String playerHint = '提示';
   static const String playerCloseDlnaFirst = '请先关闭投屏后再切换视频';
@@ -650,9 +722,36 @@ class AppStrings {
   static const String dlnaCurrentDevice = '当前设备';
   static const String dlnaEnsureSameNetwork = '请确保设备与手机在同一网络下';
   static const String dlnaDeviceCountTemplate = '发现 %d 个设备';
+  static const String dlnaSelectDevice = '选择投屏设备';
+  static const String dlnaScanFailed = '扫描失败';
+  static const String dlnaActiveTime = '活跃时间';
+  static const String dlnaVideo = '视频';
+  static const String dlnaEpisodeSeparator = ' - ';
 
   // ── 通用错误提示 ──
   static const String clearFailed = '清空失败';
+  static const String couldNotLaunch = '无法打开';
+  static String couldNotLaunchUrl(String url) => '无法打开 $url';
+
+  // ── 加载状态 ──
+  static const String loadingEmojiSearch = '🔍';
+  static const String loadingEmojiMagic = '✨';
+  static const String loadingEmojiError = '😵';
+
+  // ── 播放器 ──
+  static const String playerDetail = '详情';
+  static const String playerUnknown = 'unknown';
+
+  // ── 保存场景 ──
+  static const String sceneBackButton = '返回按钮';
+  static const String sceneTimedSave = '定时保存';
+  static const String sceneAppBackground = '应用进入后台';
+  static const String scenePause = '暂停';
+  static const String sceneDlnaPause = 'DLNA暂停';
+  static const String sceneNextEpisodeButton = '下一集按钮';
+  static const String sceneAutoNextEpisode = '自动播放下一集';
+  static const String sceneEpisodeListClick = '选集列表点击';
+  static const String sceneEpisodePanelClick = '选集面板点击';
 
   // ── 通知相关 ──
   static const String notifUpdateFileNotExist = '更新文件不存在，请重新下载';
@@ -716,7 +815,6 @@ class AppStrings {
   static const String countShortDrama = '共 %d 部短剧';
 
   // ── 播放器面板补充 ──
-  static const String episodeSection = '第%d集';
   static const String downloadCount = '下载 (%d)';
   static const String episodeCount = '选集 (%d)';
 
@@ -732,4 +830,169 @@ class AppStrings {
   static const String getFavoritesFailed = '获取收藏夹失败';
   static const String getPlayRecordsFailed = '获取播放记录失败';
   static const String clearPlayRecordsDone = '播放记录已清空';
+
+  // ── HTTP Header 值 ──
+  static const String authorizationBearer = 'Bearer ';
+
+  // ── 分类计数格式 ──
+  static const String countAnimeSeries = '个番剧';
+  static const String countAnimeMovie = '部动画电影';
+  static const String countAllAnime = '部番剧';
+
+  // ── 搜索/筛选 ──
+  static const String sortDefault = 'T';
+  static const String sortAll = 'all';
+  static const String categoryHot = '热门';
+  static const String categoryLatest = '最新';
+  static const String filterFormat = '形式';
+
+  // ── 短剧类型 ──
+  static const String shortDramaFemaleLove = '女频恋爱';
+  static const String shortDramaReverseCool = '反转爽剧';
+  static const String shortDramaCostumeXianxia = '古装仙侠';
+  static const String shortDramaEraTravel = '年代穿越';
+  static const String shortDramaBrainSuspense = '脑洞悬疑';
+  static const String shortDramaModernCity = '现代都市';
+  static const String shortDramaEdge = '擦边短剧';
+
+  // ── AI 设置 ──
+  static const String aiCustom = '自定义';
+  static const String aiCustomModel = '自定义模型';
+
+  // ── 通用提示 ──
+  static const String pullToRefresh = '下拉刷新';
+  static const String noFavoritesContent = '您收藏的视频将显示在这里';
+  static const String noHistoryContent = '您观看过的视频将显示在这里';
+  static const String comingSoonMore = '敬请期待更多精彩内容';
+  static const String unknownYear = '未知年份';
+
+  // ── 网盘搜索 ──
+  static const String netdiskUnavailable = '未启用';
+  static const String netdiskCopyLinkLabel = '链接';
+  static const String netdiskCopyPasswordLabel = '密码';
+
+  // ── DLNA 设备类型关键词 ──
+  static const String dlnaDeviceTv = 'tv';
+  static const String dlnaDeviceTelevision = '电视';
+  static const String dlnaDeviceBox = 'box';
+  static const String dlnaDevicePlayer = '播放器';
+
+  // ── 服务错误 ──
+  static const String doubanDetailParseEmpty = '豆瓣详情数据解析为空';
+  static const String releaseCalendarFetchFailed = '获取即将上映数据失败';
+  static const String releaseCalendarException = '获取即将上映数据异常: ';
+  static const String cacheItemMissingFields = '缓存项缺少必需字段: ';
+  static const String cacheTimestampTypeError = 'timestamp 字段类型错误: ';
+  static const String cacheExpirationTypeError = 'expiration 字段类型错误: ';
+  static const String m3u8Timeout = '超时';
+  static const String m3u8FetchStreamTimeout = '获取流信息超时';
+
+  // ── 确认对话框 ──
+  static const String confirmClearChatHistory = '确定要清空所有聊天记录吗？此操作不可恢复。';
+  static const String chatHistoryCleared = '聊天记录已清空';
+
+  // ── 下载设置 ──
+  static const String downloadHasActiveTasks = '有正在下载的任务，无法修改保存路径';
+
+  // ── 下载管理 ──
+  static const String downloadConfirmDeleteAll = '确定要删除所有已完成的下载任务吗？';
+  static const String downloadConfirmDeleteGroup = '确定要删除"%s"的%d个任务吗？';
+
+  // ── DLNA ──
+  static const String dlnaVideoLoading = '视频加载中...';
+
+  // ── 图片查看器 ──
+  static const String imageSaving = '正在保存图片...';
+
+  // ── AI 设置 ──
+  static const String aiAvailableBalance = '可用余额: %s';
+  static const String aiBalanceInfo = '余额信息: %s';
+
+  // ── 登录提示 ──
+  static const String authAccountLockedMinutes = '账户已被锁定，请%d分钟后再试';
+  static const String authRemainingAttempts = '还有%d次尝试机会';
+
+  // ── 电影角色/职位名称 ──
+  static const String roleDirector = '导演';
+  static const String roleSupervisor = '监督';
+  static const String roleOriginal = '原作';
+  static const String roleScript = '脚本';
+  static const String roleStoryboard = '分镜';
+  static const String rolePerformance = '演出';
+  static const String roleSeriesComposition = '系列构成';
+  static const String roleScreenplay = '剧本';
+  static const String roleStoryboardComposition = '分镜构图';
+  static const String roleStoryboardPerformance = '分镜・演出';
+
+  // ── 文件路径 ──
+  static const String directoryPictures = 'Pictures';
+  static const String directoryScreenshots = 'Screenshots';
+
+  // ── 截图相关 ──
+  static const String screenshotFormatPng = 'image/png';
+  static const String screenshotFileNameTemplate = 'screenshot_';
+
+  // ── 播放速度 ──
+  static const String playbackSpeed2x = '2x';
+
+  // ── 筛选器值 ──
+  static const String filterValueHot = '热门';
+  static const String filterValueLatest = '最新';
+  static const String filterValueDoubanHighRating = '豆瓣高分';
+  static const String filterValueUnpopularGood = '冷门佳片';
+  static const String filterValueRecentHot = '最近热门';
+  static const String filterValueChinese = '华语';
+  static const String filterValueWestern = '欧美';
+  static const String filterValueKorean = '韩国';
+  static const String filterValueJapanese = '日本';
+
+  // ── 网盘搜索统计 ──
+  static const String netdiskStatsResources = ' 个网盘资源，覆盖 ';
+  static const String netdiskStatsTypes = ' 种网盘类型';
+
+  // ── 集数格式 ──
+  static const String episodeSuffix = '集';
+  static const String daysSuffix = '天';
+  static const String unknownSearchEventType = '的搜索事件类型';
+
+  // ── 链接数量 ──
+  static const String linkCountSuffix = '个链接';
+
+  // ── Bangumi 详情 ──
+  static const String bangumiDetail = 'Bangumi 详情';
+
+  // ── 源数量 ──
+  static const String sourceCountSeparator = '等';
+  static const String sourceCountSuffix = '源';
+
+  // ── 豆瓣服务错误消息 ──
+  static const String doubanParseFailed = '豆瓣数据解析失败';
+  static const String doubanFetchFailed = '获取豆瓣数据失败';
+  static const String doubanRequestException = '豆瓣数据请求异常';
+  static const String doubanRecommendParseFailed = '豆瓣推荐数据解析失败';
+  static const String doubanRecommendFetchFailed = '获取豆瓣推荐数据失败';
+  static const String doubanRecommendRequestException = '豆瓣推荐数据请求异常';
+  static const String doubanDetailParseFailed = '豆瓣详情数据解析失败';
+  static const String doubanDetailFetchFailed = '获取豆瓣详情数据失败';
+  static const String doubanDetailRequestException = '豆瓣详情数据请求异常';
+
+  // ── 通用字符串 ──
+  static const String aiLabel = 'AI';
+  static const String icon = 'icon';
+  static const String label = 'label';
+
+  // ── 错误消息 ──
+  static const String errorContextNotMounted = 'Context not mounted';
+
+  // ── 分隔符 ──
+  static const String separatorPipe = ' | ';
+  static const String separatorSlash = ' / ';
+
+  // ── 播放速度标签 ──
+  static const String playbackSpeedLabelSlowest = '0.5x';
+  static const String playbackSpeedLabelFastest = '2.0x';
+
+  // ── 资源路径 ──
+  static const String assetDanmuIcon = 'assets/images/danmu.svg';
+
 }

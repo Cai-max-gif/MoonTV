@@ -12,6 +12,7 @@ import '../services/theme_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 
 /// 全屏图片查看器
 class FullscreenImageViewer extends StatefulWidget {
@@ -78,9 +79,9 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
           return Container(
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+              borderRadius: BorderRadius.only(
+                topLeft: AppDimens.radius16,
+                topRight: AppDimens.radius16,
               ),
             ),
             child: SafeArea(
@@ -89,7 +90,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                 children: [
                   // 标题
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                    padding: AppDimens.paddingFromLTRB2020208,
                     child: Text(
                       AppStrings.screenshotSaved,
                       style: FontUtils.poppins(
@@ -171,7 +172,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '正在保存图片...',
+              AppStrings.imageSaving,
               style: FontUtils.poppins(
                 color: isDark ? AppColors.white : AppColors.white,
               ),
@@ -194,7 +195,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
       // 保存到相册
       await Gal.putImageBytes(
         imageBytes,
-        name: widget.title.replaceAll(RegExp(r'[^\w\s-]'), ''), // 清理文件名
+        name: widget.title.replaceAll(RegExp(AppConfig.filenameInvalidCharsPattern), ''),
       );
 
       if (mounted) {
@@ -218,7 +219,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.red.withValues(alpha: 0.8),
-            duration: const Duration(seconds: 3),
+            duration: AppDurations.toastDuration,
           ),
         );
       }
@@ -341,7 +342,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                                 Icon(
                                   Icons.error_outline,
                                   color: textColor,
-                                  size: 48,
+                                  size: AppDimens.iconButtonSize,
                                 ),
                                 Gap.h16,
                                 Text(

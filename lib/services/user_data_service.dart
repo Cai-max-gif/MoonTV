@@ -4,31 +4,31 @@ import 'package:flutter/foundation.dart';
 import '../constants/app_config.dart';
 
 class UserDataService {
-  static const String _usernameKey = 'username';
-  static const String _passwordKey = 'password';
-  static const String _tokenKey = 'auth_token';
-  static const String _cookiesKey = 'cookies';
-  static const String _localSearchKey = 'local_search';
-  static const String _defaultPlaybackSpeedKey = 'default_playback_speed';
+  static const String _usernameKey = AppConfig.storageKeyUsername;
+  static const String _passwordKey = AppConfig.storageKeyPassword;
+  static const String _tokenKey = AppConfig.storageKeyToken;
+  static const String _cookiesKey = AppConfig.storageKeyCookies;
+  static const String _localSearchKey = AppConfig.storageKeyLocalSearch;
+  static const String _defaultPlaybackSpeedKey = AppConfig.storageKeyDefaultPlaybackSpeed;
   static const String _autoEnterPictureInPictureKey =
-      'auto_enter_picture_in_picture';
-  static const String _autoSkipOpeningEndingKey = 'auto_skip_opening_ending';
-  static const String _skipOpeningDurationKey = 'skip_opening_duration';
-  static const String _skipEndingDurationKey = 'skip_ending_duration';
-  static const String _autoPlayNextKey = 'auto_play_next';
-  static const String _familyModeKey = 'family_mode';
+      AppConfig.storageKeyAutoEnterPictureInPicture;
+  static const String _autoSkipOpeningEndingKey = AppConfig.storageKeyAutoSkipOpeningEnding;
+  static const String _skipOpeningDurationKey = AppConfig.storageKeySkipOpeningDuration;
+  static const String _skipEndingDurationKey = AppConfig.storageKeySkipEndingDuration;
+  static const String _autoPlayNextKey = AppConfig.storageKeyAutoPlayNext;
+  static const String _familyModeKey = AppConfig.storageKeyFamilyMode;
 
-  static const String _danmakuEnabledKey = 'danmaku_enabled';
-  static const String _danmakuSpeedKey = 'danmaku_speed';
-  static const String _danmakuOpacityKey = 'danmaku_opacity';
-  static const String _danmakuFontSizeKey = 'danmaku_font_size';
-  static const String _danmakuDisplayAreaKey = 'danmaku_display_area';
-  static const String _danmakuAntiBlockKey = 'danmaku_anti_block';
-  static const String _danmakuSyncSpeedKey = 'danmaku_sync_speed';
+  static const String _danmakuEnabledKey = AppConfig.storageKeyDanmakuEnabled;
+  static const String _danmakuSpeedKey = AppConfig.storageKeyDanmakuSpeed;
+  static const String _danmakuOpacityKey = AppConfig.storageKeyDanmakuOpacity;
+  static const String _danmakuFontSizeKey = AppConfig.storageKeyDanmakuFontSize;
+  static const String _danmakuDisplayAreaKey = AppConfig.storageKeyDanmakuDisplayArea;
+  static const String _danmakuAntiBlockKey = AppConfig.storageKeyDanmakuAntiBlock;
+  static const String _danmakuSyncSpeedKey = AppConfig.storageKeyDanmakuSyncSpeed;
 
-  static const String _loginAttemptsKey = 'login_attempts';
-  static const String _lastLoginAttemptKey = 'last_login_attempt';
-  static const String _accountLockedUntilKey = 'account_locked_until';
+  static const String _loginAttemptsKey = AppConfig.storageKeyLoginAttempts;
+  static const String _lastLoginAttemptKey = AppConfig.storageKeyLastLoginAttempt;
+  static const String _accountLockedUntilKey = AppConfig.storageKeyAccountLockedUntil;
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static int get _maxLoginAttempts => AppConfig.maxLoginAttempts;
@@ -133,11 +133,11 @@ class UserDataService {
   // 获取所有用户数据
   static Future<Map<String, String?>> getAllUserData() async {
     return {
-      'serverUrl': getDefaultServerUrl(),
-      'username': await getUsername(),
-      'password': await getPassword(),
-      'token': await getAuthToken(),
-      'cookies': await getCookies(),
+      AppConfig.storageKeyServerUrl: getDefaultServerUrl(),
+      AppConfig.storageKeyUsername: await getUsername(),
+      AppConfig.storageKeyPassword: await getPassword(),
+      AppConfig.storageKeyAuthToken: await getAuthToken(),
+      AppConfig.storageKeyCookies: await getCookies(),
     };
   }
 
@@ -276,10 +276,10 @@ class UserDataService {
     await prefs.setInt(_skipOpeningDurationKey, duration);
   }
 
-  // 获取片头跳过时长设置（默认为 90）
+  // 获取片头跳过时长设置（默认为 AppConfig.defaultSkipOpeningDuration）
   static Future<int> getSkipOpeningDuration() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_skipOpeningDurationKey) ?? 90;
+    return prefs.getInt(_skipOpeningDurationKey) ?? AppConfig.defaultSkipOpeningDuration;
   }
 
   // 保存片尾跳过时长设置
@@ -288,10 +288,10 @@ class UserDataService {
     await prefs.setInt(_skipEndingDurationKey, duration);
   }
 
-  // 获取片尾跳过时长设置（默认为 180）
+  // 获取片尾跳过时长设置（默认为 AppConfig.defaultSkipEndingDuration）
   static Future<int> getSkipEndingDuration() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_skipEndingDurationKey) ?? 180;
+    return prefs.getInt(_skipEndingDurationKey) ?? AppConfig.defaultSkipEndingDuration;
   }
 
   // 保存自动连播设置
@@ -347,7 +347,7 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuSpeed(int speedIndex) async {
-    final clamped = speedIndex.clamp(0, 4);
+    final clamped = speedIndex.clamp(AppConfig.danmakuSpeedMin, AppConfig.danmakuSpeedMax);
     danmakuSpeedNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_danmakuSpeedKey, clamped);
@@ -355,8 +355,8 @@ class UserDataService {
 
   static Future<int> getDanmakuSpeed() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_danmakuSpeedKey)?.clamp(0, 4) ??
-        (prefs.getDouble(_danmakuSpeedKey) ?? 2).toInt().clamp(0, 4);
+    return prefs.getInt(_danmakuSpeedKey)?.clamp(AppConfig.danmakuSpeedMin, AppConfig.danmakuSpeedMax) ??
+        (prefs.getDouble(_danmakuSpeedKey) ?? 2).toInt().clamp(AppConfig.danmakuSpeedMin, AppConfig.danmakuSpeedMax);
   }
 
   static Future<void> saveDanmakuOpacity(int opacity) async {
@@ -373,7 +373,7 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuFontSize(double fontSize) async {
-    final clamped = fontSize.clamp(0.5, 2.0);
+    final clamped = fontSize.clamp(AppConfig.danmakuFontSizeMin, AppConfig.danmakuFontSizeMax);
     danmakuFontSizeNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_danmakuFontSizeKey, clamped);
@@ -381,11 +381,11 @@ class UserDataService {
 
   static Future<double> getDanmakuFontSize() async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getDouble(_danmakuFontSizeKey) ?? 1.0).clamp(0.5, 2.0);
+    return (prefs.getDouble(_danmakuFontSizeKey) ?? 1.0).clamp(AppConfig.danmakuFontSizeMin, AppConfig.danmakuFontSizeMax);
   }
 
   static Future<void> saveDanmakuDisplayArea(double area) async {
-    final clamped = area.clamp(0.25, 1.0);
+    final clamped = area.clamp(AppConfig.danmakuAreaMin, AppConfig.danmakuAreaMax);
     danmakuDisplayAreaNotifier.value = clamped;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_danmakuDisplayAreaKey, clamped);
@@ -393,7 +393,7 @@ class UserDataService {
 
   static Future<double> getDanmakuDisplayArea() async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getDouble(_danmakuDisplayAreaKey) ?? 1.0).clamp(0.25, 1.0);
+    return (prefs.getDouble(_danmakuDisplayAreaKey) ?? 1.0).clamp(AppConfig.danmakuAreaMin, AppConfig.danmakuAreaMax);
   }
 
   static Future<void> saveDanmakuAntiBlock(bool enabled) async {

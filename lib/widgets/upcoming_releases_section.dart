@@ -11,6 +11,7 @@ import 'recommendation_section.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_strings.dart';
 
@@ -55,7 +56,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
   List<ReleaseCalendarItem> _items = [];
   bool _isLoading = true;
   bool _hasError = false;
-  String _selectedFilter = 'all'; // 'all', 'movie', 'tv'
+  String _selectedFilter = AppConfig.contentTypeAll; // 'all', 'movie', 'tv'
 
   StreamSubscription<void>? _refreshSubscription;
 
@@ -162,13 +163,13 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
     return _filteredItems.map((item) {
       return VideoInfo(
         id: item.id,
-        source: 'manmankan', // 改为 'manmankan' 而不是 'upcoming_release'，这样图片请求头能正确工作
+        source: AppConfig.sourceIdManmankan, // 改为 'manmankan' 而不是 'upcoming_release'，这样图片请求头能正确工作
         title: item.title,
-        sourceName: '即将上映',
+        sourceName: AppStrings.homeUpcoming,
         year: item.year,
         cover: item.cover ?? '',
         index: 0,
-        totalEpisodes: item.episodes ?? (item.type == 'tv' ? 0 : 1),
+        totalEpisodes: item.episodes ?? (item.type == AppConfig.stypeTv ? 0 : 1),
         playTime: 0,
         totalTime: 0,
         saveTime: item.createdAt,
@@ -182,7 +183,8 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
   @override
   Widget build(BuildContext context) {
     // 如果没有数据且不在加载中且没有错误，隐藏组件
-    if (!_isLoading && _items.isEmpty && !_hasError) {
+    // 如果过滤后没有可显示的内容（所有内容都已上映），也隐藏组件
+    if (!_isLoading && !_hasError && (_items.isEmpty || _filteredItems.isEmpty)) {
       return const SizedBox.shrink();
     }
 
@@ -191,7 +193,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
       children: [
           // 标题和查看更多按钮
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: AppDimens.horizontalLgPadding,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -217,7 +219,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
                   TextButton(
                     onPressed: widget.onMoreTap,
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: AppDimens.paddingHorizontal8Vertical4,
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       overlayColor: AppColors.transparent,
@@ -233,7 +235,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          Gap.h12,
           // 筛选标签
           if (!_isLoading && !_hasError && _items.isNotEmpty)
             _buildFilterTabs(),
@@ -251,7 +253,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
               isLoading: false,
               hasError: false,
               cardCount: 2.75,
-              from: 'upcoming',
+              from: AppConfig.sourceUpcoming,
             ),
         ],
       );
@@ -261,20 +263,20 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
   Widget _buildFilterTabs() {
     // 仅统计未上映的项目数量
     final upcomingItems = _items.where((item) => item.getDaysUntilRelease() > 0).toList();
-    final movieCount = upcomingItems.where((item) => item.type == 'movie').length;
-    final tvCount = upcomingItems.where((item) => item.type == 'tv').length;
+    final movieCount = upcomingItems.where((item) => item.type == AppConfig.stypeMovie).length;
+    final tvCount = upcomingItems.where((item) => item.type == AppConfig.stypeTv).length;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: AppDimens.horizontalLgPadding,
       child: Consumer<ThemeService>(
         builder: (context, themeService, child) {
           return Row(
             children: [
               _buildFilterChip(AppStrings.all, 'all', upcomingItems.length, themeService),
-              const SizedBox(width: 8),
-              _buildFilterChip(AppStrings.movie, 'movie', movieCount, themeService),
-              const SizedBox(width: 8),
-              _buildFilterChip(AppStrings.navTv, 'tv', tvCount, themeService),
+              Gap.w8,
+              _buildFilterChip(AppStrings.movie, AppConfig.stypeMovie, movieCount, themeService),
+              Gap.w8,
+              _buildFilterChip(AppStrings.navTv, AppConfig.stypeTv, tvCount, themeService),
             ],
           );
         },
@@ -293,7 +295,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: AppDimens.paddingHorizontal12Vertical6,
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.orange
@@ -307,7 +309,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
                 : (themeService.isDarkMode
                     ? AppColors.gray600
                     : AppColors.slate200),
-            width: 1,
+            width: AppDimens.dividerThicknessThin,
           ),
         ),
         child: Row(
@@ -326,16 +328,14 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
               ),
             ),
             if (count > 0) ...[
-              const SizedBox(width: 4),
+              Gap.w4,
               Text(
                 '($count)',
                 style: FontUtils.poppins(
                   fontSize: AppDimens.fontSize3xs,
                   color: isSelected
-                      ? AppColors.white70
-                      : (themeService.isDarkMode
-                          ? const Color(0xFF718096)
-                          : const Color(0xFF718096)),
+                          ? AppColors.white70
+                          : AppColors.textSlate,
                 ),
               ),
             ],
@@ -354,17 +354,17 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
         final int skeletonCount = isTablet ? visibleCards.ceil() : 3;
 
         final double screenWidth = constraints.maxWidth;
-        const double padding = 32.0;
-        const double spacing = 12.0;
+        final double padding = AppDimens.gridPaddingHorizontalDouble;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - padding;
-        const double minCardWidth = 120.0;
+        final double minCardWidth = AppDimens.gridMinCardWidth;
         final double calculatedCardWidth =
             (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
         final double cardWidth = calculatedCardWidth > minCardWidth ? calculatedCardWidth : minCardWidth;
 
         return Container(
           height: (cardWidth * 1.5) + 50,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: AppDimens.horizontalLgPadding,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: skeletonCount,
@@ -397,7 +397,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
               height: height,
               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             ),
-            const SizedBox(height: 6),
+            Gap.h6,
             Center(
               child: ShimmerEffect(
                 width: width * 0.8,
@@ -415,7 +415,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
   Widget _buildErrorState() {
     return Container(
       height: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: AppDimens.horizontalLgPadding,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -423,9 +423,9 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
             Icon(
               Icons.error_outline,
               color: AppColors.gray400,
-              size: 32,
+              size: AppDimens.iconSize32,
             ),
-            const SizedBox(height: 8),
+            Gap.h8,
             Text(
               AppStrings.loadFailed,
               style: FontUtils.poppins(
@@ -433,7 +433,7 @@ class _UpcomingReleasesSectionState extends State<UpcomingReleasesSection> {
                 color: AppColors.gray600,
               ),
             ),
-            const SizedBox(height: 8),
+            Gap.h8,
             TextButton(
               onPressed: _loadUpcomingReleases,
               child: Text(

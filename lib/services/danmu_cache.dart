@@ -4,17 +4,17 @@ import '../models/danmu_item.dart';
 import '../constants/app_config.dart';
 
 class DanmuCache {
-  static const _cachePrefix = 'danmu_cache_';
+  static const _cachePrefix = AppConfig.cacheKeyDanmu;
   static const _cacheDuration = AppConfig.danmuCacheDuration;
 
   static String _buildCacheKey(
       {String? title, String? doubanId, String? episode, String? episodeId}) {
     final parts = <String>[];
-    if (title != null) parts.add('t=$title');
-    if (doubanId != null) parts.add('d=$doubanId');
-    if (episode != null) parts.add('e=$episode');
-    if (episodeId != null) parts.add('ei=$episodeId');
-    return _cachePrefix + parts.join('&');
+    if (title != null) parts.add('${AppConfig.danmuCacheKeyTitle}=$title');
+    if (doubanId != null) parts.add('${AppConfig.danmuCacheKeyDoubanId}=$doubanId');
+    if (episode != null) parts.add('${AppConfig.danmuCacheKeyEpisode}=$episode');
+    if (episodeId != null) parts.add('${AppConfig.danmuCacheKeyEpisodeId}=$episodeId');
+    return _cachePrefix + parts.join(AppConfig.urlSeparatorAmpersand);
   }
 
   static Future<void> save(
@@ -27,8 +27,8 @@ class DanmuCache {
     final key = _buildCacheKey(
         title: title, doubanId: doubanId, episode: episode, episodeId: episodeId);
     final cacheData = json.encode({
-      'time': DateTime.now().millisecondsSinceEpoch,
-      'data': data.map((e) => e.toJson()).toList(),
+      AppConfig.jsonTime: DateTime.now().millisecondsSinceEpoch,
+      AppConfig.jsonData: data.map((e) => e.toJson()).toList(),
     });
     await prefs.setString(key, cacheData);
   }
@@ -45,13 +45,13 @@ class DanmuCache {
     if (cached == null) return null;
 
     final map = json.decode(cached) as Map<String, dynamic>;
-    final time = DateTime.fromMillisecondsSinceEpoch(map['time'] as int);
+    final time = DateTime.fromMillisecondsSinceEpoch(map[AppConfig.jsonTime] as int);
     if (DateTime.now().difference(time) > _cacheDuration) {
       await prefs.remove(key);
       return null;
     }
 
-    final dataList = map['data'] as List;
+    final dataList = map[AppConfig.jsonData] as List;
     return dataList
         .map((e) => DanmuItem.fromJson(e as Map<String, dynamic>))
         .toList();

@@ -9,6 +9,7 @@ import '../utils/font_utils.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_strings.dart';
 
@@ -165,11 +166,11 @@ class _HistoryGridState extends State<HistoryGrid>
 
           // 计算每列的宽度
           final double screenWidth = constraints.maxWidth;
-          const double padding = 16.0;
-          const double spacing = 12.0;
+          final double padding = AppDimens.gridPaddingHorizontal;
+          final double spacing = AppDimens.gridSpacingMd;
           final double availableWidth =
               screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-          const double minItemWidth = 80.0;
+          final double minItemWidth = AppDimens.gridMinItemWidth;
           final double calculatedItemWidth = availableWidth / crossAxisCount;
           final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
           final double itemHeight = itemWidth * 2.0;
@@ -218,7 +219,7 @@ class _HistoryGridState extends State<HistoryGrid>
         Center(
           child: ShimmerEffect(
             width: width * 0.6,
-            height: 8,
+            height: AppDimens.spacingSm,
             borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
         ),
@@ -233,7 +234,7 @@ class _HistoryGridState extends State<HistoryGrid>
         children: [
           const Icon(
             Icons.error_outline,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -247,7 +248,7 @@ class _HistoryGridState extends State<HistoryGrid>
           ),
           Gap.h12,
           Text(
-            _errorMessage ?? '未知错误',
+            _errorMessage ?? AppStrings.unknownError,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: AppColors.gray475,
@@ -284,7 +285,7 @@ class _HistoryGridState extends State<HistoryGrid>
         children: [
           const Icon(
             Icons.history,
-            size: 80,
+            size: AppDimens.iconSize80,
             color: AppColors.silver,
           ),
           Gap.h24,
@@ -298,7 +299,7 @@ class _HistoryGridState extends State<HistoryGrid>
           ),
           Gap.h12,
           Text(
-            '您观看过的视频将显示在这里',
+            AppStrings.noHistoryContent,
             style: FontUtils.poppins(
               fontSize: AppDimens.fontSizeMd,
               color: AppColors.gray475,
@@ -321,11 +322,11 @@ class _HistoryGridState extends State<HistoryGrid>
 
           // 计算每列的宽度
           final double screenWidth = constraints.maxWidth;
-          const double padding = 16.0;
-          const double spacing = 12.0;
+          final double padding = AppDimens.gridPaddingHorizontal;
+          final double spacing = AppDimens.gridSpacingMd;
           final double availableWidth =
               screenWidth - (padding * 2) - (spacing * (crossAxisCount - 1));
-          const double minItemWidth = 80.0;
+          final double minItemWidth = AppDimens.gridMinItemWidth;
           final double calculatedItemWidth = availableWidth / crossAxisCount;
           final double itemWidth = math.max(calculatedItemWidth, minItemWidth);
           final double itemHeight = itemWidth * 2.0;
@@ -347,7 +348,7 @@ class _HistoryGridState extends State<HistoryGrid>
               return VideoCard(
                 videoInfo: VideoInfo.fromPlayRecord(playRecord),
                 onTap: () => widget.onVideoTap(playRecord),
-                from: 'playrecord',
+                from: AppConfig.sourcePlayrecord,
                 cardWidth: itemWidth,
                 onGlobalMenuAction: widget.onGlobalMenuAction != null
                     ? (action) => widget.onGlobalMenuAction!(playRecord, action)

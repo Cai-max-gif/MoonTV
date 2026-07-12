@@ -1,4 +1,4 @@
-import 'search_result.dart';
+﻿import 'search_result.dart';
 import 'video_info.dart';
 import '../constants/app_config.dart';
 
@@ -133,7 +133,7 @@ class AggregatedSearchResult {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: key, // 使用聚合键作为ID
-      source: 'aggregated', // 标记为聚合来源
+      source: AppConfig.aggregatedSource, // 标记为聚合来源
       title: title,
       sourceName: sourceNames.join(', '), // 显示所有源名称
       year: year,

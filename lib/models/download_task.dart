@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import '../constants/app_config.dart';
 
 enum DownloadStatus {
   downloading,
@@ -47,12 +48,17 @@ class DownloadTask {
             _generateLocalFileName(title, episodeTitle, episodeIndex),
         createdAt = createdAt ?? DateTime.now();
 
+  static DownloadStatus _parseDownloadStatus(int index) {
+    final values = DownloadStatus.values;
+    return index >= 0 && index < values.length ? values[index] : DownloadStatus.failed;
+  }
+
   static String _generateLocalFileName(
       String title, String episodeTitle, int episodeIndex) {
-    final safeTitle = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+    final safeTitle = title.replaceAll(RegExp(AppConfig.invalidFilenameChars), '_').trim();
     final safeEpisode =
-        episodeTitle.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
-    return '${safeTitle}_${safeEpisode}_$episodeIndex.ts';
+        episodeTitle.replaceAll(RegExp(AppConfig.invalidFilenameChars), '_').trim();
+    return '${safeTitle}_${safeEpisode}_$episodeIndex${AppConfig.fileExtensionTs}';
   }
 
   String get localFilePath {
@@ -75,45 +81,45 @@ class DownloadTask {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'episode_title': episodeTitle,
-      'episode_index': episodeIndex,
-      'cover': cover,
-      'video_url': videoUrl,
-      'save_path': savePath,
-      'progress': progress,
-      'status': status.index,
-      'total_bytes': totalBytes,
-      'downloaded_bytes': downloadedBytes,
-      'created_at': createdAt.millisecondsSinceEpoch,
-      'completed_at': completedAt?.millisecondsSinceEpoch,
-      'local_file_name': localFileName,
-      'retry_count': retryCount,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonEpisodeTitle: episodeTitle,
+      AppConfig.jsonEpisodeIndex: episodeIndex,
+      AppConfig.jsonCover: cover,
+      AppConfig.jsonVideoUrl: videoUrl,
+      AppConfig.jsonSavePath: savePath,
+      AppConfig.jsonProgress: progress,
+      AppConfig.jsonStatus: status.index,
+      AppConfig.jsonTotalBytes: totalBytes,
+      AppConfig.jsonDownloadedBytes: downloadedBytes,
+      AppConfig.jsonCreatedAt: createdAt.millisecondsSinceEpoch,
+      AppConfig.jsonCompletedAt: completedAt?.millisecondsSinceEpoch,
+      AppConfig.jsonLocalFileName: localFileName,
+      AppConfig.jsonRetryCount: retryCount,
     };
   }
 
   factory DownloadTask.fromJson(Map<String, dynamic> json) {
     return DownloadTask(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      episodeTitle: json['episode_title']?.toString() ?? '',
-      episodeIndex: json['episode_index'] as int? ?? 0,
-      cover: json['cover']?.toString() ?? '',
-      videoUrl: json['video_url']?.toString() ?? '',
-      savePath: json['save_path']?.toString() ?? '',
-      progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
-      status: DownloadStatus.values[json['status'] as int? ?? 0],
-      totalBytes: json['total_bytes'] as int? ?? 0,
-      downloadedBytes: json['downloaded_bytes'] as int? ?? 0,
-      createdAt: json['created_at'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int)
+      id: json[AppConfig.jsonId]?.toString() ?? '',
+      title: json[AppConfig.jsonTitle]?.toString() ?? '',
+      episodeTitle: json[AppConfig.jsonEpisodeTitle]?.toString() ?? '',
+      episodeIndex: json[AppConfig.jsonEpisodeIndex] as int? ?? 0,
+      cover: json[AppConfig.jsonCover]?.toString() ?? '',
+      videoUrl: json[AppConfig.jsonVideoUrl]?.toString() ?? '',
+      savePath: json[AppConfig.jsonSavePath]?.toString() ?? '',
+      progress: (json[AppConfig.jsonProgress] as num?)?.toDouble() ?? 0.0,
+      status: _parseDownloadStatus(json[AppConfig.jsonStatus] as int? ?? 0),
+      totalBytes: json[AppConfig.jsonTotalBytes] as int? ?? 0,
+      downloadedBytes: json[AppConfig.jsonDownloadedBytes] as int? ?? 0,
+      createdAt: json[AppConfig.jsonCreatedAt] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json[AppConfig.jsonCreatedAt] as int)
           : DateTime.now(),
-      completedAt: json['completed_at'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(json['completed_at'] as int)
+      completedAt: json[AppConfig.jsonCompletedAt] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json[AppConfig.jsonCompletedAt] as int)
           : null,
-      localFileName: json['local_file_name']?.toString(),
-      retryCount: json['retry_count'] as int? ?? 0,
+      localFileName: json[AppConfig.jsonLocalFileName]?.toString(),
+      retryCount: json[AppConfig.jsonRetryCount] as int? ?? 0,
     );
   }
 

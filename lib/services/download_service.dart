@@ -8,12 +8,15 @@ import '../utils/storage_utils.dart';
 import 'download_engine.dart';
 import 'notification_service.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
+import '../constants/app_regex.dart';
+import '../constants/app_strings.dart';
 
 class DownloadService extends ChangeNotifier {
-  static const String _downloadTasksKey = 'download_tasks';
-  static const String _maxConcurrentKey = 'max_concurrent_downloads';
-  static const String _concurrentThreadsKey = 'concurrent_threads';
-  static const String _savePathKey = 'download_save_path';
+  static const String _downloadTasksKey = AppConfig.storageKeyDownloadTasks;
+  static const String _maxConcurrentKey = AppConfig.storageKeyMaxConcurrentDownloads;
+  static const String _concurrentThreadsKey = AppConfig.storageKeyConcurrentThreads;
+  static const String _savePathKey = AppConfig.storageKeyDownloadSavePath;
   static final DownloadService _instance = DownloadService._internal();
 
   factory DownloadService() => _instance;
@@ -23,8 +26,8 @@ class DownloadService extends ChangeNotifier {
   DownloadService._internal();
 
   final List<DownloadTask> _tasks = [];
-  int _maxConcurrentDownloads = 1;
-  int _concurrentThreads = 4;
+  int _maxConcurrentDownloads = AppConfig.downloadMinConcurrent;
+  int _concurrentThreads = AppConfig.downloadDefaultThreads;
   String _savePath = '';
 
   final Map<String, DownloadEngine> _activeEngines = {};
@@ -68,15 +71,15 @@ class DownloadService extends ChangeNotifier {
         await prefs.setString(_savePathKey, _savePath);
       }
     }
-    _maxConcurrentDownloads = prefs.getInt(_maxConcurrentKey) ?? 1;
-    _concurrentThreads = prefs.getInt(_concurrentThreadsKey) ?? 4;
+    _maxConcurrentDownloads = prefs.getInt(_maxConcurrentKey) ?? AppConfig.downloadMinConcurrent;
+    _concurrentThreads = prefs.getInt(_concurrentThreadsKey) ?? AppConfig.downloadDefaultThreads;
   }
 
   Future<void> loadTasks() async {
     final prefs = await SharedPreferences.getInstance();
     final tasksJson = prefs.getString(_downloadTasksKey);
-    _maxConcurrentDownloads = prefs.getInt(_maxConcurrentKey) ?? 1;
-    _concurrentThreads = prefs.getInt(_concurrentThreadsKey) ?? 4;
+    _maxConcurrentDownloads = prefs.getInt(_maxConcurrentKey) ?? AppConfig.downloadMinConcurrent;
+    _concurrentThreads = prefs.getInt(_concurrentThreadsKey) ?? AppConfig.downloadDefaultThreads;
     _savePath = prefs.getString(_savePathKey) ?? '';
 
     if (_savePath.isEmpty) {
@@ -118,7 +121,7 @@ class DownloadService extends ChangeNotifier {
               continue;
             }
           }
-          final tempDir = Directory('${task.localFilePath}_temp');
+          final tempDir = Directory('${task.localFilePath}${AppConfig.downloadTempDirSuffix}');
           if (await tempDir.exists()) {
             await tempDir.delete(recursive: true);
           }
@@ -138,7 +141,7 @@ class DownloadService extends ChangeNotifier {
   void _normalizeRetryingTasks() {
     for (final task in _tasks) {
       if (task.status == DownloadStatus.retrying) {
-        if (task.retryCount >= 5) {
+        if (task.retryCount >= AppConfig.downloadMaxRetryCount) {
           task.status = DownloadStatus.failed;
         } else {
           task.status = DownloadStatus.queued;
@@ -157,16 +160,16 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<void> setMaxConcurrentDownloads(int max) async {
-    if (max < 1) max = 1;
-    if (max > 3) max = 3;
+    if (max < AppConfig.downloadMinConcurrent) max = AppConfig.downloadMinConcurrent;
+    if (max > AppConfig.downloadMaxConcurrent) max = AppConfig.downloadMaxConcurrent;
     _maxConcurrentDownloads = max;
     await _saveTasks();
     notifyListeners();
   }
 
   Future<void> setConcurrentThreads(int threads) async {
-    if (threads < 1) threads = 1;
-    if (threads > 16) threads = 16;
+    if (threads < AppConfig.downloadMinThreads) threads = AppConfig.downloadMinThreads;
+    if (threads > AppConfig.downloadMaxThreads) threads = AppConfig.downloadMaxThreads;
     _concurrentThreads = threads;
     await _saveTasks();
     notifyListeners();
@@ -432,7 +435,7 @@ class DownloadService extends ChangeNotifier {
     if (_activeEngines.containsKey(task.id)) return;
 
     final headers = _buildRequestHeaders(task.videoUrl);
-    final engine = DownloadEngine(referer: headers['Referer'], origin: headers['Origin']);
+    final engine = DownloadEngine(referer: headers[AppConfig.headerReferer], origin: headers[AppConfig.headerOrigin]);
     _activeEngines[task.id] = engine;
 
     int lastProgressPercent = 0;
@@ -491,7 +494,7 @@ class DownloadService extends ChangeNotifier {
       if (_tasks[idx].status == DownloadStatus.queued) return;
 
       final currentRetry = _tasks[idx].retryCount;
-      if (currentRetry < 5) {
+      if (currentRetry < AppConfig.downloadMaxRetryCount) {
         _tasks[idx].status = DownloadStatus.retrying;
         _tasks[idx].retryCount = currentRetry + 1;
         notifyListeners();
@@ -530,7 +533,7 @@ class DownloadService extends ChangeNotifier {
       await outputFile.delete();
     }
 
-    final tempDir = Directory('${task.localFilePath}_temp');
+    final tempDir = Directory('${task.localFilePath}${AppConfig.downloadTempDirSuffix}');
     if (await tempDir.exists()) {
       await tempDir.delete(recursive: true);
     }
@@ -570,7 +573,7 @@ class DownloadService extends ChangeNotifier {
     bool hasNewTasks = false;
 
     final files = (await downloadDir.list().toList()).where((entity) {
-      return entity is File && entity.path.endsWith('.ts');
+      return entity is File && entity.path.endsWith(AppConfig.fileExtensionTs);
     }).cast<File>();
 
     for (final file in files) {
@@ -591,17 +594,17 @@ class DownloadService extends ChangeNotifier {
   }
 
   DownloadTask? _parseFileNameToTask(String fileName, String savePath) {
-    final match = RegExp(r'^(.+)_第(\d+)集_(\d+)\.ts$').firstMatch(fileName);
+    final match = RegExp(AppRegex.tsFilePattern).firstMatch(fileName);
     if (match != null) {
       final title = match.group(1) ?? '';
-      final episodeNum = match.group(2) ?? '';
+      final episodeNum = int.tryParse(match.group(2) ?? '0') ?? 0;
       final episodeIndex = int.tryParse(match.group(3) ?? '0') ?? 0;
 
       if (title.isNotEmpty) {
         return DownloadTask(
           id: 'local_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode}',
           title: title,
-          episodeTitle: '第$episodeNum集',
+          episodeTitle: AppStrings.formatEpisodeTitle(episodeNum),
           episodeIndex: episodeIndex,
           cover: '',
           videoUrl: '',
@@ -615,7 +618,7 @@ class DownloadService extends ChangeNotifier {
       }
     }
 
-    final simpleMatch = RegExp(r'^(.+)_(\d+)\.ts$').firstMatch(fileName);
+    final simpleMatch = RegExp(AppRegex.tsFilePatternAlt).firstMatch(fileName);
     if (simpleMatch != null) {
       final title = simpleMatch.group(1) ?? '';
       final episodeIndex = int.tryParse(simpleMatch.group(2) ?? '0') ?? 0;
@@ -624,7 +627,7 @@ class DownloadService extends ChangeNotifier {
         return DownloadTask(
           id: 'local_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode}',
           title: title,
-          episodeTitle: '第$episodeIndex集',
+          episodeTitle: AppStrings.formatEpisodeTitle(episodeIndex),
           episodeIndex: episodeIndex,
           cover: '',
           videoUrl: '',
@@ -648,8 +651,8 @@ class DownloadService extends ChangeNotifier {
     final origin = uri.hasPort
       ? '${uri.scheme}://${uri.host}:${uri.port}'
       : '${uri.scheme}://${uri.host}';
-    headers['Origin'] = origin;
-    headers['Referer'] = '$origin${uri.path}';
+    headers[AppConfig.headerOrigin] = origin;
+    headers[AppConfig.headerReferer] = '$origin${uri.path}';
     
     return headers;
   }

@@ -3,6 +3,7 @@ import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_strings.dart';
+import '../constants/app_config.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/search_result.dart';
 import '../models/douban_movie.dart';
@@ -38,12 +39,12 @@ class PlayerDetailsPanel extends StatelessWidget {
         children: [
           // 标题         if (showTitle)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: AppDimens.paddingLeft16Right16Top16Bottom8,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '详情',
+                    AppStrings.detailInfo,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -95,12 +96,12 @@ class PlayerDetailsPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 左侧封面
-              _buildCoverImage(context, cover, 'douban', isDarkMode),
+              _buildCoverImage(context, cover, AppConfig.sourceDouban, isDarkMode),
               Gap.w16,
               // 右侧信息
               Expanded(
                 child: SizedBox(
-                  height: 160,
+                  height: AppDimens.playerDetailCoverHeight,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.max,
@@ -171,7 +172,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                           ],
                           if (totalEpisodes != null && totalEpisodes > 1) ...[
                             Text(
-                              '$totalEpisodes集',
+                              '${totalEpisodes}${AppStrings.episodeSuffix}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isDarkMode
                                     ? AppColors.gray400
@@ -210,7 +211,7 @@ class PlayerDetailsPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '风格',
+                  AppStrings.detailStyle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDarkMode ? AppColors.white : AppColors.black,
@@ -222,8 +223,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                   runSpacing: 8,
                   children: genres
                       .map((genre) => Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: AppDimens.paddingHorizontal12Vertical6,
                             decoration: BoxDecoration(
                               color: isDarkMode
                                   ? AppColors.gray700
@@ -250,7 +250,7 @@ class PlayerDetailsPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '制作信息',
+                  AppStrings.detailProduction,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDarkMode ? AppColors.white : AppColors.black,
@@ -266,7 +266,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '简介',
+                AppStrings.detailSummary,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isDarkMode ? AppColors.white : AppColors.black,
@@ -277,7 +277,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                 summary,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
-                  height: 1.5,
+                  height: AppDimens.lineHeightLoose,
                 ),
               ),
             ],
@@ -291,7 +291,7 @@ class PlayerDetailsPanel extends StatelessWidget {
   Widget _buildCurrentDetailPanel(BuildContext context, bool isDarkMode) {
     final String title = currentDetail?.title ?? AppStrings.detailNoTitle;
     final String cover = currentDetail?.poster ?? '';
-    final String year = currentDetail?.year ?? '未知年份';
+    final String year = currentDetail?.year ?? AppStrings.unknownYear;
     final String summary = currentDetail?.desc ?? AppStrings.detailNoSummary;
     final String? sourceName = currentDetail?.sourceName;
     final String? class_ = currentDetail?.class_;
@@ -313,7 +313,7 @@ class PlayerDetailsPanel extends StatelessWidget {
               // 右侧信息
               Expanded(
                 child: SizedBox(
-                  height: 160,
+                  height: AppDimens.playerDetailCoverHeight,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.max,
@@ -336,8 +336,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                         children: [
                           if (sourceName != null && sourceName.isNotEmpty) ...[
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 3),
+                              padding: AppDimens.paddingHorizontal6Vertical3,
                               decoration: BoxDecoration(
                                 border: Border.all(
                                     color: isDarkMode
@@ -367,7 +366,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                           Gap.h4,
                           if (totalEpisodes > 1)
                             Text(
-                              '$totalEpisodes集',
+                              AppStrings.episodesCount.replaceAll('%d', '$totalEpisodes'),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isDarkMode
                                     ? AppColors.gray400
@@ -389,7 +388,7 @@ class PlayerDetailsPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '分类',
+                  AppStrings.filterCategory,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDarkMode ? AppColors.white : AppColors.black,
@@ -402,8 +401,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                   children: class_
                       .split(',')
                       .map((category) => Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: AppDimens.paddingHorizontal12Vertical6,
                             decoration: BoxDecoration(
                               color: isDarkMode
                                   ? AppColors.gray700
@@ -429,7 +427,7 @@ class PlayerDetailsPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '简介',
+                AppStrings.detailSummary,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isDarkMode ? AppColors.white : AppColors.black,
@@ -440,7 +438,7 @@ class PlayerDetailsPanel extends StatelessWidget {
                 summary,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
-                  height: 1.5,
+                  height: AppDimens.lineHeightLoose,
                 ),
               ),
             ],
@@ -452,8 +450,8 @@ class PlayerDetailsPanel extends StatelessWidget {
 
   Widget _buildCoverImage(BuildContext context, String cover, String? source, bool isDarkMode) {
     return SizedBox(
-      width: 120,
-      height: 160,
+      width: AppDimens.cardCoverWidth,
+      height: AppDimens.playerDetailCoverHeight,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         child: cover.isNotEmpty
@@ -466,25 +464,25 @@ class PlayerDetailsPanel extends StatelessWidget {
                   return CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
-                    width: 120,
-                    height: 160,
+                    width: AppDimens.cardCoverWidth,
+                    height: AppDimens.playerDetailCoverHeight,
                     cacheKey: imageUrl,
                     httpHeaders: headers,
-                    memCacheWidth: (120 * MediaQuery.of(context).devicePixelRatio).round(),
-                    memCacheHeight: (160 * MediaQuery.of(context).devicePixelRatio).round(),
+                    memCacheWidth: (AppDimens.cardCoverWidth.toInt() * MediaQuery.of(context).devicePixelRatio).round(),
+                    memCacheHeight: (AppDimens.playerDetailCoverHeight.toInt() * MediaQuery.of(context).devicePixelRatio).round(),
                     placeholder: (context, url) => Container(
-                      width: 120,
-                      height: 160,
+                      width: AppDimens.cardCoverWidth,
+                      height: AppDimens.playerDetailCoverHeight,
                       decoration: BoxDecoration(
-                        color: isDarkMode ? AppColors.gray800 : AppColors.gray200,
+                        color: isDarkMode ? AppColors.darkBg3 : AppColors.gray200,
                         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
-                      width: 120,
-                      height: 160,
-                      color: isDarkMode ? AppColors.gray800 : AppColors.gray200,
-                      child: const Icon(Icons.movie, size: 50),
+                      width: AppDimens.cardCoverWidth,
+                      height: AppDimens.playerDetailCoverHeight,
+                      color: isDarkMode ? AppColors.darkBg3 : AppColors.gray200,
+                      child: const Icon(Icons.movie, size: AppDimens.iconSize50),
                     ),
                     fadeInDuration: AppDurations.normal,
                     fadeOutDuration: AppDurations.fastest,
@@ -492,10 +490,10 @@ class PlayerDetailsPanel extends StatelessWidget {
                 },
               )
             : Container(
-                width: 120,
-                height: 160,
-                color: isDarkMode ? AppColors.gray800 : AppColors.gray200,
-                child: const Icon(Icons.movie, size: 50),
+                width: AppDimens.cardCoverWidth,
+                height: AppDimens.playerDetailCoverHeight,
+                color: isDarkMode ? AppColors.darkBg3 : AppColors.gray200,
+                child: const Icon(Icons.movie, size: AppDimens.iconSize50),
               ),
       ),
     );
@@ -542,16 +540,16 @@ class PlayerDetailsPanel extends StatelessWidget {
       children: [
         if (directors.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
+            padding: AppDimens.paddingBottom4,
             child: RichText(
               text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                 ),
                 children: [
-                  const TextSpan(
-                    text: '导演: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  TextSpan(
+                    text: AppStrings.doubanDirectorColon,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: directors.join(' / ')),
                 ],
@@ -560,16 +558,16 @@ class PlayerDetailsPanel extends StatelessWidget {
           ),
         if (writers.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
+            padding: AppDimens.paddingBottom4,
             child: RichText(
               text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                 ),
                 children: [
-                  const TextSpan(
-                    text: '编剧: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  TextSpan(
+                    text: AppStrings.doubanScreenwriterColon,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: writers.join(' / ')),
                 ],
@@ -578,16 +576,16 @@ class PlayerDetailsPanel extends StatelessWidget {
           ),
         if (actors.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
+            padding: AppDimens.paddingBottom4,
             child: RichText(
               text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? AppColors.gray300 : AppColors.gray700,
                 ),
                 children: [
-                  const TextSpan(
-                    text: '主演: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  TextSpan(
+                    text: AppStrings.doubanActorColon,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: actors.join(' / ')),
                 ],

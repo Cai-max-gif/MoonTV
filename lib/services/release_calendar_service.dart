@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/release_calendar_item.dart';
 import 'api_service.dart';
 import '../constants/app_config.dart';
+import '../constants/app_strings.dart';
 
 /// 即将上映服务
 class ReleaseCalendarService {
@@ -50,21 +51,21 @@ class ReleaseCalendarService {
       // 构建查询参数
       final queryParams = <String, String>{};
       if (type != null) {
-        queryParams['type'] = type;
+        queryParams[AppConfig.jsonType] = type;
       }
       if (limit != null) {
-        queryParams['limit'] = limit.toString();
+        queryParams[AppConfig.jsonLimit] = limit.toString();
       }
       
       final response = await ApiService.get<Map<String, dynamic>>(
-        '/api/release-calendar',
+        AppConfig.releaseCalendarEndpoint,
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
         context: context,
         fromJson: (data) => data as Map<String, dynamic>,
       );
 
       if (response.success && response.data != null) {
-        final itemsData = response.data!['items'] as List<dynamic>? ?? [];
+        final itemsData = response.data![AppConfig.jsonItems] as List<dynamic>? ?? [];
         final items = itemsData
             .map((item) =>
                 ReleaseCalendarItem.fromJson(item as Map<String, dynamic>))
@@ -78,10 +79,10 @@ class ReleaseCalendarService {
 
         return ApiResponse.success(items);
       } else {
-        return ApiResponse.error(response.message ?? '获取即将上映数据失败');
+        return ApiResponse.error(response.message ?? AppStrings.releaseCalendarFetchFailed);
       }
     } catch (e) {
-      return ApiResponse.error('获取即将上映数据异常: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.releaseCalendarException}${e.toString()}');
     }
   }
 
@@ -91,7 +92,7 @@ class ReleaseCalendarService {
     int? limit,
     bool forceRefresh = false,
   }) async {
-    return getReleaseCalendar(context, type: 'movie', limit: limit, forceRefresh: forceRefresh);
+    return getReleaseCalendar(context, type: AppConfig.stypeMovie, limit: limit, forceRefresh: forceRefresh);
   }
 
   /// 获取即将上映的电视剧
@@ -100,6 +101,6 @@ class ReleaseCalendarService {
     int? limit,
     bool forceRefresh = false,
   }) async {
-    return getReleaseCalendar(context, type: 'tv', limit: limit, forceRefresh: forceRefresh);
+    return getReleaseCalendar(context, type: AppConfig.stypeTv, limit: limit, forceRefresh: forceRefresh);
   }
 }

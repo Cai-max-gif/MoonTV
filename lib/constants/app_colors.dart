@@ -9,15 +9,11 @@ class AppColors {
   static const Color textDarkHint = Color(0xFF666666);
   static const Color scaffoldLight = Color(0xFFf8f9fa);
   static const Color scaffoldDark = Color(0xFF121212);
-  static const Color cardLight = Color(0xFFffffff);
   static const Color cardDark = Color(0xFF1e1e1e);
   static const Color inputBgLight = Color(0xFFf0f0f0);
   static const Color inputBgDark = Color(0xFF2c2c2c);
   static const Color borderLight = Color(0xFFe0e0e0);
   static const Color borderDark = Color(0xFF333333);
-  static const Color darkDivider = Color(0xFF333333);
-  static const Color grayBorder = Color(0xFFe5e7eb);
-  static const Color lightDivider = Color(0xFFe0e0e0);
   static const Color error = Color(0xFFE74C3C);
   static const Color warning = Color(0xFFFFB800);
   static const Color info = Color(0xFF3498DB);
@@ -28,11 +24,6 @@ class AppColors {
   static const Color amber = Color(0xFFf59e0b);
   static const Color violet = Color(0xFF8b5cf6);
   static const Color emerald = Color(0xFF10b981);
-  static const Color roleAdmin = Color(0xFFf59e0b);
-  static const Color roleOwner = Color(0xFF8b5cf6);
-  static const Color roleUser = Color(0xFF10b981);
-  static const Color borderLightGray = Color(0xFFe5e7eb);
-  static const Color borderDarkGray = Color(0xFF374151);
   static const Color textDarkGray = Color(0xFF1f2937);
   static const Color white = Color(0xFFffffff);
   static const Color black = Color(0xFF000000);
@@ -84,7 +75,6 @@ class AppColors {
   static const Color yellow500 = Color(0xFFEAB308);
   static const Color indigo500 = Color(0xFF6366F1);
   static const Color teal500 = Color(0xFF14B8A6);
-  static const Color gradStart = Color(0xFFe6f3fb);
   static const Color gradMid1 = Color(0xFFeaf3f7);
   static const Color gradMid2 = Color(0xFFf7f7f3);
   static const Color gradMid3 = Color(0xFFe9ecef);
@@ -94,6 +84,8 @@ class AppColors {
   static const Color gray750 = Color(0xFF2D3748);
   static const Color slate200 = Color(0xFFE2E8F0);
   static const Color blue500 = Color(0xFF3182CE);
+  static const Color blue50 = Color(0xFFEFF6FF);
+  static const Color blue200 = Color(0xFFBFDBFE);
   static const Color darkGreenBg = Color(0xFF1e3a28);
 
   // ── 网盘类型半透明背景色 ──
@@ -115,17 +107,14 @@ class AppColors {
   static const Color gray75 = Color(0xFFBFBFBF);
   static const Color gray85 = Color(0xFFD9D9D9);
   static const Color gray150 = Color(0xFFE8E8E8);
-  static const Color gray250 = Color(0xFFF0F0F0);
-  static const Color gray280 = Color(0xFF1C1C1E);
   static const Color gray650 = Color(0xFFA0A0A0);
-  static const Color gray800 = Color(0xFF1a1a1a);
-  static const Color gray850 = Color(0xFF202020);
-
   // ── 覆盖层 / 透明色 ──
   static const Color hoverOverlay = Color(0x809E9E9E);
+  static const Color overlayCardDark = Color(0xE61F2937);
+  static const Color overlayCardLight = Color(0xF2FFFFFF);
+  static const Color textSlate = Color(0xFF718096);
   static const Color overlayHeavy = Color(0xB3000000);
   static const Color overlayMedium = Color(0x99000000);
-  static const Color overlayLight = Color(0x4D000000);
   static const Color white70 = Color(0xB3FFFFFF);
   static const Color black54 = Color(0x8A000000);
   static const Color black87 = Color(0xDE000000);
@@ -133,6 +122,10 @@ class AppColors {
   static const Color white30 = Color(0x4DFFFFFF);
   static const Color white20 = Color(0x33FFFFFF);
   static const Color white10 = Color(0x1AFFFFFF);
+  static const Color white40 = Color(0x66FFFFFF);
+  static const Color white80 = Color(0xCCFFFFFF);
+  static const Color black10 = Color(0x19000000);
+  static const Color grey40 = Color(0x669CA3AF);
   static const Color black85 = Color(0xD9000000);
 
   // ── 通知渠道颜色 ──

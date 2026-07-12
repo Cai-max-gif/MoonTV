@@ -1,54 +1,7 @@
 import 'video_info.dart';
 import '../constants/app_config.dart';
 import '../constants/app_strings.dart';
-
-/// HTML 实体解码工具函数
-String _decodeHtmlEntities(String text) {
-  if (text.isEmpty) return text;
-  
-  // 常见的 HTML 实体映射
-  final Map<String, String> htmlEntities = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'",
-    '&nbsp;': ' ',
-    '&copy;': '©',
-    '&reg;': '®',
-    '&trade;': '™',
-    '&hellip;': '…',
-    '&mdash;': '—',
-    '&ndash;': '–',
-    '&lsquo;': ''',
-    '&rsquo;': ''',
-    '&ldquo;': '"',
-    '&rdquo;': '"',
-    '&bull;': '•',
-    '&middot;': '·',
-  };
-  
-  String result = text;
-  
-  // 处理命名实体
-  htmlEntities.forEach((entity, replacement) {
-    result = result.replaceAll(entity, replacement);
-  });
-  
-  // 处理数字实体 (如 &#123; 或 &#x1A;)
-  result = result.replaceAllMapped(
-    RegExp(r'&#(\d+);'),
-    (match) => String.fromCharCode(int.parse(match.group(1)!))
-  );
-  
-  result = result.replaceAllMapped(
-    RegExp(r'&#x([0-9a-fA-F]+);'),
-    (match) => String.fromCharCode(int.parse(match.group(1)!, radix: 16))
-  );
-  
-  return result;
-}
+import '../utils/html_utils.dart';
 
 /// Bangumi 评分数据模型
 class BangumiRating {
@@ -63,8 +16,7 @@ class BangumiRating {
   });
 
   factory BangumiRating.fromJson(Map<String, dynamic> json) {
-    // 安全地转换 count Map，确保值是整数
-    final countData = json['count'] ?? {};
+    final countData = json[AppConfig.jsonCount] ?? {};
     final Map<String, int> safeCount = {};
     if (countData is Map) {
       countData.forEach((key, value) {
@@ -73,17 +25,17 @@ class BangumiRating {
     }
     
     return BangumiRating(
-      total: json['total'] is int ? json['total'] : int.tryParse(json['total']?.toString() ?? '0') ?? 0,
+      total: json[AppConfig.jsonTotal] is int ? json[AppConfig.jsonTotal] : int.tryParse(json[AppConfig.jsonTotal]?.toString() ?? '0') ?? 0,
       count: safeCount,
-      score: (json['score'] ?? 0.0).toDouble(),
+      score: (json[AppConfig.jsonScore] ?? 0.0).toDouble(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'total': total,
-      'count': count,
-      'score': score,
+      AppConfig.jsonTotal: total,
+      AppConfig.jsonCount: count,
+      AppConfig.jsonScore: score,
     };
   }
 }
@@ -106,21 +58,21 @@ class BangumiImages {
 
   factory BangumiImages.fromJson(Map<String, dynamic> json) {
     return BangumiImages(
-      large: json['large']?.toString() ?? '',
-      common: json['common']?.toString() ?? '',
-      medium: json['medium']?.toString() ?? '',
-      small: json['small']?.toString() ?? '',
-      grid: json['grid']?.toString() ?? '',
+      large: json[AppConfig.jsonLarge]?.toString() ?? '',
+      common: json[AppConfig.jsonCommon]?.toString() ?? '',
+      medium: json[AppConfig.jsonMedium]?.toString() ?? '',
+      small: json[AppConfig.jsonSmall]?.toString() ?? '',
+      grid: json[AppConfig.jsonGrid]?.toString() ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'large': large,
-      'common': common,
-      'medium': medium,
-      'small': small,
-      'grid': grid,
+      AppConfig.jsonLarge: large,
+      AppConfig.jsonCommon: common,
+      AppConfig.jsonMedium: medium,
+      AppConfig.jsonSmall: small,
+      AppConfig.jsonGrid: grid,
     };
   }
 
@@ -159,21 +111,21 @@ class BangumiCollection {
 
   factory BangumiCollection.fromJson(Map<String, dynamic> json) {
     return BangumiCollection(
-      doing: json['doing'] ?? 0,
-      onHold: json['on_hold'] ?? 0,
-      dropped: json['dropped'] ?? 0,
-      wish: json['wish'] ?? 0,
-      collect: json['collect'] ?? 0,
+      doing: json[AppConfig.jsonDoing] ?? 0,
+      onHold: json[AppConfig.jsonOnHold] ?? 0,
+      dropped: json[AppConfig.jsonDropped] ?? 0,
+      wish: json[AppConfig.jsonWish] ?? 0,
+      collect: json[AppConfig.jsonCollect] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'doing': doing,
-      'on_hold': onHold,
-      'dropped': dropped,
-      'wish': wish,
-      'collect': collect,
+      AppConfig.jsonDoing: doing,
+      AppConfig.jsonOnHold: onHold,
+      AppConfig.jsonDropped: dropped,
+      AppConfig.jsonWish: wish,
+      AppConfig.jsonCollect: collect,
     };
   }
 }
@@ -194,10 +146,10 @@ class BangumiWeekday {
 
   factory BangumiWeekday.fromJson(Map<String, dynamic> json) {
     return BangumiWeekday(
-      en: json['en']?.toString() ?? '',
-      cn: json['cn']?.toString() ?? '',
-      ja: json['ja']?.toString() ?? '',
-      id: json['id'] ?? 0,
+      en: json[AppConfig.jsonEn]?.toString() ?? '',
+      cn: json[AppConfig.jsonCn]?.toString() ?? '',
+      ja: json[AppConfig.jsonJa]?.toString() ?? '',
+      id: json[AppConfig.jsonId] ?? 0,
     );
   }
 }
@@ -234,37 +186,37 @@ class BangumiItem {
 
   factory BangumiItem.fromJson(Map<String, dynamic> json) {
     return BangumiItem(
-      id: json['id'] ?? 0,
-      url: json['url']?.toString() ?? '',
-      type: json['type'] ?? 0,
-      name: _decodeHtmlEntities(json['name']?.toString() ?? ''),
-      nameCn: json['name_cn']?.toString() != null 
-          ? _decodeHtmlEntities(json['name_cn']!.toString())
+      id: json[AppConfig.jsonId] ?? 0,
+      url: json[AppConfig.jsonUrl]?.toString() ?? '',
+      type: json[AppConfig.jsonType] ?? 0,
+      name: HtmlUtils.decodeEntities(json[AppConfig.jsonName]?.toString() ?? ''),
+      nameCn: json[AppConfig.jsonNameCn]?.toString() != null 
+          ? HtmlUtils.decodeEntities(json[AppConfig.jsonNameCn]!.toString())
           : null,
-      summary: _decodeHtmlEntities(json['summary']?.toString() ?? ''),
-      airDate: json['air_date']?.toString() ?? '',
-      airWeekday: json['air_weekday'] ?? 0,
-      rating: BangumiRating.fromJson(json['rating'] ?? {}),
-      rank: json['rank'] ?? 0,
-      images: BangumiImages.fromJson(json['images'] ?? {}),
-      collection: BangumiCollection.fromJson(json['collection'] ?? {}),
+      summary: HtmlUtils.decodeEntities(json[AppConfig.jsonSummary]?.toString() ?? ''),
+      airDate: json[AppConfig.jsonAirDate]?.toString() ?? '',
+      airWeekday: json[AppConfig.jsonAirWeekday] ?? 0,
+      rating: BangumiRating.fromJson(json[AppConfig.jsonRating] ?? {}),
+      rank: json[AppConfig.jsonRank] ?? 0,
+      images: BangumiImages.fromJson(json[AppConfig.jsonImages] ?? {}),
+      collection: BangumiCollection.fromJson(json[AppConfig.jsonCollection] ?? {}),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'url': url,
-      'type': type,
-      'name': name,
-      'name_cn': nameCn,
-      'summary': summary,
-      'air_date': airDate,
-      'air_weekday': airWeekday,
-      'rating': rating.toJson(),
-      'rank': rank,
-      'images': images.toJson(),
-      'collection': collection.toJson(),
+      AppConfig.jsonId: id,
+      AppConfig.jsonUrl: url,
+      AppConfig.jsonType: type,
+      AppConfig.jsonName: name,
+      AppConfig.jsonNameCn: nameCn,
+      AppConfig.jsonSummary: summary,
+      AppConfig.jsonAirDate: airDate,
+      AppConfig.jsonAirWeekday: airWeekday,
+      AppConfig.jsonRating: rating.toJson(),
+      AppConfig.jsonRank: rank,
+      AppConfig.jsonImages: images.toJson(),
+      AppConfig.jsonCollection: collection.toJson(),
     };
   }
 
@@ -272,7 +224,7 @@ class BangumiItem {
   VideoInfo toVideoInfo() {
     return VideoInfo(
       id: id.toString(),
-      source: AppConfig.sourceIdBangumi,
+      source: AppConfig.sourceBangumi,
       title: nameCn?.isNotEmpty == true ? nameCn! : name,
       sourceName: AppStrings.bangumiSourceName,
       year: airDate.split('-').first,
@@ -336,74 +288,74 @@ class BangumiDetails {
 
   factory BangumiDetails.fromJson(Map<String, dynamic> json) {
     return BangumiDetails(
-      id: json['id'] ?? 0,
-      type: json['type'] ?? 0,
-      name: _decodeHtmlEntities(json['name']?.toString() ?? ''),
-      nameCn: json['name_cn']?.toString() != null 
-          ? _decodeHtmlEntities(json['name_cn']!.toString())
+      id: json[AppConfig.jsonId] ?? 0,
+      type: json[AppConfig.jsonType] ?? 0,
+      name: HtmlUtils.decodeEntities(json[AppConfig.jsonName]?.toString() ?? ''),
+      nameCn: json[AppConfig.jsonNameCn]?.toString() != null 
+          ? HtmlUtils.decodeEntities(json[AppConfig.jsonNameCn]!.toString())
           : null,
-      summary: _decodeHtmlEntities(json['summary']?.toString() ?? ''),
-      nsfw: json['nsfw'] ?? false,
-      locked: json['locked'] ?? false,
-      date: json['date']?.toString(),
-      platform: json['platform']?.toString(),
-      images: BangumiImages.fromJson(json['images'] ?? {}),
-      infobox: (json['infobox'] as List<dynamic>? ?? [])
+      summary: HtmlUtils.decodeEntities(json[AppConfig.jsonSummary]?.toString() ?? ''),
+      nsfw: json[AppConfig.jsonNsfw] ?? false,
+      locked: json[AppConfig.jsonLocked] ?? false,
+      date: json[AppConfig.jsonDate]?.toString(),
+      platform: json[AppConfig.jsonPlatform]?.toString(),
+      images: BangumiImages.fromJson(json[AppConfig.jsonImages] ?? {}),
+      infobox: (json[AppConfig.jsonInfobox] as List<dynamic>? ?? [])
           .map((item) {
             if (item is Map<String, dynamic>) {
-              final value = item['value'];
+              final value = item[AppConfig.jsonValue];
               if (value is List) {
-                final valueList = value.map((v) => v['v']?.toString() ?? '').join(', ');
-                return '${item['key']}: $valueList';
+                final valueList = value.map((v) => v[AppConfig.jsonV]?.toString() ?? '').join(', ');
+                return '${item[AppConfig.jsonKey]}: $valueList';
               }
-              return '${item['key']}: ${value?.toString() ?? ''}';
+              return '${item[AppConfig.jsonKey]}: ${value?.toString() ?? ''}';
             }
             return item.toString();
           })
           .toList(),
-      volumes: json['volumes'] ?? 0,
-      eps: json['eps'] ?? 0,
-      totalEpisodes: json['total_episodes'] ?? 0,
-      rating: BangumiRating.fromJson(json['rating'] ?? {}),
-      collection: BangumiCollection.fromJson(json['collection'] ?? {}),
-      tags: (json['tags'] as List<dynamic>? ?? [])
+      volumes: json[AppConfig.jsonVolumes] ?? 0,
+      eps: json[AppConfig.jsonEps] ?? 0,
+      totalEpisodes: json[AppConfig.jsonTotalEpisodes] ?? 0,
+      rating: BangumiRating.fromJson(json[AppConfig.jsonRating] ?? {}),
+      collection: BangumiCollection.fromJson(json[AppConfig.jsonCollection] ?? {}),
+      tags: (json[AppConfig.jsonTags] as List<dynamic>? ?? [])
           .map((tag) {
             if (tag is Map<String, dynamic>) {
-              return tag['name']?.toString() ?? '';
+              return tag[AppConfig.jsonName]?.toString() ?? '';
             } else {
               return tag.toString();
             }
           })
           .where((name) => name.isNotEmpty)
           .toList(),
-      metaTags: (json['meta_tags'] as List<dynamic>? ?? [])
+      metaTags: (json[AppConfig.jsonMetaTags] as List<dynamic>? ?? [])
           .map((tag) => tag.toString())
           .toList(),
-      series: json['series'] ?? false,
+      series: json[AppConfig.jsonSeries] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'type': type,
-      'name': name,
-      'name_cn': nameCn,
-      'summary': summary,
-      'nsfw': nsfw,
-      'locked': locked,
-      'date': date,
-      'platform': platform,
-      'images': images.toJson(),
-      'infobox': infobox,
-      'volumes': volumes,
-      'eps': eps,
-      'total_episodes': totalEpisodes,
-      'rating': rating.toJson(),
-      'collection': collection.toJson(),
-      'tags': tags,
-      'meta_tags': metaTags,
-      'series': series,
+      AppConfig.jsonId: id,
+      AppConfig.jsonType: type,
+      AppConfig.jsonName: name,
+      AppConfig.jsonNameCn: nameCn,
+      AppConfig.jsonSummary: summary,
+      AppConfig.jsonNsfw: nsfw,
+      AppConfig.jsonLocked: locked,
+      AppConfig.jsonDate: date,
+      AppConfig.jsonPlatform: platform,
+      AppConfig.jsonImages: images.toJson(),
+      AppConfig.jsonInfobox: infobox,
+      AppConfig.jsonVolumes: volumes,
+      AppConfig.jsonEps: eps,
+      AppConfig.jsonTotalEpisodes: totalEpisodes,
+      AppConfig.jsonRating: rating.toJson(),
+      AppConfig.jsonCollection: collection.toJson(),
+      AppConfig.jsonTags: tags,
+      AppConfig.jsonMetaTags: metaTags,
+      AppConfig.jsonSeries: series,
     };
   }
 }
@@ -420,8 +372,8 @@ class BangumiCalendarResponse {
 
   factory BangumiCalendarResponse.fromJson(Map<String, dynamic> json) {
     return BangumiCalendarResponse(
-      weekday: BangumiWeekday.fromJson(json['weekday'] ?? {}),
-      items: (json['items'] as List<dynamic>? ?? [])
+      weekday: BangumiWeekday.fromJson(json[AppConfig.jsonWeekday] ?? {}),
+      items: (json[AppConfig.jsonItems] as List<dynamic>? ?? [])
           .map((item) => BangumiItem.fromJson(item as Map<String, dynamic>))
           .toList(),
     );

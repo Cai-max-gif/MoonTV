@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 class Announcement {
   final String id;
   final String title;
@@ -15,23 +17,23 @@ class Announcement {
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
-      id: (json['id'] as String?) ?? '',
-      title: (json['title'] as String?) ?? '',
-      content: (json['content'] as String?) ?? '',
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+      id: json[AppConfig.jsonId]?.toString() ?? '',
+      title: json[AppConfig.jsonTitle]?.toString() ?? '',
+      content: json[AppConfig.jsonContent]?.toString() ?? '',
+      createdAt: json[AppConfig.jsonCreatedAt] != null
+          ? DateTime.parse(json[AppConfig.jsonCreatedAt] as String)
           : DateTime.now(),
-      isActive: (json['is_active'] as bool?) ?? false,
+      isActive: (json[AppConfig.jsonIsActive] as bool?) ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'title': title,
-      'content': content,
-      'created_at': createdAt.toIso8601String(),
-      'is_active': isActive,
+      AppConfig.jsonId: id,
+      AppConfig.jsonTitle: title,
+      AppConfig.jsonContent: content,
+      AppConfig.jsonCreatedAt: createdAt.toIso8601String(),
+      AppConfig.jsonIsActive: isActive,
     };
   }
 }

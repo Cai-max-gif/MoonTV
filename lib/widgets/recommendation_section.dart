@@ -9,6 +9,7 @@ import 'video_card.dart';
 import 'video_menu_bottom_sheet.dart';
 import 'shimmer_effect.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_config.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_strings.dart';
@@ -27,7 +28,7 @@ class RecommendationSection extends StatefulWidget {
   final double cardCount; // 显示的卡片数量（如2.75）
   final Map<String, String>? rateMap; // 评分映射，key为item.id，value为评分
   final String
-      from; // 场景值：'favorite', 'playrecord', 'search', 'agg', 'shortdrama'
+      from; // 场景值：sourceFavorite, sourcePlayrecord, sourceSearch, sourceAgg, sourceShortDrama
 
   const RecommendationSection({
     super.key,
@@ -42,7 +43,7 @@ class RecommendationSection extends StatefulWidget {
     this.onRetry,
     this.cardCount = 2.75,
     this.rateMap,
-    this.from = 'douban', // 默认使用douban模式
+    this.from = AppConfig.sourceDouban, // 默认使用douban模式
   });
 
   @override
@@ -116,8 +117,8 @@ class _RecommendationSectionState extends State<RecommendationSection> {
     final double visibleCards =
         DeviceUtils.getHorizontalVisibleCards(context, widget.cardCount);
     final double screenWidth = MediaQuery.of(context).size.width;
-    const double padding = 32.0;
-    const double spacing = 12.0;
+    final double padding = AppDimens.gridPaddingHorizontalDouble;
+    final double spacing = AppDimens.gridSpacingMd;
     final double availableWidth = screenWidth - padding;
     final double cardWidth =
         (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
@@ -138,8 +139,8 @@ class _RecommendationSectionState extends State<RecommendationSection> {
     final double visibleCards =
         DeviceUtils.getHorizontalVisibleCards(context, widget.cardCount);
     final double screenWidth = MediaQuery.of(context).size.width;
-    const double padding = 32.0;
-    const double spacing = 12.0;
+    final double padding = AppDimens.gridPaddingHorizontalDouble;
+    final double spacing = AppDimens.gridSpacingMd;
     final double availableWidth = screenWidth - padding;
     final double cardWidth =
         (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
@@ -169,13 +170,13 @@ class _RecommendationSectionState extends State<RecommendationSection> {
     final isPC = DeviceUtils.isPC();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: AppDimens.marginBottom24,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 标题和查看更多按钮
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: AppDimens.horizontalLgPadding,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -215,8 +216,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
                     child: TextButton(
                       onPressed: widget.onMoreTap,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                        padding: AppDimens.paddingHorizontal8Vertical4,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         overlayColor: AppColors.transparent,
@@ -269,7 +269,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Container(
-                  width: 80,
+                  width: AppDimens.iconSize80,
                   color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
@@ -296,7 +296,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Container(
-                  width: 80,
+                  width: AppDimens.iconSize80,
                   color: AppColors.transparent,
                   child: IgnorePointer(
                     ignoring: !_isHovered,
@@ -332,30 +332,30 @@ class _RecommendationSectionState extends State<RecommendationSection> {
             onTap: onPressed,
             customBorder: const CircleBorder(),
             child: Container(
-              width: 64,
-              height: 64,
+              width: AppDimens.iconButtonSizeLarge,
+              height: AppDimens.iconButtonSizeLarge,
               decoration: BoxDecoration(
                 color: themeService.isDarkMode
-                    ? const Color(0xE61F2937)
-                    : const Color(0xF2FFFFFF),
+                    ? AppColors.overlayCardDark
+                    : AppColors.overlayCardLight,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: themeService.isDarkMode
                       ? AppColors.gray600
                       : AppColors.gray200,
-                  width: 1,
+                  width: AppDimens.dividerThicknessThin,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.black30,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    blurRadius: AppDimens.shadowBlurSm,
+                    offset: AppDimens.offset02,
                   ),
                 ],
               ),
               child: Icon(
                 icon,
-                size: 32,
+                size: AppDimens.iconSize32,
                 color: themeService.isDarkMode
                     ? AppColors.gray300
                     : AppColors.gray600,
@@ -377,21 +377,20 @@ class _RecommendationSectionState extends State<RecommendationSection> {
 
         // 计算卡片宽度
         final double screenWidth = constraints.maxWidth;
-        const double padding = 32.0; // 左右padding (16 * 2)
-        const double spacing = 12.0; // 卡片间距
+        final double padding = AppDimens.gridPaddingHorizontalDouble;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - padding;
-        // 确保最小宽度，防止负宽度约束
-        const double minCardWidth = 120.0; // 最小卡片宽度
+        final double minCardWidth = AppDimens.gridMinCardWidth;
         final double calculatedCardWidth =
             (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
         final double cardWidth = math.max(calculatedCardWidth, minCardWidth);
 
         return SizedBox(
-          height: (cardWidth * 1.5) + 60, // 增加高度以容纳放大效果
+          height: (cardWidth * 1.5) + 46,
           child: ListView.builder(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: AppDimens.horizontalLgPadding,
             clipBehavior: Clip.none, // 允许内容溢出，不裁剪放大的卡片
             itemCount: widget.videoInfos?.length ?? 0,
             itemBuilder: (context, index) {
@@ -431,18 +430,17 @@ class _RecommendationSectionState extends State<RecommendationSection> {
 
         // 计算卡片宽度
         final double screenWidth = constraints.maxWidth;
-        const double padding = 32.0; // 左右padding (16 * 2)
-        const double spacing = 12.0; // 卡片间距
+        final double padding = AppDimens.gridPaddingHorizontalDouble;
+        final double spacing = AppDimens.gridSpacingMd;
         final double availableWidth = screenWidth - padding;
-        // 确保最小宽度，防止负宽度约束
-        const double minCardWidth = 120.0; // 最小卡片宽度
+        final double minCardWidth = AppDimens.gridMinCardWidth;
         final double calculatedCardWidth =
             (availableWidth - (spacing * (visibleCards - 1))) / visibleCards;
         final double cardWidth = math.max(calculatedCardWidth, minCardWidth);
 
         return Container(
           height: (cardWidth * 1.5) + 50,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: AppDimens.horizontalLgPadding,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: skeletonCount,
@@ -495,7 +493,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
   Widget _buildErrorState() {
     return Container(
       height: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: AppDimens.horizontalLgPadding,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -503,7 +501,7 @@ class _RecommendationSectionState extends State<RecommendationSection> {
             Icon(
               Icons.error_outline,
               color: AppColors.gray400,
-              size: 32,
+              size: AppDimens.iconSize32,
             ),
             Gap.h8,
             Text(

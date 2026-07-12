@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
 /// 空心圆形滑块拇指形状（用于设置页面的滑块）

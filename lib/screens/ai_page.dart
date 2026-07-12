@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_config.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
@@ -86,8 +87,8 @@ class _AIPageState extends State<AIPage> {
 
     setState(() {
       _messages.add({
-        'text': message,
-        'isUser': true,
+        AppConfig.jsonText: message,
+        AppConfig.jsonIsUser: true,
       });
       _isLoading = true;
     });
@@ -108,8 +109,8 @@ class _AIPageState extends State<AIPage> {
       if (mounted) {
         setState(() {
           _messages.add({
-            'text': reply,
-            'isUser': false,
+            AppConfig.jsonText: reply,
+            AppConfig.jsonIsUser: false,
           });
           _isLoading = false;
         });
@@ -119,9 +120,9 @@ class _AIPageState extends State<AIPage> {
       if (mounted) {
         setState(() {
           _messages.add({
-            'text': '${AppStrings.errorException}${e.toString()}',
-            'isUser': false,
-            'isError': true,
+            AppConfig.jsonText: '${AppStrings.errorException}${e.toString()}',
+            AppConfig.jsonIsUser: false,
+            AppConfig.jsonIsError: true,
           });
           _isLoading = false;
         });
@@ -135,8 +136,8 @@ class _AIPageState extends State<AIPage> {
     for (int i = startIndex; i < _messages.length; i++) {
       final msg = _messages[i];
       history.add({
-        'role': msg['isUser'] ? 'user' : 'assistant',
-        'content': msg['text'].toString(),
+        AppConfig.jsonRole: msg[AppConfig.jsonIsUser] ? AppConfig.aiRoleUser : AppConfig.aiRoleAssistant,
+        AppConfig.jsonContent: msg[AppConfig.jsonText].toString(),
       });
     }
     return history;
@@ -249,15 +250,15 @@ class _AIPageState extends State<AIPage> {
 
   Widget _buildMessageBubble(
       Map<String, dynamic> message, ThemeService themeService) {
-    final isUser = message['isUser'] as bool;
-    final isError = message['isError'] as bool? ?? false;
+    final isUser = message[AppConfig.jsonIsUser] as bool;
+    final isError = message[AppConfig.jsonIsError] as bool? ?? false;
     final bgColor = isUser
         ? AppColors.accent
         : isError
             ? AppColors.redAccent.withValues(alpha: 0.15)
             : themeService.isDarkMode
                 ? AppColors.cardDark
-                : AppColors.grayBorder;
+                : AppColors.gray200;
     final textColor = isUser
         ? AppColors.white
         : isError
@@ -269,7 +270,7 @@ class _AIPageState extends State<AIPage> {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
+        margin: AppDimens.marginVertical8,
         padding: AppDimens.listTilePadding,
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
@@ -277,24 +278,22 @@ class _AIPageState extends State<AIPage> {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft:
-                isUser ? const Radius.circular(16) : const Radius.circular(4),
-            bottomRight:
-                isUser ? const Radius.circular(4) : const Radius.circular(16),
+            topLeft: AppDimens.radius16,
+            topRight: AppDimens.radius16,
+            bottomLeft: isUser ? AppDimens.radius16 : AppDimens.radius4,
+            bottomRight: isUser ? AppDimens.radius4 : AppDimens.radius16,
           ),
         ),
         child: isUser || isError
             ? Text(
-                message['text'].toString(),
+                message[AppConfig.jsonText].toString(),
                 style: FontUtils.poppins(
                   fontSize: AppDimens.fontSizeMd,
                   color: textColor,
                 ),
               )
             : GptMarkdown(
-                message['text'].toString(),
+                message[AppConfig.jsonText].toString(),
                 style: FontUtils.poppins(
                   fontSize: AppDimens.fontSizeMd,
                   color: textColor,
@@ -308,27 +307,27 @@ class _AIPageState extends State<AIPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
+        margin: AppDimens.marginVertical8,
         padding: AppDimens.listTilePadding,
         decoration: BoxDecoration(
           color: themeService.isDarkMode
               ? AppColors.cardDark
-              : AppColors.grayBorder,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-            bottomLeft: Radius.circular(4),
-            bottomRight: Radius.circular(16),
+              : AppColors.gray200,
+          borderRadius: BorderRadius.only(
+            topLeft: AppDimens.radius16,
+            topRight: AppDimens.radius16,
+            bottomLeft: AppDimens.radius4,
+            bottomRight: AppDimens.radius16,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
+            SizedBox(
+              width: AppDimens.iconSm,
+              height: AppDimens.iconSm,
               child: CircularProgressIndicator(
-                strokeWidth: 2,
+                strokeWidth: AppDimens.dividerThicknessMd,
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
               ),
             ),
@@ -356,9 +355,9 @@ class _AIPageState extends State<AIPage> {
         border: Border(
           top: BorderSide(
             color: themeService.isDarkMode
-                ? AppColors.darkDivider
-                : AppColors.grayBorder,
-            width: 1,
+                ? AppColors.borderDark
+                : AppColors.gray200,
+            width: AppDimens.borderWidthSm,
           ),
         ),
       ),
@@ -382,10 +381,7 @@ class _AIPageState extends State<AIPage> {
                     fontSize: AppDimens.fontSizeMd,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  contentPadding: AppDimens.paddingHorizontal20Vertical12,
                 ),
                 style: FontUtils.poppins(
                   fontSize: AppDimens.fontSizeMd,
@@ -406,17 +402,17 @@ class _AIPageState extends State<AIPage> {
               onTap: _sendMessage,
               behavior: HitTestBehavior.opaque,
               child: Container(
-                width: 48,
-                height: 48,
+                width: AppDimens.buttonHeight,
+                height: AppDimens.buttonHeight,
                 decoration: BoxDecoration(
                   color: AppColors.accent,
                   borderRadius: BorderRadius.circular(AppDimens.radiusPill),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     LucideIcons.send,
                     color: AppColors.white,
-                    size: 20,
+                    size: AppDimens.iconSize20,
                   ),
                 ),
               ),

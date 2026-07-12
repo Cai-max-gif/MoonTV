@@ -1,4 +1,4 @@
-/// 应用统一动画时长常量
+﻿/// 应用统一动画时长常量
 class AppDurations {
   AppDurations._();
 
@@ -53,4 +53,27 @@ class AppDurations {
 
   // ── 下载进度轮询 ──
   static const Duration downloadProgressPoll = Duration(milliseconds: 500);
+
+  // ── 播放器相关 ──
+  static const Duration playerControlHideDelay = Duration(milliseconds: 250);
+  static const Duration playerScrollAnimation = Duration(milliseconds: 500);
+  static const Duration playerTransition = Duration(milliseconds: 300);
+  static const Duration playerSeekTimeout = Duration(seconds: 10);
+
+  // ── 网络请求 ──
+  static const Duration statsTimerInterval = Duration(seconds: 3);
+
+  // ── 音量菜单自动隐藏 ──
+  static const Duration volumeMenuHideDelay = Duration(seconds: 1);
+
+  // ── 即时过渡 ──
+  static const Duration instantTransition = Duration(milliseconds: 0);
+
+  // ── 补充 Duration 常量 ──
+  static const Duration floatingAnimation = Duration(milliseconds: 1200);
+  static const Duration minimalTransition = Duration(milliseconds: 1);
+
+  // ── 图片缓存动画 ──
+  static const Duration imageFadeIn = Duration(milliseconds: 150);
+  static const Duration imageFadeOut = Duration(milliseconds: 100);
 }

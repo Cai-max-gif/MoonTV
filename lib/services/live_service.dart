@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:xml/xml_events.dart';
 import 'package:gbk_codec/gbk_codec.dart';
 import '../constants/app_config.dart';
+import '../constants/app_regex.dart';
 import '../constants/app_strings.dart';
 
 // ignore: unused_import
@@ -112,12 +113,12 @@ class LiveService {
 
       // 确定使用的 User-Agent
       final userAgent =
-          liveSource.ua.isEmpty ? 'AptvPlayer/1.4.10' : liveSource.ua;
+          liveSource.ua.isEmpty ? AppConfig.liveDefaultUserAgent : liveSource.ua;
 
       // 请求 M3U 内容
       final response = await http.get(
         Uri.parse(liveSource.url),
-        headers: {'User-Agent': userAgent},
+        headers: {AppConfig.headerUserAgent: userAgent},
       ).timeout(AppConfig.liveRequestTimeout);
 
       if (response.statusCode != 200) {
@@ -183,9 +184,8 @@ class LiveService {
 
       // 检查是否是 #EXTM3U 行，提取 tvg-url
       if (line.startsWith('#EXTM3U')) {
-        // 支持两种格式：x-tvg-url 和 url-tvg
         final tvgUrlMatch =
-            RegExp(r'(?:x-tvg-url|url-tvg)="([^"]*)"').firstMatch(line);
+            RegExp(AppRegex.m3u8TvgUrl).firstMatch(line);
         if (tvgUrlMatch != null) {
           tvgUrl = tvgUrlMatch.group(1)?.split(',')[0].trim() ?? '';
         }
@@ -195,21 +195,21 @@ class LiveService {
       // 检查是否是 #EXTINF 行
       if (line.startsWith('#EXTINF:')) {
         // 提取 tvg-id
-        final tvgIdMatch = RegExp(r'tvg-id="([^"]*)"').firstMatch(line);
+        final tvgIdMatch = RegExp(AppRegex.m3u8TvgId).firstMatch(line);
         final tvgId = tvgIdMatch?.group(1) ?? '';
 
         // 提取 tvg-name
-        final tvgNameMatch = RegExp(r'tvg-name="([^"]*)"').firstMatch(line);
+        final tvgNameMatch = RegExp(AppRegex.m3u8TvgName).firstMatch(line);
         final tvgName = tvgNameMatch?.group(1) ?? '';
 
         // 提取 tvg-logo
-        final tvgLogoMatch = RegExp(r'tvg-logo="([^"]*)"').firstMatch(line);
+        final tvgLogoMatch = RegExp(AppRegex.m3u8TvgLogo).firstMatch(line);
         final logo = tvgLogoMatch?.group(1) ?? '';
 
         // 提取 group-title
         final groupTitleMatch =
-            RegExp(r'group-title="([^"]*)"').firstMatch(line);
-        final group = groupTitleMatch?.group(1) ?? AppStrings.liveUngroupedDefault;
+            RegExp(AppRegex.m3u8GroupTitle).firstMatch(line);
+        final group = groupTitleMatch?.group(1) ?? AppConfig.liveUngroupedDefault;
 
         // 提取标题（#EXTINF 行最后的逗号后面的内容）
         // 使用 lastIndexOf 更健壮，避免频道名中包含逗号的问题
@@ -329,9 +329,9 @@ class LiveService {
         final programs = entry.value
             .map((p) => EpgProgram(
                   channelId: tvgId,
-                  title: p['title'] ?? '',
-                  startTime: _parseEpgDateTime(p['start'] ?? ''),
-                  endTime: _parseEpgDateTime(p['end'] ?? ''),
+                  title: p[AppConfig.jsonTitle] ?? '',
+                  startTime: _parseEpgDateTime(p[AppConfig.jsonStart] ?? ''),
+                  endTime: _parseEpgDateTime(p[AppConfig.jsonEnd] ?? ''),
                 ))
             .toList();
 
@@ -362,7 +362,7 @@ class LiveService {
 
     try {
       final request = http.Request('GET', Uri.parse(epgUrl));
-      request.headers['User-Agent'] = userAgent;
+      request.headers[AppConfig.headerUserAgent] = userAgent;
 
       final response = await request.send().timeout(AppConfig.liveRequestTimeout);
       if (response.statusCode != 200) {
@@ -382,21 +382,21 @@ class LiveService {
           in response.stream.transform(utf8.decoder).toXmlEvents()) {
         for (final event in events) {
           if (event is XmlStartElementEvent) {
-            if (event.name == 'programme') {
+            if (event.name == AppConfig.epgTagProgramme) {
               inProgramme = true;
               // 提取属性
               currentTvgId = event.attributes
-                  .firstWhere((attr) => attr.name == 'channel',
+                  .firstWhere((attr) => attr.name == AppConfig.epgAttrChannel,
                       orElse: () => XmlEventAttribute(
                           '', '', XmlAttributeType.DOUBLE_QUOTE))
                   .value;
               currentStart = event.attributes
-                  .firstWhere((attr) => attr.name == 'start',
+                  .firstWhere((attr) => attr.name == AppConfig.epgAttrStart,
                       orElse: () => XmlEventAttribute(
                           '', '', XmlAttributeType.DOUBLE_QUOTE))
                   .value;
               currentEnd = event.attributes
-                  .firstWhere((attr) => attr.name == 'stop',
+                  .firstWhere((attr) => attr.name == AppConfig.epgAttrStop,
                       orElse: () => XmlEventAttribute(
                           '', '', XmlAttributeType.DOUBLE_QUOTE))
                   .value;
@@ -404,7 +404,7 @@ class LiveService {
 
               // 如果当前频道不在关注列表中，标记为跳过
               shouldSkipCurrentProgram = !tvgSet.contains(currentTvgId);
-            } else if (event.name == 'title' &&
+            } else if (event.name == AppConfig.epgTagTitle &&
                 inProgramme &&
                 !shouldSkipCurrentProgram) {
               inTitle = true;
@@ -427,9 +427,9 @@ class LiveService {
                   result[currentTvgId] = [];
                 }
                 result[currentTvgId]!.add({
-                  'start': currentStart,
-                  'end': currentEnd,
-                  'title': currentTitle.trim(),
+                  AppConfig.jsonStart: currentStart,
+                  AppConfig.jsonEnd: currentEnd,
+                  AppConfig.jsonTitle: currentTitle.trim(),
                 });
               }
 

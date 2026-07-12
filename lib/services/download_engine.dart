@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:pointycastle/export.dart';
 import '../constants/app_config.dart';
+import '../constants/app_regex.dart';
 import '../constants/app_strings.dart';
 
 class M3U8Segment {
@@ -39,11 +40,11 @@ class DownloadEngine {
               connectTimeout: AppConfig.downloadConnectTimeout,
               receiveTimeout: AppConfig.downloadReceiveTimeout,
               headers: {
-                'User-Agent': AppConfig.defaultUserAgent,
-                'Accept': '*/*',
-                'Accept-Language': AppConfig.headerAcceptLanguage,
-                if (referer != null) 'Referer': referer,
-                if (origin != null) 'Origin': origin,
+                AppConfig.headerUserAgent: AppConfig.defaultUserAgent,
+                AppConfig.headerAccept: AppConfig.headerAcceptAll,
+                AppConfig.headerAcceptLanguage: AppConfig.headerAcceptLanguage,
+                if (referer != null) AppConfig.headerReferer: referer,
+                if (origin != null) AppConfig.headerOrigin: origin,
               },
             ));
 
@@ -74,12 +75,12 @@ class DownloadEngine {
     if (_cancelled) throw Exception(AppStrings.updateCancelled);
 
     if (parseResult.segments.isEmpty) {
-      throw Exception('未解析到任何视频片段，可能不是有效的 M3U8 地址');
+      throw Exception(AppStrings.m3u8ParseFailed);
     }
 
     final totalSegments = parseResult.segments.length;
 
-    final tempDir = Directory('${savePath}_temp');
+    final tempDir = Directory('${savePath}${AppConfig.downloadTempDirSuffix}');
     await _safeCreateDir(tempDir);
 
     final alreadyDone = <int>{};
@@ -88,7 +89,7 @@ class DownloadEngine {
       for (final entry in entries) {
         if (entry is File) {
           final name = entry.path.split(Platform.pathSeparator).last;
-          if (name.startsWith('seg_') && name.endsWith('.ts')) {
+          if (name.startsWith(AppConfig.downloadSegmentPrefix) && name.endsWith(AppConfig.fileExtensionTs)) {
             final idxStr = name.substring(4, name.length - 3);
             final idx = int.tryParse(idxStr);
             if (idx != null && idx >= 0 && idx < totalSegments) {
@@ -105,7 +106,7 @@ class DownloadEngine {
         keyBytes = await _downloadKey(parseResult.keyUrl!, headers: headers);
       } catch (e) {
         await _cleanupTemp(tempDir);
-        throw Exception('下载解密密钥失败: $e');
+        throw Exception('${AppStrings.m3u8DownloadKeyFailed}: $e');
       }
       if (_cancelled) {
         await _cleanupTemp(tempDir);
@@ -205,7 +206,7 @@ class DownloadEngine {
   }
 
   String _segmentPath(Directory tempDir, int index) {
-    return '${tempDir.path}${Platform.pathSeparator}seg_${index.toString().padLeft(6, '0')}.ts';
+    return '${tempDir.path}${Platform.pathSeparator}${AppConfig.downloadSegmentPrefix}${index.toString().padLeft(6, '0')}${AppConfig.fileExtensionTs}';
   }
 
   Future<void> _safeCreateDir(Directory dir) async {
@@ -225,21 +226,21 @@ class DownloadEngine {
 
   Future<M3U8ParseResult> _parseM3U8(String m3u8Url, {int depth = 0, Map<String, String>? headers}) async {
     if (depth > 5) {
-      throw Exception('M3U8 解析层级过深，可能存在循环引用');
+      throw Exception(AppStrings.m3u8ParseDepthTooDeep);
     }
 
     final requestOptions = Options(headers: _mergeHeaders(headers));
     final response = await _dio.get(m3u8Url, options: requestOptions);
     final content = response.data.toString();
 
-    if (!content.startsWith('#EXTM3U')) {
-      throw Exception('无效的 M3U8 链接');
+    if (!content.startsWith(AppConfig.m3u8TagExtM3u)) {
+      throw Exception(AppStrings.m3u8InvalidUrl);
     }
 
-    if (content.contains('#EXT-X-STREAM-INF')) {
+    if (content.contains(AppConfig.m3u8TagExtXStreamInf)) {
       final subPlaylistUrl = _extractSubPlaylistUrl(content, m3u8Url);
       if (subPlaylistUrl == null) {
-        throw Exception('无法从主播放列表提取子播放列表');
+        throw Exception(AppStrings.m3u8CannotExtractSubPlaylist);
       }
       return _parseM3U8(subPlaylistUrl, depth: depth + 1, headers: headers);
     }
@@ -254,12 +255,12 @@ class DownloadEngine {
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
 
-      if (line.startsWith('#EXT-X-KEY:')) {
-        final method = _extractAttr(line, 'METHOD');
-        if (method == 'AES-128') {
-          keyUrl = _extractAttr(line, 'URI');
+      if (line.startsWith(AppConfig.m3u8TagExtXKey)) {
+        final method = _extractAttr(line, AppConfig.m3u8AttrMethod);
+        if (method == AppConfig.m3u8KeyAes128) {
+          keyUrl = _extractAttr(line, AppConfig.m3u8AttrUri);
 
-          final ivAttr = _extractAttr(line, 'IV');
+          final ivAttr = _extractAttr(line, AppConfig.m3u8AttrIv);
           if (ivAttr != null) {
             ivString = ivAttr.startsWith('0x') ? ivAttr.substring(2) : ivAttr;
           }
@@ -270,9 +271,9 @@ class DownloadEngine {
         }
       }
 
-      if (line.startsWith('#EXTINF:')) {
+      if (line.startsWith(AppConfig.m3u8TagExtInf)) {
         final duration = double.tryParse(
-                line.substring('#EXTINF:'.length).split(',')[0].trim()) ??
+                line.substring(AppConfig.m3u8TagExtInf.length).split(',')[0].trim()) ??
             0.0;
 
         if (i + 1 < lines.length) {
@@ -312,8 +313,8 @@ class DownloadEngine {
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
       
-      if (line.startsWith('#EXT-X-STREAM-INF')) {
-        final bandwidthMatch = RegExp(r'BANDWIDTH=(\d+)').firstMatch(line);
+      if (line.startsWith(AppConfig.m3u8TagExtXStreamInf)) {
+        final bandwidthMatch = RegExp(r'${AppConfig.m3u8AttrBandwidth}=(\d+)').firstMatch(line);
         final bandwidth = bandwidthMatch != null 
             ? int.parse(bandwidthMatch.group(1)!) 
             : 0;
@@ -349,7 +350,7 @@ class DownloadEngine {
   }
 
   String? _extractAttr(String line, String attrName) {
-    final pattern = RegExp('$attrName=("([^"]*)"|([^,]*))');
+    final pattern = RegExp(AppRegex.m3u8Attr.replaceFirst(r'(\w+)', attrName));
     final match = pattern.firstMatch(line);
     if (match != null) {
       return match.group(2) ?? match.group(3);
@@ -388,7 +389,7 @@ class DownloadEngine {
         final responseStream = (response.data as ResponseBody).stream;
 
         if (keyBytes != null) {
-          final tempPath = '$savePath._enc';
+          final tempPath = '$savePath${AppConfig.downloadEncryptedExtension}';
           await _streamToFile(responseStream, tempPath);
           final encryptedFile = File(tempPath);
           try {
@@ -413,7 +414,7 @@ class DownloadEngine {
         if (retryCount >= maxRetries) {
           rethrow;
         }
-        await Future.delayed(Duration(seconds: retryCount));
+        await Future.delayed(Duration(seconds: retryCount * AppConfig.downloadRetryDelayMultiplier));
       }
     }
     return 0;
@@ -424,7 +425,7 @@ class DownloadEngine {
     if (await file.exists()) {
       await file.delete();
     }
-    final tempPath = '$savePath._enc';
+    final tempPath = '$savePath${AppConfig.downloadEncryptedExtension}';
     final tempFile = File(tempPath);
     if (await tempFile.exists()) {
       await tempFile.delete();
@@ -524,7 +525,7 @@ class DownloadEngine {
   Future<void> _mergeSegments(
       List<String> segmentPaths, String outputPath) async {
     if (segmentPaths.isEmpty) {
-      throw Exception('没有可合并的视频片段');
+      throw Exception(AppStrings.m3u8NoSegmentsToMerge);
     }
 
     int totalSize = 0;
@@ -542,11 +543,11 @@ class DownloadEngine {
     }
 
     if (validSegments.isEmpty) {
-      throw Exception('没有有效的视频片段可合并');
+      throw Exception(AppStrings.m3u8NoValidSegments);
     }
 
     if (totalSize < AppConfig.m3u8MinFileSize) {
-      throw Exception('合并后的文件大小异常，可能下载失败');
+      throw Exception(AppStrings.m3u8MergeSizeAbnormal);
     }
 
     final outputFile = File(outputPath);

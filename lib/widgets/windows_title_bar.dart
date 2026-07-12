@@ -42,7 +42,7 @@ class _WindowsTitleBarState extends State<WindowsTitleBar> {
             : (isDark ? AppColors.white : AppColors.darkBg4);
         
         return Container(
-          height: 40,
+          height: AppDimens.windowsTitleButtonHeight,
           decoration: BoxDecoration(
             color: backgroundColor,
           ),
@@ -103,8 +103,8 @@ class _WindowsTitleBarState extends State<WindowsTitleBar> {
     required bool isCloseButton,
   }) {
     return SizedBox(
-      width: 46,
-      height: 40,
+      width: AppDimens.windowsTitleButtonWidth,
+      height: AppDimens.windowsTitleButtonHeight,
       child: _WindowsButtonHover(
         onPressed: onPressed,
         icon: icon,
@@ -194,8 +194,8 @@ class _MinimizeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 16,
-      height: 16,
+      width: AppDimens.iconSm,
+      height: AppDimens.spacingLg,
       child: CustomPaint(
         painter: _MinimizePainter(color: color),
       ),
@@ -236,8 +236,8 @@ class _MaximizeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 16,
-      height: 16,
+      width: AppDimens.iconSm,
+      height: AppDimens.spacingLg,
       child: CustomPaint(
         painter: _MaximizePainter(color: color),
       ),

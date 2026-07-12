@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 /// 直播源模型
 class LiveSource {
   final String key;
@@ -20,25 +22,25 @@ class LiveSource {
 
   factory LiveSource.fromJson(Map<String, dynamic> json) {
     return LiveSource(
-      key: json['key'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      url: json['url'] as String? ?? '',
-      ua: json['ua'] as String? ?? '',
-      epg: json['epg'] as String? ?? '',
-      from: json['from'] as String? ?? '',
-      disabled: json['disabled'] as bool? ?? false,
+      key: json[AppConfig.jsonKey] as String? ?? '',
+      name: json[AppConfig.jsonName] as String? ?? '',
+      url: json[AppConfig.jsonUrl] as String? ?? '',
+      ua: json[AppConfig.jsonUa] as String? ?? '',
+      epg: json[AppConfig.jsonEpg] as String? ?? '',
+      from: json[AppConfig.jsonFrom] as String? ?? '',
+      disabled: json[AppConfig.jsonDisabled] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'key': key,
-      'name': name,
-      'url': url,
-      'ua': ua,
-      'epg': epg,
-      'from': from,
-      'disabled': disabled,
+      AppConfig.jsonKey: key,
+      AppConfig.jsonName: name,
+      AppConfig.jsonUrl: url,
+      AppConfig.jsonUa: ua,
+      AppConfig.jsonEpg: epg,
+      AppConfig.jsonFrom: from,
+      AppConfig.jsonDisabled: disabled,
     };
   }
 }
