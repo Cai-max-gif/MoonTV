@@ -45,3 +45,7 @@ coverage/
 # Java/Android crash logs
 hs_err_*.log
 replay_*.log
+
+# Agent configuration
+.agents/
+AGENTS.md
