@@ -106,7 +106,7 @@ class DownloadEngine {
         keyBytes = await _downloadKey(parseResult.keyUrl!, headers: headers);
       } catch (e) {
         await _cleanupTemp(tempDir);
-        throw Exception('${AppStrings.m3u8DownloadKeyFailed}: $e');
+        throw Exception(AppStrings.m3u8DownloadKeyFailed);
       }
       if (_cancelled) {
         await _cleanupTemp(tempDir);

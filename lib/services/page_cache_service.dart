@@ -98,7 +98,7 @@ class PageCacheService
         return DataOperationResult.success(records);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorGetFailed}');
     }
 
     return DataOperationResult.error(AppStrings.errorGetFailed);
@@ -160,7 +160,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.msgOperationFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.msgOperationFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.msgOperationFailed}');
     }
   }
 
@@ -183,7 +183,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.errorDeleteFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorDeleteFailed}');
     }
   }
 
@@ -206,7 +206,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.msgOperationFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.msgOperationFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.msgOperationFailed}');
     }
   }
 
@@ -298,7 +298,7 @@ class PageCacheService
         return DataOperationResult.success(filteredData);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorGetFailed}');
     }
 
     return DataOperationResult.error(AppStrings.errorGetFailed);
@@ -348,7 +348,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.errorAddFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorAddFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorAddFailed}');
     }
   }
 
@@ -371,7 +371,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.favUnfavoriteFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.favUnfavoriteFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.favUnfavoriteFailed}');
     }
   }
 
@@ -474,7 +474,7 @@ class PageCacheService
         return DataOperationResult.success(response.data!);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorGetFailed}');
     }
 
     return DataOperationResult.error(AppStrings.errorGetFailed);
@@ -533,7 +533,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.errorAddFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorAddFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorAddFailed}');
     }
   }
 
@@ -558,7 +558,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.errorDeleteFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.errorDeleteFailed}');
     }
   }
 
@@ -576,7 +576,7 @@ class PageCacheService
         return DataOperationResult.error(response.message ?? AppStrings.msgOperationFailed);
       }
     } catch (e) {
-      return DataOperationResult.error('${AppStrings.msgOperationFailed}: ${e.toString()}');
+      return DataOperationResult.error('${AppStrings.msgOperationFailed}');
     }
   }
 

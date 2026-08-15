@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         final attempts = await UserDataService.getLoginAttempts();
-        final remainingAttempts = 5 - attempts;
+        final remainingAttempts = AppConfig.maxLoginAttempts - attempts;
         _showToast('${result.error ?? AppStrings.authTelegramLoginFailed}，${AppStrings.authRemainingAttempts.replaceAll('%d', '$remainingAttempts')}', AppColors.error);
       }
     }
@@ -272,7 +272,6 @@ class _LoginScreenState extends State<LoginScreen> {
             // 保存用户数据，使用真实用户名
             await UserDataService.saveUserData(
               username: realUsername,
-              password: _passwordController.text,
               token: token,
               cookies: cookies,
             );
@@ -283,7 +282,6 @@ class _LoginScreenState extends State<LoginScreen> {
             // 保存用户数据，使用用户输入的用户名
             await UserDataService.saveUserData(
               username: _usernameController.text,
-              password: _passwordController.text,
               cookies: cookies,
             );
           }

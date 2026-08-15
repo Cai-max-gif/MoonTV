@@ -641,7 +641,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen>
             _isLoading = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppStrings.livePlayerLoadFailed}$error')),
+            SnackBar(content: Text(AppStrings.livePlayerLoadFailed)),
           );
         }
       },

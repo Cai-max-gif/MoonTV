@@ -191,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.profileCheckUpdateFailed}${e.toString()}',
+              '${AppStrings.profileCheckUpdateFailed}',
               style: FontUtils.poppins(
                 color: AppColors.white,
               ),
@@ -266,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.profileFetchAnnouncementFailed}${e.toString()}',
+              '${AppStrings.profileFetchAnnouncementFailed}',
               style: FontUtils.poppins(
                 color: AppColors.white,
               ),

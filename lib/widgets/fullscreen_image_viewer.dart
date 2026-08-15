@@ -215,7 +215,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.saveFailed}: ${e.toString()}',
+              '${AppStrings.saveFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.red.withValues(alpha: 0.8),

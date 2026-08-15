@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_config.dart';
 import '../constants/app_durations.dart';
+import '../constants/app_strings.dart';
 import 'package:pip/pip.dart';
 import '../services/user_data_service.dart';
 import 'mobile_player_controls.dart';
@@ -234,7 +235,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       setState(() {
         _isInitialized = true;
       });
-      widget.onError?.call(e.toString());
+      widget.onError?.call(AppStrings.networkError);
     }
   }
 

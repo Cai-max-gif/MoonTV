@@ -1447,7 +1447,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         _showScreenshotToastMessage(AppStrings.screenshotFailed);
       }
     } catch (e) {
-      _showScreenshotToastMessage('${AppStrings.screenshotFailed}: $e');
+      _showScreenshotToastMessage(AppStrings.screenshotFailed);
     }
   }
 
@@ -1462,7 +1462,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
         await _saveToScreenshotsFolder(imageData);
       }
     } catch (e) {
-      _showScreenshotToastMessage('${AppStrings.saveFailed}: $e');
+      _showScreenshotToastMessage(AppStrings.saveFailed);
     }
   }
 
@@ -1482,7 +1482,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
       await Gal.putImageBytes(imageData);
       _showScreenshotToastMessage(AppStrings.screenshotSaved);
     } catch (e) {
-      _showScreenshotToastMessage('${AppStrings.saveToGalleryFailed}: $e');
+      _showScreenshotToastMessage(AppStrings.saveToGalleryFailed);
     }
   }
 
@@ -1561,7 +1561,7 @@ class _PCPlayerControlsState extends State<PCPlayerControls> {
           _showScreenshotToastMessage(AppStrings.screenshotSaveFailed);
         }
       } catch (fallbackError) {
-        _showScreenshotToastMessage('${AppStrings.saveToFolderFailed}: $e');
+        _showScreenshotToastMessage(AppStrings.saveToFolderFailed);
       }
     }
   }

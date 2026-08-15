@@ -5,7 +5,6 @@ import '../constants/app_config.dart';
 
 class UserDataService {
   static const String _usernameKey = AppConfig.storageKeyUsername;
-  static const String _passwordKey = AppConfig.storageKeyPassword;
   static const String _tokenKey = AppConfig.storageKeyToken;
   static const String _cookiesKey = AppConfig.storageKeyCookies;
   static const String _localSearchKey = AppConfig.storageKeyLocalSearch;
@@ -31,6 +30,10 @@ class UserDataService {
   static const String _accountLockedUntilKey = AppConfig.storageKeyAccountLockedUntil;
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  // ponytail: cache SharedPreferences instance to avoid repeated getInstance() calls
+  static SharedPreferences? _prefsCache;
+  static Future<SharedPreferences> get _prefs async =>
+      _prefsCache ??= await SharedPreferences.getInstance();
   static int get _maxLoginAttempts => AppConfig.maxLoginAttempts;
   static Duration get _lockDuration => AppConfig.loginLockDuration;
 
@@ -51,7 +54,6 @@ class UserDataService {
   // 保存用户登录信息（支持令牌认证）
   static Future<void> saveUserData({
     required String username,
-    String? password, // 密码仅用于当前登录，不再存储
     String? token,
     String? cookies,
   }) async {
@@ -91,10 +93,6 @@ class UserDataService {
     return await _secureStorage.read(key: _usernameKey);
   }
 
-  // 获取密码 - 不再存储密码，始终返回null
-  static Future<String?> getPassword() async {
-    return null;
-  }
 
   // 获取认证令牌
   static Future<String?> getAuthToken() async {
@@ -117,7 +115,6 @@ class UserDataService {
   // 清除用户数据
   static Future<void> clearUserData() async {
     await _secureStorage.delete(key: _usernameKey);
-    await _secureStorage.delete(key: _passwordKey);
     await _secureStorage.delete(key: _tokenKey);
     await _secureStorage.delete(key: _cookiesKey);
     await resetLoginAttempts();
@@ -125,7 +122,6 @@ class UserDataService {
 
   // 只清除认证信息，保留服务器地址和用户名
   static Future<void> clearAuthData() async {
-    await _secureStorage.delete(key: _passwordKey);
     await _secureStorage.delete(key: _tokenKey);
     await _secureStorage.delete(key: _cookiesKey);
   }
@@ -135,7 +131,6 @@ class UserDataService {
     return {
       AppConfig.storageKeyServerUrl: getDefaultServerUrl(),
       AppConfig.storageKeyUsername: await getUsername(),
-      AppConfig.storageKeyPassword: await getPassword(),
       AppConfig.storageKeyAuthToken: await getAuthToken(),
       AppConfig.storageKeyCookies: await getCookies(),
     };
@@ -224,97 +219,97 @@ class UserDataService {
 
   // 保存本地搜索设置
   static Future<void> saveLocalSearch(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_localSearchKey, enabled);
   }
 
   // 获取本地搜索设置（默认为 false）
   static Future<bool> getLocalSearch() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_localSearchKey) ?? false;
   }
 
   // 保存默认倍速设置
   static Future<void> saveDefaultPlaybackSpeed(double speed) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setDouble(_defaultPlaybackSpeedKey, speed);
   }
 
   // 获取默认倍速设置（默认为 1.0）
   static Future<double> getDefaultPlaybackSpeed() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getDouble(_defaultPlaybackSpeedKey) ?? 1.0;
   }
 
   // 保存自动进入画中画设置
   static Future<void> saveAutoEnterPictureInPicture(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_autoEnterPictureInPictureKey, enabled);
   }
 
   // 获取自动进入画中画设置（默认为 false）
   static Future<bool> getAutoEnterPictureInPicture() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_autoEnterPictureInPictureKey) ?? false;
   }
 
   // 保存自动跳过片头片尾设置
   static Future<void> saveAutoSkipOpeningEnding(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_autoSkipOpeningEndingKey, enabled);
   }
 
   // 获取自动跳过片头片尾设置（默认为 false）
   static Future<bool> getAutoSkipOpeningEnding() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_autoSkipOpeningEndingKey) ?? false;
   }
 
   // 保存片头跳过时长设置
   static Future<void> saveSkipOpeningDuration(int duration) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setInt(_skipOpeningDurationKey, duration);
   }
 
   // 获取片头跳过时长设置（默认为 AppConfig.defaultSkipOpeningDuration）
   static Future<int> getSkipOpeningDuration() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getInt(_skipOpeningDurationKey) ?? AppConfig.defaultSkipOpeningDuration;
   }
 
   // 保存片尾跳过时长设置
   static Future<void> saveSkipEndingDuration(int duration) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setInt(_skipEndingDurationKey, duration);
   }
 
   // 获取片尾跳过时长设置（默认为 AppConfig.defaultSkipEndingDuration）
   static Future<int> getSkipEndingDuration() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getInt(_skipEndingDurationKey) ?? AppConfig.defaultSkipEndingDuration;
   }
 
   // 保存自动连播设置
   static Future<void> saveAutoPlayNext(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_autoPlayNextKey, enabled);
   }
 
   // 获取自动连播设置（默认为 false）
   static Future<bool> getAutoPlayNext() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_autoPlayNextKey) ?? false;
   }
 
   // 保存家庭模式设置
   static Future<void> saveFamilyMode(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_familyModeKey, enabled);
   }
 
   // 获取家庭模式设置（默认为 true）
   static Future<bool> getFamilyMode() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_familyModeKey) ?? true;
   }
 
@@ -335,26 +330,26 @@ class UserDataService {
   }
 
   static Future<void> saveDanmakuEnabled(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_danmakuEnabledKey, enabled);
     danmakuEnabledNotifier.value = enabled;
   }
 
   // 获取弹幕启用状态（默认为 false）
   static Future<bool> getDanmakuEnabled() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_danmakuEnabledKey) ?? false;
   }
 
   static Future<void> saveDanmakuSpeed(int speedIndex) async {
     final clamped = speedIndex.clamp(AppConfig.danmakuSpeedMin, AppConfig.danmakuSpeedMax);
     danmakuSpeedNotifier.value = clamped;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setInt(_danmakuSpeedKey, clamped);
   }
 
   static Future<int> getDanmakuSpeed() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getInt(_danmakuSpeedKey)?.clamp(AppConfig.danmakuSpeedMin, AppConfig.danmakuSpeedMax) ??
         (prefs.getDouble(_danmakuSpeedKey) ?? 2).toInt().clamp(AppConfig.danmakuSpeedMin, AppConfig.danmakuSpeedMax);
   }
@@ -362,12 +357,12 @@ class UserDataService {
   static Future<void> saveDanmakuOpacity(int opacity) async {
     final clamped = opacity.clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax);
     danmakuOpacityNotifier.value = clamped;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setInt(_danmakuOpacityKey, clamped);
   }
 
   static Future<int> getDanmakuOpacity() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getInt(_danmakuOpacityKey)?.clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax) ??
         (prefs.getDouble(_danmakuOpacityKey) ?? AppConfig.danmakuDefaultOpacity).toInt().clamp(AppConfig.danmakuOpacityMin, AppConfig.danmakuOpacityMax);
   }
@@ -375,46 +370,46 @@ class UserDataService {
   static Future<void> saveDanmakuFontSize(double fontSize) async {
     final clamped = fontSize.clamp(AppConfig.danmakuFontSizeMin, AppConfig.danmakuFontSizeMax);
     danmakuFontSizeNotifier.value = clamped;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setDouble(_danmakuFontSizeKey, clamped);
   }
 
   static Future<double> getDanmakuFontSize() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return (prefs.getDouble(_danmakuFontSizeKey) ?? 1.0).clamp(AppConfig.danmakuFontSizeMin, AppConfig.danmakuFontSizeMax);
   }
 
   static Future<void> saveDanmakuDisplayArea(double area) async {
     final clamped = area.clamp(AppConfig.danmakuAreaMin, AppConfig.danmakuAreaMax);
     danmakuDisplayAreaNotifier.value = clamped;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setDouble(_danmakuDisplayAreaKey, clamped);
   }
 
   static Future<double> getDanmakuDisplayArea() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return (prefs.getDouble(_danmakuDisplayAreaKey) ?? 1.0).clamp(AppConfig.danmakuAreaMin, AppConfig.danmakuAreaMax);
   }
 
   static Future<void> saveDanmakuAntiBlock(bool enabled) async {
     danmakuAntiBlockNotifier.value = enabled;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_danmakuAntiBlockKey, enabled);
   }
 
   static Future<bool> getDanmakuAntiBlock() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_danmakuAntiBlockKey) ?? true;
   }
 
   static Future<void> saveDanmakuSyncSpeed(bool enabled) async {
     danmakuSyncSpeedNotifier.value = enabled;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setBool(_danmakuSyncSpeedKey, enabled);
   }
 
   static Future<bool> getDanmakuSyncSpeed() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     return prefs.getBool(_danmakuSyncSpeedKey) ?? true;
   }
 }

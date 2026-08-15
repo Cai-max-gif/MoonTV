@@ -174,7 +174,7 @@ class DoubanService {
         );
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.doubanRequestException}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.doubanRequestException}');
     }
   }
 
@@ -384,7 +384,7 @@ class DoubanService {
         );
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.doubanRecommendRequestException}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.doubanRecommendRequestException}');
     }
   }
 
@@ -519,7 +519,7 @@ class DoubanService {
         );
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.doubanDetailRequestException}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.doubanDetailRequestException}');
     }
   }
 }

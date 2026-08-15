@@ -6,6 +6,10 @@ import '../models/announcement.dart';
 import 'api_service.dart';
 
 class AnnouncementService {
+
+  static SharedPreferences? _prefsCache;
+  static Future<SharedPreferences> get _prefs async =>
+      _prefsCache ??= await SharedPreferences.getInstance();
   static String get announcementApiUrl => AppConfig.announcementEndpoint;
   static const String _cacheKey = AppConfig.cacheKeyAnnouncement;
   static const String _cacheTimeKey = AppConfig.cacheKeyAnnouncementTime;
@@ -99,7 +103,7 @@ class AnnouncementService {
 
   static Future<Announcement?> _getCachedAnnouncement() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefs;
       final jsonString = prefs.getString(_cacheKey);
       if (jsonString != null) {
         final json = jsonDecode(jsonString) as Map<String, dynamic>;
@@ -113,7 +117,7 @@ class AnnouncementService {
 
   static Future<void> _saveAnnouncementToCache(Announcement announcement) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefs;
       final jsonString = jsonEncode(announcement.toJson());
       await prefs.setString(_cacheKey, jsonString);
       await prefs.setInt(_cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
@@ -124,7 +128,7 @@ class AnnouncementService {
 
   static Future<bool> _isCacheValid() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefs;
       final cacheTime = prefs.getInt(_cacheTimeKey);
       if (cacheTime == null) return false;
 

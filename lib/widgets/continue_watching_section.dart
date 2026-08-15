@@ -398,7 +398,7 @@ class _ContinueWatchingSectionState extends State<ContinueWatchingSection>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.clearFailed}: ${e.toString()}',
+              '${AppStrings.clearFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,

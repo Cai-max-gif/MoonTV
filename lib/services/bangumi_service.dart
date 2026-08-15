@@ -105,7 +105,7 @@ class BangumiService {
         );
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.bangumiRequestException}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.bangumiRequestException}');
     }
   }
 
@@ -186,7 +186,7 @@ class BangumiService {
         );
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.bangumiRequestException}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.bangumiRequestException}');
     }
   }
 }

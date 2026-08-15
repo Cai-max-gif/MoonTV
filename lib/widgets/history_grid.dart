@@ -79,7 +79,7 @@ class _HistoryGridState extends State<HistoryGrid>
       });
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = AppStrings.networkError;
         _isLoading = false;
       });
     }
@@ -133,7 +133,7 @@ class _HistoryGridState extends State<HistoryGrid>
         throw Exception(result.errorMessage ?? AppStrings.getPlayRecordsFailed);
       }
     } catch (e) {
-      throw Exception('${AppStrings.getPlayRecordsFailed}: $e');
+      throw Exception(AppStrings.getPlayRecordsFailed);
     }
   }
 

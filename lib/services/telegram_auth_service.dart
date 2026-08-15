@@ -119,7 +119,7 @@ class TelegramAuthService {
       onStatusChanged?.call(AppStrings.telegramError);
       return TelegramAuthResult(
         success: false,
-        error: '${AppStrings.telegramError}: $e',
+        error: AppStrings.telegramError,
       );
     }
   }

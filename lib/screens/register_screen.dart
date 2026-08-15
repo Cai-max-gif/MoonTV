@@ -276,7 +276,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             await UserDataService.saveUserData(
               username: username,
-              password: password,
               token: token,
               cookies: cookies,
             );
@@ -284,7 +283,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             String cookies = _parseCookies(response);
             await UserDataService.saveUserData(
               username: username,
-              password: password,
               cookies: cookies,
             );
           }

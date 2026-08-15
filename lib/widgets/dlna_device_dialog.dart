@@ -86,7 +86,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
       if (mounted) {
         setState(() {
           _isScanning = false;
-          _scanStatus = '${AppStrings.dlnaScanFailed}: $e';
+          _scanStatus = AppStrings.dlnaScanFailed;
         });
       }
     }
@@ -382,7 +382,7 @@ class _DLNADeviceDialogState extends State<DLNADeviceDialog> {
         // 显示投屏失败提示
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppStrings.dlnaFailed}: $e'),
+            content: Text(AppStrings.dlnaFailed),
             backgroundColor: AppColors.red,
             duration: AppDurations.toastDuration,
           ),

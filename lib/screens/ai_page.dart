@@ -120,7 +120,7 @@ class _AIPageState extends State<AIPage> {
       if (mounted) {
         setState(() {
           _messages.add({
-            AppConfig.jsonText: '${AppStrings.errorException}${e.toString()}',
+            AppConfig.jsonText: '${AppStrings.errorException}',
             AppConfig.jsonIsUser: false,
             AppConfig.jsonIsError: true,
           });

@@ -4,6 +4,10 @@ import '../models/danmu_item.dart';
 import '../constants/app_config.dart';
 
 class DanmuCache {
+
+  static SharedPreferences? _prefsCache;
+  static Future<SharedPreferences> get _prefs async =>
+      _prefsCache ??= await SharedPreferences.getInstance();
   static const _cachePrefix = AppConfig.cacheKeyDanmu;
   static const _cacheDuration = AppConfig.danmuCacheDuration;
 
@@ -23,7 +27,7 @@ class DanmuCache {
       String? episode,
       String? episodeId,
       required List<DanmuItem> data}) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final key = _buildCacheKey(
         title: title, doubanId: doubanId, episode: episode, episodeId: episodeId);
     final cacheData = json.encode({
@@ -38,7 +42,7 @@ class DanmuCache {
       String? doubanId,
       String? episode,
       String? episodeId}) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final key = _buildCacheKey(
         title: title, doubanId: doubanId, episode: episode, episodeId: episodeId);
     final cached = prefs.getString(key);

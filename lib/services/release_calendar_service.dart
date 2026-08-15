@@ -82,7 +82,7 @@ class ReleaseCalendarService {
         return ApiResponse.error(response.message ?? AppStrings.releaseCalendarFetchFailed);
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.releaseCalendarException}${e.toString()}');
+      return ApiResponse.error('${AppStrings.releaseCalendarException}');
     }
   }
 

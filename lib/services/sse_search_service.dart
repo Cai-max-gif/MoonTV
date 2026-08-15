@@ -91,7 +91,7 @@ class SSESearchService {
 
       _isConnected = false;
     } catch (e) {
-      _errorController?.add('${AppStrings.sseLocalSearchError}${e.toString()}');
+      _errorController?.add('${AppStrings.sseLocalSearchError}');
       _isConnected = false;
     }
   }
@@ -135,7 +135,7 @@ class SSESearchService {
     } catch (e) {
       // 其他错误处理
       _completedSources++;
-      _sourceErrors[resource.key] = e.toString();
+      _sourceErrors[resource.key] = AppStrings.networkError;
 
       // 发送错误进度更新
       _progressController?.add(SearchProgress(
@@ -143,7 +143,7 @@ class SSESearchService {
         completedSources: _completedSources,
         currentSource: resource.name,
         isComplete: false,
-        error: e.toString(),
+        error: AppStrings.networkError,
       ));
     }
   }
@@ -258,7 +258,7 @@ class SSESearchService {
         return;
       }
 
-      _errorController?.add('${AppStrings.sseConnectionFailed}${e.toString()}');
+      _errorController?.add('${AppStrings.sseConnectionFailed}');
       rethrow;
     }
   }
@@ -329,7 +329,7 @@ class SSESearchService {
           break;
       }
     } catch (e) {
-      _errorController?.add('${AppStrings.sseParseFailed}${e.toString()}');
+      _errorController?.add('${AppStrings.sseParseFailed}');
     }
   }
 

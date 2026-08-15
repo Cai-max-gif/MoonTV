@@ -599,7 +599,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         _showScreenshotToastMessage(AppStrings.screenshotFailed);
       }
     } catch (e) {
-      _showScreenshotToastMessage('${AppStrings.screenshotFailed}: $e');
+      _showScreenshotToastMessage(AppStrings.screenshotFailed);
     }
   }
 
@@ -614,7 +614,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
         await _saveToScreenshotsFolder(imageData);
       }
     } catch (e) {
-      _showScreenshotToastMessage('${AppStrings.saveFailed}: $e');
+      _showScreenshotToastMessage(AppStrings.saveFailed);
     }
   }
 
@@ -634,7 +634,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
       await Gal.putImageBytes(imageData);
       _showScreenshotToastMessage(AppStrings.screenshotSaved);
     } catch (e) {
-      _showScreenshotToastMessage('${AppStrings.saveToGalleryFailed}: $e');
+      _showScreenshotToastMessage(AppStrings.saveToGalleryFailed);
     }
   }
 
@@ -713,7 +713,7 @@ class _MobilePlayerControlsState extends State<MobilePlayerControls> {
           _showScreenshotToastMessage(AppStrings.screenshotSaveFailed);
         }
       } catch (fallbackError) {
-        _showScreenshotToastMessage('${AppStrings.saveToFolderFailed}: $e');
+        _showScreenshotToastMessage(AppStrings.saveToFolderFailed);
       }
     }
   }

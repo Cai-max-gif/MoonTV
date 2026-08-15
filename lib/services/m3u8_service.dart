@@ -62,7 +62,7 @@ class M3U8Service {
         AppConfig.jsonDownloadSpeed: 0.0,
         AppConfig.jsonLatency: 0,
         AppConfig.jsonSuccess: false,
-        AppConfig.jsonError: e.toString(),
+        AppConfig.jsonError: AppStrings.networkError,
       };
     }
   }
@@ -302,7 +302,7 @@ class M3U8Service {
           AppConfig.jsonDownloadSpeed: 0.0,
           AppConfig.jsonLatency: 0,
           AppConfig.jsonSuccess: false,
-          AppConfig.jsonError: e.toString(),
+          AppConfig.jsonError: AppStrings.networkError,
         });
       }
     });

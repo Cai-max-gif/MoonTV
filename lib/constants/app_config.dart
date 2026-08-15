@@ -6,13 +6,13 @@ class AppConfig {
   static const String appName = 'MoonTV';
 
   /// GitHub 仓库地址
-  static const String githubRepoUrl = 'https://github.com/Cai-max-gif/MoonTV';
+  static const String githubRepoUrl = 'https://github.com/xijindu/MoonTV';
 
   /// GitHub API 发布页
-  static const String githubApiReleases = 'https://api.github.com/repos/Cai-max-gif/MoonTV/releases/latest';
+  static const String githubApiReleases = 'https://api.github.com/repos/xijindu/MoonTV/releases/latest';
 
   /// GitHub 下载基础 URL
-  static const String githubDownloadBase = 'https://github.com/Cai-max-gif/MoonTV/releases/download';
+  static const String githubDownloadBase = 'https://github.com/xijindu/MoonTV/releases/download';
 
   /// 默认版本号（package_info 获取失败时的回退）
   static const String defaultVersion = '1.5.1';
@@ -819,7 +819,6 @@ class AppConfig {
 
   // ── 存储键 ──
   static const String storageKeyUsername = 'username';
-  static const String storageKeyPassword = 'password';
   static const String storageKeyToken = 'auth_token';
   static const String storageKeyCookies = 'cookies';
   static const String storageKeyLocalSearch = 'local_search';

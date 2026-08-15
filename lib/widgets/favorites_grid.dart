@@ -86,7 +86,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
       });
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = AppStrings.networkError;
         _isLoading = false;
       });
     }
@@ -207,7 +207,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
         throw Exception(result.errorMessage ?? AppStrings.getFavoritesFailed);
       }
     } catch (e) {
-      throw Exception('${AppStrings.getFavoritesFailed}: $e');
+      throw Exception(AppStrings.getFavoritesFailed);
     }
   }
 
@@ -224,7 +224,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
         throw Exception(result.errorMessage ?? AppStrings.getPlayRecordsFailed);
       }
     } catch (e) {
-      throw Exception('${AppStrings.getPlayRecordsFailed}: $e');
+      throw Exception(AppStrings.getPlayRecordsFailed);
     }
   }
 

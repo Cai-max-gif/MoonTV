@@ -56,6 +56,10 @@ class AISettings {
 }
 
 class AIService {
+
+  static SharedPreferences? _prefsCache;
+  static Future<SharedPreferences> get _prefs async =>
+      _prefsCache ??= await SharedPreferences.getInstance();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static const String _apiKeyPrefix = AppConfig.aiApiKeyPrefix;
   static const String _settingsKey = AppConfig.aiSettingsKey;
@@ -64,7 +68,7 @@ class AIService {
   static Duration get _timeout => AppConfig.aiRequestTimeout;
 
   static Future<List<Map<String, dynamic>>> loadChatHistory() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final historyJson = prefs.getString(_chatHistoryKey);
     if (historyJson != null) {
       try {
@@ -81,7 +85,7 @@ class AIService {
 
   static Future<void> saveChatHistory(
       List<Map<String, dynamic>> messages) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     if (messages.isEmpty) {
       await prefs.remove(_chatHistoryKey);
       return;
@@ -91,12 +95,12 @@ class AIService {
   }
 
   static Future<void> clearChatHistory() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.remove(_chatHistoryKey);
   }
 
   static Future<AISettings> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final settingsJson = prefs.getString(_settingsKey);
     AISettings settings;
 
@@ -120,7 +124,7 @@ class AIService {
   }
 
   static Future<void> saveSettings(AISettings settings) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
 
     if (settings.apiKey.isNotEmpty) {
       await _secureStorage.write(

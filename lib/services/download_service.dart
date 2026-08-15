@@ -13,6 +13,10 @@ import '../constants/app_regex.dart';
 import '../constants/app_strings.dart';
 
 class DownloadService extends ChangeNotifier {
+
+  static SharedPreferences? _prefsCache;
+  static Future<SharedPreferences> get _prefs async =>
+      _prefsCache ??= await SharedPreferences.getInstance();
   static const String _downloadTasksKey = AppConfig.storageKeyDownloadTasks;
   static const String _maxConcurrentKey = AppConfig.storageKeyMaxConcurrentDownloads;
   static const String _concurrentThreadsKey = AppConfig.storageKeyConcurrentThreads;
@@ -62,7 +66,7 @@ class DownloadService extends ChangeNotifier {
 
   Future<void> _ensureSavePath() async {
     if (_savePath.isNotEmpty) return;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     _savePath = prefs.getString(_savePathKey) ?? '';
     if (_savePath.isEmpty) {
       final defaultDir = await StorageUtils.getDefaultDownloadDirectory();
@@ -76,7 +80,7 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<void> loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final tasksJson = prefs.getString(_downloadTasksKey);
     _maxConcurrentDownloads = prefs.getInt(_maxConcurrentKey) ?? AppConfig.downloadMinConcurrent;
     _concurrentThreads = prefs.getInt(_concurrentThreadsKey) ?? AppConfig.downloadDefaultThreads;
@@ -151,7 +155,7 @@ class DownloadService extends ChangeNotifier {
   }
 
   Future<void> _saveTasks() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final tasksJson = json.encode(_tasks.map((t) => t.toJson()).toList());
     await prefs.setString(_downloadTasksKey, tasksJson);
     await prefs.setInt(_maxConcurrentKey, _maxConcurrentDownloads);

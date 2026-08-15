@@ -188,7 +188,7 @@ class _UserMenuState extends State<UserMenu> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.profileCheckUpdateFailed}${e.toString()}',
+              '${AppStrings.profileCheckUpdateFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.red,

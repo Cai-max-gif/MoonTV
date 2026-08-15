@@ -27,6 +27,10 @@ enum UpdateDownloadStatus {
 }
 
 class VersionService {
+
+  static SharedPreferences? _prefsCache;
+  static Future<SharedPreferences> get _prefs async =>
+      _prefsCache ??= await SharedPreferences.getInstance();
   static const String _lastCheckKey = AppConfig.storageKeyLastVersionCheck;
   static const String _dismissedVersionKey = AppConfig.storageKeyDismissedVersion;
 
@@ -233,7 +237,7 @@ class VersionService {
           // 如果是手动检查，不检查是否被忽略
           if (!isManualCheck) {
             // 检查是否被用户忽略过这个版本
-            final prefs = await SharedPreferences.getInstance();
+            final prefs = await _prefs;
             final dismissedVersion = prefs.getString(_dismissedVersionKey);
             if (dismissedVersion == latestVersion) {
               return null;
@@ -304,7 +308,7 @@ class VersionService {
   }
 
   static Future<bool> shouldShowUpdatePrompt(String version) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
 
     final dismissedVersion = prefs.getString(_dismissedVersionKey);
     if (dismissedVersion == version) {
@@ -324,12 +328,12 @@ class VersionService {
   }
 
   static Future<void> dismissVersion(String version) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setString(_dismissedVersionKey, version);
   }
 
   static Future<void> clearDismissedVersion() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.remove(_dismissedVersionKey);
   }
 

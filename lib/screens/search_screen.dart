@@ -558,7 +558,7 @@ class _SearchScreenState extends State<SearchScreen>
         }
 
         setState(() {
-          _searchError = e.toString();
+          _searchError = AppStrings.networkError;
         });
       }
     }
@@ -1376,7 +1376,7 @@ class _SearchScreenState extends State<SearchScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.favFailed}: ${e.toString()}',
+              '${AppStrings.favFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,
@@ -1434,7 +1434,7 @@ class _SearchScreenState extends State<SearchScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.favUnfavoriteFailed}: ${e.toString()}',
+              '${AppStrings.favUnfavoriteFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,

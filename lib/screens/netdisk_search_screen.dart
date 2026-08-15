@@ -110,7 +110,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = '${AppStrings.netdiskSearchError}${e.toString()}';
+          _error = '${AppStrings.netdiskSearchError}';
         });
       }
     }
@@ -141,7 +141,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppStrings.netdiskOpenUrlFailed}${e.toString()}')),
+          SnackBar(content: Text('${AppStrings.netdiskOpenUrlFailed}')),
         );
       }
     }
@@ -170,7 +170,7 @@ class _NetdiskSearchScreenState extends State<NetdiskSearchScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppStrings.netdiskCopyFailed}${e.toString()}')),
+          SnackBar(content: Text('${AppStrings.netdiskCopyFailed}')),
         );
       }
     }

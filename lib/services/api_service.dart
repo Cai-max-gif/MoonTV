@@ -262,7 +262,7 @@ class ApiService {
       }
     } catch (e) {
       return ApiResponse.error(
-        '${AppStrings.errorException}${e.toString()}',
+        '${AppStrings.errorException}',
         statusCode: response.statusCode,
       );
     }
@@ -326,7 +326,7 @@ class ApiService {
     } catch (e) {
       // 记录详细错误信息供调试
       // 生产环境中应使用专业的日志库
-      // print('GET请求错误: ${e.toString()}');
+      // print('GET请求错误');
       // 向用户返回通用错误信息
       return ApiResponse.error(AppStrings.errorNetworkRequest);
     }
@@ -502,7 +502,7 @@ class ApiService {
         if (retryCount >= _maxRetries) {
           // 记录详细错误信息供调试
           // 生产环境中应使用专业的日志库
-          // print('文件上传错误: ${e.toString()}');
+          // print('文件上传错误');
           // 向用户返回通用错误信息
           return ApiResponse.error(AppStrings.errorNetworkRequest);
         }
@@ -560,7 +560,7 @@ class ApiService {
             statusCode: response.statusCode);
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -581,7 +581,7 @@ class ApiService {
         return ApiResponse.error(response.message ?? AppStrings.errorGetFailed);
       }
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -597,7 +597,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorAddFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorAddFailed}');
     }
   }
 
@@ -612,7 +612,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}');
     }
   }
 
@@ -628,7 +628,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorDeleteFailed}');
     }
   }
 
@@ -651,7 +651,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}');
     }
   }
 
@@ -668,7 +668,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorDeleteFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorDeleteFailed}');
     }
   }
 
@@ -682,7 +682,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}');
     }
   }
 
@@ -704,7 +704,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.favFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.favFailed}');
     }
   }
 
@@ -721,7 +721,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.favUnfavoriteFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.favUnfavoriteFailed}');
     }
   }
 
@@ -775,7 +775,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorException}${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorException}');
     }
   }
 
@@ -811,7 +811,7 @@ class ApiService {
       // 没有令牌或cookies，返回需要重新登录
       return ApiResponse.error(AppStrings.authLoginFailed);
     } catch (e) {
-      return ApiResponse.error('${AppStrings.authLoginFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.authLoginFailed}');
     }
   }
 
@@ -1080,7 +1080,7 @@ class ApiService {
       if ((e is SocketException || e is TimeoutException) && _cachedShortDramaCategories != null) {
         return ApiResponse.success(_cachedShortDramaCategories!);
       }
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1154,7 +1154,7 @@ class ApiService {
         final cached = _cachedShortDramaLists[cacheKey]!;
         return ApiResponse.success(Map<String, dynamic>.from(cached)..remove(AppConfig.jsonCacheTime));
       }
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1234,7 +1234,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1260,7 +1260,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1288,7 +1288,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1311,7 +1311,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1365,7 +1365,7 @@ class ApiService {
         final cached = _cachedShortDramaRecommends![cacheKey]!;
         return ApiResponse.success(cached[AppConfig.jsonData] as List<dynamic>);
       }
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1382,7 +1382,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1427,7 +1427,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1446,7 +1446,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 
@@ -1466,7 +1466,7 @@ class ApiService {
 
       return response;
     } catch (e) {
-      return ApiResponse.error('${AppStrings.errorGetFailed}: ${e.toString()}');
+      return ApiResponse.error('${AppStrings.errorGetFailed}');
     }
   }
 }

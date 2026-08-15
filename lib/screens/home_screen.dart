@@ -806,7 +806,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                '${AppStrings.errorDeleteFailed}: ${e.toString()}',
+                '${AppStrings.errorDeleteFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,
@@ -909,7 +909,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppStrings.favFailed}: ${e.toString()}',
+              '${AppStrings.favFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,
@@ -968,7 +968,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-               '${AppStrings.favUnfavoriteFailed}: ${e.toString()}',
+               '${AppStrings.favUnfavoriteFailed}',
               style: FontUtils.poppins(color: AppColors.white),
             ),
             backgroundColor: AppColors.error,
